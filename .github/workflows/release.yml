@@ -40,12 +40,12 @@ jobs:
           BRIEF_DOWNLOAD_URL: https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip
         run: node scripts/build-installer.js
 
-      - name: Publish to GitHub Release v1.0.0
+      - name: Publish to GitHub Release v1.0.1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          $tag = "v1.0.0"
+          $tag = "v1.0.1"
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `

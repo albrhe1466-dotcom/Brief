@@ -1165,9 +1165,10 @@ function setupIpc() {
     try {
       const res = await agent.runWork(payload);
       const summary = (res && res.text) ? String(res.text).replace(/\s+/g, ' ').trim() : 'Desktop task finished.';
+      const timePrefix = (res && res.elapsedLabel) ? ('Worked ' + res.elapsedLabel + ' · ') : '';
       sendWindowsNotification({
         title: res && res.stopped ? 'Brief stopped' : 'Brief finished working',
-        body: summary.slice(0, 200)
+        body: (timePrefix + summary).slice(0, 200)
       });
       return res;
     } catch (err) {
@@ -1280,6 +1281,16 @@ app.whenReady().then(async () => {
       usePlanner: true,
       thinkingLevel: (initialSettings.thinkingLevel === 'low' || !initialSettings.thinkingLevel) ? 'medium' : initialSettings.thinkingLevel,
       uiCleanV7: true
+    });
+  }
+  if (!initialSettings.uiCleanV8) {
+    settingsStore.set({
+      maxSteps: Math.max(140, Number(initialSettings.maxSteps) || 140),
+      deepWorkMinMinutes: Number(initialSettings.deepWorkMinMinutes) > 0 ? Number(initialSettings.deepWorkMinMinutes) : 10,
+      deepWorkMaxMinutes: Number(initialSettings.deepWorkMaxMinutes) > 0 ? Number(initialSettings.deepWorkMaxMinutes) : 25,
+      multiAgentParallel: true,
+      verifyTaskBeforeFinish: true,
+      uiCleanV8: true
     });
   }
   {

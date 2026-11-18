@@ -187,7 +187,7 @@ class McpServerConnection {
     const initRes = await this.rpc('initialize', {
       protocolVersion: '2024-11-05',
       capabilities: {},
-      clientInfo: { name: 'LOCALLY', version: '1.0.0' }
+      clientInfo: { name: 'LOCALLY', version: '1.0.1' }
     }, 15000);
     this.notify('notifications/initialized', {});
     return initRes;
@@ -199,7 +199,7 @@ class McpServerConnection {
     const initRes = await this.rpc('initialize', {
       protocolVersion: '2024-11-05',
       capabilities: {},
-      clientInfo: { name: 'LOCALLY', version: '1.0.0' }
+      clientInfo: { name: 'LOCALLY', version: '1.0.1' }
     }, 10000);
     await this.notifyHttp('notifications/initialized', {}).catch(() => {});
     return initRes;

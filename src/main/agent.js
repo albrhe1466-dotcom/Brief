@@ -148,6 +148,110 @@ async function describeForegroundElements(screen, automation) {
   }
 }
 
+/** Tools that only observe or inspect without changing any app/file/timeline state. */
+const PASSIVE_OBSERVE_TOOLS = new Set([
+  'take_screenshot', 'read_screen_text', 'zoom_region', 'wait', 'list_windows',
+  'list_directory', 'search_files', 'project_tree', 'grep_files', 'read_file',
+  'path_info', 'get_system_info', 'web_search', 'fetch_url'
+]);
+
+/** Navigation/window focus tools (necessary first steps, but NOT finished creation work). */
+const APP_NAV_TOOLS = new Set([
+  'open_app', 'focus_window', 'window_control', 'close_other_windows',
+  'browser_tab', 'open_url', 'switch_display'
+]);
+
+function formatWorkedTime(ms) {
+  const totalSec = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+  if (totalSec < 60) return totalSec + 's';
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  return mins + 'm ' + String(secs).padStart(2, '0') + 's';
+}
+
+function isMutatingWorkStep(item) {
+  if (!item || !item.ok) return false;
+  const t = String(item.tool || '');
+  return !PASSIVE_OBSERVE_TOOLS.has(t) && !APP_NAV_TOOLS.has(t);
+}
+
+function isTestEvidenceStep(item) {
+  if (!item || !item.ok) return false;
+  const t = String(item.tool || '');
+  const a = item.args || {};
+  if (t === 'run_command') return true;
+  if (/execute_luau|start_stop_play|test|verify|render|preview|play/i.test(t)) return true;
+  if (t === 'press_keys') {
+    const ks = String(a.keys || '');
+    if (/\b(?:f5|f8|space)\b/i.test(ks)) return true;
+  }
+  if (t === 'click_text' || t === 'click_element') {
+    const q = String(a.query || '');
+    if (/\b(play|run|test|preview|render|export|output|console|timeline)\b/i.test(q)) return true;
+  }
+  return false;
+}
+
+function detectDeepTaskProfile(task, openWindows, settings, overrides) {
+  const text = String(task || '');
+  const winNames = Array.isArray(openWindows) ? openWindows.map((w) => String(w.title || '')).join(' ') : '';
+  const combined = text + ' ' + winNames;
+  const isRoblox = /\b(roblox|studio|obby|elevator|luau|workspace|startergui|proximityprompt|clickdetector)\b/i.test(combined);
+  const isAnimationOrCreative = /\b(capcut|blender|higgsfield|after\s*effects|premiere|photoshop|illustrator|adobe|animat(?:e|ion|ing)|keyframe|rig|timeline|3d|shader|unreal|unity|davinci)\b/i.test(combined);
+  const isQuickCheckOnly = /^\s*(?:what is on my screen|read (?:this|screen)|open [a-z0-9 ]{1,24}|search (?:google|youtube|web) for .{1,50}|take a screenshot|list windows)\s*[.!?]?\s*$/i.test(text);
+  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|game|elevator|obby|ui|button|animat)\b/i.test(text));
+  const isDeepBuildTask = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(full|complete|entire|thorough|complex|multi-step|3d|game|elevator|obby|studio)\b/i.test(text));
+
+  const minMins = (overrides && typeof overrides.minWorkMs === 'number')
+    ? null
+    : Math.max(0, Number((settings && settings.deepWorkMinMinutes !== undefined) ? settings.deepWorkMinMinutes : 10));
+  const maxMins = (overrides && typeof overrides.maxWorkMs === 'number')
+    ? null
+    : Math.max(5, Number((settings && settings.deepWorkMaxMinutes !== undefined) ? settings.deepWorkMaxMinutes : 25));
+
+  const minWorkMs = (overrides && typeof overrides.minWorkMs === 'number')
+    ? overrides.minWorkMs
+    : (isDeepBuildTask ? minMins * 60 * 1000 : 0);
+  const maxWorkMs = (overrides && typeof overrides.maxWorkMs === 'number')
+    ? overrides.maxWorkMs
+    : (maxMins * 60 * 1000);
+
+  return {
+    isRoblox,
+    isAnimationOrCreative,
+    requiresAppTest,
+    isDeepBuildTask,
+    minWorkMs,
+    maxWorkMs
+  };
+}
+
+/** Fast visual change percentage (0..100) comparing two screenshots via small raw RGBA sample. */
+function computeVisualDiffPct(shotA, shotB) {
+  try {
+    if (!shotA || !shotB || !shotA.base64 || !shotB.base64) return null;
+    if (shotA.base64 === shotB.base64) return 0;
+    const { nativeImage } = require('electron');
+    if (!nativeImage) return null;
+    const imgA = nativeImage.createFromBuffer(Buffer.from(shotA.base64, 'base64')).resize({ width: 48, height: 27 });
+    const imgB = nativeImage.createFromBuffer(Buffer.from(shotB.base64, 'base64')).resize({ width: 48, height: 27 });
+    const bufA = imgA.toBitmap();
+    const bufB = imgB.toBitmap();
+    if (!bufA.length || bufA.length !== bufB.length) return null;
+    let changed = 0;
+    const pixels = Math.floor(bufA.length / 4);
+    for (let i = 0; i < bufA.length; i += 4) {
+      const dr = Math.abs(bufA[i] - bufB[i]);
+      const dg = Math.abs(bufA[i + 1] - bufB[i + 1]);
+      const db = Math.abs(bufA[i + 2] - bufB[i + 2]);
+      if (dr + dg + db > 28) changed += 1;
+    }
+    return pixels ? Number(((changed / pixels) * 100).toFixed(1)) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 /** Tools that would pull ready-made assets from a store instead of building things by hand. */
 const BLOCKED_STORE_TOOL_RE = /(insert_asset|search_asset|insert_model|toolbox|marketplace|manage_assets|manage_open_cloud_assets|generate_scene|generate_procedural_model|generate_mesh|generate_avatar)/i;
 
@@ -294,6 +398,62 @@ class AgentRunner extends EventEmitter {
       return { id: /computer-use/i.test(pId) ? (m.bestPro || m.bestFlash || m.fast || '') : pId, isComputerUse: false };
     }
     return { id: active || m.bestPro || m.bestFlash || m.fast || '', isComputerUse: /computer-use/i.test(active) };
+  }
+
+  /**
+   * Builds a multi-agent model roster from the healthy models available on the user's API key
+   * so Executor, Scout, Code/Animation Specialist, and QA Tester do not leave models sitting idle.
+   */
+  resolveTeamRoster() {
+    const s = this.getSettings() || {};
+    const m = this.getMatch() || { presets: {} };
+    const executor = this.resolveModelForJob('agent').id;
+    const candidates = this.getFallbackModels(new Set());
+    const fastRole = stripModelPrefix((s.roles && s.roles.fast) || '');
+    const planRole = stripModelPrefix((s.roles && s.roles.planner) || '');
+
+    const pickDistinct = (preferredIds, fallbackId) => {
+      for (const raw of preferredIds) {
+        const clean = stripModelPrefix(raw || '');
+        if (!clean || /computer-use/i.test(clean)) continue;
+        if (candidates.includes(clean) && clean !== executor) return clean;
+      }
+      for (const id of candidates) {
+        if (id !== executor) return id;
+      }
+      return fallbackId || executor;
+    };
+
+    const scout = (fastRole && fastRole !== 'auto')
+      ? fastRole
+      : pickDistinct([
+          m.presets && m.presets.flashlite35 && m.presets.flashlite35.id,
+          m.presets && m.presets.gpt6luna && m.presets.gpt6luna.id,
+          m.presets && m.presets.claudehaiku55 && m.presets.claudehaiku55.id,
+          m.fast,
+          m.bestFlash
+        ], executor);
+
+    const specialist = (planRole && planRole !== 'auto')
+      ? planRole
+      : pickDistinct([
+          m.presets && m.presets.hydrogen && m.presets.hydrogen.id,
+          m.presets && m.presets.flash38 && m.presets.flash38.id,
+          m.presets && m.presets.gpt61terra && m.presets.gpt61terra.id,
+          m.presets && m.presets.claudesonnet55 && m.presets.claudesonnet55.id,
+          m.bestFlash
+        ].filter((id) => id !== scout), scout);
+
+    const qaTester = pickDistinct([
+      m.presets && m.presets.argon && m.presets.argon.id,
+      m.presets && m.presets.gpt61sol && m.presets.gpt61sol.id,
+      m.presets && m.presets.claudeopus55 && m.presets.claudeopus55.id,
+      m.bestPro,
+      planRole
+    ], specialist || executor);
+
+    const distinctCount = new Set([executor, scout, specialist, qaTester].filter(Boolean)).size;
+    return { executor, scout, specialist, qaTester, distinctCount };
   }
 
   /** Ordered list of healthy general Gemini fallback model IDs from the user's account, excluding failedModels. */
@@ -655,44 +815,83 @@ class AgentRunner extends EventEmitter {
   }
 
   /**
-   * Independent QA Verifier Agent (Agent 4): verifies real screenshot, OCR text, and executed tool evidence
-   * against the user's requirements before allowing Brief to say "Done".
+   * Independent QA Verifier Agent: compares BEFORE vs AFTER screenshots, OCR state, mutating work actions,
+   * and live test evidence before allowing Brief to declare completion. Fail-closed on incomplete/untested work.
    */
-  async runTaskVerifierAgent({ task, planText, stepLog, candidateAnswer, currentShot, modelId }) {
+  async runTaskVerifierAgent({
+    task,
+    taskProfile,
+    planText,
+    stepLog,
+    mutatingCount,
+    testCount,
+    elapsedMs,
+    minWorkMs,
+    qaPasses,
+    initShot,
+    currentShot,
+    candidateAnswer,
+    modelId,
+    deepPolishAudit
+  }) {
     if (!this.gemini || typeof this.gemini.generate !== 'function') return { verified: true };
+    if (mutatingCount === 0) {
+      return {
+        verified: false,
+        reason: 'Only screenshots or passive reads ran — zero edits, clicks, keyframes, objects, or commands were executed.',
+        next_fix: 'Stop taking passive photos. Click, type, build scripts/objects/keyframes, and test the result cleanly right now.'
+      };
+    }
     try {
-      const [visionShot, uiMap] = await Promise.all([
+      const [beforeVisionShot, afterVisionShot, uiMap] = await Promise.all([
+        initShot ? shotForVision(initShot, this.automation) : Promise.resolve(null),
         shotForVision(currentShot, this.automation),
         describeForegroundElements(this.screen, this.automation)
       ]);
-      const traceLines = (Array.isArray(stepLog) ? stepLog : []).slice(-24).map((s) =>
-        `Step ${s.step} [${s.tool}] (${s.ok ? 'OK' : 'FAILED'}): ${s.description}${s.result && s.result.error ? ' · ERR: ' + String(s.result.error).slice(0, 120) : ''}`
-      ).join('\n');
+      const visualDiffPct = computeVisualDiffPct(initShot, currentShot);
+      const mutSteps = (Array.isArray(stepLog) ? stepLog : []).filter(isMutatingWorkStep);
+      const tstSteps = (Array.isArray(stepLog) ? stepLog : []).filter(isTestEvidenceStep);
+      const traceLines = (Array.isArray(stepLog) ? stepLog : []).slice(-26).map((s) => {
+        const tag = isTestEvidenceStep(s) ? 'TEST' : (isMutatingWorkStep(s) ? 'EDIT' : 'VIEW');
+        return `Step ${s.step} [${s.tool}/${tag}] (${s.ok ? 'OK' : 'FAILED'}): ${s.description}${s.result && s.result.error ? ' · ERR: ' + String(s.result.error).slice(0, 120) : ''}`;
+      }).join('\n');
+
+      const depthNote = (taskProfile && taskProfile.isDeepBuildTask && minWorkMs > 0 && elapsedMs < minWorkMs && qaPasses < 2)
+        ? `\nDEEP QUALITY CHECK (${formatWorkedTime(elapsedMs)} worked so far; target thorough build+test window is ${Math.round(minWorkMs / 60000)}–25m): Hunt carefully for ANYTHING missing, ugly, untested, static, or broken (missing UI buttons, un-animated frames, missing easing/lighting, Play-mode errors, collision/UX issues). If anything can be tested deeper or improved cleanly, return verified=false with exact next_fix!`
+        : '';
+
       const prompt = [
-        'You are Brief\'s Independent QA Verifier Agent. Decide whether the Executor actually completed, tested, and verified the user\'s request on the real machine.',
-        'STRICT RULES FOR APPROVAL:',
-        '1. Writing code or copy-pasting into a file/message WITHOUT actually putting/running/testing it in the requested app/Roblox/website is NOT done -> verified=false.',
-        '2. For Roblox Studio (elevator/obby/GUI/script): Parts/Scripts MUST exist inside Studio AND Play/Run test + Output must have been checked for zero errors -> otherwise verified=false.',
-        '3. For CapCut / editor tasks: the requested animation/clip/text/effect must visibly be applied in the timeline/preview and tested -> otherwise verified=false.',
-        '4. If a previous tool failed cleanly or nothing on screen reflects completion yet -> verified=false.',
-        'Reply ONLY with strict JSON: {"verified":true,"reason":"...","next_fix":""} or {"verified":false,"reason":"specific gap","next_fix":"exact actions/tests to finish now"}.',
+        'You are Brief\'s Independent QA Tester & Reviewer Agent. Compare the BEFORE vs AFTER desktop images, executed steps, and live OCR UI state strictly.',
+        'STRICT REJECTION RULES (return verified=false whenever ANY fails):',
+        '1. Screenshots, OCR reads, or focusing windows without actually building/editing what the user asked -> verified=false.',
+        '2. Writing or copying code/prompts into a file/message WITHOUT running, applying, or testing it live inside the real app -> verified=false.',
+        '3. Roblox Studio (elevator/obby/GUI/script): Parts, buttons, and scripts MUST visibly exist in Studio AND Play/Run (F5/F8) + Output MUST have been tested with zero errors -> otherwise verified=false.',
+        '4. Blender / CapCut / Higgsfield / Adobe (animation/3D/video): Objects/clips AND real multi-frame animation keyframes/effects MUST be applied AND timeline playback/scrubbing must have been visually tested across frames -> otherwise verified=false.',
+        '5. If UI/scene appears missing requested buttons, broken, clipped, static, or visually unchanged -> verified=false.',
+        depthNote,
+        'Reply ONLY with strict JSON: {"verified":true,"reason":"specific tested proof","next_fix":""} or {"verified":false,"reason":"specific missing or broken item","next_fix":"exact next actions & test to run now"}.',
         '',
         'USER REQUEST: ' + task,
-        planText ? ('PLAN CHECKLIST:\n' + planText) : '',
+        `METRICS: elapsed=${formatWorkedTime(elapsedMs)}, mutatingEdits=${mutSteps.length}, testRuns=${tstSteps.length}, visualScreenDiff=${visualDiffPct !== null ? (visualDiffPct + '%') : 'unknown'}, qaPass=${qaPasses}, auditMode=${deepPolishAudit ? 'deep_polish' : 'completion_check'}`,
+        planText ? ('SPECIALIST / SCOUT BRIEF:\n' + planText.slice(0, 1400)) : '',
         'EXECUTED STEPS:\n' + (traceLines || '(none)'),
-        'EXECUTOR CLAIMED: ' + (candidateAnswer || '(no summary)'),
+        'EXECUTOR SUMMARY: ' + (candidateAnswer || '(none)'),
         uiMap
       ].filter(Boolean).join('\n');
 
+      const vParts = [{ text: prompt }];
+      if (beforeVisionShot && beforeVisionShot.base64) {
+        vParts.push({ text: '[BEFORE screenshot at task start:]' });
+        vParts.push({ inlineData: { mimeType: beforeVisionShot.mime, data: beforeVisionShot.base64 } });
+      }
+      if (afterVisionShot && afterVisionShot.base64) {
+        vParts.push({ text: '[AFTER screenshot RIGHT NOW:]' });
+        vParts.push({ inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } });
+      }
+
       const vPayload = {
-        contents: [{
-          role: 'user',
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: visionShot.mime, data: visionShot.base64 } }
-          ]
-        }],
-        generationConfig: { maxOutputTokens: 320, temperature: 0.1 }
+        contents: [{ role: 'user', parts: vParts }],
+        generationConfig: { maxOutputTokens: 380, temperature: 0.1 }
       };
       const res = await this.gemini.generate(modelId, vPayload, { signal: this.abortController ? this.abortController.signal : undefined, retries: 1 });
       const cand = (res && res.candidates || [])[0];
@@ -708,21 +907,40 @@ class AgentRunner extends EventEmitter {
               next_fix: String(parsed.next_fix || '').trim()
             };
           }
-        } catch (_) { /* ignore malformed json */ }
+        } catch (_) { /* fall through to text pattern */ }
       }
       if (/\b(?:VERIFIED\s*:\s*NO|NOT\s+VERIFIED|verified["']?\s*:\s*false)\b/i.test(txt)) {
-        return { verified: false, reason: txt.slice(0, 180), next_fix: 'Inspect the current screen & output logs, complete all unfinished steps, test it live, then verify.' };
+        return { verified: false, reason: txt.slice(0, 180), next_fix: 'Inspect UI, complete unfinished parts, run live Play/Playback test, and re-verify.' };
+      }
+      if (/\bverified["']?\s*:\s*true\b/i.test(txt)) {
+        return { verified: true, reason: txt.slice(0, 180), next_fix: '' };
+      }
+      // Fail-closed when response was ambiguous and no in-app test ran yet
+      if (testCount === 0 && taskProfile && taskProfile.requiresAppTest) {
+        return {
+          verified: false,
+          reason: 'QA Verifier could not confirm live app test evidence yet.',
+          next_fix: 'Run an explicit live test (Play/Run in Roblox, Space/Play/timeline scrub in Blender/CapCut/Adobe, or test command) and inspect the resulting screen.'
+        };
       }
       return { verified: true, reason: txt.slice(0, 160), next_fix: '' };
-    } catch (_) {
-      return { verified: true };
+    } catch (err) {
+      // Fail-closed unless mutating & tested work has already been proven cleanly
+      if (mutatingCount === 0 || (taskProfile && taskProfile.requiresAppTest && testCount === 0)) {
+        return {
+          verified: false,
+          reason: 'QA verification could not verify live tested results (' + (err && err.message ? err.message : 'check error') + ').',
+          next_fix: 'Execute concrete build & live test checks in the target app and re-capture evidence.'
+        };
+      }
+      return { verified: false, reason: 'QA check interrupted (' + (err && err.message ? err.message : 'retry') + ') — re-verify current state before finishing.', next_fix: 'Take one quick inspection check and verify everything requested is present and working.' };
     }
   }
 
   /**
-   * Runs the full real multi-agent desktop pipeline (Strategist + Scout + Precision Executor + QA Verifier).
+   * Runs the full real multi-agent desktop pipeline (Strategist + Scout + Specialist + Precision Executor + QA Verifier).
    */
-  async runWork({ chatId, messages, task, attachments, webSearch, screenShare }) {
+  async runWork({ chatId, messages, task, attachments, webSearch, screenShare, _testMinWorkMs, _testMaxWorkMs }) {
     if (this.running) throw new Error('An agent task is already running. Press Stop first.');
     this.running = true;
     this.stopped = false;
@@ -730,8 +948,9 @@ class AgentRunner extends EventEmitter {
     this.screen.resetSession();
 
     const runId = ++this.runId;
+    const workStartMs = Date.now();
     const settings = this.getSettings();
-    const maxSteps = Math.max(1, Math.min(80, Number(settings.maxSteps) || 40));
+    const configuredMax = Math.max(1, Math.min(200, Number(settings.maxSteps) || 140));
     const agentModel = this.resolveModelForJob('agent');
     const fastModel = this.resolveModelForJob('fast');
     const screenModel = this.resolveModelForJob('screen');
@@ -739,9 +958,10 @@ class AgentRunner extends EventEmitter {
 
     if (!agentModel.id) {
       this.running = false;
-      throw new Error('No Gemini model is selected or available on this API key. Open Settings → API Key & Models.');
+      throw new Error('No AI model is selected or available on this API key. Open Settings → API Key & Models.');
     }
 
+    const roster = this.resolveTeamRoster();
     const userOriginPos = (this.automation && typeof this.automation.position === 'function')
       ? await this.automation.position().catch(() => null)
       : null;
@@ -752,17 +972,29 @@ class AgentRunner extends EventEmitter {
     const stepLog = [];
     let finalAnswer = '';
     let errorNote = null;
+    let maxSteps = configuredMax;
+
+    const elapsedNowLabel = () => formatWorkedTime(Date.now() - workStartMs);
 
     this.setStatus({
       running: true,
       state: 'observing',
       mode: 'work',
       model: agentModel.id,
+      crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+      elapsedMs: 0,
+      elapsedLabel: '0s',
       step: 0,
       maxSteps,
-      stepText: 'Scout Agent scanning screen & OCR text...'
+      stepText: `Multi-Agent Crew (${roster.distinctCount} model${roster.distinctCount === 1 ? '' : 's'}) opening workspace...`
     });
-    this.emitLog({ kind: 'task', status: 'started', model: agentModel.id, tool: 'work_start', detail: task });
+    this.emitLog({
+      kind: 'task',
+      status: 'started',
+      model: agentModel.id,
+      tool: 'work_start',
+      detail: `${task} [Crew: Exec=${roster.executor}, Scout=${roster.scout}, Specialist=${roster.specialist}, QA=${roster.qaTester}]`
+    });
 
     try {
       // Honor Third Eye shared window/display and tuck Brief away so the very first screenshot shows the real target app/tab, never Brief itself.
@@ -790,6 +1022,11 @@ class AgentRunner extends EventEmitter {
       const openWindows = (Array.isArray(rawWindows) ? rawWindows : []).filter((w) => !/^(?:brief(?:\s|$)|locally(?:\s|$))/i.test(String(w.title || '')) && !/^(?:locally|brief)$/i.test(String(w.process || '')));
       const openTabs = Array.isArray(rawTabs) ? rawTabs : [];
 
+      const taskProfile = detectDeepTaskProfile(task, openWindows, settings, { minWorkMs: _testMinWorkMs, maxWorkMs: _testMaxWorkMs });
+      if (taskProfile.isDeepBuildTask) {
+        maxSteps = Math.max(configuredMax, 140);
+      }
+
       const obsShotThumb = thumbOf(currentShotInit);
       this.emit('work-step', {
         runId,
@@ -798,11 +1035,12 @@ class AgentRunner extends EventEmitter {
           step: 0,
           toolCallId: 'observe-init',
           running: true,
-          model: agentModel.id,
+          model: roster.scout || agentModel.id,
+          agentRole: 'Scout Eyes',
           tool: 'observe_screen',
           description: screenShare && screenShare.enabled
             ? ('Third Eye looking at "' + (screenShare.name || 'screen') + '"…')
-            : 'Looking at your screen & finding the target tab/app…',
+            : `Crew (${roster.distinctCount} models) scanning desktop & launching Step 1 immediately…`,
           seenShot: obsShotThumb
         }
       });
@@ -815,7 +1053,7 @@ class AgentRunner extends EventEmitter {
       if (this.getSettings().showOverlay !== false) {
         try {
           const startMap = this.screen.mapPoint(520, 420, { scale: 1000 });
-          this.cursorEmitter({ kind: 'move', x: startMap.dip.x, y: startMap.dip.y, ms: 200, label: 'Working…' });
+          this.cursorEmitter({ kind: 'move', x: startMap.dip.x, y: startMap.dip.y, ms: 200, label: 'Crew starting…' });
           this.automation.move(startMap.native.x, startMap.native.y, 200).catch(() => {});
         } catch (_) { /* ignore */ }
       }
@@ -833,50 +1071,80 @@ class AgentRunner extends EventEmitter {
         describeForegroundElements(this.screen, this.automation)
       ]);
 
+      // PARALLEL MULTI-AGENT CREW: Instead of blocking Step 1 for 25s waiting on analysis, launch Specialist + Scout CONCURRENTLY
+      // while Executor immediately jumps into Step 1 actions!
       let planText = '';
-      if (settings.usePlanner && plannerModel.id && !/computer-use/i.test(plannerModel.id)) {
-        let planSecs = 0;
-        this.setStatus({ running: true, state: 'thinking', mode: 'work', model: plannerModel.id, step: 0, maxSteps, stepText: 'Planner Agent strategizing (' + plannerModel.id + ')...' });
-        const planTimer = setInterval(() => {
-          planSecs += 1;
-          if (!this.stopped) this.setStatus({ running: true, state: 'thinking', mode: 'work', model: plannerModel.id, step: 0, maxSteps, stepText: `Planner Agent (${planSecs}s) with ${plannerModel.id}...` });
-        }, 1000);
-        try {
-          const planPayload = {
-            contents: [{
-              role: 'user',
-              parts: [
-                {
-                  text: 'You are Brief\'s Strategist/Planner Agent. Look closely at the task, current desktop screenshot, and Scout OCR/UI map below.\n' +
-                    'Write a crisp, concrete execution & TEST plan (4-6 bullets) PLUS explicit VERIFICATION CRITERIA defining what MUST be visibly checked & tested before saying Done.\n' +
-                    '- If coding/app: must actually run/execute tests, NOT just write or copy code.\n' +
-                    '- If Roblox Studio: must build objects & ServerScript/LocalScript in Studio (via MCP or Command Bar), press Play/Run (F8/F5), and verify Output + motion.\n' +
-                    '- If CapCut / desktop UI: must locate buttons via `click_text`/OCR, apply real timeline/keyframe changes, and verify visually.\n\n' +
-                    'Task: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 10).map((w) => w.title).join(' | ') || 'none') +
-                    '\nConnected MCP: ' + ((this.mcpManager ? this.mcpManager.list().filter((x) => x.status === 'connected').map((s) => s.name).join(', ') : '') || 'none') +
-                    initUiMap
-                },
-                { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
-              ]
-            }],
-            generationConfig: { maxOutputTokens: 450, temperature: 0.2 }
-          };
-          const planTCfg = buildThinkingConfig(plannerModel.id, settings.thinkingLevel || 'medium', this.getModels());
-          if (planTCfg) planPayload.generationConfig.thinkingConfig = planTCfg;
-          const planRes = await this.gemini.generate(plannerModel.id, planPayload, { signal: this.abortController.signal, retries: 1 });
-          const pCand = (planRes.candidates || [])[0];
-          planText = ((pCand && pCand.content && pCand.content.parts) || []).map((p) => p.text || '').join('').trim();
-          if (planText) {
-            this.emitLog({ kind: 'plan', status: 'ok', model: plannerModel.id, tool: 'planner', detail: planText });
-            this.emit('work-plan', { runId, chatId, model: plannerModel.id, plan: planText });
-          }
-        } catch (planErr) {
-          if (this.stopped || planErr.kind === 'aborted') throw abortError();
-          this.emitLog({ kind: 'plan', status: 'warn', model: plannerModel.id, tool: 'planner', detail: 'Planner skipped: ' + planErr.message });
-        } finally {
-          clearInterval(planTimer);
-        }
-      }
+      let specialistInjected = false;
+      let scoutMidAuditPromise = null;
+      let scoutAuditNote = '';
+      const enableParallel = settings.multiAgentParallel !== false && typeof this.gemini.generate === 'function';
+
+      const specialistModelId = (roster.specialist && !/computer-use/i.test(roster.specialist)) ? roster.specialist : (plannerModel.id || agentModel.id);
+      const scoutModelId = (roster.scout && !/computer-use/i.test(roster.scout)) ? roster.scout : (fastModel.id || agentModel.id);
+
+      const concurrentCrewPromise = (enableParallel && settings.usePlanner !== false && specialistModelId)
+        ? Promise.allSettled([
+            this.gemini.generate(specialistModelId, {
+              contents: [{
+                role: 'user',
+                parts: [
+                  {
+                    text: 'You are Brief\'s Specialist Architect working IN PARALLEL alongside the Desktop Executor.\n' +
+                      'Do NOT stall with vague essays. Provide:\n' +
+                      '1) Concrete objects/scripts/keyframes/UI buttons needed so nothing is missing or ugly.\n' +
+                      '2) Exact app test steps required to prove it works (Roblox Studio: Play/Run F5/F8 + check Output; Blender/CapCut/Higgsfield/Adobe: multi-frame keyframes + Space/Play playback scrub verify; Code: run tests).\n' +
+                      'Task: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 8).map((w) => w.title).join(' | ') || 'none')
+                  },
+                  { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
+                ]
+              }],
+              generationConfig: { maxOutputTokens: 420, temperature: 0.2 }
+            }, { signal: this.abortController.signal, retries: 0 }),
+            (scoutModelId && scoutModelId !== specialistModelId)
+              ? this.gemini.generate(scoutModelId, {
+                  contents: [{
+                    role: 'user',
+                    parts: [
+                      {
+                        text: 'You are Brief\'s Fast Scout Agent. In 4 crisp bullets, list the exact visible UI controls/tabs/menus in the screenshot and OCR map that the Executor should click or watch out for.\nTask: ' + task + '\n' + initUiMap
+                      },
+                      { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
+                    ]
+                  }],
+                  generationConfig: { maxOutputTokens: 220, temperature: 0.1 }
+                }, { signal: this.abortController.signal, retries: 0 })
+              : Promise.resolve(null)
+          ]).then((settled) => {
+            const chunks = [];
+            const specRes = settled[0] && settled[0].status === 'fulfilled' ? settled[0].value : null;
+            const sCand = specRes && (specRes.candidates || [])[0];
+            const specTxt = ((sCand && sCand.content && sCand.content.parts) || []).map((p) => p.text || '').join('').trim();
+            if (specTxt) chunks.push(`[Specialist (${specialistModelId}) Blueprint]\n${specTxt}`);
+
+            const scoutRes = settled[1] && settled[1].status === 'fulfilled' ? settled[1].value : null;
+            const scCand = scoutRes && (scoutRes.candidates || [])[0];
+            const scTxt = ((scCand && scCand.content && scCand.content.parts) || []).map((p) => p.text || '').join('').trim();
+            if (scTxt) chunks.push(`[Scout (${scoutModelId}) UI Map]\n${scTxt}`);
+
+            planText = chunks.join('\n\n');
+            if (planText) {
+              this.emitLog({ kind: 'plan', status: 'ok', model: specialistModelId, tool: 'parallel_crew', detail: planText });
+              this.emit('work-plan', { runId, chatId, model: specialistModelId, plan: planText });
+            }
+            return planText;
+          }).catch(() => '')
+        : Promise.resolve('');
+
+      // Emit crew announcement immediately so user sees all agents working without waiting
+      this.emit('work-plan', {
+        runId,
+        chatId,
+        model: agentModel.id,
+        plan: `Parallel Crew Launched — Executor: ${roster.executor} · Scout: ${roster.scout} · Specialist: ${roster.specialist} · QA Tester: ${roster.qaTester}` +
+          (taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0
+            ? `\nDeep Studio Mode active (target ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m build, live testing & polish).`
+            : '')
+      });
 
       const webSearchBlock = (Array.isArray(initialWebHits) && initialWebHits.length)
         ? '\n\n[Live Web Search Results — use these facts accurately and stay strictly on the user\'s exact topic]:\n' +
@@ -888,12 +1156,14 @@ class AgentRunner extends EventEmitter {
         ? '\n\n[LONG-PRESS / HOLD INSTRUCTION: The user explicitly wants a LONG PRESS / HOLD. Call `click({ x, y, hold_ms: 2500 })` or `mouse_button({ action: "long_press", x, y, duration_ms: 2500 })` or `click_element({ query, hold_ms: 2500 })` for mouse hold, or `hold_key({ key, action: "long_press", duration_ms: 2500 })` for keyboard hold — NEVER do a short quick tap!]'
         : '';
 
+      const urgencyDirective = '\n\n[EXECUTION DIRECTIVE: Act IMMEDIATELY on Step 1 — DO NOT pause to summarize screenshots. Taking screenshots without building, typing, scripting, keyframing, and testing inside the target app is strictly rejected by QA Verifier.]';
+
       const initialParts = [
         {
           text: task +
+            urgencyDirective +
             longPressHint +
             webSearchBlock +
-            (planText ? '\n\n[Suggested Plan]\n' + planText : '') +
             initUiMap +
             '\n\n[Initial real desktop screenshot with 0..1000 coordinate grid attached below.]'
         },
@@ -948,49 +1218,91 @@ class AgentRunner extends EventEmitter {
       const recentClicks = [];
       const failedModels = new Set();
       let activeStepModel = agentModel.id;
-      let zeroActionNudges = 0;
+      let zeroWorkRejections = 0;
+      let untestedRejections = 0;
       let fallbackSwitches = 0;
       let verifyRejections = 0;
+      let deepPolishRejections = 0;
+      let qaPasses = 0;
       let forceToolNextTurn = false;
       let mouseButtonHeld = false;
       let didHoldAction = false;
 
       for (let step = 1; step <= maxSteps; step++) {
         if (this.stopped) throw abortError();
+        if (Date.now() - workStartMs >= taskProfile.maxWorkMs) {
+          this.emit('work-note', {
+            runId,
+            chatId,
+            step,
+            text: `⏱️ Reached max ${Math.round(taskProfile.maxWorkMs / 60000)}m time window (${elapsedNowLabel()} worked). Finalizing verified summary…`
+          });
+          break;
+        }
+
+        // Inject finished parallel Specialist + Scout notes on Step 2+ without ever blocking Step 1
+        if (!specialistInjected && step >= 2) {
+          const crewNote = await Promise.race([concurrentCrewPromise, sleep(150).then(() => '')]);
+          if (crewNote) {
+            specialistInjected = true;
+            contents.push({
+              role: 'user',
+              parts: [{ text: '[Parallel Multi-Agent Crew Guidance Ready — follow these concrete implementation & testing requirements:]\n' + crewNote }]
+            });
+          }
+        }
+        if (scoutAuditNote) {
+          const noteToInject = scoutAuditNote;
+          scoutAuditNote = '';
+          contents.push({ role: 'user', parts: [{ text: noteToInject }] });
+        }
+
+        const curElapsed = elapsedNowLabel();
         this.setStatus({
           running: true,
           state: 'thinking',
           mode: 'work',
           model: activeStepModel,
+          crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+          elapsedMs: Date.now() - workStartMs,
+          elapsedLabel: curElapsed,
+          mutatingCount: stepLog.filter(isMutatingWorkStep).length,
+          testCount: stepLog.filter(isTestEvidenceStep).length,
           step,
           maxSteps,
-          stepText: `Step ${step}/${maxSteps} · Thinking with ${activeStepModel}...`
+          stepText: `⏱ ${curElapsed} · Step ${step}/${maxSteps} · Executor working (${activeStepModel})...`
         });
 
         let json;
         let streamedAnyThought = false;
         let waitSecs = 0;
-        let streamPhase = 'Thinking & Analyzing';
+        let streamPhase = 'Working';
         let streamBytes = 0;
         const waitTicker = setInterval(() => {
           waitSecs += 1;
           if (!this.stopped) {
+            const elapsedStr = elapsedNowLabel();
             const extra = streamBytes > 0 ? ` · ${(streamBytes / 1024).toFixed(1)} KB` : '';
             this.setStatus({
               running: true,
               state: 'thinking',
               mode: 'work',
               model: activeStepModel,
+              crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+              elapsedMs: Date.now() - workStartMs,
+              elapsedLabel: elapsedStr,
+              mutatingCount: stepLog.filter(isMutatingWorkStep).length,
+              testCount: stepLog.filter(isTestEvidenceStep).length,
               step,
               maxSteps,
-              stepText: `Step ${step}/${maxSteps} · ${streamPhase} (${waitSecs}s${extra}) with ${activeStepModel}...`
+              stepText: `⏱ ${elapsedStr} · Step ${step}/${maxSteps} · ${streamPhase} (${waitSecs}s${extra}) with ${activeStepModel}...`
             });
             if (waitSecs % 2 === 1 && !mouseButtonHeld && this.getSettings().showOverlay !== false) {
               try {
                 const { screen: elecScreen } = (process.versions && process.versions.electron) ? require('electron') : {};
                 if (elecScreen && typeof elecScreen.getCursorScreenPoint === 'function') {
                   const pt = elecScreen.getCursorScreenPoint();
-                  this.cursorEmitter({ kind: 'layer-only', x: pt.x, y: pt.y, label: `Step ${step} · ${streamPhase}` });
+                  this.cursorEmitter({ kind: 'layer-only', x: pt.x, y: pt.y, label: `⏱ ${elapsedStr} · Step ${step}` });
                 }
               } catch (_) { /* ignore */ }
             }
@@ -1106,43 +1418,84 @@ class AgentRunner extends EventEmitter {
         }
 
         if (!calls.length) {
+          const mutStepsNow = stepLog.filter(isMutatingWorkStep);
+          const tstStepsNow = stepLog.filter(isTestEvidenceStep);
+          const elapsedNow = Date.now() - workStartMs;
+          const withinMaxTime = elapsedNow < taskProfile.maxWorkMs;
           const missingHold = wantsLongPress && !didHoldAction;
-          if ((stepLog.length === 0 || missingHold) && zeroActionNudges < 2 && step < maxSteps) {
-            zeroActionNudges += 1;
+
+          // Gate 1: Reject photo-only / zero real action attempts deterministically
+          if ((mutStepsNow.length === 0 || missingHold) && zeroWorkRejections < 5 && step < maxSteps && withinMaxTime) {
+            zeroWorkRejections += 1;
             forceToolNextTurn = !usingDirectCu;
             if (visibleText) this.emit('work-note', { runId, chatId, step, text: visibleText });
+            this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'action_gate', detail: missingHold ? 'Rejected: no hold/long-press performed' : `Rejected: ${stepLog.length} passive step(s), 0 real edits performed` });
             contents.push({
               role: 'user',
               parts: [{ text: missingHold
-                ? 'You have NOT executed a long-press or hold action yet! Do NOT finish with a quick tap — call `mouse_button({ action: "long_press", x, y, duration_ms: 2500 })`, `click({ x, y, hold_ms: 2500 })`, `click_element({ query, hold_ms: 2500 })`, or `hold_key({ key, action: "long_press", duration_ms: 2500 })` right now.'
-                : 'You responded with text only and took ZERO desktop/file/tool actions. Do NOT just describe what you plan to do — call a real tool right now (such as open_app, click_text, click, write_file, list_directory, or run_command) to actually carry out the task on the computer.' }]
+                ? 'REJECTED: You have NOT executed a long-press or hold action yet! Call `mouse_button({ action: "long_press", x, y, duration_ms: 2500 })`, `click({ x, y, hold_ms: 2500 })`, `click_element({ query, hold_ms: 2500 })`, or `hold_key({ key, action: "long_press", duration_ms: 2500 })` right now.'
+                : `[REJECTED BY QA GATE — Time Worked: ${formatWorkedTime(elapsedNow)}]\nYou only looked / took screenshots / focused windows (${stepLog.length} passive action(s), ZERO real edits/builds!). Stop just taking photos and explaining what you see. Call real mutating tools NOW (\`click_text\`, \`click\`, \`type_text\`, \`drag\`, \`press_keys\`, \`write_file\`, \`run_command\`, or \`mcp__\`) to actually create, animate, or fix the work inside the app!` }]
             });
             continue;
           }
-          // QA Verifier Agent gate: reject premature "Done" claims unless the real screen/logs/tests prove it works!
-          if (!usingDirectCu && verifyRejections < 3 && step < maxSteps && stepLog.length >= 1 && settings.verifyTaskBeforeFinish !== false) {
+
+          // Gate 2: Require live app / animation / Play / command testing before completion on build tasks
+          if (taskProfile.requiresAppTest && tstStepsNow.length === 0 && untestedRejections < 4 && step < maxSteps && withinMaxTime) {
+            untestedRejections += 1;
+            forceToolNextTurn = !usingDirectCu;
+            const testDirective = taskProfile.isRoblox
+              ? 'You MUST test inside Roblox Studio right now: ensure **Output** is open (`View -> Output`), run **Play / Run (`F5` or `F8`)**, test your buttons/doors/scripts live, inspect Output with `read_screen_text` for zero red errors, and fix any missing/broken parts!'
+              : taskProfile.isAnimationOrCreative
+                ? 'You MUST test your animation/scene live right now: check keyframes across multiple timeline frames (`I`/Keyframes), press **Space / Play** or `drag` the timeline playhead across start/mid/end frames, take screenshots during playback to verify motion, and fix any static or missing UI/visual elements!'
+                : 'You MUST execute a real test command (`run_command`) or run/interact with the app live and inspect output screenshots to prove it actually works with zero errors!';
+            this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'test_gate', detail: 'Rejected premature Done without in-app live testing' });
+            this.emit('work-note', { runId, chatId, step, text: '🛡️ Blocked premature completion: no live Play/Test run verified yet. Testing the work now…' });
+            contents.push({
+              role: 'user',
+              parts: [{ text: `[REJECTED — NO LIVE TEST RUN VERIFIED YET (${formatWorkedTime(elapsedNow)} worked)]\n` + testDirective }]
+            });
+            continue;
+          }
+
+          // Gate 3 & 4: Fail-Closed Independent QA Verifier Agent comparing BEFORE vs AFTER + Deep Polish Check
+          const needsMoreDepth = taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0 && elapsedNow < taskProfile.minWorkMs && deepPolishRejections < 8 && step < maxSteps - 1 && withinMaxTime;
+          if (!usingDirectCu && (verifyRejections < 8 || needsMoreDepth) && step < maxSteps && withinMaxTime && settings.verifyTaskBeforeFinish !== false) {
+            const qaModelId = roster.qaTester || plannerModel.id || activeStepModel;
             this.setStatus({
               running: true,
               state: 'thinking',
               mode: 'work',
-              model: activeStepModel,
+              model: qaModelId,
+              crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+              elapsedMs: elapsedNow,
+              elapsedLabel: formatWorkedTime(elapsedNow),
               step,
               maxSteps,
-              stepText: 'QA Verifier Agent testing & verifying real work...'
+              stepText: `⏱ ${formatWorkedTime(elapsedNow)} · QA Tester (${qaModelId}) verifying live changes & missing UI...`
             });
             const verdict = await this.runTaskVerifierAgent({
               task,
+              taskProfile,
               planText,
               stepLog,
-              candidateAnswer: visibleText,
+              mutatingCount: mutStepsNow.length,
+              testCount: tstStepsNow.length,
+              elapsedMs: elapsedNow,
+              minWorkMs: taskProfile.minWorkMs,
+              qaPasses,
+              initShot: currentShotInit,
               currentShot,
-              modelId: plannerModel.id || activeStepModel
+              candidateAnswer: visibleText,
+              modelId: qaModelId,
+              deepPolishAudit: needsMoreDepth
             });
+
             if (verdict && verdict.verified === false) {
               verifyRejections += 1;
+              if (needsMoreDepth) deepPolishRejections += 1;
               forceToolNextTurn = true;
-              const rejectMsg = '🛡️ QA Verifier Agent caught incomplete work: ' + (verdict.reason || 'Requirements not verified working yet.') + ' Continuing work & testing…';
-              this.emitLog({ kind: 'verify', status: 'warn', model: plannerModel.id || activeStepModel, tool: 'qa_verifier', detail: verdict.reason || 'Rejected incomplete completion' });
+              const rejectMsg = `🛡️ QA Tester (${qaModelId}) found gaps after ${formatWorkedTime(elapsedNow)}: ${verdict.reason || 'Work incomplete or missing verification.'} Fixing & testing now…`;
+              this.emitLog({ kind: 'verify', status: 'warn', model: qaModelId, tool: 'qa_verifier', detail: verdict.reason || 'Rejected incomplete completion' });
               this.emit('work-note', { runId, chatId, step, text: rejectMsg });
               const [verifyVisionShot, verifyUiMap] = await Promise.all([
                 shotForVision(currentShot, this.automation),
@@ -1152,9 +1505,9 @@ class AgentRunner extends EventEmitter {
                 role: 'user',
                 parts: [
                   {
-                    text: '[QA Verifier Agent REJECTED your completion claim — DO NOT say it is ready yet!]\n' +
-                      'Reason: ' + (verdict.reason || 'Not yet verified working.') + '\n' +
-                      'Required next actions/tests: ' + (verdict.next_fix || 'Complete the remaining steps, run/play/test inside the real target app, and verify visually before finishing.') +
+                    text: `[QA Verifier (${qaModelId}) REJECTED completion — Time Worked: ${formatWorkedTime(elapsedNow)}]\n` +
+                      'Issue found: ' + (verdict.reason || 'Not yet thoroughly built, animated, or tested.') + '\n' +
+                      'Required fixes & tests NOW: ' + (verdict.next_fix || 'Fix missing UI/objects/keyframes/scripts, test Play/Playback live again, and inspect the result.') +
                       verifyUiMap
                   },
                   { inlineData: { mimeType: verifyVisionShot.mime, data: verifyVisionShot.base64 } }
@@ -1162,11 +1515,26 @@ class AgentRunner extends EventEmitter {
               });
               continue;
             }
+
+            qaPasses += 1;
+            if (needsMoreDepth && qaPasses < 2) {
+              deepPolishRejections += 1;
+              forceToolNextTurn = true;
+              const polishMsg = `🔍 Deep Studio Review (${formatWorkedTime(elapsedNow)} worked): First test pass succeeded — checking missing details, UI edge cases, visual polish & running second QA pass…`;
+              this.emitLog({ kind: 'verify', status: 'ok', model: qaModelId, tool: 'deep_polish', detail: polishMsg });
+              this.emit('work-note', { runId, chatId, step, text: polishMsg });
+              contents.push({
+                role: 'user',
+                parts: [{ text: `[DEEP POLISH & SECOND QA PASS REQUIRED — Worked ${formatWorkedTime(elapsedNow)} / target ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m]\nDo NOT stop after just one quick check! Inspect every detail of the scene/app carefully (all buttons, UI responsiveness, animations/keyframes/easing, lighting/geometry, error handling, edge cases), upgrade anything rough or missing, and run another full live Play/Playback test.` }]
+              });
+              continue;
+            }
+
             if (verdict && verdict.reason) {
-              this.emitLog({ kind: 'verify', status: 'ok', model: plannerModel.id || activeStepModel, tool: 'qa_verifier', detail: verdict.reason });
+              this.emitLog({ kind: 'verify', status: 'ok', model: qaModelId, tool: 'qa_verifier', detail: verdict.reason });
             }
           }
-          finalAnswer = visibleText || 'Task completed.';
+          finalAnswer = visibleText || 'Task completed and verified.';
           break;
         }
 
@@ -1409,13 +1777,17 @@ class AgentRunner extends EventEmitter {
           }
         }
 
-        // Attach the fresh gridded screenshot + any zoomed region close-ups + OCR/UI element map
+        // Attach the fresh gridded screenshot + OCR map + live timer & schedule non-blocking Scout mid-run audit every 5 edits
         if (!usingDirectCu) {
           const [afterVisionShot, afterUiMap] = await Promise.all([
             shotForVision(currentShot, this.automation),
             describeForegroundElements(this.screen, this.automation)
           ]);
-          responseParts.push({ text: `[Fresh desktop screenshot after step ${step} (with 0..1000 coordinate grid). Verify whether the action worked.]` + afterUiMap });
+          const mutNow = stepLog.filter(isMutatingWorkStep).length;
+          const tstNow = stepLog.filter(isTestEvidenceStep).length;
+          const timeNow = elapsedNowLabel();
+          const metricsLine = `\n[Time Worked: ${timeNow} | Real Edits: ${mutNow} | Tests Verified: ${tstNow}${taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0 ? ` | Deep Studio Target: ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m` : ''}]`;
+          responseParts.push({ text: `[Fresh desktop screenshot after step ${step} (with 0..1000 coordinate grid). Verify visually.]` + metricsLine + afterUiMap });
           responseParts.push({ inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } });
           for (const ex of extraVisionImages.slice(-2)) {
             if (ex && ex.image && ex.image.base64) {
@@ -1423,39 +1795,86 @@ class AgentRunner extends EventEmitter {
               responseParts.push({ inlineData: { mimeType: ex.image.mime || 'image/png', data: ex.image.base64 } });
             }
           }
+          if (enableParallel && mutNow > 0 && mutNow % 5 === 0 && !scoutMidAuditPromise && scoutModelId) {
+            scoutMidAuditPromise = this.gemini.generate(scoutModelId, {
+              contents: [{
+                role: 'user',
+                parts: [
+                  { text: `You are Scout Agent auditing progress mid-run after ${mutNow} edits (${timeNow}). List any missing buttons/objects, red errors, static un-animated items, or next test to run cleanly in 2-3 short lines.\nGoal: ${task}\n${afterUiMap}` },
+                  { inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } }
+                ]
+              }],
+              generationConfig: { maxOutputTokens: 160, temperature: 0.1 }
+            }, { signal: this.abortController.signal, retries: 0 }).then((r) => {
+              const c = (r && r.candidates || [])[0];
+              const txt = ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
+              if (txt) {
+                scoutAuditNote = `[Scout (${scoutModelId}) Mid-Run Audit @ ${timeNow}]:\n${txt}`;
+                this.emitLog({ kind: 'verify', status: 'ok', model: scoutModelId, tool: 'scout_audit', detail: txt });
+              }
+            }).catch(() => {}).finally(() => { scoutMidAuditPromise = null; });
+          }
         }
         contents.push({ role: 'user', parts: responseParts });
       }
 
+      const finalElapsedMs = Date.now() - workStartMs;
+      const finalElapsedLabel = formatWorkedTime(finalElapsedMs);
+      const finalMutCount = stepLog.filter(isMutatingWorkStep).length;
+      const finalTestCount = stepLog.filter(isTestEvidenceStep).length;
+      const usedCrewModels = [...new Set([roster.executor, roster.scout, roster.specialist, roster.qaTester, activeStepModel].filter(Boolean))];
+
       if (!finalAnswer) {
-        // Optional fast-model final summary if max steps reached without a concluding message
         const summarizer = fastModel.id || activeStepModel;
-        this.setStatus({ running: true, state: 'thinking', model: summarizer, stepText: 'Summarizing results...' });
+        this.setStatus({ running: true, state: 'thinking', model: summarizer, elapsedMs: finalElapsedMs, elapsedLabel: finalElapsedLabel, stepText: `⏱ ${finalElapsedLabel} · Summarizing verified results...` });
         const sumRes = await this.gemini.generate(summarizer, {
           contents: [
             ...pruneHistoryScreenshots(contents, 1),
-            { role: 'user', parts: [{ text: 'Reached the step limit. Summarize clearly and honestly what you completed, what you found, and anything still remaining.' }] }
+            { role: 'user', parts: [{ text: `Worked for ${finalElapsedLabel} (${stepLog.length} total actions, ${finalMutCount} real edits, ${finalTestCount} live test steps). Summarize clearly and honestly what you built, what you tested & verified working, and anything remaining.` }] }
           ]
         }, { signal: this.abortController.signal, retries: 1 }).catch(() => null);
         const sCand = sumRes && (sumRes.candidates || [])[0];
         finalAnswer = (sCand && sCand.content && sCand.content.parts.map((x) => x.text || '').join('\n').trim()) ||
-          `Stopped after ${maxSteps} steps.`;
+          `Completed session after ${finalElapsedLabel} (${finalMutCount} edits, ${finalTestCount} verified test actions).`;
+      }
+
+      const reportBanner = `\n\n---\n⏱️ **Time Worked:** ${finalElapsedLabel} · **Real Edits:** ${finalMutCount} · **Tests Run:** ${finalTestCount} · **Crew:** ${usedCrewModels.join(', ')}`;
+      if (!finalAnswer.includes('Time Worked:')) {
+        finalAnswer = finalAnswer.trim() + reportBanner;
       }
 
       this.cursorEmitter({ kind: 'hide' });
-      this.emitLog({ kind: 'task', status: 'ok', model: activeStepModel, tool: 'work_done', detail: `Finished in ${stepLog.length} step(s)` });
-      this.setStatus({ running: false, state: 'idle', step: 0, stepText: 'Ready' });
-      return { text: finalAnswer, steps: stepLog, model: activeStepModel };
+      this.emitLog({ kind: 'task', status: 'ok', model: activeStepModel, tool: 'work_done', detail: `Finished in ${finalElapsedLabel} (${stepLog.length} step(s), ${finalMutCount} edits, ${finalTestCount} tests)` });
+      this.setStatus({ running: false, state: 'idle', elapsedMs: finalElapsedMs, elapsedLabel: finalElapsedLabel, step: 0, stepText: 'Ready' });
+      return {
+        text: finalAnswer,
+        steps: stepLog,
+        elapsedMs: finalElapsedMs,
+        elapsedLabel: finalElapsedLabel,
+        mutatingCount: finalMutCount,
+        testCount: finalTestCount,
+        crew: usedCrewModels,
+        model: activeStepModel
+      };
     } catch (e) {
+      const stopElapsedMs = Date.now() - workStartMs;
+      const stopElapsedLabel = formatWorkedTime(stopElapsedMs);
       this.cursorEmitter({ kind: 'hide' });
       if (this.stopped || e.kind === 'aborted' || e.name === 'AbortError') {
-        this.emitLog({ kind: 'task', status: 'stopped', model: agentModel.id, tool: 'work_stop', detail: 'Stopped by user after ' + stepLog.length + ' step(s).' });
-        this.setStatus({ running: false, state: 'stopped', stepText: 'Stopped by user' });
-        return { text: 'Task stopped by user after ' + stepLog.length + ' step(s).', steps: stepLog, stopped: true, model: agentModel.id };
+        this.emitLog({ kind: 'task', status: 'stopped', model: agentModel.id, tool: 'work_stop', detail: `Stopped by user after ${stopElapsedLabel} (${stepLog.length} step(s)).` });
+        this.setStatus({ running: false, state: 'stopped', elapsedMs: stopElapsedMs, elapsedLabel: stopElapsedLabel, stepText: 'Stopped by user' });
+        return {
+          text: `Task stopped by user after **${stopElapsedLabel}** (${stepLog.length} step(s)).`,
+          steps: stepLog,
+          elapsedMs: stopElapsedMs,
+          elapsedLabel: stopElapsedLabel,
+          stopped: true,
+          model: agentModel.id
+        };
       }
       errorNote = e.message;
       this.emitLog({ kind: 'task', status: 'error', model: agentModel.id, tool: 'work_error', detail: e.message });
-      this.setStatus({ running: false, state: 'error', stepText: e.message });
+      this.setStatus({ running: false, state: 'error', elapsedMs: stopElapsedMs, elapsedLabel: stopElapsedLabel, stepText: e.message });
       throw e;
     } finally {
       this.running = false;
@@ -1471,4 +1890,10 @@ class AgentRunner extends EventEmitter {
   }
 }
 
-module.exports = { AgentRunner };
+module.exports = {
+  AgentRunner,
+  formatWorkedTime,
+  isMutatingWorkStep,
+  isTestEvidenceStep,
+  detectDeepTaskProfile
+};

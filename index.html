@@ -133,7 +133,7 @@
       width: 100%;
       height: 3px;
       z-index: 120;
-      background: transparent;
+      background: var(--bg-deep);
       pointer-events: none;
     }
 
@@ -143,6 +143,7 @@
       background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-violet));
       box-shadow: 0 0 14px var(--accent-blue-glow);
       transition: width 0.08s linear;
+      border: 2px solid var(--bg-deep);
     }
 
     .ambient-backdrop {
@@ -720,6 +721,8 @@
     .meta-badge-item strong {
       color: var(--text-primary);
       font-weight: 600;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .hash-copy-btn {
@@ -1310,7 +1313,6 @@
 
     .pipeline-badge {
       display: inline-flex;
-      align-items: center;
       gap: 6px;
       width: fit-content;
       padding: 4px 10px;
@@ -1395,6 +1397,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      margin-bottom: 24px;
     }
 
     .provider-switch-card {
@@ -1429,6 +1432,7 @@
       padding: 8px;
       flex-shrink: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
     }
@@ -1449,6 +1453,8 @@
       justify-content: space-between;
       transition: border-color 0.35s ease, box-shadow 0.35s ease;
       box-shadow: 0 0 42px rgba(59, 130, 246, 0.2);
+      justify-content: center;
+      margin: 14px 0;
     }
 
     .provider-preview-stage[data-theme="openai"] {
@@ -1481,6 +1487,8 @@
       background: rgba(255, 255, 255, 0.035);
       border: 1px solid var(--border-subtle);
       display: flex;
+      flex-direction: column;
+      gap: 12px;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
@@ -1727,6 +1735,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .spec-row {
@@ -1841,6 +1850,7 @@
       font-size: 14px;
       color: var(--text-secondary);
       line-height: 1.65;
+      padding: 28px;
     }
 
     .faq-item.is-open .faq-answer {
@@ -2019,7 +2029,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
@@ -2175,7 +2185,7 @@
           <img src="assets/icon.png" alt="Brief Icon">
         </span>
         <span>Brief</span>
-        <span class="nav-version-chip" id="nav-version-chip">v1.0.0</span>
+        <span class="nav-version-chip" id="nav-version-chip">v1.0.1</span>
       </a>
 
       <nav class="nav-links" aria-label="Main navigation">
@@ -2250,7 +2260,7 @@
           </div>
 
           <div class="hero-meta-bar">
-            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.0</strong></span>
+            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.1</strong></span>
             <span class="meta-badge-item">Architecture <strong>x64 Windows</strong></span>
             <span class="meta-badge-item">Source <strong id="hero-source-mode">GitHub Releases</strong></span>
             <button class="hash-copy-btn" id="hero-copy-sha-btn" type="button" title="Copy SHA-256 Digest">
@@ -2345,8 +2355,8 @@
             <div class="fact-stat-label">Planner · Scout OCR · Executor · QA Loop</div>
           </div>
           <div class="fact-stat-card" data-reveal data-reveal-delay="2">
-            <div class="fact-stat-value">60<span> Steps</span></div>
-            <div class="fact-stat-label">Default Multi-Step Verification Budget</div>
+            <div class="fact-stat-value">140<span> Steps</span></div>
+            <div class="fact-stat-label">10–25m Deep Studio Build, Test &amp; QA Budget</div>
           </div>
           <div class="fact-stat-card" data-reveal data-reveal-delay="3">
             <div class="fact-stat-value">4K<span> Grid</span></div>
@@ -2670,6 +2680,7 @@
                 </div>
                 <span class="pipeline-badge badge-blue" id="prov-stage-border-label">Blue Control Overlay</span>
               </div>
+            </div>
 
               <p id="prov-stage-summary" style="margin-top: 14px; font-size: 14px; color: var(--text-secondary);">
                 Direct Gemini API streaming with automatic <code>thought_signature</code> recovery, Computer-Use coordinate normalization, and thinking level controls (Low, Medium, High).
@@ -3032,6 +3043,9 @@ Local MCP Bridge:
               Electron renders only Brief's chat and dashboard window. All actual screen vision, OCR, window management, mouse motion, drags, scrolling, and key presses execute in Brief's Node main process and its persistent Win32 native PowerShell input host (<code>winput.ps1</code>) calling Windows <code>user32.dll</code> <code>SendInput</code> and <code>Windows.Media.Ocr</code> directly at native OS speed.
             </div>
           </div>
+        </div>
+      </div>
+    </section>
 
           <div class="faq-item">
             <button class="faq-trigger" type="button" aria-expanded="false">
@@ -3095,6 +3109,7 @@ Local MCP Bridge:
         </div>
       </div>
     </section>
+            </button>
 
     <!-- =====================================================================
          CURSOR MOTION PROFILES & CONTROL SHORTCUTS LAB
@@ -3108,6 +3123,7 @@ Local MCP Bridge:
             Test Brief's real cursor speed profiles below. After clicking or dragging a UI control, <code>alignCursorBack</code> smoothly returns your pointer or keeps handoffs predictable.
           </p>
         </div>
+            </button>
 
         <div class="motion-lab-grid" data-reveal>
           <div class="spec-table-card">
@@ -3121,6 +3137,7 @@ Local MCP Bridge:
                 <path d="M4 3 L24 12 L14 15 L11 25 Z" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
               </svg>
             </div>
+            </button>
 
             <div class="motion-controls-row">
               <div class="motion-speed-pills" role="group" aria-label="Select cursor speed profile">
@@ -3135,6 +3152,8 @@ Local MCP Bridge:
               Profile: adaptive · smooth curved trajectory + alignCursorBack enabled
             </div>
           </div>
+            </button>
+          </div>
 
           <div class="shortcut-cards-col">
             <div class="shortcut-item-card">
@@ -3143,7 +3162,6 @@ Local MCP Bridge:
                 <div style="font-size: 13px; color: var(--text-secondary);">Immediately aborts all running desktop automation anywhere in Windows.</div>
               </div>
               <span class="kbd-pill">Ctrl + Alt + Q</span>
-            </div>
 
             <div class="shortcut-item-card">
               <div>
@@ -3199,6 +3217,11 @@ Local MCP Bridge:
                 <span class="btn-dl-sub" style="color: var(--text-muted);">Checksums, source zip &amp; build logs</span>
               </span>
             </a>
+          </div>
+
+          <div class="tool-search-wrap">
+            <span class="tool-search-icon" aria-hidden="true">🔍</span>
+            <input class="tool-search-input" id="tool-search-input" type="search" placeholder="Filter 45 tools (e.g. ocr, art, hold, edit)..." aria-label="Search Brief tools">
           </div>
         </div>
       </div>
@@ -4649,14 +4672,14 @@ Local MCP Bridge:
 
               const rawDigest = exeAsset && exeAsset.digest ? String(exeAsset.digest).replace(/^sha256:/i, '') : '';
               applyReleaseMetrics({
-                version: release.tag_name || '1.0.0',
+                version: release.tag_name || '1.0.1',
                 exeBytes: exeAsset ? exeAsset.size : 0,
                 zipBytes: zipAsset ? zipAsset.size : 0,
                 exeSha: rawDigest
               });
             })
             .catch(function () {
-              applyReleaseMetrics({ version: '1.0.0' });
+              applyReleaseMetrics({ version: '1.0.1' });
             });
         }
 
@@ -4678,7 +4701,7 @@ Local MCP Bridge:
               }
               applyDownloadTargets('/download/Brief-Setup.exe', '/download/brief-package.zip', 'Local Download Server');
               applyReleaseMetrics({
-                version: info.version || '1.0.0',
+                version: info.version || '1.0.1',
                 exeBytes: info.installer.size,
                 zipBytes: info.archive && info.archive.exists ? info.archive.size : 0,
                 exeSha: info.installer.sha256 || ''

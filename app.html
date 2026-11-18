@@ -4776,8 +4776,19 @@
 
               <div class="toggle-row">
                 <div>
-                  <div style="font-weight: 700;">Run Pre-Task Planner Step</div>
-                  <div class="field-hint">Uses your assigned planner model to outline steps before starting complex tasks.</div>
+                  <div style="font-weight: 700;">Parallel Multi-Agent Crew (Recommended)</div>
+                  <div class="field-hint">Launches Scout, Specialist, Executor, and QA Tester models concurrently so other models work alongside you instead of waiting idle.</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="opt-multi-agent">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div>
+                  <div style="font-weight: 700;">Run Pre-Task Specialist Blueprint</div>
+                  <div class="field-hint">Drafts Roblox/Blender/CapCut/Code implementation &amp; test checklists cleanly in parallel while Step 1 opens the app immediately.</div>
                 </div>
                 <label class="toggle-switch">
                   <input type="checkbox" id="opt-use-planner">
@@ -4823,7 +4834,15 @@
               <div class="role-grid">
                 <div class="field-group">
                   <label class="field-label" for="opt-max-steps">Max Steps per Task</label>
-                  <input class="text-input mono" id="opt-max-steps" type="number" min="5" max="100">
+                  <input class="text-input mono" id="opt-max-steps" type="number" min="5" max="200">
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="opt-deep-min-mins">Deep Studio Min Work (min)</label>
+                  <input class="text-input mono" id="opt-deep-min-mins" type="number" min="0" max="20">
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="opt-deep-max-mins">Max Work Ceiling (min)</label>
+                  <input class="text-input mono" id="opt-deep-max-mins" type="number" min="5" max="30">
                 </div>
                 <div class="field-group">
                   <label class="field-label" for="opt-cursor-speed-profile">Mouse Speed Mode</label>
@@ -5057,7 +5076,11 @@
           minimizeDuringAgent: true,
           showOverlay: true,
           showWidget: false,
-          maxSteps: 60,
+          maxSteps: 140,
+          deepWorkMinMinutes: 10,
+          deepWorkMaxMinutes: 25,
+          multiAgentParallel: true,
+          verifyTaskBeforeFinish: true,
           screenshotMaxWidth: 3840,
           displayTarget: 'primary',
           typingDelayMs: 6,
@@ -7015,7 +7038,7 @@
         }
         const statusText = isLive
           ? (msg.liveStatus || ('Working in ' + target + '…'))
-          : ('Worked in ' + target + ' · ' + steps.length + ' step' + (steps.length === 1 ? '' : 's'));
+          : ('Worked ' + (msg.elapsedLabel ? (msg.elapsedLabel + ' ') : '') + 'in ' + target + ' · ' + steps.length + ' step' + (steps.length === 1 ? '' : 's'));
         title.appendChild(createElement('span', {
           className: isLive ? 'trace-head-shimmer' : '',
           text: statusText
@@ -7036,9 +7059,15 @@
           }));
         }
         head.appendChild(title);
+        const crewModels = Array.isArray(msg.crew) ? [...new Set(msg.crew.filter(Boolean))] : [];
+        const rightBadgeText = [
+          msg.elapsedLabel ? ('⏱ ' + msg.elapsedLabel) : (isLive ? '⏱ 0s' : ''),
+          crewModels.length > 1 ? (crewModels.length + ' agents') : '',
+          steps.length ? (steps.length + (steps.length === 1 ? ' action' : ' actions')) : (isLive ? 'Live' : '0 steps')
+        ].filter(Boolean).join(' · ');
         head.appendChild(createElement('span', {
           className: 'selector-subbadge',
-          text: steps.length ? steps.length + (steps.length === 1 ? ' action' : ' actions') : (isLive ? 'Live' : '0 steps')
+          text: rightBadgeText
         }));
         wrap.appendChild(head);
 
@@ -7730,6 +7759,8 @@
             });
             const finalTxt = String(res.text || '');
             assistantMsg.model = res.model || assistantMsg.model;
+            if (res.elapsedLabel) assistantMsg.elapsedLabel = res.elapsedLabel;
+            if (Array.isArray(res.crew)) assistantMsg.crew = res.crew;
             if (Array.isArray(res.steps)) assistantMsg.steps = res.steps;
             if (finalTxt && (!assistantMsg.text || assistantMsg.text.length < finalTxt.length * 0.7)) {
               let curLen = assistantMsg.text ? assistantMsg.text.length : 0;
@@ -8389,10 +8420,13 @@
         $('opt-show-overlay').checked = !!State.settings.showOverlay;
         $('opt-minimize-agent').checked = !!State.settings.minimizeDuringAgent;
         $('opt-use-planner').checked = !!State.settings.usePlanner;
+        $('opt-multi-agent').checked = State.settings.multiAgentParallel !== false;
         $('opt-send-enter').checked = State.settings.sendWithEnter !== false;
         $('opt-sound-chime').checked = State.settings.soundChime !== false;
         $('opt-align-cursor').checked = State.settings.alignCursorBack !== false;
-        $('opt-max-steps').value = State.settings.maxSteps || 60;
+        $('opt-max-steps').value = State.settings.maxSteps || 140;
+        $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 10;
+        $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 25;
         $('opt-cursor-speed-profile').value = State.settings.cursorSpeedProfile || 'adaptive';
         $('opt-cursor-speed').value = State.settings.cursorSpeedMs !== undefined ? State.settings.cursorSpeedMs : 200;
         $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 120;
@@ -9509,6 +9543,7 @@
         toggleSave('opt-show-overlay', 'showOverlay');
         toggleSave('opt-minimize-agent', 'minimizeDuringAgent');
         toggleSave('opt-use-planner', 'usePlanner');
+        toggleSave('opt-multi-agent', 'multiAgentParallel');
         toggleSave('opt-send-enter', 'sendWithEnter');
         toggleSave('opt-sound-chime', 'soundChime');
         toggleSave('opt-align-cursor', 'alignCursorBack');
@@ -9521,7 +9556,9 @@
             if (api && api.updateSettings) await api.updateSettings({ [key]: v }).catch(() => {});
           });
         };
-        numSave('opt-max-steps', 'maxSteps', 5, 100);
+        numSave('opt-max-steps', 'maxSteps', 5, 200);
+        numSave('opt-deep-min-mins', 'deepWorkMinMinutes', 0, 20);
+        numSave('opt-deep-max-mins', 'deepWorkMaxMinutes', 5, 30);
         numSave('opt-cursor-speed', 'cursorSpeedMs', 0, 1500);
         numSave('opt-cmd-timeout', 'commandTimeoutSec', 10, 1800);
 
@@ -9638,19 +9675,31 @@
           }
           const chat = getActiveChat();
           const activeAssistant = chat && chat.messages[chat.messages.length - 1];
-          if (activeAssistant && activeAssistant.streaming && st && st.stepText) {
-            activeAssistant.liveStatus = st.stepText;
+          if (activeAssistant && activeAssistant.streaming && st) {
+            if (st.stepText) activeAssistant.liveStatus = st.stepText;
+            if (st.elapsedLabel) activeAssistant.elapsedLabel = st.elapsedLabel;
+            if (Array.isArray(st.crew)) activeAssistant.crew = st.crew;
             const row = document.querySelector('[data-msg-id="' + activeAssistant.id + '"]');
             if (row) {
               const shimmerHead = row.querySelector('.work-trace-head .trace-head-shimmer');
-              if (shimmerHead) shimmerHead.textContent = st.stepText;
+              if (shimmerHead && st.stepText) shimmerHead.textContent = st.stepText;
+              const rightPill = row.querySelector('.work-trace-head > .selector-subbadge');
+              if (rightPill && activeAssistant.elapsedLabel) {
+                const stepsCount = Array.isArray(activeAssistant.steps) ? activeAssistant.steps.length : 0;
+                const crewCount = Array.isArray(activeAssistant.crew) ? new Set(activeAssistant.crew.filter(Boolean)).size : 0;
+                rightPill.textContent = [
+                  '⏱ ' + activeAssistant.elapsedLabel,
+                  crewCount > 1 ? (crewCount + ' agents') : '',
+                  stepsCount ? (stepsCount + (stepsCount === 1 ? ' action' : ' actions')) : 'Live'
+                ].filter(Boolean).join(' · ');
+              }
               const waitShimmer = row.querySelector('.trace-timeline > .trace-node.running .trace-head-shimmer');
-              if (waitShimmer && !(activeAssistant.steps && activeAssistant.steps.length)) {
+              if (waitShimmer && st.stepText && !(activeAssistant.steps && activeAssistant.steps.length)) {
                 waitShimmer.textContent = st.stepText;
               }
               refreshWorkStageBar(row, activeAssistant);
               const prose = row.querySelector('.msg-prose');
-              if (prose && !activeAssistant.text && activeAssistant.mode !== 'work') {
+              if (prose && !activeAssistant.text && activeAssistant.mode !== 'work' && st.stepText) {
                 prose.innerHTML = '<div class="thinking-shimmer">' + escapeHtml(st.stepText) + '</div>';
               }
             }

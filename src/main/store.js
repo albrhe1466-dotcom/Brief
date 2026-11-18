@@ -94,7 +94,11 @@ const DEFAULT_SETTINGS = {
   minimizeDuringAgent: true,
   showOverlay: true,
   showWidget: false,
-  maxSteps: 60,
+  maxSteps: 140,
+  deepWorkMinMinutes: 10,
+  deepWorkMaxMinutes: 25,
+  multiAgentParallel: true,
+  verifyTaskBeforeFinish: true,
   screenshotMaxWidth: 3840,
   displayTarget: 'primary',       // 'primary' | 'cursor' | display id
   typingDelayMs: 6,
