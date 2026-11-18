@@ -114,6 +114,7 @@ const DEFAULT_SETTINGS = {
   provider: 'gemini',
   userName: '',
   onboardingCompleted: false,
+  seenNewsVersion: '',
   lastValidation: null,
   mcpServers: []
 };

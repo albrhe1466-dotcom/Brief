@@ -17,7 +17,8 @@ const os = require('os');
 const assert = require('assert');
 
 const { getTool, resolvePath, declarations, isPermanentDeleteCommand } = require('../src/main/tools');
-const { matchPresets, buildThinkingConfig } = require('../src/main/gemini');
+const { matchPresets, buildThinkingConfig, resolveGeminiRuntimeCandidates, isModernGeminiModelId } = require('../src/main/gemini');
+const { DEFAULT_SETTINGS } = require('../src/main/store');
 const { KeyStore } = require('../src/main/keystore');
 
 async function runFunctionalTests(screen, automation) {
@@ -183,6 +184,25 @@ async function runFunctionalTests(screen, automation) {
     pass('thinking-config', 'LOW/MEDIUM/HIGH thinkingLevel & Gemini 2.5 thinkingBudget verified');
   } catch (e) {
     fail('thinking-config', e);
+  }
+
+  // 8. v1.0.2 modern Gemini 3/4 candidates (zero 1.5/2.0/2.5 fallbacks) & seenNewsVersion default
+  try {
+    for (const modelId of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-4-argon']) {
+      const cands = resolveGeminiRuntimeCandidates(modelId);
+      assert.strictEqual(cands[0], modelId, 'Exact requested model must come first: ' + modelId);
+      const legacy = cands.filter((c) => /^gemini-(1|2)(?:\.|$|-)/i.test(c));
+      assert.strictEqual(legacy.length, 0, 'Legacy 1.x/2.x models forbidden in candidates for ' + modelId + ': ' + legacy.join(', '));
+    }
+    assert.strictEqual(isModernGeminiModelId('gemini-2.5-pro'), false);
+    assert.strictEqual(isModernGeminiModelId('gemini-2.0-flash'), false);
+    assert.strictEqual(isModernGeminiModelId('gemini-1.5-pro'), false);
+    assert.strictEqual(isModernGeminiModelId('gemini-3.1-pro-preview'), true);
+    assert.strictEqual(isModernGeminiModelId('gemini-4-hydrogen'), true);
+    assert.strictEqual(DEFAULT_SETTINGS.seenNewsVersion, '');
+    pass('modern-gemini-routing-v102', 'Zero 1.5/2.0/2.5 fallback verified across all 4 Gemini models + seenNewsVersion initialized');
+  } catch (e) {
+    fail('modern-gemini-routing-v102', e);
   }
 
   return {

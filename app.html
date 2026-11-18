@@ -1019,6 +1019,7 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      z-index: 1;
     }
 
     /* Clean centered welcome layout matching Photos 1-4 */
@@ -2588,7 +2589,7 @@
       padding: 8px 24px 16px;
       flex-shrink: 0;
       position: relative;
-      z-index: 16;
+      z-index: 65;
     }
 
     .composer-wrap {
@@ -2853,19 +2854,158 @@
     .popover-panel {
       position: absolute;
       bottom: calc(100% + 10px);
-      background: var(--bg-glass-strong);
+      background: #14151a;
       border: 1.5px solid var(--border-strong);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 20px 56px rgba(0, 0, 0, 0.78);
       padding: 12px;
       display: none;
-      z-index: 40;
-      animation: fadeSlideUp 0.16s var(--ease-out);
-      backdrop-filter: blur(16px);
+      z-index: 70;
+      isolation: isolate;
     }
 
     .popover-panel.open {
       display: block;
+    }
+
+    /* ===================================================================
+       WHAT'S NEW / NEWS MODAL (CENTERED, ONE-TIME PER VERSION)
+    ==================================================================== */
+    .modal-box.news-modal {
+      max-width: 840px;
+      width: calc(100vw - 32px);
+      max-height: 88vh;
+      border-color: rgba(96, 165, 250, 0.36);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72), 0 0 42px rgba(59, 130, 246, 0.16);
+    }
+
+    .news-version-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.4);
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .news-hero-strip {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(16, 185, 129, 0.08));
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .news-gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .news-gallery-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .news-photo-card {
+      background: rgba(20, 22, 28, 0.96);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      text-align: left;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+
+    .news-photo-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--blue-400);
+    }
+
+    .news-photo-thumb {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      background: #0a0b0e;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .news-photo-caption {
+      padding: 9px 10px;
+    }
+
+    .news-photo-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .news-photo-sub {
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+
+    .news-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .news-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .news-col-card {
+      background: rgba(20, 22, 28, 0.92);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 13px 15px;
+    }
+
+    .news-col-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 9px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .news-list {
+      margin: 0;
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 12.25px;
+      line-height: 1.48;
+      color: var(--text-secondary);
+    }
+
+    .news-list strong {
+      color: #f8fafc;
     }
 
     #model-popover {
@@ -4145,6 +4285,11 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.2">
+            <span aria-hidden="true">✨</span>
+            <span>News</span>
+          </button>
+
           <button class="header-pill-btn" id="settings-open-btn" type="button" title="Settings &amp; API Key">
             <span class="key-status-dot" id="header-key-dot"></span>
             <span>Settings</span>
@@ -5026,6 +5171,88 @@
         <button class="btn-primary modal-close-x" type="button">Close</button>
       </div>
     </div>
+
+    <!-- 11. WHAT'S NEW / NEWS RELEASE MODAL (CENTERED, SHOWN ONCE PER VERSION) -->
+    <div class="modal-box news-modal" id="modal-whats-new" role="dialog" aria-modal="true" aria-labelledby="whats-new-title">
+      <div class="modal-head">
+        <div class="modal-title" id="whats-new-title">
+          <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
+          <span>What’s New in Brief</span>
+          <span class="news-version-pill">News · v1.0.2</span>
+        </div>
+        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close (don't show again for v1.0.2)" aria-label="Close What's New">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="news-hero-strip">
+          <div>
+            <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
+              Brief v1.0.2 — Real Gemini 3 &amp; 4 Models, Multi-Agent Crew Verification &amp; Stability Fixes
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              Click any screenshot below to zoom in. Closing this dialog with <strong>✕</strong> marks v1.0.2 as read so it will not pop up again automatically.
+            </div>
+          </div>
+        </div>
+
+        <div class="news-gallery-grid" id="whats-new-gallery">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-gemini-fix.png" data-news-caption="True Gemini 3 &amp; 4 Models (Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen, 4 Argon)">
+            <img class="news-photo-thumb" src="assets/news-gemini-fix.png" alt="Brief Model Selector showing Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen, and 4 Argon">
+            <div class="news-photo-caption">
+              <div class="news-photo-title">True Gemini 3 &amp; 4 Models</div>
+              <div class="news-photo-sub">Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen &amp; 4 Argon directly active — zero legacy 2.5 Pro fallback.</div>
+            </div>
+          </button>
+
+          <button class="news-photo-card" type="button" data-news-src="assets/news-studio-crew.png" data-news-caption="Multi-Agent Work Crew, Live Worked Timer &amp; BEFORE/AFTER Verification">
+            <img class="news-photo-thumb" src="assets/news-studio-crew.png" alt="Brief 4-Agent Studio Crew execution steps and QA verification">
+            <div class="news-photo-caption">
+              <div class="news-photo-title">4-Agent Crew &amp; QA Proof</div>
+              <div class="news-photo-sub">Planner, WinRT OCR Scout, Specialist &amp; QA Verifier work together with live worked timer &amp; verification checks.</div>
+            </div>
+          </button>
+
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v102-setup.png" data-news-caption="Brief v1.0.2 Download Website &amp; Compiled Windows Setup Wizard">
+            <img class="news-photo-thumb" src="assets/news-v102-setup.png" alt="Brief v1.0.2 Download Page and Windows Setup Wizard">
+            <div class="news-photo-caption">
+              <div class="news-photo-title">Brief v1.0.2 Release</div>
+              <div class="news-photo-sub">Updated public Windows Setup Wizard (Brief-Setup.exe) &amp; GitHub Release v1.0.2.</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="news-columns">
+          <div class="news-col-card">
+            <div class="news-col-heading">
+              <span>✨</span>
+              <span>What’s New in v1.0.2</span>
+            </div>
+            <ul class="news-list">
+              <li><strong>True Gemini 3 &amp; 4 Pipeline:</strong> Keeps <em>Gemini 3.5 Flash-Lite</em>, <em>Gemini 3.8 Flash</em>, <em>Gemini 4 Hydrogen</em>, and <em>Gemini 4 Argon</em> intact while dynamically discovering active Gemini 3.x / 4.x models on your key via <code class="mono">v1beta/models</code>.</li>
+              <li><strong>Parallel 4-Agent Studio Crew:</strong> Runs Specialist, WinRT OCR Scout, Executor &amp; QA Verifier together with a live stopwatch (<code class="mono">10–15m</code> minimum / <code class="mono">20–25m</code> max on deep Studio, Blender, CapCut &amp; Adobe jobs).</li>
+              <li><strong>Instant Auto-Paste &amp; <code class="mono">Shift+Enter</code>:</strong> Pastes multi-line text reliably via <code class="mono">Ctrl+V</code> and supports clean soft newlines without premature submission.</li>
+              <li><strong>Centered Release News:</strong> Shows new features &amp; fixes once per version and stays dismissed after closing.</li>
+            </ul>
+          </div>
+
+          <div class="news-col-card">
+            <div class="news-col-heading">
+              <span>🔧</span>
+              <span>What Has Been Fixed</span>
+            </div>
+            <ul class="news-list">
+              <li><strong>Eliminated Secret <code class="mono">gemini-2.5-pro</code> Fallback:</strong> Purged all retired <code class="mono">1.5</code>, <code class="mono">2.0</code>, and <code class="mono">2.5</code> model downgrades from Gemini, OpenRouter &amp; Crew fallbacks — stopping Google’s dead-model crash permanently.</li>
+              <li><strong>Stopped “Photo-Only” Premature Done:</strong> Brief’s completion gates reject tasks that only take screenshots without real edits, commands, or UI test verification.</li>
+              <li><strong>Fixed Model Popover Layering:</strong> Resolved z-index stacking &amp; opacity so underlying chat text never bleeds over the Model, Permission, or Attach menus.</li>
+              <li><strong>Before/After Verification Gate:</strong> Confirms real visual &amp; functional change on target apps before reporting Done.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot" style="justify-content: space-between;">
+        <span style="font-size: 12px; color: var(--text-muted);">Shown once per update · Reopen anytime from <strong>✨ News</strong> in the top bar</span>
+        <button class="btn-primary" id="whats-new-done-btn" type="button">Got it, Don’t Show Again</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast Notification Container -->
@@ -5094,6 +5321,7 @@
           sendWithEnter: true,
           soundChime: true,
           userName: '',
+          seenNewsVersion: '',
           provider: 'gemini',
           lastValidation: null
         },
@@ -7392,7 +7620,8 @@
         }
       }
 
-      function openLightbox(src, caption) {
+      function openLightbox(src, caption, returnModal) {
+        State.ui.lightboxReturnModal = returnModal || null;
         $('lightbox-img').src = src;
         $('lightbox-caption').textContent = caption || 'Desktop Screenshot';
         openModal('modal-lightbox');
@@ -7903,6 +8132,9 @@
                 setView('welcome', 'right');
                 renderWelcomeView({ triggerLogoAnim: true });
                 if (DOM.composerInput) DOM.composerInput.focus();
+                if (shouldShowWhatsNew()) {
+                  setTimeout(() => openWhatsNewModal(), 280);
+                }
               }
             }, 720);
           } else {
@@ -8649,6 +8881,29 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
+      const BRIEF_NEWS_VERSION = '1.0.2';
+
+      function shouldShowWhatsNew() {
+        const seen = String((State.settings && State.settings.seenNewsVersion) || '');
+        if (seen === BRIEF_NEWS_VERSION) return false;
+        try {
+          if (localStorage.getItem('brief_seen_news_version') === BRIEF_NEWS_VERSION) return false;
+        } catch (_) { /* ignore */ }
+        return true;
+      }
+
+      function dismissWhatsNewPermanently() {
+        State.settings.seenNewsVersion = BRIEF_NEWS_VERSION;
+        try { localStorage.setItem('brief_seen_news_version', BRIEF_NEWS_VERSION); } catch (_) { /* ignore */ }
+        if (api && api.updateSettings) {
+          api.updateSettings({ seenNewsVersion: BRIEF_NEWS_VERSION }).catch(() => {});
+        }
+      }
+
+      function openWhatsNewModal() {
+        openModal('modal-whats-new');
+      }
+
       function openModal(id) {
         State.ui.activeModal = id;
         DOM.modalBackdrop.classList.add('open');
@@ -8662,6 +8917,16 @@
           submitApprovalDecision(false, 'Closed permanent deletion confirmation dialog.');
           return;
         }
+        if (State.ui.activeModal === 'modal-lightbox' && State.ui.lightboxReturnModal) {
+          const ret = State.ui.lightboxReturnModal;
+          State.ui.lightboxReturnModal = null;
+          openModal(ret);
+          return;
+        }
+        if (State.ui.activeModal === 'modal-whats-new') {
+          dismissWhatsNewPermanently();
+        }
+        State.ui.lightboxReturnModal = null;
         State.ui.activeModal = null;
         DOM.modalBackdrop.classList.remove('open');
         document.querySelectorAll('.modal-box').forEach((box) => box.classList.remove('open'));
@@ -9312,6 +9577,9 @@
           State.settings.onboardingCompleted = true;
           if (api && api.updateSettings) api.updateSettings({ onboardingCompleted: true }).catch(() => {});
           setView('welcome', 'right');
+          if (shouldShowWhatsNew()) {
+            setTimeout(() => openWhatsNewModal(), 280);
+          }
         });
 
         // Welcome & Settings User Name
@@ -9409,6 +9677,22 @@
           btn.addEventListener('click', () => closeAllModals());
         });
         $('lightbox-close-btn').addEventListener('click', () => closeAllModals());
+        $('whats-new-open-btn').addEventListener('click', () => openWhatsNewModal());
+        $('whats-new-close-x').addEventListener('click', () => {
+          dismissWhatsNewPermanently();
+          closeAllModals();
+        });
+        $('whats-new-done-btn').addEventListener('click', () => {
+          dismissWhatsNewPermanently();
+          closeAllModals();
+        });
+        document.querySelectorAll('.news-photo-card').forEach((card) => {
+          card.addEventListener('click', () => {
+            const src = card.getAttribute('data-news-src');
+            const cap = card.getAttribute('data-news-caption') || 'What’s New Preview';
+            if (src) openLightbox(src, cap, 'modal-whats-new');
+          });
+        });
         $('full-access-cancel-btn').addEventListener('click', () => closeAllModals());
         $('full-access-confirm-btn').addEventListener('click', () => confirmFullAccessActivation());
         $('perm-delete-cancel-btn').addEventListener('click', () => submitApprovalDecision(false, 'Denied permanent deletion.'));
@@ -9991,6 +10275,9 @@
               setTimeout(() => { try { $('welcome-name-input').focus(); } catch (_) {} }, 120);
             }
           }
+          if (!showOnboarding && shouldShowWhatsNew()) {
+            setTimeout(() => openWhatsNewModal(), 340);
+          }
           setTimeout(() => playLocallyChime('ready'), 260);
         } catch (err) {
           showToast('Startup error: ' + err.message, 'error');
@@ -10011,7 +10298,8 @@
           'view-welcome', 'view-chat', 'composer-dock', 'composer-input',
           'model-trigger-btn', 'perm-trigger-btn', 'emergency-stop-btn',
           'send-btn', 'log-drawer', 'modal-settings', 'modal-full-access',
-          'modal-perm-delete'
+          'modal-perm-delete', 'modal-whats-new', 'whats-new-open-btn',
+          'whats-new-close-x', 'whats-new-done-btn'
         ];
         const missing = ids.filter((id) => !document.getElementById(id));
         const fontFamily = window.getComputedStyle(document.body).fontFamily || '';

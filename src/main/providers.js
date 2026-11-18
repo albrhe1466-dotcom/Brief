@@ -1089,17 +1089,19 @@ class OpenRouterClient {
   }
 
   resolveRuntimeCandidates(model) {
-    const id = stripModelPrefix(model).toLowerCase();
-    if (/flash.*lite/.test(id)) return [stripModelPrefix(model), 'google/gemini-2.5-flash-lite', 'google/gemini-2.0-flash-lite-001', 'google/gemini-2.5-flash'];
-    if (/flash|hydrogen/.test(id)) return [stripModelPrefix(model), 'google/gemini-2.5-flash', 'google/gemini-2.0-flash-001'];
-    if (/argon/.test(id)) return [stripModelPrefix(model), 'google/gemini-2.5-pro', 'google/gemini-2.5-flash'];
-    if (/luna/.test(id)) return [stripModelPrefix(model), 'openai/gpt-4.1-mini', 'openai/gpt-4o-mini'];
-    if (/terra/.test(id)) return [stripModelPrefix(model), 'openai/gpt-4.1', 'openai/gpt-4o'];
-    if (/sol|astra/.test(id)) return [stripModelPrefix(model), 'openai/gpt-4o', 'openai/gpt-4.1'];
-    if (/haiku/.test(id)) return [stripModelPrefix(model), 'anthropic/claude-3.5-haiku', 'anthropic/claude-3-haiku'];
-    if (/opus/.test(id)) return [stripModelPrefix(model), 'anthropic/claude-opus-4', 'anthropic/claude-sonnet-4'];
-    if (/sonnet|fable/.test(id)) return [stripModelPrefix(model), 'anthropic/claude-sonnet-4', 'anthropic/claude-3.7-sonnet', 'anthropic/claude-3.5-sonnet'];
-    return [stripModelPrefix(model), 'google/gemini-2.5-flash'];
+    const exact = stripModelPrefix(model);
+    const id = exact.toLowerCase();
+    if (/flash.*lite/.test(id)) return [exact, 'google/gemini-3.1-flash-lite-preview', 'google/gemini-3-flash-preview'];
+    if (/hydrogen/.test(id)) return [exact, 'google/gemini-3.8-flash', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview'];
+    if (/flash/.test(id)) return [exact, 'google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite-preview'];
+    if (/argon/.test(id)) return [exact, 'google/gemini-3.1-pro-preview', 'google/gemini-4-hydrogen', 'google/gemini-3.8-flash'];
+    if (/luna/.test(id)) return [exact, 'openai/gpt-5-mini', 'openai/gpt-4.1-mini'];
+    if (/terra/.test(id)) return [exact, 'openai/gpt-5', 'openai/gpt-4.1'];
+    if (/sol|astra/.test(id)) return [exact, 'openai/gpt-5', 'openai/gpt-4.1'];
+    if (/haiku/.test(id)) return [exact, 'anthropic/claude-haiku-4.5', 'anthropic/claude-3.5-haiku'];
+    if (/opus/.test(id)) return [exact, 'anthropic/claude-opus-4.5', 'anthropic/claude-sonnet-4.5'];
+    if (/sonnet|fable/.test(id)) return [exact, 'anthropic/claude-sonnet-4.5', 'anthropic/claude-sonnet-4'];
+    return [exact, 'google/gemini-3-flash-preview', 'google/gemini-3.1-pro-preview'];
   }
 
   async generate(model, payload, { signal, key, timeoutMs = 55000 } = {}) {

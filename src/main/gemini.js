@@ -185,21 +185,66 @@ function abortError() { const e = new Error('Stopped by user.'); e.name = 'Abort
 
 function emptyUsage() { return { requests: 0, prompt: 0, output: 0, thoughts: 0, cached: 0, tool: 0, total: 0 }; }
 
+let LIVE_GEMINI_34_MODELS = [];
+
+function isModernGeminiModelId(id) {
+  const clean = stripModelPrefix(id).toLowerCase();
+  if (!clean) return false;
+  if (/^gemini-(1|2)(?:\.|$|-)/.test(clean)) return false;
+  if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|bison|gecko|learnlm)/i.test(clean)) return false;
+  return /^(gemini-(?:3|4|5)|.*hydrogen|.*argon)/.test(clean);
+}
+
 function resolveGeminiRuntimeCandidates(model) {
-  const id = stripModelPrefix(model).toLowerCase();
+  const exact = stripModelPrefix(model);
+  const id = exact.toLowerCase();
+  const out = [];
+  const push = (cand) => {
+    const clean = stripModelPrefix(cand);
+    if (clean && !out.includes(clean)) out.push(clean);
+  };
+  push(exact);
+
+  const live = Array.isArray(LIVE_GEMINI_34_MODELS) ? LIVE_GEMINI_34_MODELS : [];
   if (/3\.5.*flash.*lite|flash.*lite/.test(id)) {
-    return [stripModelPrefix(model), 'gemini-3.1-flash-lite-preview', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-2.5-flash'];
+    for (const m of live) if (/flash.*lite/i.test(m)) push(m);
+    push('gemini-3.5-flash-lite');
+    push('gemini-3.1-flash-lite-preview');
+    push('gemini-3-flash-preview');
+    return out;
   }
   if (/3\.8.*flash|flash/.test(id)) {
-    return [stripModelPrefix(model), 'gemini-2.5-flash', 'gemini-3.1-flash-lite-preview', 'gemini-2.0-flash', 'gemini-2.5-flash-lite'];
+    for (const m of live) if (/3\.8|flash/i.test(m) && !/lite/i.test(m)) push(m);
+    push('gemini-3.8-flash');
+    push('gemini-3-flash-preview');
+    push('gemini-3.5-flash');
+    push('gemini-3.1-flash-lite-preview');
+    return out;
   }
   if (/hydrogen/.test(id)) {
-    return [stripModelPrefix(model), 'gemini-2.5-flash', 'gemini-3.1-flash-lite-preview', 'gemini-2.5-pro'];
+    for (const m of live) if (/hydrogen|gemini-4/i.test(m) && !/argon/i.test(m)) push(m);
+    push('gemini-4-hydrogen');
+    for (const m of live) if (/3\.8|3\.1-pro|3-flash/i.test(m)) push(m);
+    push('gemini-3.8-flash');
+    push('gemini-3.1-pro-preview');
+    push('gemini-3-flash-preview');
+    return out;
   }
   if (/argon|pro/.test(id)) {
-    return [stripModelPrefix(model), 'gemini-2.5-flash', 'gemini-3.1-flash-lite-preview', 'gemini-2.5-pro'];
+    for (const m of live) if (/argon|3\.1-pro|gemini-4/i.test(m)) push(m);
+    push('gemini-4-argon');
+    push('gemini-3.1-pro-preview');
+    for (const m of live) if (/hydrogen|3\.8|3-flash/i.test(m)) push(m);
+    push('gemini-4-hydrogen');
+    push('gemini-3.8-flash');
+    return out;
   }
-  return [stripModelPrefix(model), 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  for (const m of live) push(m);
+  push('gemini-3.8-flash');
+  push('gemini-3.1-pro-preview');
+  push('gemini-3-flash-preview');
+  push('gemini-3.1-flash-lite-preview');
+  return out;
 }
 
 function ensureThoughtSignatures(payload, fillAllUnsigned = false) {
@@ -242,25 +287,7 @@ function ensureThoughtSignatures(payload, fillAllUnsigned = false) {
 }
 
 function adaptGeminiPayloadForTarget(payload, targetId) {
-  let out = ensureThoughtSignatures(payload, false);
-  if (!out || !out.generationConfig || !out.generationConfig.thinkingConfig) return out;
-  const tc = out.generationConfig.thinkingConfig;
-  if (/gemini-2\.5/i.test(targetId) && tc.thinkingLevel) {
-    const copy = out === payload ? JSON.parse(JSON.stringify(out)) : out;
-    const lvl = String(tc.thinkingLevel).toUpperCase();
-    copy.generationConfig.thinkingConfig = {
-      thinkingBudget: lvl === 'MINIMAL' ? 256 : (lvl === 'LOW' ? 512 : (lvl === 'HIGH' ? 6144 : 2048)),
-      includeThoughts: true
-    };
-    return copy;
-  }
-  if (/gemini-2\.0/i.test(targetId)) {
-    const copy = out === payload ? JSON.parse(JSON.stringify(out)) : out;
-    delete copy.generationConfig.thinkingConfig;
-    if (!Object.keys(copy.generationConfig).length) delete copy.generationConfig;
-    return copy;
-  }
-  return out;
+  return ensureThoughtSignatures(payload, false);
 }
 
 const GEMINI_ALLOWLIST = [
@@ -345,13 +372,38 @@ class GeminiClient {
   }
 
   async listModels(key) {
+    const out = GEMINI_ALLOWLIST.map((m) => Object.assign({}, m));
+    const seen = new Set(out.map((m) => m.id));
     try {
-      await this.raw('models?pageSize=1', { key, context: 'list' });
+      const json = await this.raw('models?pageSize=200', { key, context: 'list' });
+      const rawModels = (json && Array.isArray(json.models)) ? json.models : [];
+      const discoveredIds = [];
+      for (const rm of rawModels) {
+        const id = stripModelPrefix(rm && rm.name);
+        const methods = Array.isArray(rm && rm.supportedGenerationMethods) ? rm.supportedGenerationMethods : [];
+        if (!id || !methods.includes('generateContent') || !isModernGeminiModelId(id)) continue;
+        discoveredIds.push(id);
+        if (!seen.has(id)) {
+          seen.add(id);
+          out.push({
+            id,
+            name: 'models/' + id,
+            displayName: (rm && rm.displayName) || id,
+            description: (rm && rm.description) || 'Active Gemini 3/4 model',
+            methods: methods.slice(),
+            inputTokenLimit: (rm && rm.inputTokenLimit) || 1048576,
+            outputTokenLimit: (rm && rm.outputTokenLimit) || 65536,
+            thinking: true
+          });
+        }
+      }
+      if (discoveredIds.length) {
+        LIVE_GEMINI_34_MODELS = discoveredIds;
+      }
     } catch (e) {
       if (e.kind === 'invalid' || e.kind === 'disabled') throw e;
     }
-    // Hardcoded allowlist: show ONLY these 4 Gemini models, no older or legacy models
-    return GEMINI_ALLOWLIST.map((m) => Object.assign({}, m));
+    return out;
   }
 
   async generate(model, body, { signal, key, retries = 3, onRetry, timeoutMs = 60000 } = {}) {
@@ -658,4 +710,4 @@ function describeFailure(e, duringList, model) {
   }
 }
 
-module.exports = { GeminiClient, matchPresets, PRESETS, stripModelPrefix, modelPath, buildThinkingConfig, adaptGeminiPayloadForTarget, ensureThoughtSignatures, ApiError, abortError, sleep };
+module.exports = { GeminiClient, matchPresets, PRESETS, stripModelPrefix, modelPath, buildThinkingConfig, adaptGeminiPayloadForTarget, ensureThoughtSignatures, resolveGeminiRuntimeCandidates, isModernGeminiModelId, ApiError, abortError, sleep };

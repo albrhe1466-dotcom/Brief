@@ -477,8 +477,16 @@ class AgentRunner extends EventEmitter {
       push(m.presets.argon && m.presets.argon.id);
     }
     const availableIds = new Set(all.filter((x) => Array.isArray(x.methods) && x.methods.includes('generateContent')).map((x) => x.id));
-    for (const stableFreeId of ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-2.0-flash-lite']) {
-      if (availableIds.has(stableFreeId)) push(stableFreeId);
+    for (const modernId of [
+      'gemini-4-hydrogen',
+      'gemini-3.8-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3-flash-preview',
+      'gemini-3.1-flash-lite-preview',
+      'gemini-4-argon',
+      'gemini-3.1-pro-preview'
+    ]) {
+      if (availableIds.has(modernId)) push(modernId);
     }
     push(m.bestFlash);
     push(m.fast);
