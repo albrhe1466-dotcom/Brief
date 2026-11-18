@@ -401,7 +401,7 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(ROOT, 'index.html'));
+  mainWindow.loadFile(path.join(ROOT, 'app.html'));
   mainWindow.on('closed', () => {
     mainWindow = null;
     if (widgetWindow && !widgetWindow.isDestroyed()) widgetWindow.close();

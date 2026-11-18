@@ -3,286 +3,4747 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Download Brief for Windows 10 & 11 — Private multi-agent desktop AI with WinRT native OCR vision, DPI-aware SendInput automation, 45 real tools, and a genuine Windows Setup Wizard installer.">
+  <meta name="theme-color" content="#090c12">
   <title>Download Brief — Private Desktop AI Agent for Windows</title>
   <link rel="icon" type="image/png" href="assets/icon.png">
   <style>
+    /* =========================================================================
+       BRIEF DOWNLOAD EXPERIENCE — DESIGN TOKENS & MOTION FOUNDATION
+    ========================================================================= */
     :root {
-      --bg: #0b0e14;
-      --surface: #131823;
-      --surface-2: #192030;
-      --border: rgba(255, 255, 255, 0.1);
-      --text: #f3f6fc;
-      --muted: #9aa7bd;
-      --blue: #3b82f6;
-      --blue-glow: rgba(59, 130, 246, 0.35);
-      --green: #34d399;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at 18% 12%, rgba(59, 130, 246, 0.16), transparent 42%),
-                  radial-gradient(circle at 82% 20%, rgba(139, 92, 246, 0.12), transparent 45%),
-                  var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.55;
-    }
-    a { color: inherit; text-decoration: none; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-    header {
-      position: sticky; top: 0; z-index: 20;
-      backdrop-filter: blur(14px);
-      background: rgba(11, 14, 20, 0.8);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav {
-      height: 68px; display: flex; align-items: center; justify-content: space-between;
-    }
-    .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; font-size: 19px; }
-    .brand img { width: 32px; height: 32px; object-fit: contain; }
-    .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; color: var(--muted); }
-    .nav-links a:hover { color: #fff; }
-    .nav-cta {
-      padding: 8px 16px; border-radius: 999px; background: #fff; color: #0b0e14;
-      font-weight: 700; font-size: 13.5px; transition: transform 0.15s;
-    }
-    .nav-cta:hover { transform: translateY(-1px); }
+      --bg-deep: #07090e;
+      --bg-base: #0b0e16;
+      --bg-elevated: #111623;
+      --bg-surface: #161d2e;
+      --bg-surface-hover: #1c253b;
+      --bg-glass: rgba(13, 17, 27, 0.78);
+      --bg-glass-strong: rgba(15, 20, 32, 0.92);
 
-    .hero { padding: 72px 0 56px; text-align: center; }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
-      color: #93c5fd; background: rgba(59, 130, 246, 0.14); border: 1px solid rgba(96, 165, 250, 0.35);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-default: rgba(255, 255, 255, 0.13);
+      --border-bright: rgba(147, 197, 253, 0.36);
+
+      --text-primary: #f5f7fc;
+      --text-secondary: #a8b4cb;
+      --text-muted: #76849e;
+      --text-code: #cbd8f0;
+
+      --accent-blue: #3b82f6;
+      --accent-blue-dark: #1d4ed8;
+      --accent-blue-soft: rgba(59, 130, 246, 0.16);
+      --accent-blue-glow: rgba(59, 130, 246, 0.4);
+      --accent-cyan: #22d3ee;
+      --accent-violet: #8b5cf6;
+      --accent-violet-soft: rgba(139, 92, 246, 0.16);
+      --accent-emerald: #34d399;
+      --accent-emerald-soft: rgba(16, 185, 129, 0.15);
+      --accent-amber: #fbbf24;
+      --accent-orange: #f97316;
+      --accent-orange-soft: rgba(249, 115, 22, 0.16);
+
+      --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: Georgia, 'Times New Roman', serif;
+      --font-mono: Consolas, 'Cascadia Code', 'Fira Code', monospace;
+
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+      --radius-pill: 999px;
+
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --container-max: 1200px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-deep);
+      color-scheme: dark;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      line-height: 1.62;
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: rgba(59, 130, 246, 0.35);
+      color: #ffffff;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-deep);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      border: 2px solid var(--bg-deep);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.45);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+    }
+
+    code,
+    pre {
+      font-family: var(--font-mono);
+    }
+
+    /* =========================================================================
+       AMBIENT BACKDROP, CANVAS PARTICLES & SCROLL INDICATOR
+    ========================================================================= */
+    .scroll-progress-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      z-index: 120;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    .scroll-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-violet));
+      box-shadow: 0 0 14px var(--accent-blue-glow);
+      transition: width 0.08s linear;
+    }
+
+    .ambient-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ambient-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 80% 65% at 50% 18%, #000 35%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 18%, #000 35%, transparent 100%);
+    }
+
+    .aurora-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(95px);
+      opacity: 0.48;
+      will-change: transform;
+    }
+
+    .aurora-orb-1 {
+      width: 580px;
+      height: 580px;
+      top: -180px;
+      left: -120px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.42), transparent 70%);
+      animation: floatAuroraOne 18s ease-in-out infinite alternate;
+    }
+
+    .aurora-orb-2 {
+      width: 520px;
+      height: 520px;
+      top: 80px;
+      right: -140px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.34), transparent 70%);
+      animation: floatAuroraTwo 22s ease-in-out infinite alternate;
+    }
+
+    .aurora-orb-3 {
+      width: 480px;
+      height: 480px;
+      bottom: -160px;
+      left: 34%;
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.2), transparent 70%);
+      animation: floatAuroraThree 25s ease-in-out infinite alternate;
+    }
+
+    #bg-particle-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.65;
+    }
+
+    @keyframes floatAuroraOne {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(75px, 55px) scale(1.1); }
+    }
+
+    @keyframes floatAuroraTwo {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-80px, 65px) scale(1.14); }
+    }
+
+    @keyframes floatAuroraThree {
+      0% { transform: translate(0, 0) scale(0.95); }
+      100% { transform: translate(60px, -70px) scale(1.12); }
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.65; }
+    }
+
+    @keyframes shimmerSweep {
+      0% { transform: translateX(-140%) skewX(-20deg); }
+      100% { transform: translateX(260%) skewX(-20deg); }
+    }
+
+    @keyframes floatCardGentle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-7px); }
+    }
+
+    @keyframes scanBeam {
+      0% { top: 8%; opacity: 0.25; }
+      50% { top: 84%; opacity: 0.9; }
+      100% { top: 8%; opacity: 0.25; }
+    }
+
+    @keyframes spinSlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* =========================================================================
+       LAYOUT UTILITIES & SCROLL REVEAL SYSTEM
+    ========================================================================= */
+    .container {
+      width: 100%;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .section {
+      padding: 84px 0;
+      position: relative;
+    }
+
+    .section-compact {
+      padding: 52px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 48px;
+    }
+
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #93c5fd;
+      background: rgba(59, 130, 246, 0.13);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 3.8vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+
+    .section-title-serif {
+      font-family: var(--font-serif);
+      font-weight: 400;
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(24px) scale(0.985);
+      transition:
+        opacity 0.65s var(--ease-out-expo),
+        transform 0.65s var(--ease-out-expo);
+    }
+
+    [data-reveal].is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    [data-reveal-delay="1"] { transition-delay: 0.07s; }
+    [data-reveal-delay="2"] { transition-delay: 0.14s; }
+    [data-reveal-delay="3"] { transition-delay: 0.21s; }
+    [data-reveal-delay="4"] { transition-delay: 0.28s; }
+
+    .glow-surface {
+      position: relative;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition:
+        border-color 0.22s ease,
+        transform 0.25s var(--ease-out-expo),
+        box-shadow 0.25s ease;
+    }
+
+    .glow-surface::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        420px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(59, 130, 246, 0.11),
+        transparent 60%
+      );
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .glow-surface:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-3px);
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.42);
+    }
+
+    .glow-surface:hover::before {
+      opacity: 1;
+    }
+
+    /* =========================================================================
+       TOP NAVIGATION HEADER & MOBILE DRAWER
+    ========================================================================= */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(8, 11, 18, 0.78);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .site-header.is-scrolled {
+      background: rgba(8, 11, 18, 0.92);
+      border-bottom-color: var(--border-default);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .nav-inner {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.015em;
+    }
+
+    .nav-brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(147, 197, 253, 0.32);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+    }
+
+    .nav-brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .nav-version-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .nav-links a {
+      padding: 6px 2px;
+      position: relative;
+      transition: color 0.18s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--accent-blue);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.22s var(--ease-out-expo);
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+    }
+
+    .nav-links a:hover::after {
+      transform: scaleX(1);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-github-link {
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-default);
+      background: rgba(255, 255, 255, 0.03);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: all 0.18s ease;
+    }
+
+    .nav-github-link:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .nav-download-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13.5px;
+      border: 1px solid rgba(147, 197, 253, 0.45);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.38);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    }
+
+    .nav-download-cta:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.1);
+      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.5);
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-default);
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .mobile-nav-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px 24px 20px;
+      background: rgba(9, 12, 18, 0.98);
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .mobile-nav-drawer.is-open {
+      display: flex;
+    }
+
+    .mobile-nav-drawer a {
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .mobile-nav-drawer a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+
+    /* =========================================================================
+       HERO SECTION & ANIMATED DESKTOP STAGE SHOWCASE
+    ========================================================================= */
+    .hero-section {
+      padding: 68px 0 54px;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 42px;
+      align-items: center;
+    }
+
+    .hero-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 15px;
+      border-radius: var(--radius-pill);
+      background: rgba(37, 99, 235, 0.14);
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      color: #bfdbfe;
+      font-size: 12.5px;
+      font-weight: 600;
       margin-bottom: 22px;
     }
-    .hero h1 {
-      font-size: clamp(36px, 5vw, 56px); font-weight: 700; letter-spacing: -0.025em;
-      max-width: 820px; margin: 0 auto 18px; line-height: 1.12;
+
+    .live-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulseDot 2s ease-in-out infinite;
     }
-    .hero p {
-      font-size: 17.5px; color: var(--muted); max-width: 650px; margin: 0 auto 32px;
+
+    .hero-heading {
+      font-size: clamp(36px, 4.7vw, 58px);
+      font-weight: 700;
+      line-height: 1.09;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
     }
-    .download-actions {
-      display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+
+    .hero-heading-highlight {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      background: linear-gradient(125deg, #ffffff 10%, #93c5fd 52%, #6ee7b7 92%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-lead {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 590px;
+      margin-bottom: 28px;
+      line-height: 1.68;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      align-items: stretch;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .btn-dl-hero {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 26px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 60%, #1e40af 100%);
+      border: 1px solid rgba(147, 197, 253, 0.55);
+      color: #ffffff;
+      box-shadow:
+        0 14px 36px rgba(37, 99, 235, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .btn-dl-hero::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 42%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.26), transparent);
+      animation: shimmerSweep 3.8s ease-in-out infinite;
+    }
+
+    .btn-dl-hero:hover {
+      transform: translateY(-2px) scale(1.012);
+      filter: brightness(1.08);
+      box-shadow: 0 20px 44px rgba(37, 99, 235, 0.56);
+    }
+
+    .btn-dl-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .btn-dl-copy {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.25;
+    }
+
+    .btn-dl-title {
+      font-size: 15.5px;
+      font-weight: 700;
+    }
+
+    .btn-dl-sub {
+      font-size: 12px;
+      color: #dbeafe;
+      font-weight: 500;
+    }
+
+    .btn-dl-zip {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .btn-dl-zip:hover {
+      border-color: rgba(147, 197, 253, 0.45);
+      background: var(--bg-surface);
+      transform: translateY(-2px);
+    }
+
+    .hero-meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      color: var(--text-muted);
       margin-bottom: 18px;
     }
-    .btn-dl-primary {
-      display: inline-flex; align-items: center; gap: 12px;
-      padding: 15px 28px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.25);
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: #fff; font-size: 16px; font-weight: 700;
-      box-shadow: 0 12px 34px var(--blue-glow);
-      transition: transform 0.16s, filter 0.16s;
-      cursor: pointer;
-    }
-    .btn-dl-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
-    .btn-dl-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 20px; border-radius: 14px; border: 1px solid var(--border);
-      background: var(--surface); color: var(--text); font-size: 14.5px; font-weight: 600;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .btn-dl-secondary:hover { border-color: rgba(96, 165, 250, 0.5); background: var(--surface-2); }
-    .meta-strip {
-      font-size: 13px; color: var(--muted);
-      display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
-    }
-    .meta-strip code { color: #cbd5e1; font-family: Consolas, monospace; font-size: 12px; }
 
-    .dl-toast {
-      margin: 18px auto 0; max-width: 620px; padding: 12px 16px; border-radius: 12px;
-      background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(52, 211, 153, 0.38);
-      color: #a7f3d0; font-size: 13.5px; display: none; text-align: left;
+    .meta-badge-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
     }
-    .dl-toast.visible { display: block; }
 
-    .section { padding: 48px 0; }
-    .section-title { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 10px; }
-    .section-sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 30px; }
+    .meta-badge-item strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
 
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
-      padding: 22px; transition: border-color 0.18s;
+    .hash-copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      background: rgba(59, 130, 246, 0.09);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      color: #bfdbfe;
+      font-size: 12px;
+      transition: background 0.16s ease, border-color 0.16s ease;
     }
-    .card:hover { border-color: rgba(96, 165, 250, 0.36); }
-    .step-badge {
-      display: inline-block; font-size: 11.5px; font-weight: 700; color: #93c5fd;
-      background: rgba(37, 99, 235, 0.18); border: 1px solid rgba(96, 165, 250, 0.35);
-      padding: 3px 10px; border-radius: 999px; margin-bottom: 10px;
-    }
-    .card h3 { font-size: 17px; margin-bottom: 8px; }
-    .card p { font-size: 14px; color: var(--muted); }
 
-    .providers-row {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 22px;
+    .hash-copy-btn:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(96, 165, 250, 0.5);
     }
-    .prov-pill {
-      display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px;
-      border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; font-weight: 600;
-    }
-    .prov-pill img { width: 22px; height: 22px; object-fit: contain; }
 
-    footer {
-      margin-top: 56px; padding: 28px 0; border-top: 1px solid var(--border);
-      text-align: center; font-size: 13px; color: var(--muted);
+    .download-banner-toast {
+      display: none;
+      margin-top: 12px;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.42);
+      color: #a7f3d0;
+      font-size: 13.5px;
+      animation: floatCardGentle 4s ease-in-out infinite;
+    }
+
+    .download-banner-toast.is-visible {
+      display: block;
+    }
+
+    /* Live Hero Stage Monitor */
+    .hero-stage-card {
+      position: relative;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(160deg, rgba(22, 29, 46, 0.94), rgba(10, 14, 23, 0.98));
+      border: 1px solid rgba(147, 197, 253, 0.25);
+      padding: 18px;
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(37, 99, 235, 0.16);
+    }
+
+    .hero-stage-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 16px;
+    }
+
+    .stage-window-dots {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .stage-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .stage-dot-red { background: #ef4444; }
+    .stage-dot-amber { background: #f59e0b; }
+    .stage-dot-green { background: #10b981; }
+
+    .stage-label-pill {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      color: #93c5fd;
+    }
+
+    .stage-viewport {
+      position: relative;
+      border-radius: var(--radius-md);
+      background: #090d16;
+      border: 1px solid var(--border-subtle);
+      height: 290px;
+      overflow: hidden;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stage-scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-blue), transparent);
+      box-shadow: 0 0 18px var(--accent-cyan);
+      animation: scanBeam 4.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .stage-mock-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    .stage-ocr-box {
+      position: absolute;
+      border: 1.5px dashed rgba(34, 211, 238, 0.72);
+      background: rgba(34, 211, 238, 0.08);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      color: #a5f3fc;
+      font-family: var(--font-mono);
+      transition: all 0.45s var(--ease-out-expo);
+    }
+
+    .stage-ocr-tag {
+      position: absolute;
+      top: -19px;
+      left: 0;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(14, 116, 144, 0.92);
+      color: #ecfeff;
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .stage-agent-cursor {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      left: 62%;
+      top: 56%;
+      pointer-events: none;
+      transition: left 0.7s var(--ease-out-expo), top 0.7s var(--ease-out-expo);
+      filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.85));
+    }
+
+    .stage-pipeline-pills {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .stage-step-pill {
+      padding: 9px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      text-align: left;
+      transition: all 0.22s ease;
+    }
+
+    .stage-step-pill.is-active {
+      background: rgba(37, 99, 235, 0.18);
+      border-color: rgba(96, 165, 250, 0.55);
+      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.22);
+    }
+
+    .stage-step-num {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .stage-step-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stage-console-strip {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* =========================================================================
+       VERIFIED TECHNICAL FACTS STRIP
+    ========================================================================= */
+    .facts-ribbon {
+      padding: 28px 0;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(17, 22, 35, 0.55);
+    }
+
+    .facts-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+    }
+
+    .fact-stat-card {
+      padding: 16px 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border-subtle);
+      text-align: center;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .fact-stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-bright);
+    }
+
+    .fact-stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .fact-stat-value span {
+      color: var(--accent-blue);
+    }
+
+    .fact-stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+
+    /* =========================================================================
+       REAL WINDOWS SETUP WIZARD SECTION
+    ========================================================================= */
+    .wizard-showcase-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .wizard-steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .wizard-step-btn {
+      text-align: left;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s ease;
+    }
+
+    .wizard-step-btn:hover {
+      border-color: var(--border-default);
+      background: var(--bg-surface);
+    }
+
+    .wizard-step-btn.is-active {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(17, 22, 35, 0.96));
+      border-color: rgba(96, 165, 250, 0.55);
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.2);
+    }
+
+    .wizard-step-kicker {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #93c5fd;
+      margin-bottom: 4px;
+    }
+
+    .wizard-step-heading {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .wizard-step-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Native Windows Setup Dialog Illustration Frame */
+    .win-dialog-frame {
+      border-radius: 14px;
+      background: #f0f0f0;
+      color: #111827;
+      border: 1px solid #9ca3af;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.65);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 410px;
+    }
+
+    .win-titlebar {
+      height: 34px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: #1f2937;
+    }
+
+    .win-titlebar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .win-titlebar-left img {
+      width: 16px;
+      height: 16px;
+    }
+
+    .win-titlebar-controls {
+      display: flex;
+      gap: 14px;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .win-dialog-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 165px 1fr;
+    }
+
+    .win-sidebar-gradient {
+      background: linear-gradient(180deg, #142d62 0%, #0a1224 100%);
+      color: #ffffff;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .win-sidebar-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px;
+      margin-bottom: 12px;
+    }
+
+    .win-sidebar-logo img {
+      width: 100%;
+      height: 100%;
+    }
+
+    .win-content-pane {
+      background: #ffffff;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .win-progress-track {
+      width: 100%;
+      height: 18px;
+      background: #e5e7eb;
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .win-progress-fill {
+      height: 100%;
+      width: 72%;
+      background: linear-gradient(90deg, #16a34a, #22c55e);
+      transition: width 0.45s ease;
+    }
+
+    .win-input-mock {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      padding: 7px 10px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #334155;
+      margin: 8px 0 12px;
+    }
+
+    .win-dialog-footer {
+      background: #f0f0f0;
+      border-top: 1px solid #d1d5db;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #4b5563;
+    }
+
+    .win-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .win-btn-native {
+      padding: 5px 14px;
+      border: 1px solid #9ca3af;
+      background: #e5e7eb;
+      color: #111827;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .win-btn-native-primary {
+      border-color: #0067c0;
+      background: #0067c0;
+      color: #ffffff;
+    }
+
+    /* =========================================================================
+       FIRST-RUN 3-SLIDE ONBOARDING INTERACTIVE PREVIEW
+    ========================================================================= */
+    .onb-demo-shell {
+      border-radius: var(--radius-xl);
+      background: linear-gradient(155deg, rgba(20, 26, 42, 0.94), rgba(11, 14, 22, 0.98));
+      border: 1px solid var(--border-default);
+      padding: 28px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.52);
+    }
+
+    .onb-demo-nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .onb-demo-tab {
+      padding: 8px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s ease;
+    }
+
+    .onb-demo-tab.is-active {
+      color: #ffffff;
+      background: var(--accent-blue);
+      border-color: rgba(147, 197, 253, 0.65);
+      box-shadow: 0 8px 22px rgba(37, 99, 235, 0.35);
+    }
+
+    .onb-slide-viewport {
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      background: #141820;
+    }
+
+    .onb-slide-track {
+      display: flex;
+      width: 300%;
+      transition: transform 0.55s var(--ease-out-expo);
+    }
+
+    .onb-slide-panel {
+      width: 33.3333%;
+      padding: 36px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .onb-panel-ring {
+      width: 74px;
+      height: 74px;
+      border-radius: 20px;
+      background: rgba(59, 130, 246, 0.14);
+      border: 1px solid rgba(96, 165, 250, 0.42);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      margin-bottom: 16px;
+      transition: all 0.25s ease;
+    }
+
+    .onb-panel-ring img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .onb-key-tester-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 14px 0;
+    }
+
+    .key-prefix-chip {
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      transition: all 0.16s ease;
+    }
+
+    .key-prefix-chip:hover,
+    .key-prefix-chip.is-active {
+      color: #ffffff;
+      border-color: var(--accent-blue);
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .onb-fake-input {
+      width: 100%;
+      max-width: 440px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      background: #0b0e16;
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+  <style>
+    /* =========================================================================
+       4-AGENT PIPELINE & ARCHITECTURE CARDS
+    ========================================================================= */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    .pipeline-card {
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pipeline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-blue {
+      color: #93c5fd;
+      background: rgba(59, 130, 246, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.35);
+    }
+
+    .badge-cyan {
+      color: #67e8f9;
+      background: rgba(34, 211, 238, 0.15);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+    }
+
+    .badge-violet {
+      color: #c4b5fd;
+      background: rgba(139, 92, 246, 0.16);
+      border: 1px solid rgba(167, 139, 250, 0.35);
+    }
+
+    .badge-emerald {
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    .badge-orange {
+      color: #fdba74;
+      background: rgba(249, 115, 22, 0.16);
+      border: 1px solid rgba(251, 146, 60, 0.35);
+    }
+
+    .pipeline-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .pipeline-card p {
+      font-size: 13.8px;
+      color: var(--text-secondary);
+      line-height: 1.58;
+    }
+
+    .pipeline-spec-list {
+      list-style: none;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12.2px;
+      color: var(--text-code);
+      font-family: var(--font-mono);
+    }
+
+    .pipeline-spec-list li::before {
+      content: '→ ';
+      color: var(--accent-blue);
+    }
+
+    /* =========================================================================
+       CURSOR & PROVIDER BORDER THEME SHOWCASE
+    ========================================================================= */
+    .provider-showcase-shell {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .provider-tabs-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .provider-switch-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .provider-switch-card:hover {
+      background: var(--bg-surface);
+      border-color: var(--border-default);
+    }
+
+    .provider-switch-card.is-active {
+      background: var(--bg-surface);
+      border-color: rgba(147, 197, 253, 0.55);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .provider-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .provider-card-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .provider-preview-stage {
+      border-radius: var(--radius-xl);
+      background: var(--bg-elevated);
+      border: 2px solid #3b82f6;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.35s ease, box-shadow 0.35s ease;
+      box-shadow: 0 0 42px rgba(59, 130, 246, 0.2);
+    }
+
+    .provider-preview-stage[data-theme="openai"] {
+      border-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 42px rgba(255, 255, 255, 0.16);
+    }
+
+    .provider-preview-stage[data-theme="claude"] {
+      border-color: #f97316;
+      box-shadow: 0 0 42px rgba(249, 115, 22, 0.25);
+    }
+
+    .provider-preview-stage[data-theme="openrouter"] {
+      border-color: #38bdf8;
+      box-shadow:
+        -10px 0 32px rgba(59, 130, 246, 0.22),
+        10px 0 32px rgba(249, 115, 22, 0.22);
+    }
+
+    .provider-models-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .provider-model-chip {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .provider-model-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* =========================================================================
+       45-TOOL INTERACTIVE CAPABILITY EXPLORER
+    ========================================================================= */
+    .tools-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .tools-filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tool-filter-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: all 0.16s ease;
+    }
+
+    .tool-filter-btn:hover {
+      color: #ffffff;
+      border-color: var(--border-default);
+    }
+
+    .tool-filter-btn.is-active {
+      background: var(--accent-blue);
+      border-color: rgba(147, 197, 253, 0.55);
+      color: #ffffff;
+    }
+
+    .tool-search-wrap {
+      position: relative;
+      min-width: 240px;
+      flex: 0 1 300px;
+    }
+
+    .tool-search-input {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .tool-search-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .tool-search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .tools-catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .tool-item-card {
+      padding: 15px 16px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      transition: border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .tool-item-card:hover {
+      border-color: rgba(96, 165, 250, 0.42);
+      transform: translateY(-2px);
+    }
+
+    .tool-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .tool-item-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #93c5fd;
+    }
+
+    .tool-item-cat {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    .tool-item-desc {
+      font-size: 12.6px;
+      color: var(--text-secondary);
+      line-height: 1.48;
+    }
+
+    /* =========================================================================
+       ENGINEERING DEEP-DIVE TABS & FACTS CARDS
+    ========================================================================= */
+    .deepdive-shell {
+      border-radius: var(--radius-xl);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      overflow: hidden;
+    }
+
+    .deepdive-tabbar {
+      display: flex;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.02);
+      padding: 8px;
+      gap: 6px;
+    }
+
+    .deepdive-tab-btn {
+      padding: 9px 15px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: all 0.16s ease;
+    }
+
+    .deepdive-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .deepdive-tab-btn.is-active {
+      color: #ffffff;
+      background: rgba(37, 99, 235, 0.24);
+      border: 1px solid rgba(96, 165, 250, 0.4);
+    }
+
+    .deepdive-panel {
+      display: none;
+      padding: 28px;
+    }
+
+    .deepdive-panel.is-active {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .deepdive-codebox {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      background: #080b12;
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+      font-size: 12.2px;
+      line-height: 1.65;
+      color: #cbd5e1;
+      overflow-x: auto;
+    }
+
+    .deepdive-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .deepdive-bullets li {
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .deepdive-bullets li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent-emerald);
+      font-weight: 700;
+    }
+
+    /* =========================================================================
+       REQUIREMENTS MATRIX & CHECKSUM VERIFIER
+    ========================================================================= */
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .spec-table-card {
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .spec-table-card h3 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spec-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 13.5px;
+    }
+
+    .spec-row:last-child {
+      border-bottom: none;
+    }
+
+    .spec-key {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .spec-val {
+      color: var(--text-primary);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .verify-command-card {
+      margin-top: 24px;
+      padding: 22px 24px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(17, 22, 35, 0.95));
+      border: 1px solid rgba(52, 211, 153, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .verify-cmd-pre {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: #a7f3d0;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    /* =========================================================================
+       FAQ ACCORDION
+    ========================================================================= */
+    .faq-list {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .faq-item.is-open {
+      border-color: rgba(96, 165, 250, 0.45);
+    }
+
+    .faq-trigger {
+      width: 100%;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      text-align: left;
+      font-size: 15.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .faq-plus {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      transition: transform 0.22s ease, background 0.22s ease;
+    }
+
+    .faq-item.is-open .faq-plus {
+      transform: rotate(45deg);
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .faq-item.is-open .faq-answer {
+      display: block;
+    }
+
+    /* =========================================================================
+       BOTTOM DOWNLOAD CTA & FOOTER
+    ========================================================================= */
+    .final-cta-card {
+      padding: 54px 36px;
+      border-radius: var(--radius-xl);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.25), transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.16), transparent 55%),
+        var(--bg-elevated);
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      text-align: center;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    .final-cta-card h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 14px;
+    }
+
+    .final-cta-card p {
+      max-width: 620px;
+      margin: 0 auto 28px;
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 36px 0 44px;
+      margin-top: 40px;
+      background: rgba(7, 9, 14, 0.9);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a:hover {
+      color: #ffffff;
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS & REDUCED MOTION
+    ========================================================================= */
+    @media (max-width: 1060px) {
+      .hero-grid,
+      .wizard-showcase-grid,
+      .provider-showcase-shell,
+      .deepdive-panel.is-active {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .facts-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .tools-catalog-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 780px) {
+      .nav-links,
+      .nav-github-link {
+        display: none;
+      }
+
+      .mobile-menu-toggle {
+        display: inline-flex;
+      }
+
+      .facts-grid,
+      .pipeline-grid,
+      .tools-catalog-grid,
+      .matrix-grid,
+      .provider-models-grid,
+      .stage-pipeline-pills {
+        grid-template-columns: 1fr;
+      }
+
+      .win-dialog-body {
+        grid-template-columns: 1fr;
+      }
+
+      .win-sidebar-gradient {
+        display: none;
+      }
+
+      .section {
+        padding: 58px 0;
+      }
+    }
+
+    /* =========================================================================
+       INTERACTIVE CURSOR MOTION LAB & KEYBOARD CONTROLS
+    ========================================================================= */
+    .motion-lab-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .motion-track-stage {
+      position: relative;
+      height: 250px;
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at 22% 28%, rgba(59, 130, 246, 0.14), transparent 55%),
+        #090d16;
+      border: 1px solid var(--border-default);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .motion-anchor-dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      transform: translate(-50%, -50%);
+    }
+
+    .motion-anchor-start {
+      left: 16%;
+      top: 72%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 18px rgba(52, 211, 153, 0.7);
+    }
+
+    .motion-anchor-target {
+      left: 80%;
+      top: 28%;
+      background: var(--accent-blue);
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.8);
+    }
+
+    .motion-sim-cursor {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      left: 16%;
+      top: 72%;
+      transform: translate(-3px, -3px);
+      pointer-events: none;
+      filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.9));
+    }
+
+    .motion-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .motion-speed-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .shortcut-cards-col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .shortcut-item-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .kbd-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: #090c12;
+      border: 1px solid var(--border-default);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+
+    /* =========================================================================
+       ARCHITECTURAL COMPARISON MATRIX
+    ========================================================================= */
+    .comparison-table-card {
+      border-radius: var(--radius-xl);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      overflow-x: auto;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+      text-align: left;
+    }
+
+    .comparison-table thead th {
+      padding: 18px 22px;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .comparison-table thead th.col-brief {
+      color: #93c5fd;
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    .comparison-table tbody td {
+      padding: 16px 22px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    .comparison-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .comparison-table tbody td.col-feature {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .comparison-table tbody td.col-brief {
+      color: #ecfdf5;
+      background: rgba(59, 130, 246, 0.05);
+      font-weight: 500;
+    }
+
+    .check-inline {
+      color: var(--accent-emerald);
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    .dash-inline {
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    @media (max-width: 1060px) {
+      .motion-lab-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container nav">
-      <a class="brand" href="./">
-        <img src="assets/icon.png" alt="Brief Logo">
+  <div class="scroll-progress-wrap" aria-hidden="true">
+    <div class="scroll-progress-bar" id="scroll-progress-bar"></div>
+  </div>
+
+  <div class="ambient-backdrop" aria-hidden="true">
+    <div class="ambient-grid"></div>
+    <div class="aurora-orb aurora-orb-1"></div>
+    <div class="aurora-orb aurora-orb-2"></div>
+    <div class="aurora-orb aurora-orb-3"></div>
+  </div>
+  <canvas id="bg-particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- =======================================================================
+       STICKY NAVIGATION BAR
+  ======================================================================= -->
+  <header class="site-header" id="site-header">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="#top">
+        <span class="nav-brand-logo">
+          <img src="assets/icon.png" alt="Brief Icon">
+        </span>
         <span>Brief</span>
+        <span class="nav-version-chip" id="nav-version-chip">v1.0.0</span>
       </a>
-      <nav class="nav-links">
-        <a href="#setup-flow">Windows Setup</a>
-        <a href="#first-run">First-Run Tour</a>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#windows-wizard">Windows Wizard</a>
+        <a href="#onboarding-preview">First-Run Slides</a>
+        <a href="#architecture">4-Agent Engine</a>
         <a href="#providers">Providers</a>
-        <a class="nav-cta" id="nav-download-cta" href="download/Brief-Setup.exe" download="Brief-Setup.exe">Download</a>
+        <a href="#tools-explorer">45 Tools</a>
+        <a href="#deep-dive">Engineering</a>
+        <a href="#faq">FAQ</a>
       </nav>
+
+      <div class="nav-actions">
+        <a class="nav-github-link" href="https://github.com/albrhe1466-dotcom/Brief" target="_blank" rel="noopener">GitHub Repo</a>
+        <a class="nav-download-cta" id="nav-download-cta" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
+          <span>Download Brief</span>
+        </a>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Toggle Menu" aria-expanded="false">☰</button>
+      </div>
+    </div>
+
+    <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+      <a href="#windows-wizard">Windows Setup Wizard</a>
+      <a href="#onboarding-preview">First-Run Slide Tour</a>
+      <a href="#architecture">4-Agent Architecture</a>
+      <a href="#providers">Supported AI Providers</a>
+      <a href="#tools-explorer">45 Real Desktop Tools</a>
+      <a href="#deep-dive">Engineering Facts</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/albrhe1466-dotcom/Brief" target="_blank" rel="noopener">GitHub Repository</a>
     </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <div class="hero-badge">Windows 10 / 11 (64-bit) · Native Windows Setup Wizard</div>
-      <h1>Your desktop AI that sees, clicks, builds, and verifies.</h1>
-      <p>
-        Download the real Windows installer (<code style="color:#fff">Brief-Setup.exe</code>). When opened, Windows launches the Setup Wizard, downloads Brief onto your computer, creates shortcuts, and opens straight into your personal welcome setup.
-      </p>
+  <main id="top">
+    <!-- =====================================================================
+         HERO SECTION
+    ===================================================================== -->
+    <section class="hero-section">
+      <div class="container hero-grid">
+        <div class="hero-copy-col" data-reveal>
+          <div class="hero-pill-badge">
+            <span class="live-pulse-dot" aria-hidden="true"></span>
+            <span>Windows 10 &amp; 11 (64-bit) · Native Windows Setup Wizard</span>
+          </div>
 
-      <div class="download-actions">
-        <a class="btn-dl-primary" id="btn-download-exe" href="download/Brief-Setup.exe" download="Brief-Setup.exe">
-          <span>⬇ Download Brief Setup (.exe)</span>
-          <span id="exe-size-tag" style="font-size:12.5px;opacity:0.88;font-weight:500;">Windows Wizard</span>
-        </a>
-        <a class="btn-dl-secondary" id="btn-download-zip" href="download/brief-package.zip" download="Brief-Portable-Windows.zip">
-          <span>📦 Portable Package (.zip)</span>
-          <span id="zip-size-tag" style="font-size:12px;color:var(--muted);">Full Bundle</span>
-        </a>
-      </div>
+          <h1 class="hero-heading">
+            The desktop AI agent that
+            <span class="hero-heading-highlight">sees, acts, and verifies</span>
+            for real.
+          </h1>
 
-      <div class="meta-strip">
-        <span>Version: <strong id="ver-tag">1.0.0</strong></span>
-        <span>OS: <strong>Windows 10 / 11 x64</strong></span>
-        <span>Setup SHA-256: <code id="sha-tag">ready</code></span>
-      </div>
+          <p class="hero-lead">
+            Download <strong>Brief</strong> as a genuine compiled Windows Setup Wizard (<code>Brief-Setup.exe</code>). When opened on Windows, the native Setup Wizard downloads Brief onto your PC, installs shortcuts, and opens straight into an animated 3-slide welcome experience with instant API key auto-detection.
+          </p>
 
-      <div class="dl-toast" id="dl-toast">
-        <strong>Download started: Brief-Setup.exe</strong><br>
-        Open <strong>Brief-Setup.exe</strong> from your browser downloads bar or <code style="color:#fff">Downloads</code> folder to launch the native Windows Setup Wizard.
+          <div class="hero-cta-row">
+            <a class="btn-dl-hero" id="hero-download-exe" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
+              <span class="btn-dl-icon" aria-hidden="true">⬇</span>
+              <span class="btn-dl-copy">
+                <span class="btn-dl-title">Download Brief Setup (.exe)</span>
+                <span class="btn-dl-sub" id="hero-exe-meta">Real Windows Setup Wizard · ~84 KB</span>
+              </span>
+            </a>
+
+            <a class="btn-dl-zip" id="hero-download-zip" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip" download="Brief-Portable-Windows.zip">
+              <span style="font-size: 20px;" aria-hidden="true">📦</span>
+              <span class="btn-dl-copy">
+                <span class="btn-dl-title" style="font-size: 14.5px;">Portable Bundle (.zip)</span>
+                <span class="btn-dl-sub" id="hero-zip-meta" style="color: var(--text-muted);">Complete Windows App · ~166.7 MB</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="hero-meta-bar">
+            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.0</strong></span>
+            <span class="meta-badge-item">Architecture <strong>x64 Windows</strong></span>
+            <span class="meta-badge-item">Source <strong id="hero-source-mode">GitHub Releases</strong></span>
+            <button class="hash-copy-btn" id="hero-copy-sha-btn" type="button" title="Copy SHA-256 Digest">
+              <span>SHA-256:</span>
+              <code id="hero-sha-short">verified on release</code>
+            </button>
+          </div>
+
+          <div class="download-banner-toast" id="download-started-toast" role="status">
+            <strong>Download triggered for Brief-Setup.exe!</strong>
+            Open <strong>Brief-Setup.exe</strong> from your browser's Downloads bar or your <code>Downloads</code> folder to launch the native Windows Setup Wizard and install Brief cleanly.
+          </div>
+        </div>
+
+        <!-- Live Interactive Brief Vision & Pipeline Stage -->
+        <div class="hero-stage-col" data-reveal data-reveal-delay="1">
+          <div class="hero-stage-card glow-surface" id="hero-stage-card">
+            <div class="hero-stage-topbar">
+              <div class="stage-window-dots" aria-hidden="true">
+                <span class="stage-dot stage-dot-red"></span>
+                <span class="stage-dot stage-dot-amber"></span>
+                <span class="stage-dot stage-dot-green"></span>
+                <span style="font-size: 12px; color: var(--text-secondary); margin-left: 8px; font-weight: 600;">Brief Desktop Runtime Preview</span>
+              </div>
+              <span class="stage-label-pill" id="stage-live-badge">Step 2 · Scout WinRT OCR</span>
+            </div>
+
+            <div class="stage-viewport" id="stage-viewport">
+              <div class="stage-mock-grid" aria-hidden="true"></div>
+              <div class="stage-scan-line" aria-hidden="true"></div>
+
+              <div class="stage-ocr-box" id="stage-ocr-target-a" style="left: 10%; top: 18%; width: 44%;">
+                <span class="stage-ocr-tag">OCR · Explorer Tree</span>
+                <div>App.tsx · 98.4% confidence</div>
+              </div>
+
+              <div class="stage-ocr-box" id="stage-ocr-target-b" style="left: 48%; top: 52%; width: 42%; border-color: rgba(52, 211, 153, 0.72); background: rgba(16, 185, 129, 0.08); color: #a7f3d0;">
+                <span class="stage-ocr-tag" style="background: rgba(5, 150, 105, 0.9);">Verified Button Target</span>
+                <div>Publish Release (642, 318)</div>
+              </div>
+
+              <div class="stage-ocr-box" id="stage-ocr-target-c" style="left: 12%; top: 72%; width: 34%; border-color: rgba(167, 139, 250, 0.7); background: rgba(139, 92, 246, 0.1); color: #ddd6fe;">
+                <span class="stage-ocr-tag" style="background: rgba(109, 40, 217, 0.92);">DPI Normalized</span>
+                <div>norm(620, 560) → align back</div>
+              </div>
+
+              <svg class="stage-agent-cursor" id="stage-agent-cursor" viewBox="0 0 28 28" aria-hidden="true">
+                <path d="M4 3 L24 12 L14 15 L11 25 Z" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="stage-pipeline-pills" role="tablist" aria-label="Brief 4-stage pipeline preview">
+              <button class="stage-step-pill" type="button" data-stage-index="0">
+                <span class="stage-step-num">Stage 1</span>
+                <span class="stage-step-name">Strategist</span>
+              </button>
+              <button class="stage-step-pill is-active" type="button" data-stage-index="1">
+                <span class="stage-step-num">Stage 2</span>
+                <span class="stage-step-name">Scout OCR</span>
+              </button>
+              <button class="stage-step-pill" type="button" data-stage-index="2">
+                <span class="stage-step-num">Stage 3</span>
+                <span class="stage-step-name">Executor</span>
+              </button>
+              <button class="stage-step-pill" type="button" data-stage-index="3">
+                <span class="stage-step-num">Stage 4</span>
+                <span class="stage-step-name">QA Verify</span>
+              </button>
+            </div>
+
+            <div class="stage-console-strip">
+              <span id="stage-console-text">read_screen_text() → Windows.Media.Ocr scanned 1920x1080 surface</span>
+              <span style="color: var(--text-muted); white-space: nowrap;">auto-cycles</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="section" id="setup-flow">
-      <h2 class="section-title">Real Windows Installer — Not a Simulator</h2>
-      <p class="section-sub">Three simple steps from browser download to running Brief locally on your PC.</p>
-      <div class="grid-3">
-        <div class="card">
-          <div class="step-badge">1 · Windows Wizard</div>
-          <h3>Run Brief-Setup.exe</h3>
-          <p>Opening the downloaded executable launches the genuine native Windows Setup Wizard dialog — pick install location, Desktop &amp; Start Menu shortcuts, and click Install.</p>
-        </div>
-        <div class="card">
-          <div class="step-badge">2 · Live Download &amp; Install</div>
-          <h3>Downloads &amp; Extracts</h3>
-          <p>The Windows wizard downloads the full Brief desktop bundle with a real progress bar, registers Brief in Windows Installed Apps, and clicks straight through to Launch.</p>
-        </div>
-        <div class="card" id="first-run">
-          <div class="step-badge">3 · First-Run Slide Setup</div>
-          <h3>Welcome · Name · Any Key</h3>
-          <p>On launch, Brief greets you with smooth animated slides: enter your name, paste any API key (Gemini, OpenAI, Claude, or OpenRouter), watch it auto-detect &amp; confirm, and enter the workspace.</p>
+    <!-- =====================================================================
+         VERIFIED TECHNICAL FACTS RIBBON
+    ===================================================================== -->
+    <section class="facts-ribbon" aria-label="Verified technical specifications">
+      <div class="container">
+        <div class="facts-grid">
+          <div class="fact-stat-card" data-reveal>
+            <div class="fact-stat-value" data-count-target="45">45<span>+</span></div>
+            <div class="fact-stat-label">Registered Desktop, File, Web &amp; UI Tools</div>
+          </div>
+          <div class="fact-stat-card" data-reveal data-reveal-delay="1">
+            <div class="fact-stat-value">4<span>-Stage</span></div>
+            <div class="fact-stat-label">Planner · Scout OCR · Executor · QA Loop</div>
+          </div>
+          <div class="fact-stat-card" data-reveal data-reveal-delay="2">
+            <div class="fact-stat-value">60<span> Steps</span></div>
+            <div class="fact-stat-label">Default Multi-Step Verification Budget</div>
+          </div>
+          <div class="fact-stat-card" data-reveal data-reveal-delay="3">
+            <div class="fact-stat-value">4K<span> Grid</span></div>
+            <div class="fact-stat-label">Up to 3,840 px GDI+ Coordinate Capture</div>
+          </div>
+          <div class="fact-stat-card" data-reveal data-reveal-delay="4">
+            <div class="fact-stat-value">DPAPI</div>
+            <div class="fact-stat-label">Hardware-Backed Local Key Encryption</div>
+          </div>
+          <div class="fact-stat-card" data-reveal data-reveal-delay="4">
+            <div class="fact-stat-value">0<span> Telemetry</span></div>
+            <div class="fact-stat-label">Direct Provider Endpoints Only</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="providers">
-      <h2 class="section-title">Bring Any API Key — Auto-Detected Instantly</h2>
-      <p class="section-sub">Encrypted locally with Windows DPAPI / OS keychain protection. Nothing leaves your PC except calls to your chosen AI provider.</p>
-      <div class="providers-row">
-        <div class="prov-pill"><img src="assets/gemini-logo.png" alt="Gemini"><span>Google Gemini</span></div>
-        <div class="prov-pill"><img src="assets/openai-logo.png" alt="OpenAI"><span>OpenAI</span></div>
-        <div class="prov-pill"><img src="assets/claude-logo.png" alt="Claude"><span>Anthropic Claude</span></div>
-        <div class="prov-pill"><img src="assets/openrouter-logo.png" alt="OpenRouter"><span>OpenRouter</span></div>
+    <!-- =====================================================================
+         REAL WINDOWS SETUP WIZARD SECTION
+    ===================================================================== -->
+    <section class="section" id="windows-wizard">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Real Compiled Windows Installer</span>
+          <h2 class="section-title">A genuine native Windows Setup Wizard — not a browser fake.</h2>
+          <p class="section-subtitle">
+            When you click Download, Windows receives a real compiled <code>.NET Framework 4</code> Win32/WinForms executable (<code>Brief-Setup.exe</code>). Clicking each step below inspects what the real Windows Setup dialog displays and configures on your PC.
+          </p>
+        </div>
+
+        <div class="wizard-showcase-grid">
+          <div class="wizard-steps-list" data-reveal>
+            <button class="wizard-step-btn is-active" type="button" data-wizard-step="0">
+              <span class="wizard-step-kicker">Wizard Screen 1 · Welcome</span>
+              <div class="wizard-step-heading">Native Windows Setup Launches Instantly</div>
+              <div class="wizard-step-desc">
+                DPI-aware Windows dialog with the Brief icon embedded via <code>rcedit</code>. Explains the install flow before touching any folder.
+              </div>
+            </button>
+
+            <button class="wizard-step-btn" type="button" data-wizard-step="1">
+              <span class="wizard-step-kicker">Wizard Screen 2 · Install Options</span>
+              <div class="wizard-step-heading">Folder Picker, Shortcuts &amp; First-Run Flag</div>
+              <div class="wizard-step-desc">
+                Includes a real Windows <code>FolderBrowserDialog</code> (defaulting to <code>%LOCALAPPDATA%\Programs\LOCALLY</code>), Desktop &amp; Start Menu checkboxes, and <code>--first-run</code> toggle.
+              </div>
+            </button>
+
+            <button class="wizard-step-btn" type="button" data-wizard-step="2">
+              <span class="wizard-step-kicker">Wizard Screen 3 · Live Download &amp; Extract</span>
+              <div class="wizard-step-heading">TLS 1.2 HTTPS Streaming + Progress Bar</div>
+              <div class="wizard-step-desc">
+                Streams <code>brief-package.zip</code> over TLS 1.2 with live MB and MB/s speed, extracts the Electron runtime cleanly, writes <code>WScript.Shell</code> shortcuts, and registers Uninstall info.
+              </div>
+            </button>
+
+            <button class="wizard-step-btn" type="button" data-wizard-step="3">
+              <span class="wizard-step-kicker">Wizard Screen 4 · Complete &amp; Launch</span>
+              <div class="wizard-step-heading">Opens Straight Into Brief First-Run Onboarding</div>
+              <div class="wizard-step-desc">
+                Clicking Finish launches <code>Brief.exe --first-run</code> so your animated 3-slide welcome, name, and API key confirmation flow opens automatically.
+              </div>
+            </button>
+          </div>
+
+          <div class="win-dialog-frame" data-reveal data-reveal-delay="1" aria-label="Windows Setup Wizard visual walkthrough">
+            <div class="win-titlebar">
+              <div class="win-titlebar-left">
+                <img src="assets/icon.png" alt="Brief">
+                <span id="win-frame-title">Brief Setup — Welcome</span>
+              </div>
+              <div class="win-titlebar-controls" aria-hidden="true">
+                <span>─</span>
+                <span>✕</span>
+              </div>
+            </div>
+
+            <div class="win-dialog-body">
+              <div class="win-sidebar-gradient">
+                <div>
+                  <div class="win-sidebar-logo">
+                    <img src="assets/icon.png" alt="Brief Icon">
+                  </div>
+                  <div style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Brief Setup</div>
+                  <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">Private Desktop AI Agent for Windows 10 &amp; 11</div>
+                </div>
+                <div style="font-size: 10.5px; color: #93c5fd;">Native .NET 4 Wizard · Walkthrough Preview</div>
+              </div>
+
+              <div class="win-content-pane">
+                <div id="win-pane-body">
+                  <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;" id="win-pane-heading">Welcome to the Brief Setup Wizard</h3>
+                  <p style="font-size: 12.5px; color: #475569; line-height: 1.55; margin-bottom: 14px;" id="win-pane-copy">
+                    This real Windows installer will download the verified Brief package, configure shortcuts, register Brief under Windows Installed Apps, and launch the first-run onboarding tour.
+                  </p>
+                  <div class="win-input-mock" id="win-pane-detail">Artifact: Brief-Setup.exe (native WinForms x64/AnyCPU executable)</div>
+                  <div class="win-progress-track" id="win-pane-progress-wrap" style="display: none;">
+                    <div class="win-progress-fill" id="win-pane-progress-fill"></div>
+                  </div>
+                </div>
+
+                <div style="font-size: 11.5px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;" id="win-pane-footnote">
+                  Clicking Download above saves the real Windows Brief-Setup.exe onto your computer.
+                </div>
+              </div>
+            </div>
+
+            <div class="win-dialog-footer">
+              <span>Inspecting step <strong id="win-step-counter">1 / 4</strong></span>
+              <div class="win-btn-row">
+                <button class="win-btn-native" id="win-preview-prev" type="button">&lt; Prev</button>
+                <button class="win-btn-native win-btn-native-primary" id="win-preview-next" type="button">Next &gt;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         FIRST-RUN 3-SLIDE ONBOARDING PREVIEW
+    ===================================================================== -->
+    <section class="section" id="onboarding-preview" style="padding-top: 28px;">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Smooth Animated First Launch</span>
+          <h2 class="section-title">What happens the moment Windows finishes installing Brief.</h2>
+          <p class="section-subtitle">
+            Brief greets new installs with a fluid 3-slide welcome transition: greet, personalize your name, and paste any supported API key with instant provider auto-detection before entering the workspace.
+          </p>
+        </div>
+
+        <div class="onb-demo-shell" data-reveal>
+          <div class="onb-demo-nav" role="tablist" aria-label="First-run onboarding slides preview">
+            <button class="onb-demo-tab is-active" type="button" data-onb-slide="0">1 · Welcome to Brief</button>
+            <button class="onb-demo-tab" type="button" data-onb-slide="1">2 · Tell Brief Your Name</button>
+            <button class="onb-demo-tab" type="button" data-onb-slide="2">3 · Auto-Detect Any API Key</button>
+          </div>
+
+          <div class="onb-slide-viewport">
+            <div class="onb-slide-track" id="onb-preview-track">
+              <!-- Slide 0 -->
+              <div class="onb-slide-panel">
+                <div class="onb-panel-ring">
+                  <img src="assets/icon.png" alt="Brief Icon">
+                </div>
+                <h3 style="font-size: 26px; font-weight: 700; margin-bottom: 10px;">Welcome to Brief</h3>
+                <p style="max-width: 520px; color: var(--text-secondary); font-size: 14.5px; margin-bottom: 20px;">
+                  Your private Windows desktop AI partner that reads screen text with native WinRT OCR, drives mouse and keyboard precisely, builds code, and verifies every edit before reporting done.
+                </p>
+                <button class="nav-download-cta" type="button" data-onb-slide="1">Get Started →</button>
+              </div>
+
+              <!-- Slide 1 -->
+              <div class="onb-slide-panel">
+                <div class="onb-panel-ring">
+                  <img src="assets/icon.png" alt="Brief Icon">
+                </div>
+                <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">What's your name?</h3>
+                <p style="max-width: 460px; color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
+                  Saved locally inside encrypted app settings so Brief greets you personally on every startup.
+                </p>
+                <input class="onb-fake-input" id="onb-preview-name" type="text" value="Abdullah" aria-label="Demo name input">
+                <div style="margin-top: 16px; display: flex; gap: 10px;">
+                  <button class="tool-filter-btn" type="button" data-onb-slide="0">← Back</button>
+                  <button class="nav-download-cta" type="button" data-onb-slide="2">Continue →</button>
+                </div>
+              </div>
+
+              <!-- Slide 2 -->
+              <div class="onb-slide-panel">
+                <div class="onb-panel-ring" id="onb-preview-prov-ring">
+                  <img src="assets/gemini-logo.png" id="onb-preview-prov-img" alt="Provider Icon">
+                </div>
+                <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;" id="onb-preview-prov-title">Detected: Google Gemini</h3>
+                <p style="max-width: 500px; color: var(--text-secondary); font-size: 13.8px;" id="onb-preview-prov-sub">
+                  Click any sample prefix below to test Brief's real-time API provider detection before key validation:
+                </p>
+                <div class="onb-key-tester-pills">
+                  <button class="key-prefix-chip is-active" type="button" data-demo-prefix="gemini">AIza… (Gemini)</button>
+                  <button class="key-prefix-chip" type="button" data-demo-prefix="gemini-aq">AQ.… (Gemini)</button>
+                  <button class="key-prefix-chip" type="button" data-demo-prefix="openai">sk-proj-… (OpenAI)</button>
+                  <button class="key-prefix-chip" type="button" data-demo-prefix="claude">sk-ant-… (Claude)</button>
+                  <button class="key-prefix-chip" type="button" data-demo-prefix="openrouter">sk-or-v1-… (OpenRouter)</button>
+                </div>
+                <input class="onb-fake-input" id="onb-preview-key-sample" type="text" readonly value="AIzaSy•••ExampleGeminiPrefix•••" aria-label="Detected key prefix sample">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         4-AGENT PIPELINE SECTION
+    ===================================================================== -->
+    <section class="section" id="architecture">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Built For Real Apps — Not Shallow Clicks</span>
+          <h2 class="section-title">Why Brief finishes complex tasks instead of stopping halfway.</h2>
+          <p class="section-subtitle">
+            Instead of letting one blind prompt guess random coordinates and declare victory early, Brief coordinates four distinct passes over live Windows screen evidence.
+          </p>
+        </div>
+
+        <div class="pipeline-grid">
+          <article class="glow-surface pipeline-card" data-reveal>
+            <span class="pipeline-badge badge-blue">Agent 1 · Strategist</span>
+            <h3>Task Planner</h3>
+            <p>
+              Breaks multi-step desktop goals into verifiable checkpoints before moving the cursor, ensuring target apps, panels, and files are scoped up front.
+            </p>
+            <ul class="pipeline-spec-list">
+              <li>usePlanner: true default</li>
+              <li>focus_window + list_windows</li>
+              <li>Clean subtask milestones</li>
+            </ul>
+          </article>
+
+          <article class="glow-surface pipeline-card" data-reveal data-reveal-delay="1">
+            <span class="pipeline-badge badge-cyan">Agent 2 · Scout Eyes</span>
+            <h3>WinRT OCR + 4K Grid</h3>
+            <p>
+              Combines <code>Windows.Media.Ocr</code> native text detection with normalized coordinate grids and <code>zoom_region</code> inspection so small UI buttons are never misread.
+            </p>
+            <ul class="pipeline-spec-list">
+              <li>read_screen_text() native</li>
+              <li>click_text() exact match</li>
+              <li>Up to 3,840 px capture</li>
+            </ul>
+          </article>
+
+          <article class="glow-surface pipeline-card" data-reveal data-reveal-delay="2">
+            <span class="pipeline-badge badge-violet">Agent 3 · Aligned Hands</span>
+            <h3>DPI-Aware Executor</h3>
+            <p>
+              Runs a persistent high-DPI PowerShell <code>user32.dll</code> host (<code>winput.ps1</code>) with Slow/Medium/Fast/Adaptive speed profiles and optional cursor alignment return.
+            </p>
+            <ul class="pipeline-spec-list">
+              <li>SendInput hardware events</li>
+              <li>hold_key &amp; drag splines</li>
+              <li>alignCursorBack: true</li>
+            </ul>
+          </article>
+
+          <article class="glow-surface pipeline-card" data-reveal data-reveal-delay="3">
+            <span class="pipeline-badge badge-emerald">Agent 4 · QA Verifier</span>
+            <h3>Independent Proof Check</h3>
+            <p>
+              Inspects the actual post-action desktop and file outputs, rejects incomplete work automatically, and loops back to fix missing buttons, dialogs, or builds.
+            </p>
+            <ul class="pipeline-spec-list">
+              <li>maxSteps: 60 budget</li>
+              <li>thought_signature recovery</li>
+              <li>Windows Toast alerts</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+    <!-- =====================================================================
+         PROVIDER AUTO-DETECTION & THEME SHOWCASE
+    ===================================================================== -->
+    <section class="section" id="providers" style="padding-top: 24px;">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">One Installer · Four Official AI Ecosystems</span>
+          <h2 class="section-title">Bring any API key — Brief adapts models, logo, and cursor theme.</h2>
+          <p class="section-subtitle">
+            Keys are validated live directly against your chosen provider endpoint and sealed inside local Windows DPAPI storage. Click each provider to inspect its exact preset models and active overlay border styling.
+          </p>
+        </div>
+
+        <div class="provider-showcase-shell" data-reveal>
+          <div class="provider-tabs-col" role="tablist" aria-label="Supported AI providers">
+            <button class="provider-switch-card is-active" type="button" data-provider-tab="gemini">
+              <div class="provider-card-icon"><img src="assets/gemini-logo.png" alt="Google Gemini"></div>
+              <div>
+                <div style="font-weight: 700; font-size: 15.5px;">Google Gemini</div>
+                <div style="font-size: 12.5px; color: var(--text-muted);">Detects <code>AIza...</code> &amp; <code>AQ....</code> · Cobalt Blue Border</div>
+              </div>
+            </button>
+
+            <button class="provider-switch-card" type="button" data-provider-tab="openai">
+              <div class="provider-card-icon"><img src="assets/openai-logo.png" alt="OpenAI"></div>
+              <div>
+                <div style="font-weight: 700; font-size: 15.5px;">OpenAI</div>
+                <div style="font-size: 12.5px; color: var(--text-muted);">Detects <code>sk-...</code> / <code>sk-proj-...</code> · Pure White Border</div>
+              </div>
+            </button>
+
+            <button class="provider-switch-card" type="button" data-provider-tab="claude">
+              <div class="provider-card-icon"><img src="assets/claude-logo.png" alt="Anthropic Claude"></div>
+              <div>
+                <div style="font-weight: 700; font-size: 15.5px;">Anthropic Claude</div>
+                <div style="font-size: 12.5px; color: var(--text-muted);">Detects <code>sk-ant-...</code> · Warm Orange Border</div>
+              </div>
+            </button>
+
+            <button class="provider-switch-card" type="button" data-provider-tab="openrouter">
+              <div class="provider-card-icon"><img src="assets/openrouter-logo.png" alt="OpenRouter"></div>
+              <div>
+                <div style="font-weight: 700; font-size: 15.5px;">OpenRouter Unified</div>
+                <div style="font-size: 12.5px; color: var(--text-muted);">Detects <code>sk-or-...</code> · Tri-Color Provider Border</div>
+              </div>
+            </button>
+          </div>
+
+          <div class="provider-preview-stage" id="provider-preview-stage" data-theme="gemini">
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="provider-card-icon" style="width: 48px; height: 48px;">
+                    <img src="assets/gemini-logo.png" id="prov-stage-logo" alt="Selected Provider Logo">
+                  </div>
+                  <div>
+                    <h3 id="prov-stage-name" style="font-size: 21px; font-weight: 700;">Google Gemini</h3>
+                    <div id="prov-stage-prefix" style="font-size: 12.5px; color: var(--text-muted); font-family: var(--font-mono);">Key formats: AIza... · AQ....</div>
+                  </div>
+                </div>
+                <span class="pipeline-badge badge-blue" id="prov-stage-border-label">Blue Control Overlay</span>
+              </div>
+
+              <p id="prov-stage-summary" style="margin-top: 14px; font-size: 14px; color: var(--text-secondary);">
+                Direct Gemini API streaming with automatic <code>thought_signature</code> recovery, Computer-Use coordinate normalization, and thinking level controls (Low, Medium, High).
+              </p>
+
+              <div class="provider-models-grid" id="prov-stage-models">
+                <div class="provider-model-chip"><span>Gemini 3.5 Flash-Lite</span><span class="provider-model-hint">Fastest</span></div>
+                <div class="provider-model-chip"><span>Gemini 3.8 Flash</span><span class="provider-model-hint">Balanced</span></div>
+                <div class="provider-model-chip"><span>Gemini 4 Hydrogen</span><span class="provider-model-hint">Reasoning</span></div>
+                <div class="provider-model-chip"><span>Gemini 4 Argon</span><span class="provider-model-hint">Strong</span></div>
+              </div>
+            </div>
+
+            <div style="padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-muted);">
+              <span>Cursor overlay automatically recolors to match active provider</span>
+              <span>Global Emergency Stop: <code>Ctrl+Alt+Q</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         INTERACTIVE 45-TOOL CAPABILITY EXPLORER
+    ===================================================================== -->
+    <section class="section" id="tools-explorer">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Complete Toolset Transparency</span>
+          <h2 class="section-title">Explore all 45 built-in Windows &amp; workspace tools.</h2>
+          <p class="section-subtitle">
+            Every action shown below comes directly from <code>src/main/tools.js</code> — filter by capability category or search by tool name to inspect what Brief actually calls under the hood.
+          </p>
+        </div>
+
+        <div class="tools-controls-bar" data-reveal>
+          <div class="tools-filter-tabs" role="tablist" aria-label="Filter tools by category">
+            <button class="tool-filter-btn is-active" type="button" data-tool-cat="all">All 45 Tools</button>
+            <button class="tool-filter-btn" type="button" data-tool-cat="vision">Vision &amp; OCR</button>
+            <button class="tool-filter-btn" type="button" data-tool-cat="input">Mouse &amp; Keyboard</button>
+            <button class="tool-filter-btn" type="button" data-tool-cat="window">Windows &amp; Displays</button>
+            <button class="tool-filter-btn" type="button" data-tool-cat="files">Files &amp; Code</button>
+            <button class="tool-filter-btn" type="button" data-tool-cat="web">Terminal &amp; Web</button>
+          </div>
+
+          <div class="tool-search-wrap">
+            <span class="tool-search-icon" aria-hidden="true">🔍</span>
+            <input class="tool-search-input" id="tool-search-input" type="search" placeholder="Filter 45 tools (e.g. ocr, art, hold, edit)..." aria-label="Search Brief tools">
+          </div>
+        </div>
+
+        <div class="tools-catalog-grid" id="tools-catalog-grid" data-reveal>
+          <noscript>Enable JavaScript to search and filter all 45 Brief desktop and codebase tools interactively.</noscript>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         ENGINEERING FACTS DEEP-DIVE TABS
+    ===================================================================== -->
+    <section class="section" id="deep-dive" style="padding-top: 24px;">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Under The Hood</span>
+          <h2 class="section-title">Technical architecture facts &amp; honest Windows boundaries.</h2>
+          <p class="section-subtitle">
+            Real numbers, real Windows APIs, and full transparency about OS security rules like UIPI and Secure Desktop.
+          </p>
+        </div>
+
+        <div class="deepdive-shell" data-reveal>
+          <div class="deepdive-tabbar" role="tablist" aria-label="Technical architecture deep dives">
+            <button class="deepdive-tab-btn is-active" type="button" data-tech-tab="vision">1 · Native WinRT OCR &amp; High-DPI</button>
+            <button class="deepdive-tab-btn" type="button" data-tech-tab="hands">2 · Persistent Input Host &amp; Curves</button>
+            <button class="deepdive-tab-btn" type="button" data-tech-tab="security">3 · DPAPI Encryption &amp; Honest Limits</button>
+            <button class="deepdive-tab-btn" type="button" data-tech-tab="notifications">4 · Windows Toast Alerts &amp; MCP</button>
+          </div>
+
+          <div class="deepdive-panel is-active" id="tech-panel-vision">
+            <div>
+              <h3 style="font-size: 21px; font-weight: 700; margin-bottom: 10px;">Per-Monitor DPI Normalization + Native Windows OCR</h3>
+              <p style="font-size: 14.5px; color: var(--text-secondary);">
+                Standard Electron desktop capture or naive pixel guessing breaks on 125%, 150%, or dual-monitor setups. Brief queries every display's logical DIP bounds and physical resolution, maps normalized <code>0–1000</code> model coordinates into exact screen pixels, and runs native <code>Windows.Media.Ocr.OcrEngine</code> right in memory.
+              </p>
+              <ul class="deepdive-bullets">
+                <li>Captures up to <strong>3,840 px</strong> wide GDI+ screenshots with an optional coordinate overlay grid.</li>
+                <li><code>click_text</code> matches on-screen labels using extracted OCR bounding boxes rather than blind guessing.</li>
+                <li><code>zoom_region</code> crops dense timelines, CAD toolbars, or small buttons before clicking.</li>
+              </ul>
+            </div>
+            <pre class="deepdive-codebox">norm(0..1000, 0..1000)
+  -> dip(display.bounds.x + nx * width, ny * height)
+  -> nativePhysical(dip * scaleFactor)
+  -> SetProcessDpiAwarenessContext(-4) // Per-Monitor V2
+
+OCR Engine:
+  Windows.Media.Ocr.OcrEngine.TryCreateFromUserProfileLanguages()
+  Returns line bounding rects + confidence centers</pre>
+          </div>
+
+          <div class="deepdive-panel" id="tech-panel-hands">
+            <div>
+              <h3 style="font-size: 21px; font-weight: 700; margin-bottom: 10px;">Aligned Mouse Motion, Drag &amp; Art Stroke Primitives</h3>
+              <p style="font-size: 14.5px; color: var(--text-secondary);">
+                Rather than spawning a slow new PowerShell process for every single click, Brief boots a single long-lived background Win32 P/Invoke input host (<code>src/main/native/winput.ps1</code>) communicating over stdin/stdout JSON lines.
+              </p>
+              <ul class="deepdive-bullets">
+                <li>Supports <strong>adaptive</strong>, <strong>slow</strong>, <strong>medium</strong>, and <strong>fast</strong> cursor trajectories plus post-action <code>alignCursorBack</code>.</li>
+                <li><code>hold_key</code>, <code>mouse_button</code>, <code>drag</code>, and <code>scroll</code> support real hold-and-drag gestures for sliders, timelines, and canvases.</li>
+                <li><code>draw_art</code> executes smooth multi-point geometric vector strokes for diagrams and artwork.</li>
+              </ul>
+            </div>
+            <pre class="deepdive-codebox">Host Process:
+  powershell.exe -&gt; src/main/native/winput.ps1 (persistent loop)
+  user32.dll :: SendInput(INPUT[], cbSize)
+
+Supported Profiles:
+  adaptive  -&gt; adjusts ease speed by travel distance
+  slow      -&gt; precision drawing &amp; delicate UI targets
+  medium    -&gt; balanced everyday workflow speed
+  fast      -&gt; rapid repetitive navigation</pre>
+          </div>
+
+          <div class="deepdive-panel" id="tech-panel-security">
+            <div>
+              <h3 style="font-size: 21px; font-weight: 700; margin-bottom: 10px;">Zero Plaintext Key Storage + Transparent OS Boundaries</h3>
+              <p style="font-size: 14.5px; color: var(--text-secondary);">
+                Every API key you paste is encrypted using Electron <code>safeStorage</code> backed by Windows <strong>DPAPI</strong> (tied to your logged-in Windows user account). Brief never uploads keys to any intermediary server and clearly discloses Windows OS protections.
+              </p>
+              <ul class="deepdive-bullets">
+                <li>Keys never touch remote analytics, telemetry servers, or unencrypted disk files.</li>
+                <li><strong>Permission Modes:</strong> <em>Chat Only</em>, <em>Ask for Permission</em>, and guarded <em>Full Access</em> (permanent deletions always confirm).</li>
+                <li><strong>Honest Windows UIPI Boundary:</strong> Non-elevated apps cannot send synthetic input to elevated Administrator windows, UAC prompts, or Secure Desktop.</li>
+              </ul>
+            </div>
+            <pre class="deepdive-codebox">Storage:
+  safeStorage.encryptString(apiKey) -&gt; DPAPI blob on userData
+  Legacy migration: no plaintext secret files written
+
+Provider Endpoints Only:
+  Gemini     -&gt; generativelanguage.googleapis.com
+  OpenAI     -&gt; api.openai.com
+  Anthropic  -&gt; api.anthropic.com
+  OpenRouter -&gt; openrouter.ai/api/v1</pre>
+          </div>
+
+          <div class="deepdive-panel" id="tech-panel-notifications">
+            <div>
+              <h3 style="font-size: 21px; font-weight: 700; margin-bottom: 10px;">Native Windows Action Center Notifications &amp; Local MCP</h3>
+              <p style="font-size: 14.5px; color: var(--text-secondary);">
+                Long multi-step builds don't require staring at the chat window. Brief pushes real Windows Toast notifications through Windows Notification Manager when an agent finishes, hits an error, or requests permission, alongside a local MCP bridge on port <code>3847</code>.
+              </p>
+              <ul class="deepdive-bullets">
+                <li><strong>Windows Action Center alerts</strong> notify you even if Brief is minimized behind Roblox Studio or VS Code.</li>
+                <li><strong>Local MCP Bridge:</strong> Auto-discovers connected MCP servers and exposes live workspace tools cleanly on <code>127.0.0.1:3847</code>.</li>
+                <li><strong>Automatic thought recovery:</strong> Preserves and strips malformed <code>thought_signature</code> tool state safely mid-turn.</li>
+              </ul>
+            </div>
+            <pre class="deepdive-codebox">Windows Toast Pipeline:
+  Main Process -&gt; Windows.UI.Notifications.ToastNotificationManager
+  Events: task_complete | approval_needed | task_error
+
+Local MCP Bridge:
+  http://127.0.0.1:3847/mcp/connect
+  Discovers active IDE &amp; creative tool MCP integrations</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         ARCHITECTURAL COMPARISON MATRIX
+    ===================================================================== -->
+    <section class="section" id="architecture-comparison" style="padding-top: 24px;">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Side-By-Side Facts</span>
+          <h2 class="section-title">How Brief compares to browser-only chat wrappers.</h2>
+          <p class="section-subtitle">
+            Designed natively around Windows APIs, multi-stage verification, and hardware-encrypted keys rather than fragile single-prompt loops.
+          </p>
+        </div>
+
+        <div class="comparison-table-card" data-reveal>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Capability</th>
+                <th class="col-brief">Brief Windows Desktop Agent</th>
+                <th>Browser-Only AI Chat Tabs</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-feature">Installer &amp; Onboarding</td>
+                <td class="col-brief"><span class="check-inline">✓</span>Real compiled .NET 4 Setup Wizard + animated 3-slide welcome setup</td>
+                <td><span class="dash-inline">—</span>No OS desktop integration or shortcuts</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Screen Vision &amp; Text Reading</td>
+                <td class="col-brief"><span class="check-inline">✓</span>4K GDI+ capture + native <code>Windows.Media.Ocr</code> + <code>zoom_region</code></td>
+                <td><span class="dash-inline">—</span>Requires manual copy-paste or static image uploads</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Mouse, Drag, Hold &amp; Art Input</td>
+                <td class="col-brief"><span class="check-inline">✓</span>Persistent DPI-aware <code>SendInput</code> host (<code>winput.ps1</code>) with 4 speed profiles</td>
+                <td><span class="dash-inline">—</span>Cannot move cursor, hold keys, or interact with apps</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Quality &amp; Completion Checks</td>
+                <td class="col-brief"><span class="check-inline">✓</span>4-agent loop (Planner, Scout, Executor, QA Verifier) with 60-step budget</td>
+                <td><span class="dash-inline">—</span>Single-pass responses cannot inspect live desktop results</td>
+              </tr>
+              <tr>
+                <td class="col-feature">API Key Security</td>
+                <td class="col-brief"><span class="check-inline">✓</span>Electron <code>safeStorage</code> / Windows DPAPI encryption + zero telemetry</td>
+                <td><span class="dash-inline">—</span>Requests routed through external vendor cloud sessions</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Multi-Provider Freedom</td>
+                <td class="col-brief"><span class="check-inline">✓</span>Auto-detects Gemini, OpenAI, Claude &amp; OpenRouter keys cleanly</td>
+                <td><span class="dash-inline">—</span>Locked into one vendor's proprietary interface</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Background Alerting</td>
+                <td class="col-brief"><span class="check-inline">✓</span>Native Windows Toast Action Center alerts on complete, error, or ask</td>
+                <td><span class="dash-inline">—</span>Hidden inside browser tabs when other apps run fullscreen</td>
+              </tr>
+              <tr>
+                <td class="col-feature">Local Tool Surface</td>
+                <td class="col-brief"><span class="check-inline">✓</span>45 dedicated Windows desktop, file, terminal, web, and MCP bridge tools</td>
+                <td><span class="dash-inline">—</span>Sandboxed inside browser tab storage</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SYSTEM REQUIREMENTS & SHA-256 VERIFIER
+    ===================================================================== -->
+    <section class="section" id="requirements">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">System &amp; Package Specifications</span>
+          <h2 class="section-title">Verified system specs &amp; installer integrity check.</h2>
+          <p class="section-subtitle">
+            Everything included inside the downloaded Windows package and how to verify file integrity with PowerShell.
+          </p>
+        </div>
+
+        <div class="matrix-grid">
+          <div class="spec-table-card" data-reveal>
+            <h3>🖥 Windows System Requirements</h3>
+            <div class="spec-row">
+              <span class="spec-key">Operating System</span>
+              <span class="spec-val">Windows 10 / Windows 11 (64-bit x64)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Setup Runtime Prerequisite</span>
+              <span class="spec-val">Built-in .NET Framework 4.x (included on Windows 10/11)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Disk Footprint Installed</span>
+              <span class="spec-val">~390 MB extracted runtime + app bundle</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Default Install Directory</span>
+              <span class="spec-val"><code>%LOCALAPPDATA%\Programs\LOCALLY</code> (per-user, no UAC required)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Desktop Session Requirement</span>
+              <span class="spec-val">Interactive unlocked Windows desktop session</span>
+            </div>
+          </div>
+
+          <div class="spec-table-card" data-reveal data-reveal-delay="1">
+            <h3>📦 Installer &amp; Release Artifacts</h3>
+            <div class="spec-row">
+              <span class="spec-key">Setup Executable</span>
+              <span class="spec-val"><code id="spec-exe-name">Brief-Setup.exe</code> (<span id="spec-exe-size">~84 KB</span>)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Full App Archive</span>
+              <span class="spec-val"><code id="spec-zip-name">brief-package.zip</code> (<span id="spec-zip-size">~166.7 MB</span>)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Shortcuts Created</span>
+              <span class="spec-val">Desktop &amp; Start Menu (<code>Brief.lnk</code>)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Uninstall Registration</span>
+              <span class="spec-val">Windows Installed Apps (<code>HKCU\...\Uninstall\Brief</code>)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Setup SHA-256 Digest</span>
+              <span class="spec-val"><code id="spec-exe-sha" style="font-size: 11.5px; word-break: break-all;">Fetching from release…</code></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="verify-command-card" data-reveal>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="font-size: 14px; font-weight: 700; color: #ecfdf5; margin-bottom: 6px;">Verify your downloaded <code>Brief-Setup.exe</code> in Windows PowerShell</div>
+            <pre class="verify-cmd-pre" id="ps-verify-cmd">Get-FileHash "$HOME\Downloads\Brief-Setup.exe" -Algorithm SHA256</pre>
+          </div>
+          <button class="nav-download-cta" id="copy-verify-cmd-btn" type="button">Copy PowerShell Check</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         FAQ ACCORDION
+    ===================================================================== -->
+    <section class="section" id="faq" style="padding-top: 24px;">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Questions &amp; Answers</span>
+          <h2 class="section-title">Everything to know before and after downloading.</h2>
+        </div>
+
+        <div class="faq-list" data-reveal>
+          <div class="faq-item is-open">
+            <button class="faq-trigger" type="button" aria-expanded="true">
+              <span>Is Brief-Setup.exe a real Windows Setup Wizard or a web simulator?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              It is a <strong>real compiled Windows executable</strong> built with Microsoft <code>.NET Framework 4</code> (<code>csc.exe</code> / <code>WinForms</code>) and stamped with the Brief icon via <code>rcedit</code>. Clicking any Download button on this site saves <code>Brief-Setup.exe</code> directly to your Downloads folder; running it launches Windows's own native Setup Wizard, downloads <code>brief-package.zip</code>, extracts <code>Brief.exe</code>, creates Desktop &amp; Start Menu shortcuts, and launches Brief into onboarding.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>What happens if Windows SmartScreen warns about an unsigned indie installer?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              Because <code>Brief-Setup.exe</code> is a community/indie open-source release compiled cleanly via GitHub Actions rather than an expensive commercial EV code-signing certificate, Windows SmartScreen may show "Windows protected your PC" on first run. You can inspect the exact open-source compiler script in <code>scripts/build-installer.js</code>, verify the SHA-256 hash above, click <strong>More info → Run anyway</strong>, or download the raw <code>brief-package.zip</code> archive directly and extract it anywhere.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>Does the installer work even if my home developer PC is turned off?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              Yes. Both this GitHub Pages webpage and the GitHub Releases binary assets (<code>Brief-Setup.exe</code> and <code>brief-package.zip</code>) are hosted 24/7 on GitHub's cloud infrastructure. Any user anywhere can download and install Brief at any time with your local computer completely shut down.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>Why is Brief packaged with Electron — can it still control native apps reliably?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              Electron renders only Brief's chat and dashboard window. All actual screen vision, OCR, window management, mouse motion, drags, scrolling, and key presses execute in Brief's Node main process and its persistent Win32 native PowerShell input host (<code>winput.ps1</code>) calling Windows <code>user32.dll</code> <code>SendInput</code> and <code>Windows.Media.Ocr</code> directly at native OS speed.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>Which API keys does Brief support during the animated onboarding?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              You can paste a <strong>Google Gemini</strong> key (<code>AIza...</code> or <code>AQ....</code>), an <strong>OpenAI</strong> key (<code>sk-...</code>), an <strong>Anthropic Claude</strong> key (<code>sk-ant-...</code>), or an <strong>OpenRouter</strong> key (<code>sk-or-...</code>). Slide 3 detects the provider instantaneously, validates the key against the provider API, saves it encrypted with Windows DPAPI, and brings you directly into Brief.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>Where are my API keys and chat histories stored?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              All API keys are sealed locally via Electron <code>safeStorage</code> (Windows DPAPI) inside your local Windows user profile, and chat history stays in local JSON files under your <code>userData</code> folder. Nothing is synced to Brief's website or any third-party backend.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>How do I stop Brief immediately while it is controlling my mouse or keyboard?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              Press <strong><code>Ctrl + Alt + Q</code></strong> globally anywhere in Windows (even while another full-screen app is focused) or click the red <strong>STOP</strong> control in Brief's floating status overlay to abort automation immediately.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>Why can't Brief click inside Administrator UAC prompts or Task Manager?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              Windows User Interface Privilege Isolation (UIPI) blocks standard user-level processes from injecting synthetic <code>SendInput</code> keystrokes or clicks into elevated Administrator windows or the Windows Secure Desktop. For security, Brief runs per-user without demanding Administrator elevation and documents this Windows boundary openly.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>Can I replay the 3-slide welcome onboarding later?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              Yes. Either click <strong>Replay Welcome Tour</strong> inside Settings in Brief, or launch <code>Brief.exe --first-run</code> from a shortcut or terminal at any time.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-trigger" type="button" aria-expanded="false">
+              <span>How do I uninstall Brief completely?</span>
+              <span class="faq-plus">+</span>
+            </button>
+            <div class="faq-answer">
+              <code>Brief-Setup.exe</code> registers an uninstall entry in Windows Settings → Apps → Installed Apps (<code>HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Brief</code>). You can also delete the install folder (<code>%LOCALAPPDATA%\Programs\LOCALLY</code>) and shortcuts cleanly anytime.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         CURSOR MOTION PROFILES & CONTROL SHORTCUTS LAB
+    ===================================================================== -->
+    <section class="section" id="motion-lab" style="padding-top: 20px;">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <span class="section-eyebrow">Precision Mouse Kinematics</span>
+          <h2 class="section-title">Adaptive, Slow, Medium &amp; Fast — plus auto-align return.</h2>
+          <p class="section-subtitle">
+            Test Brief's real cursor speed profiles below. After clicking or dragging a UI control, <code>alignCursorBack</code> smoothly returns your pointer or keeps handoffs predictable.
+          </p>
+        </div>
+
+        <div class="motion-lab-grid" data-reveal>
+          <div class="spec-table-card">
+            <div class="motion-track-stage" id="motion-track-stage">
+              <div class="stage-mock-grid" aria-hidden="true"></div>
+              <div class="motion-anchor-dot motion-anchor-start" title="Original User Pointer"></div>
+              <div class="motion-anchor-dot motion-anchor-target" title="Target UI Button"></div>
+              <span style="position: absolute; left: 10%; top: 80%; font-size: 11px; color: #6ee7b7; font-family: var(--font-mono);">User Start (160, 720)</span>
+              <span style="position: absolute; right: 8%; top: 15%; font-size: 11px; color: #93c5fd; font-family: var(--font-mono);">UI Target (800, 280)</span>
+              <svg class="motion-sim-cursor" id="motion-sim-cursor" viewBox="0 0 28 28" aria-hidden="true">
+                <path d="M4 3 L24 12 L14 15 L11 25 Z" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="motion-controls-row">
+              <div class="motion-speed-pills" role="group" aria-label="Select cursor speed profile">
+                <button class="tool-filter-btn is-active" type="button" data-speed-profile="adaptive">Adaptive (Default)</button>
+                <button class="tool-filter-btn" type="button" data-speed-profile="slow">Slow (Art/Tight UI)</button>
+                <button class="tool-filter-btn" type="button" data-speed-profile="medium">Medium</button>
+                <button class="tool-filter-btn" type="button" data-speed-profile="fast">Fast</button>
+              </div>
+              <button class="nav-download-cta" id="motion-replay-btn" type="button">Replay Cursor Move</button>
+            </div>
+            <div id="motion-readout-text" style="margin-top: 12px; font-size: 12.5px; color: var(--text-muted); font-family: var(--font-mono);">
+              Profile: adaptive · smooth curved trajectory + alignCursorBack enabled
+            </div>
+          </div>
+
+          <div class="shortcut-cards-col">
+            <div class="shortcut-item-card">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; margin-bottom: 3px;">Global Emergency Stop</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">Immediately aborts all running desktop automation anywhere in Windows.</div>
+              </div>
+              <span class="kbd-pill">Ctrl + Alt + Q</span>
+            </div>
+
+            <div class="shortcut-item-card">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; margin-bottom: 3px;">Start New Brief Task / Chat</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">Opens a fresh isolated workspace thread cleanly in Brief.</div>
+              </div>
+              <span class="kbd-pill">Ctrl + N</span>
+            </div>
+
+            <div class="shortcut-item-card">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; margin-bottom: 3px;">Filter Tools On This Page</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">Jump straight into the 45-tool explorer search box above.</div>
+              </div>
+              <span class="kbd-pill">Ctrl + K</span>
+            </div>
+
+            <div class="shortcut-item-card">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; margin-bottom: 3px;">Replay First-Run Wizard</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">Re-open the 3-slide welcome, name, and key setup tour anytime.</div>
+              </div>
+              <span class="kbd-pill">--first-run</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         FINAL CALL TO ACTION
+    ===================================================================== -->
+    <section class="section">
+      <div class="container">
+        <div class="final-cta-card" data-reveal>
+          <span class="section-eyebrow">Ready For Windows 10 &amp; 11</span>
+          <h2>Download Brief and watch it work end-to-end.</h2>
+          <p>
+            Start with the real native Windows Setup Wizard (<code>Brief-Setup.exe</code>) or inspect the full source repository directly on GitHub.
+          </p>
+          <div class="hero-cta-row" style="justify-content: center; margin-bottom: 0;">
+            <a class="btn-dl-hero" id="bottom-download-exe" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
+              <span class="btn-dl-icon" aria-hidden="true">⬇</span>
+              <span class="btn-dl-copy">
+                <span class="btn-dl-title">Download Brief-Setup.exe</span>
+                <span class="btn-dl-sub">Windows 10 / 11 (64-bit) Installer</span>
+              </span>
+            </a>
+            <a class="btn-dl-zip" href="https://github.com/albrhe1466-dotcom/Brief/releases" target="_blank" rel="noopener">
+              <span style="font-size: 18px;" aria-hidden="true">🗂</span>
+              <span class="btn-dl-copy">
+                <span class="btn-dl-title" style="font-size: 14.5px;">Browse All GitHub Releases</span>
+                <span class="btn-dl-sub" style="color: var(--text-muted);">Checksums, source zip &amp; build logs</span>
+              </span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container">Brief Desktop AI Agent · Local-first Windows automation, OCR vision, and multi-agent verification.</div>
+  <!-- =======================================================================
+       FOOTER
+  ======================================================================= -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="assets/icon.png" alt="Brief" width="22" height="22">
+        <span><strong>Brief Desktop AI Agent</strong> · Built for real Windows automation, OCR vision, and multi-agent verification.</span>
+      </div>
+      <div class="footer-links">
+        <a href="#windows-wizard">Windows Wizard</a>
+        <a href="#onboarding-preview">First-Run Slides</a>
+        <a href="#tools-explorer">45 Tools</a>
+        <a href="#requirements">SHA-256 Verify</a>
+        <a href="https://github.com/albrhe1466-dotcom/Brief" target="_blank" rel="noopener">GitHub Source</a>
+      </div>
+    </div>
   </footer>
-
   <script>
     (function () {
-      var GH_REPO = 'albrhe1466-dotcom/Brief';
-      var GH_EXE = 'https://github.com/' + GH_REPO + '/releases/latest/download/Brief-Setup.exe';
-      var GH_ZIP = 'https://github.com/' + GH_REPO + '/releases/latest/download/brief-package.zip';
+      'use strict';
 
-      function fmtBytes(n) {
-        if (!n) return '';
-        if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
-        return Math.round(n / 1024) + ' KB';
+      /* =======================================================================
+         VERIFIED CODEBASE DATASETS (MATCHING src/main/tools.js & providers.js)
+      ======================================================================= */
+      const GITHUB_REPO = 'albrhe1466-dotcom/Brief';
+      const GITHUB_RELEASE_API = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
+      const GITHUB_LATEST_EXE = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Setup.exe';
+      const GITHUB_LATEST_ZIP = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/brief-package.zip';
+
+      const TOOLS_CATALOG = [
+        {
+          name: 'click',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'x, y, button?, clicks?',
+          summary: 'Moves the OS pointer along Brief\'s DPI-aware curve to normalized screen coordinates and performs left, right, or double clicks.'
+        },
+        {
+          name: 'mouse_button',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'button, action (down|up)',
+          summary: 'Presses or releases a hardware mouse button independently for sustained drag, paint, timeline scrubbing, or hold gestures.'
+        },
+        {
+          name: 'click_element',
+          category: 'vision',
+          categoryLabel: 'Vision & OCR',
+          params: 'label, index?',
+          summary: 'Targets a visible UI control by accessible label or OCR match rather than brittle raw coordinate guessing.'
+        },
+        {
+          name: 'read_screen_text',
+          category: 'vision',
+          categoryLabel: 'Vision & OCR',
+          params: 'region?, displayIndex?',
+          summary: 'Runs native Windows.Media.Ocr across the current screen capture and returns recognized text lines with exact bounding coordinates.'
+        },
+        {
+          name: 'click_text',
+          category: 'vision',
+          categoryLabel: 'Vision & OCR',
+          params: 'text, matchCase?, offset?',
+          summary: 'Locates on-screen text directly via WinRT OCR and computes the centered clickable DIP point automatically.'
+        },
+        {
+          name: 'zoom_region',
+          category: 'vision',
+          categoryLabel: 'Vision & OCR',
+          params: 'x1, y1, x2, y2',
+          summary: 'Crops and magnifies a dense area of the desktop (such as small toolbar buttons, explorer hierarchies, or properties panels) for inspection.'
+        },
+        {
+          name: 'double_click',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'x, y',
+          summary: 'Performs a native double-click via user32 SendInput to open files, launch items, or select tokens cleanly.'
+        },
+        {
+          name: 'move_mouse',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'x, y, durationMs?',
+          summary: 'Moves the cursor smoothly across displays using Brief\'s active speed profile (adaptive, slow, medium, or fast).'
+        },
+        {
+          name: 'drag',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'fromX, fromY, toX, toY',
+          summary: 'Executes a continuous press-move-release drag operation across canvases, sliders, scrollbars, and timelines.'
+        },
+        {
+          name: 'draw_art',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'strokes[], color?, closed?',
+          summary: 'Draws smooth multi-point geometric vector paths and illustrations cleanly on drawing canvases without erratic straight-line glitches.'
+        },
+        {
+          name: 'scroll',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'deltaY, deltaX?, x?, y?',
+          summary: 'Scrolls vertically or horizontally over documents, long pages, dropdowns, and panels at configurable wheel ticks.'
+        },
+        {
+          name: 'type_text',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'text, clearFirst?',
+          summary: 'Types Unicode text safely into focused fields and editors using hardware keyboard input events.'
+        },
+        {
+          name: 'press_keys',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'keys[]',
+          summary: 'Dispatches shortcut chords such as Ctrl+S, Ctrl+Shift+P, Alt+Tab, or Enter cleanly through SendInput.'
+        },
+        {
+          name: 'hold_key',
+          category: 'input',
+          categoryLabel: 'Mouse & Keyboard',
+          params: 'key, action (down|up|hold)',
+          summary: 'Holds down modifier or movement keys for exact millisecond durations alongside clicks, drags, or camera navigation.'
+        },
+        {
+          name: 'open_app',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'appNameOrPath, args?',
+          summary: 'Launches installed Windows applications cleanly by executable name, Start Menu shortcut, or full path.'
+        },
+        {
+          name: 'focus_window',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'titleOrProcess',
+          summary: 'Brings a target window to the foreground reliably without leaving unrelated apps blocking the desktop view.'
+        },
+        {
+          name: 'window_control',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'action, title?',
+          summary: 'Maximizes, minimizes, restores, moves, or closes a specific application window cleanly via Win32 handles.'
+        },
+        {
+          name: 'close_other_windows',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'keepTitleOrProcess',
+          summary: 'Minimizes or clears distracting foreground clutter while keeping the user\'s active workspace application focused.'
+        },
+        {
+          name: 'browser_tab',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'action, urlOrQuery?',
+          summary: 'Opens, switches, or manages dedicated browser tabs rather than misclicking unrelated open tabs.'
+        },
+        {
+          name: 'list_windows',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'includeMinimized?',
+          summary: 'Enumerates open desktop windows, HWND identifiers, processes, and bounds across all connected monitors.'
+        },
+        {
+          name: 'switch_display',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'displayIndex',
+          summary: 'Switches active capture and DPI coordinate mapping seamlessly between primary and secondary monitors.'
+        },
+        {
+          name: 'take_screenshot',
+          category: 'vision',
+          categoryLabel: 'Vision & OCR',
+          params: 'grid?, maxWidth?',
+          summary: 'Captures live desktop frames up to 3,840 px via GDI+ with optional coordinate guide grids for visual verification.'
+        },
+        {
+          name: 'wait',
+          category: 'vision',
+          categoryLabel: 'Vision & OCR',
+          params: 'ms',
+          summary: 'Pauses deterministically while heavy apps compile, render, save places, or finish transitions.'
+        },
+        {
+          name: 'get_system_info',
+          category: 'window',
+          categoryLabel: 'Windows & Displays',
+          params: 'none',
+          summary: 'Inspects OS version, CPU architecture, active user paths, displays, and input readiness diagnostics.'
+        },
+        {
+          name: 'list_directory',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'dirPath, depth?',
+          summary: 'Lists folders and files inside workspace or desktop paths with accurate timestamps and byte sizes.'
+        },
+        {
+          name: 'search_files',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'rootPath, pattern',
+          summary: 'Finds files matching wildcard globs or filename queries across user folders and coding projects.'
+        },
+        {
+          name: 'project_tree',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'rootPath, maxDepth?',
+          summary: 'Generates clean structured project directory trees excluding noisy build caches like node_modules.'
+        },
+        {
+          name: 'grep_files',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'rootPath, query, regex?',
+          summary: 'Searches codebases for exact symbol names, function definitions, or configuration strings with line numbers.'
+        },
+        {
+          name: 'read_file',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'filePath, startLine?, endLine?',
+          summary: 'Reads source files, logs, or documents line-by-line with range slicing so large files never overwhelm context.'
+        },
+        {
+          name: 'write_file',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'filePath, content',
+          summary: 'Creates new dedicated project files or scripts cleanly with UTF-8 encoding and automatic parent directory creation.'
+        },
+        {
+          name: 'edit_file',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'filePath, target, replacement',
+          summary: 'Performs surgical string replacements on existing code files while preserving surrounding comments and formatting.'
+        },
+        {
+          name: 'append_file',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'filePath, content',
+          summary: 'Appends structured entries, log rows, or configuration lines to existing files atomically.'
+        },
+        {
+          name: 'create_folder',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'folderPath',
+          summary: 'Creates nested directories cleanly for new software projects or document organization tasks.'
+        },
+        {
+          name: 'move_path',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'srcPath, destPath',
+          summary: 'Moves files or directories safely across locations with collision checks.'
+        },
+        {
+          name: 'rename_path',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'targetPath, newName',
+          summary: 'Renames files or folders cleanly inside their parent directory.'
+        },
+        {
+          name: 'copy_path',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'srcPath, destPath',
+          summary: 'Duplicates files or asset trees cleanly to backup or build staging targets.'
+        },
+        {
+          name: 'delete_path',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'targetPath',
+          summary: 'Permanent deletion always prompts for explicit user approval even when Full Access mode is active.'
+        },
+        {
+          name: 'open_path',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'targetPath',
+          summary: 'Opens any local file, document, or folder with Windows default shell associations.'
+        },
+        {
+          name: 'reveal_in_folder',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'targetPath',
+          summary: 'Opens Windows File Explorer with the generated artifact or output file highlighted directly.'
+        },
+        {
+          name: 'path_info',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'targetPath',
+          summary: 'Inspects file metadata, byte size, permissions, and existence before performing operations.'
+        },
+        {
+          name: 'organize_folder',
+          category: 'files',
+          categoryLabel: 'Files & Code',
+          params: 'folderPath, rules?',
+          summary: 'Sorts cluttered Desktop or Downloads directories into tidy categorized subfolders safely.'
+        },
+        {
+          name: 'run_command',
+          category: 'web',
+          categoryLabel: 'Terminal & Web',
+          params: 'command, cwd?, timeoutMs?',
+          summary: 'Executes PowerShell / Node / build scripts and captures live stdout/stderr and exit codes for verification.'
+        },
+        {
+          name: 'open_url',
+          category: 'web',
+          categoryLabel: 'Terminal & Web',
+          params: 'url',
+          summary: 'Opens verified HTTP/HTTPS links directly inside the default Windows web browser.'
+        },
+        {
+          name: 'web_search',
+          category: 'web',
+          categoryLabel: 'Terminal & Web',
+          params: 'query',
+          summary: 'Performs real web lookups so Brief checks documentation or online information before guessing.'
+        },
+        {
+          name: 'fetch_url',
+          category: 'web',
+          categoryLabel: 'Terminal & Web',
+          params: 'url',
+          summary: 'Fetches clean HTTP response content directly for API documentation, text pages, and verification probes.'
+        }
+      ];
+
+      const PROVIDERS_DATA = {
+        gemini: {
+          theme: 'gemini',
+          name: 'Google Gemini',
+          logo: 'assets/gemini-logo.png',
+          prefixText: 'Key formats: AIza... · AQ....',
+          badgeText: 'Blue Control Overlay',
+          badgeClass: 'pipeline-badge badge-blue',
+          summary: 'Direct Gemini API streaming with automatic thought_signature recovery, Computer-Use coordinate normalization, and thinking level controls (Low, Medium, High).',
+          models: [
+            { name: 'Gemini 3.5 Flash-Lite', hint: 'Fastest' },
+            { name: 'Gemini 3.8 Flash', hint: 'Balanced' },
+            { name: 'Gemini 4 Hydrogen', hint: 'Reasoning' },
+            { name: 'Gemini 4 Argon', hint: 'Strong' }
+          ]
+        },
+        openai: {
+          theme: 'openai',
+          name: 'OpenAI',
+          logo: 'assets/openai-logo.png',
+          prefixText: 'Key formats: sk-... · sk-proj-...',
+          badgeText: 'Pure White Control Overlay',
+          badgeClass: 'pipeline-badge badge-blue',
+          summary: 'Connects directly to OpenAI endpoints using your own API key with crisp white desktop overlay styling and normalized tool/screenshot execution.',
+          models: [
+            { name: 'GPT-6 Luna', hint: 'Fastest' },
+            { name: 'GPT-6.1 Terra', hint: 'Balanced' },
+            { name: 'GPT-6.1 Sol', hint: 'Strong' },
+            { name: 'GPT-6 Astra', hint: 'Agent' }
+          ]
+        },
+        claude: {
+          theme: 'claude',
+          name: 'Anthropic Claude',
+          logo: 'assets/claude-logo.png',
+          prefixText: 'Key format: sk-ant-...',
+          badgeText: 'Warm Orange Control Overlay',
+          badgeClass: 'pipeline-badge badge-orange',
+          summary: 'Talks straight to Anthropic Messages endpoints with orange active control accents, full tool calling, and multimodal desktop vision inspection.',
+          models: [
+            { name: 'Claude Haiku 5.5', hint: 'Fastest' },
+            { name: 'Claude Sonnet 5.5', hint: 'Balanced' },
+            { name: 'Claude Opus 5.5', hint: 'Strong' },
+            { name: 'Claude Fable 5.2', hint: 'Reasoning' }
+          ]
+        },
+        openrouter: {
+          theme: 'openrouter',
+          name: 'OpenRouter Unified',
+          logo: 'assets/openrouter-logo.png',
+          prefixText: 'Key format: sk-or-... · Multi-Model Routing',
+          badgeText: 'Tri-Color Blue · White · Orange',
+          badgeClass: 'pipeline-badge badge-violet',
+          summary: 'Unlocks all 12 curated models across Google Gemini, OpenAI, and Anthropic Claude behind one OpenRouter key with tri-color border styling.',
+          models: [
+            { name: 'Gemini 3.8 Flash / Hydrogen / Argon', hint: 'Google' },
+            { name: 'GPT-6.1 Terra / Sol / Astra', hint: 'OpenAI' },
+            { name: 'Claude Sonnet 5.5 / Opus 5.5 / Fable', hint: 'Anthropic' },
+            { name: '12 Models via 1 Key', hint: 'OpenRouter' }
+          ]
+        }
+      };
+
+      const WIZARD_STAGES = [
+        {
+          title: 'Brief Setup — Welcome',
+          heading: 'Welcome to the Brief Setup Wizard',
+          copy: 'This real compiled .NET Framework 4 Windows Setup Wizard greets the user, verifies interactive environment compatibility, and prepares installation cleanly without browser simulation tricks.',
+          detail: 'Binary: Brief-Setup.exe (native Win32/WinForms executable with icon embedded via rcedit)',
+          footnote: 'Click Next > below to inspect Wizard Screen 2 (Folder Picker & Shortcuts).',
+          progressPct: 0,
+          showProgress: false
+        },
+        {
+          title: 'Brief Setup — Choose Install Location',
+          heading: 'Select Destination Folder & Shortcuts',
+          copy: 'Provides a standard Windows FolderBrowserDialog defaulting to per-user AppData (zero UAC elevation required), Desktop Shortcut toggle, Start Menu Shortcut toggle, and First-Run Welcome Tour flag.',
+          detail: 'Default Path: %LOCALAPPDATA%\\Programs\\LOCALLY\\Brief.exe',
+          footnote: 'Stores Brief cleanly per-user so desktop automation aligns with your active interactive session.',
+          progressPct: 0,
+          showProgress: false
+        },
+        {
+          title: 'Brief Setup — Downloading & Installing Brief',
+          heading: 'Downloading Brief Package & Extracting Files',
+          copy: 'Uses TLS 1.2 + 1.1 + 1.0 streaming to fetch brief-package.zip from GitHub Releases (or local server / offline archive fallback), closes stale instances, extracts files, creates Brief.lnk shortcuts, and registers Uninstall info.',
+          detail: 'Downloading Brief... 118.4 MB / 166.7 MB (24.6 MB/s) -> Registry HKCU\\...\\Uninstall\\Brief',
+          footnote: 'Registers Brief under Windows Settings -> Apps -> Installed Apps for clean uninstallation.',
+          progressPct: 74,
+          showProgress: true
+        },
+        {
+          title: 'Brief Setup — Completing Installation',
+          heading: 'Completing the Brief Setup Wizard',
+          copy: 'Installation complete. Leaving "Launch Brief now" checked runs Brief.exe --first-run automatically so the 3-slide welcome, name entry, and API key auto-detection screen opens immediately.',
+          detail: 'Process.Start("Brief.exe", "--first-run") -> Opens Slide 1: Welcome to Brief',
+          footnote: 'End of Setup walkthrough — download Brief-Setup.exe above to run it for real on Windows.',
+          progressPct: 100,
+          showProgress: true
+        }
+      ];
+
+      const PIPELINE_STAGES = [
+        {
+          badge: 'Step 1 · Strategist Planner',
+          console: 'plan_task() → Decomposing target workflow into 4 verifiable checkpoints',
+          cursorLeft: '24%',
+          cursorTop: '28%',
+          targetA: { borderColor: 'rgba(96, 165, 250, 0.9)', background: 'rgba(59, 130, 246, 0.14)' },
+          targetB: { borderColor: 'rgba(255, 255, 255, 0.18)', background: 'rgba(255, 255, 255, 0.03)' },
+          targetC: { borderColor: 'rgba(167, 139, 250, 0.35)', background: 'rgba(139, 92, 246, 0.05)' }
+        },
+        {
+          badge: 'Step 2 · Scout WinRT OCR',
+          console: 'read_screen_text() → Windows.Media.Ocr scanned 1920x1080 surface cleanly',
+          cursorLeft: '62%',
+          cursorTop: '56%',
+          targetA: { borderColor: 'rgba(34, 211, 238, 0.72)', background: 'rgba(34, 211, 238, 0.08)' },
+          targetB: { borderColor: 'rgba(52, 211, 153, 0.72)', background: 'rgba(16, 185, 129, 0.08)' },
+          targetC: { borderColor: 'rgba(167, 139, 250, 0.7)', background: 'rgba(139, 92, 246, 0.1)' }
+        },
+        {
+          badge: 'Step 3 · Aligned Executor',
+          console: 'click_text("Publish Release") → SendInput curve complete, pointer aligned back',
+          cursorLeft: '72%',
+          cursorTop: '62%',
+          targetA: { borderColor: 'rgba(34, 211, 238, 0.35)', background: 'rgba(34, 211, 238, 0.04)' },
+          targetB: { borderColor: 'rgba(52, 211, 153, 0.95)', background: 'rgba(16, 185, 129, 0.2)' },
+          targetC: { borderColor: 'rgba(167, 139, 250, 0.5)', background: 'rgba(139, 92, 246, 0.07)' }
+        },
+        {
+          badge: 'Step 4 · QA Verifier',
+          console: 'verify_result() → Re-captured screen & confirmed state transition passed',
+          cursorLeft: '28%',
+          cursorTop: '78%',
+          targetA: { borderColor: 'rgba(52, 211, 153, 0.65)', background: 'rgba(16, 185, 129, 0.08)' },
+          targetB: { borderColor: 'rgba(52, 211, 153, 0.95)', background: 'rgba(16, 185, 129, 0.18)' },
+          targetC: { borderColor: 'rgba(52, 211, 153, 0.95)', background: 'rgba(16, 185, 129, 0.18)' }
+        }
+      ];
+
+      const DEMO_PREFIX_MAP = {
+        gemini: {
+          title: 'Detected: Google Gemini',
+          logo: 'assets/gemini-logo.png',
+          sample: 'AIzaSy•••ExampleGeminiPrefix•••',
+          ringBorder: 'rgba(59, 130, 246, 0.65)',
+          ringBg: 'rgba(59, 130, 246, 0.16)',
+          sub: 'Gemini provider detected from AIza prefix — Cobalt Blue control styling ready.'
+        },
+        'gemini-aq': {
+          title: 'Detected: Google Gemini (AQ Key)',
+          logo: 'assets/gemini-logo.png',
+          sample: 'AQ.Ab8RN6•••ExampleGeminiToken•••',
+          ringBorder: 'rgba(59, 130, 246, 0.65)',
+          ringBg: 'rgba(59, 130, 246, 0.16)',
+          sub: 'Gemini provider detected automatically from AQ. prefix as well as AIza.'
+        },
+        openai: {
+          title: 'Detected: OpenAI',
+          logo: 'assets/openai-logo.png',
+          sample: 'sk-proj-•••ExampleOpenAIPrefix•••',
+          ringBorder: 'rgba(255, 255, 255, 0.85)',
+          ringBg: 'rgba(255, 255, 255, 0.1)',
+          sub: 'OpenAI key recognized — enables GPT-6 presets and pure white cursor overlay.'
+        },
+        claude: {
+          title: 'Detected: Anthropic Claude',
+          logo: 'assets/claude-logo.png',
+          sample: 'sk-ant-api03-•••ExampleClaude•••',
+          ringBorder: 'rgba(249, 115, 22, 0.8)',
+          ringBg: 'rgba(249, 115, 22, 0.18)',
+          sub: 'Anthropic key recognized — switches presets to Claude 5.5 & Fable 5.2 with orange accents.'
+        },
+        openrouter: {
+          title: 'Detected: OpenRouter Unified',
+          logo: 'assets/openrouter-logo.png',
+          sample: 'sk-or-v1-•••ExampleOpenRouter•••',
+          ringBorder: 'rgba(56, 189, 248, 0.78)',
+          ringBg: 'rgba(139, 92, 246, 0.18)',
+          sub: 'OpenRouter key recognized — exposes all 12 Gemini, OpenAI, and Claude models in one picker.'
+        }
+      };
+
+      const SPEED_PROFILES = {
+        adaptive: {
+          durationMs: 760,
+          bezierCurve: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          caption: 'Profile: adaptive · distance-scaled smooth curve + alignCursorBack enabled'
+        },
+        slow: {
+          durationMs: 1350,
+          bezierCurve: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          caption: 'Profile: slow · precision painting, CAD timelines, and delicate buttons'
+        },
+        medium: {
+          durationMs: 650,
+          bezierCurve: 'cubic-bezier(0.33, 1, 0.68, 1)',
+          caption: 'Profile: medium · balanced speed for everyday Windows automation'
+        },
+        fast: {
+          durationMs: 320,
+          bezierCurve: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          caption: 'Profile: fast · rapid multi-step navigation with low travel latency'
+        }
+      };
+
+      /* =======================================================================
+         SAFE UTILITY HELPERS
+      ======================================================================= */
+      function byId(id) {
+        return document.getElementById(id);
       }
 
-      function useGitHubReleasesFallback() {
-        var btnExe = document.getElementById('btn-download-exe');
-        var btnZip = document.getElementById('btn-download-zip');
-        var navCta = document.getElementById('nav-download-cta');
-        if (btnExe) btnExe.href = GH_EXE;
-        if (navCta) navCta.href = GH_EXE;
-        if (btnZip) btnZip.href = GH_ZIP;
-        var shaEl = document.getElementById('sha-tag');
-        if (shaEl && shaEl.textContent === 'ready') shaEl.textContent = 'GitHub Releases';
+      function formatBytesHuman(bytes) {
+        const num = Number(bytes) || 0;
+        if (!num) return '';
+        if (num >= 1024 * 1024 * 1024) {
+          return (num / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+        if (num >= 1024 * 1024) {
+          return (num / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        return Math.max(1, Math.round(num / 1024)) + ' KB';
+      }
 
-        fetch('https://api.github.com/repos/' + GH_REPO + '/releases/latest')
-          .then(function (r) {
-            if (!r.ok) throw new Error('no release yet');
-            return r.json();
-          })
-          .then(function (rel) {
-            if (rel.tag_name) document.getElementById('ver-tag').textContent = rel.tag_name.replace(/^v/i, '');
-            var assets = Array.isArray(rel.assets) ? rel.assets : [];
-            assets.forEach(function (a) {
-              if (a.name === 'Brief-Setup.exe') {
-                if (btnExe) btnExe.href = a.browser_download_url || GH_EXE;
-                if (navCta) navCta.href = a.browser_download_url || GH_EXE;
-                document.getElementById('exe-size-tag').textContent = fmtBytes(a.size);
-                if (a.digest && shaEl) shaEl.textContent = String(a.digest).replace(/^sha256:/i, '').slice(0, 14) + '…';
-              } else if (a.name === 'brief-package.zip') {
-                if (btnZip) btnZip.href = a.browser_download_url || GH_ZIP;
-                document.getElementById('zip-size-tag').textContent = fmtBytes(a.size);
+      function prefersReducedMotion() {
+        return typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      }
+
+      function copyTextSafe(text) {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          return navigator.clipboard.writeText(text).catch(function () {
+            fallbackCopyText(text);
+          });
+        }
+        fallbackCopyText(text);
+        return Promise.resolve();
+      }
+
+      function fallbackCopyText(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+        } catch (_) {}
+        document.body.removeChild(ta);
+      }
+
+      /* =======================================================================
+         MODULE 1: AMBIENT PARTICLE CONSTELLATION CANVAS
+      ======================================================================= */
+      function initParticleBackdrop() {
+        const canvas = byId('bg-particle-canvas');
+        if (!canvas || typeof canvas.getContext !== 'function') return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let particles = [];
+        let animFrameId = null;
+        let pointerX = width * 0.5;
+        let pointerY = height * 0.25;
+
+        function buildParticles() {
+          const count = width < 768 ? 26 : 52;
+          particles = [];
+          for (let i = 0; i < count; i++) {
+            particles.push({
+              x: Math.random() * width,
+              y: Math.random() * height,
+              vx: (Math.random() - 0.5) * 0.28,
+              vy: (Math.random() - 0.5) * 0.26,
+              r: 1 + Math.random() * 1.8,
+              alpha: 0.2 + Math.random() * 0.45
+            });
+          }
+        }
+
+        function resizeCanvas() {
+          width = window.innerWidth;
+          height = window.innerHeight;
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          canvas.style.width = width + 'px';
+          canvas.style.height = height + 'px';
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          buildParticles();
+        }
+
+        function drawFrame() {
+          ctx.clearRect(0, 0, width, height);
+
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x < -10) p.x = width + 10;
+            if (p.x > width + 10) p.x = -10;
+            if (p.y < -10) p.y = height + 10;
+            if (p.y > height + 10) p.y = -10;
+
+            const dx = pointerX - p.x;
+            const dy = pointerY - p.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 26000 && distSq > 4) {
+              const dist = Math.sqrt(distSq);
+              p.x += (dx / dist) * 0.14;
+              p.y += (dy / dist) * 0.14;
+            }
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(147, 197, 253, ' + p.alpha.toFixed(2) + ')';
+            ctx.fill();
+
+            for (let j = i + 1; j < particles.length; j++) {
+              const q = particles[j];
+              const lx = p.x - q.x;
+              const ly = p.y - q.y;
+              const lDist = lx * lx + ly * ly;
+              if (lDist < 17500) {
+                const opacity = (1 - lDist / 17500) * 0.14;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(q.x, q.y);
+                ctx.strokeStyle = 'rgba(96, 165, 250, ' + opacity.toFixed(3) + ')';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+              }
+            }
+          }
+
+          animFrameId = window.requestAnimationFrame(drawFrame);
+        }
+
+        resizeCanvas();
+        if (prefersReducedMotion()) {
+          drawFrame();
+          if (animFrameId) window.cancelAnimationFrame(animFrameId);
+          return;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('pointermove', function (ev) {
+          pointerX = ev.clientX;
+          pointerY = ev.clientY;
+        }, { passive: true });
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) {
+            if (animFrameId) {
+              window.cancelAnimationFrame(animFrameId);
+              animFrameId = null;
+            }
+          } else if (!animFrameId) {
+            animFrameId = window.requestAnimationFrame(drawFrame);
+          }
+        });
+
+        animFrameId = window.requestAnimationFrame(drawFrame);
+      }
+
+      /* =======================================================================
+         MODULE 2: SCROLL PROGRESS, STICKY HEADER & RADIAL CARD GLOW
+      ======================================================================= */
+      function initChromeAndGlow() {
+        const progressBar = byId('scroll-progress-bar');
+        const header = byId('site-header');
+        const glowCards = Array.prototype.slice.call(document.querySelectorAll('.glow-surface'));
+
+        function onScrollUpdate() {
+          const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+          const docHeight = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+          const pct = Math.max(0, Math.min(100, (scrollTop / docHeight) * 100));
+          if (progressBar) progressBar.style.width = pct.toFixed(2) + '%';
+          if (header) header.classList.toggle('is-scrolled', scrollTop > 18);
+        }
+
+        window.addEventListener('scroll', onScrollUpdate, { passive: true });
+        onScrollUpdate();
+
+        glowCards.forEach(function (card) {
+          card.addEventListener('pointermove', function (ev) {
+            const rect = card.getBoundingClientRect();
+            const relX = ev.clientX - rect.left;
+            const relY = ev.clientY - rect.top;
+            card.style.setProperty('--mx', relX.toFixed(1) + 'px');
+            card.style.setProperty('--my', relY.toFixed(1) + 'px');
+          }, { passive: true });
+        });
+      }
+
+      /* =======================================================================
+         MODULE 3: SCROLL REVEAL & COUNTER TRIGGERS
+      ======================================================================= */
+      function initRevealAndCounters() {
+        const revealNodes = Array.prototype.slice.call(document.querySelectorAll('[data-reveal]'));
+        if (!revealNodes.length) return;
+
+        function animateNumericCounter(el) {
+          if (!el || el.dataset.counted === '1') return;
+          el.dataset.counted = '1';
+          const target = Number(el.getAttribute('data-count-target'));
+          if (!isFinite(target) || prefersReducedMotion()) return;
+          const start = performance.now();
+          const duration = 700;
+
+          function tick(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            const val = Math.round(target * eased);
+            el.innerHTML = val + '<span>+</span>';
+            if (t < 1) window.requestAnimationFrame(tick);
+          }
+
+          window.requestAnimationFrame(tick);
+        }
+
+        if (typeof window.IntersectionObserver !== 'function' || prefersReducedMotion()) {
+          revealNodes.forEach(function (n) {
+            n.classList.add('is-visible');
+            n.querySelectorAll('[data-count-target]').forEach(animateNumericCounter);
+          });
+          return;
+        }
+
+        const io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-visible');
+            entry.target.querySelectorAll('[data-count-target]').forEach(animateNumericCounter);
+            if (entry.target.hasAttribute('data-count-target')) {
+              animateNumericCounter(entry.target);
+            }
+            io.unobserve(entry.target);
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+
+        revealNodes.forEach(function (node) {
+          io.observe(node);
+        });
+      }
+
+      /* =======================================================================
+         MODULE 4: HERO 4-STAGE DESKTOP RUNTIME LIVE SHOWCASE
+      ======================================================================= */
+      function initHeroStageShowcase() {
+        const badgeEl = byId('stage-live-badge');
+        const consoleEl = byId('stage-console-text');
+        const cursorEl = byId('stage-agent-cursor');
+        const boxA = byId('stage-ocr-target-a');
+        const boxB = byId('stage-ocr-target-b');
+        const boxC = byId('stage-ocr-target-c');
+        const stageCard = byId('hero-stage-card');
+        const pillBtns = Array.prototype.slice.call(
+          document.querySelectorAll('[data-stage-index]')
+        );
+
+        if (!pillBtns.length) return;
+
+        let activeStageIndex = 1;
+        let stageHovered = false;
+        let autoTimerId = null;
+
+        function applyBoxTheme(boxEl, styleObj) {
+          if (!boxEl || !styleObj) return;
+          boxEl.style.borderColor = styleObj.borderColor;
+          boxEl.style.background = styleObj.background;
+        }
+
+        function setStageIndex(nextIndex) {
+          const safeIdx = ((nextIndex % PIPELINE_STAGES.length) + PIPELINE_STAGES.length) % PIPELINE_STAGES.length;
+          activeStageIndex = safeIdx;
+          const stageData = PIPELINE_STAGES[safeIdx];
+
+          if (badgeEl) badgeEl.textContent = stageData.badge;
+          if (consoleEl) consoleEl.textContent = stageData.console;
+          if (cursorEl) {
+            cursorEl.style.left = stageData.cursorLeft;
+            cursorEl.style.top = stageData.cursorTop;
+          }
+
+          applyBoxTheme(boxA, stageData.targetA);
+          applyBoxTheme(boxB, stageData.targetB);
+          applyBoxTheme(boxC, stageData.targetC);
+
+          pillBtns.forEach(function (btn) {
+            const idx = Number(btn.getAttribute('data-stage-index'));
+            btn.classList.toggle('is-active', idx === safeIdx);
+            btn.setAttribute('aria-selected', idx === safeIdx ? 'true' : 'false');
+          });
+        }
+
+        pillBtns.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const idx = Number(btn.getAttribute('data-stage-index'));
+            setStageIndex(idx);
+          });
+        });
+
+        if (stageCard) {
+          stageCard.addEventListener('mouseenter', function () {
+            stageHovered = true;
+          });
+          stageCard.addEventListener('mouseleave', function () {
+            stageHovered = false;
+          });
+        }
+
+        setStageIndex(1);
+
+        if (!prefersReducedMotion()) {
+          autoTimerId = window.setInterval(function () {
+            if (!stageHovered && !document.hidden) {
+              setStageIndex(activeStageIndex + 1);
+            }
+          }, 3400);
+        }
+
+        window.addEventListener('beforeunload', function () {
+          if (autoTimerId) window.clearInterval(autoTimerId);
+        });
+      }
+
+      /* =======================================================================
+         MODULE 5: REAL WINDOWS SETUP WIZARD WALKTHROUGH CONTROLLER
+      ======================================================================= */
+      function initWindowsWizardPreview() {
+        const stepButtons = Array.prototype.slice.call(
+          document.querySelectorAll('[data-wizard-step]')
+        );
+        const frameTitleEl = byId('win-frame-title');
+        const paneHeadingEl = byId('win-pane-heading');
+        const paneCopyEl = byId('win-pane-copy');
+        const paneDetailEl = byId('win-pane-detail');
+        const progressWrapEl = byId('win-pane-progress-wrap');
+        const progressFillEl = byId('win-pane-progress-fill');
+        const footnoteEl = byId('win-pane-footnote');
+        const counterEl = byId('win-step-counter');
+        const prevBtn = byId('win-preview-prev');
+        const nextBtn = byId('win-preview-next');
+
+        if (!stepButtons.length) return;
+
+        let wizardIndex = 0;
+
+        function renderWizardStep(targetIndex) {
+          const safeIdx = Math.max(0, Math.min(WIZARD_STAGES.length - 1, targetIndex));
+          wizardIndex = safeIdx;
+          const info = WIZARD_STAGES[safeIdx];
+
+          if (frameTitleEl) frameTitleEl.textContent = info.title;
+          if (paneHeadingEl) paneHeadingEl.textContent = info.heading;
+          if (paneCopyEl) paneCopyEl.textContent = info.copy;
+          if (paneDetailEl) paneDetailEl.textContent = info.detail;
+          if (footnoteEl) footnoteEl.textContent = info.footnote;
+          if (counterEl) counterEl.textContent = String(safeIdx + 1) + ' / ' + String(WIZARD_STAGES.length);
+
+          if (progressWrapEl) {
+            progressWrapEl.style.display = info.showProgress ? 'block' : 'none';
+          }
+          if (progressFillEl) {
+            progressFillEl.style.width = String(info.progressPct) + '%';
+          }
+
+          stepButtons.forEach(function (btn) {
+            const btnIdx = Number(btn.getAttribute('data-wizard-step'));
+            btn.classList.toggle('is-active', btnIdx === safeIdx);
+          });
+
+          if (prevBtn) prevBtn.disabled = safeIdx === 0;
+          if (nextBtn) {
+            nextBtn.textContent = safeIdx === WIZARD_STAGES.length - 1 ? 'Restart' : 'Next >';
+          }
+        }
+
+        stepButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            renderWizardStep(Number(btn.getAttribute('data-wizard-step')));
+          });
+        });
+
+        if (prevBtn) {
+          prevBtn.addEventListener('click', function () {
+            renderWizardStep(wizardIndex - 1);
+          });
+        }
+
+        if (nextBtn) {
+          nextBtn.addEventListener('click', function () {
+            if (wizardIndex >= WIZARD_STAGES.length - 1) {
+              renderWizardStep(0);
+            } else {
+              renderWizardStep(wizardIndex + 1);
+            }
+          });
+        }
+
+        renderWizardStep(0);
+      }
+
+      /* =======================================================================
+         MODULE 6: 3-SLIDE ONBOARDING PREVIEW & KEY PREFIX AUTO-DETECTION DEMO
+      ======================================================================= */
+      function initOnboardingShowcase() {
+        const trackEl = byId('onb-preview-track');
+        const slideTriggers = Array.prototype.slice.call(
+          document.querySelectorAll('[data-onb-slide]')
+        );
+        const tabButtons = Array.prototype.slice.call(
+          document.querySelectorAll('.onb-demo-tab[data-onb-slide]')
+        );
+        const prefixChips = Array.prototype.slice.call(
+          document.querySelectorAll('[data-demo-prefix]')
+        );
+        const provRingEl = byId('onb-preview-prov-ring');
+        const provImgEl = byId('onb-preview-prov-img');
+        const provTitleEl = byId('onb-preview-prov-title');
+        const provSubEl = byId('onb-preview-prov-sub');
+        const keySampleEl = byId('onb-preview-key-sample');
+
+        function setOnboardingSlide(slideNum) {
+          const clamped = Math.max(0, Math.min(2, Number(slideNum) || 0));
+          if (trackEl) {
+            trackEl.style.transform = 'translateX(-' + String(clamped * 33.3333) + '%)';
+          }
+          tabButtons.forEach(function (btn) {
+            const idx = Number(btn.getAttribute('data-onb-slide'));
+            const active = idx === clamped;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+        }
+
+        slideTriggers.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            setOnboardingSlide(Number(btn.getAttribute('data-onb-slide')));
+          });
+        });
+
+        function applyPrefixDemo(keyType) {
+          const cfg = DEMO_PREFIX_MAP[keyType] || DEMO_PREFIX_MAP.gemini;
+          if (provImgEl) provImgEl.src = cfg.logo;
+          if (provTitleEl) provTitleEl.textContent = cfg.title;
+          if (provSubEl) provSubEl.textContent = cfg.sub;
+          if (keySampleEl) keySampleEl.value = cfg.sample;
+          if (provRingEl) {
+            provRingEl.style.borderColor = cfg.ringBorder;
+            provRingEl.style.background = cfg.ringBg;
+          }
+
+          prefixChips.forEach(function (chip) {
+            chip.classList.toggle('is-active', chip.getAttribute('data-demo-prefix') === keyType);
+          });
+        }
+
+        prefixChips.forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            applyPrefixDemo(chip.getAttribute('data-demo-prefix'));
+          });
+        });
+
+        setOnboardingSlide(0);
+        applyPrefixDemo('gemini');
+      }
+
+      /* =======================================================================
+         MODULE 7: 4-PROVIDER THEME & MODEL SHOWCASE CONTROLLER
+      ======================================================================= */
+      function initProviderShowcase() {
+        const providerTabs = Array.prototype.slice.call(
+          document.querySelectorAll('[data-provider-tab]')
+        );
+        const stageEl = byId('provider-preview-stage');
+        const logoEl = byId('prov-stage-logo');
+        const nameEl = byId('prov-stage-name');
+        const prefixEl = byId('prov-stage-prefix');
+        const badgeEl = byId('prov-stage-border-label');
+        const summaryEl = byId('prov-stage-summary');
+        const modelsGridEl = byId('prov-stage-models');
+
+        if (!providerTabs.length || !stageEl) return;
+
+        function selectProvider(providerKey) {
+          const info = PROVIDERS_DATA[providerKey] || PROVIDERS_DATA.gemini;
+          stageEl.setAttribute('data-theme', info.theme);
+          if (logoEl) {
+            logoEl.src = info.logo;
+            logoEl.alt = info.name;
+          }
+          if (nameEl) nameEl.textContent = info.name;
+          if (prefixEl) prefixEl.textContent = info.prefixText;
+          if (badgeEl) {
+            badgeEl.textContent = info.badgeText;
+            badgeEl.className = info.badgeClass;
+          }
+          if (summaryEl) summaryEl.textContent = info.summary;
+
+          if (modelsGridEl) {
+            modelsGridEl.innerHTML = '';
+            info.models.forEach(function (item) {
+              const chip = document.createElement('div');
+              chip.className = 'provider-model-chip';
+
+              const labelSpan = document.createElement('span');
+              labelSpan.textContent = item.name;
+
+              const hintSpan = document.createElement('span');
+              hintSpan.className = 'provider-model-hint';
+              hintSpan.textContent = item.hint;
+
+              chip.appendChild(labelSpan);
+              chip.appendChild(hintSpan);
+              modelsGridEl.appendChild(chip);
+            });
+          }
+
+          providerTabs.forEach(function (tab) {
+            const active = tab.getAttribute('data-provider-tab') === providerKey;
+            tab.classList.toggle('is-active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+        }
+
+        providerTabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            selectProvider(tab.getAttribute('data-provider-tab'));
+          });
+        });
+
+        selectProvider('gemini');
+      }
+
+      /* =======================================================================
+         MODULE 8: 45-TOOL SEARCH & FILTER EXPLORER
+      ======================================================================= */
+      function initToolsExplorer() {
+        const gridEl = byId('tools-catalog-grid');
+        const filterButtons = Array.prototype.slice.call(
+          document.querySelectorAll('[data-tool-cat]')
+        );
+        const searchInputEl = byId('tool-search-input');
+
+        if (!gridEl) return;
+
+        let activeCategory = 'all';
+        let activeQuery = '';
+
+        function renderToolsList() {
+          const queryLower = activeQuery.trim().toLowerCase();
+          const filtered = TOOLS_CATALOG.filter(function (tool) {
+            const catOk = activeCategory === 'all' || tool.category === activeCategory;
+            if (!catOk) return false;
+            if (!queryLower) return true;
+            return (
+              tool.name.toLowerCase().indexOf(queryLower) !== -1 ||
+              tool.categoryLabel.toLowerCase().indexOf(queryLower) !== -1 ||
+              tool.params.toLowerCase().indexOf(queryLower) !== -1 ||
+              tool.summary.toLowerCase().indexOf(queryLower) !== -1
+            );
+          });
+
+          gridEl.innerHTML = '';
+
+          if (!filtered.length) {
+            const emptyCard = document.createElement('div');
+            emptyCard.className = 'tool-item-card';
+            emptyCard.style.gridColumn = '1 / -1';
+            emptyCard.style.textAlign = 'center';
+            emptyCard.style.padding = '28px';
+
+            const emptyTitle = document.createElement('div');
+            emptyTitle.style.fontWeight = '700';
+            emptyTitle.style.marginBottom = '6px';
+            emptyTitle.textContent = 'No matching Brief tools for "' + activeQuery.trim() + '"';
+
+            const emptySub = document.createElement('div');
+            emptySub.style.fontSize = '13px';
+            emptySub.style.color = 'var(--text-muted)';
+            emptySub.textContent = 'Clear the filter or switch back to "All 45 Tools".';
+
+            emptyCard.appendChild(emptyTitle);
+            emptyCard.appendChild(emptySub);
+            gridEl.appendChild(emptyCard);
+            return;
+          }
+
+          const fragment = document.createDocumentFragment();
+          filtered.forEach(function (tool) {
+            const card = document.createElement('article');
+            card.className = 'tool-item-card';
+
+            const head = document.createElement('div');
+            head.className = 'tool-item-head';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'tool-item-name';
+            nameSpan.textContent = tool.name + '(' + tool.params + ')';
+
+            const catSpan = document.createElement('span');
+            catSpan.className = 'tool-item-cat';
+            catSpan.textContent = tool.categoryLabel;
+
+            head.appendChild(nameSpan);
+            head.appendChild(catSpan);
+
+            const desc = document.createElement('p');
+            desc.className = 'tool-item-desc';
+            desc.textContent = tool.summary;
+
+            card.appendChild(head);
+            card.appendChild(desc);
+            fragment.appendChild(card);
+          });
+
+          gridEl.appendChild(fragment);
+        }
+
+        filterButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            activeCategory = btn.getAttribute('data-tool-cat') || 'all';
+            filterButtons.forEach(function (other) {
+              other.classList.toggle('is-active', other === btn);
+            });
+            renderToolsList();
+          });
+        });
+
+        if (searchInputEl) {
+          searchInputEl.addEventListener('input', function () {
+            activeQuery = searchInputEl.value || '';
+            renderToolsList();
+          });
+        }
+
+        renderToolsList();
+      }
+
+      /* =======================================================================
+         MODULE 9: ENGINEERING DEEP-DIVE TABS CONTROLLER
+      ======================================================================= */
+      function initEngineeringTabs() {
+        const tabButtons = Array.prototype.slice.call(
+          document.querySelectorAll('[data-tech-tab]')
+        );
+        const panels = Array.prototype.slice.call(
+          document.querySelectorAll('.deepdive-panel')
+        );
+
+        if (!tabButtons.length) return;
+
+        function selectTechTab(tabKey) {
+          tabButtons.forEach(function (btn) {
+            const active = btn.getAttribute('data-tech-tab') === tabKey;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+          panels.forEach(function (panel) {
+            panel.classList.toggle('is-active', panel.id === 'tech-panel-' + tabKey);
+          });
+        }
+
+        tabButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            selectTechTab(btn.getAttribute('data-tech-tab'));
+          });
+        });
+      }
+
+      /* =======================================================================
+         MODULE 10: CURSOR MOTION KINEMATICS SIMULATOR
+      ======================================================================= */
+      function initCursorMotionLab() {
+        const cursorEl = byId('motion-sim-cursor');
+        const replayBtn = byId('motion-replay-btn');
+        const readoutEl = byId('motion-readout-text');
+        const profileButtons = Array.prototype.slice.call(
+          document.querySelectorAll('[data-speed-profile]')
+        );
+
+        if (!cursorEl || !profileButtons.length) return;
+
+        let activeProfile = 'adaptive';
+        let returnTimerId = null;
+
+        function playCursorTrajectory(profileKey) {
+          const cfg = SPEED_PROFILES[profileKey] || SPEED_PROFILES.adaptive;
+          activeProfile = profileKey;
+
+          if (returnTimerId) {
+            window.clearTimeout(returnTimerId);
+            returnTimerId = null;
+          }
+
+          if (readoutEl) readoutEl.textContent = cfg.caption;
+
+          cursorEl.style.transition = 'none';
+          cursorEl.style.left = '16%';
+          cursorEl.style.top = '72%';
+          void cursorEl.offsetWidth;
+
+          if (prefersReducedMotion()) {
+            cursorEl.style.left = '80%';
+            cursorEl.style.top = '28%';
+            return;
+          }
+
+          cursorEl.style.transition =
+            'left ' + cfg.durationMs + 'ms ' + cfg.bezierCurve + ', ' +
+            'top ' + cfg.durationMs + 'ms ' + cfg.bezierCurve;
+          cursorEl.style.left = '80%';
+          cursorEl.style.top = '28%';
+
+          returnTimerId = window.setTimeout(function () {
+            if (readoutEl) {
+              readoutEl.textContent = cfg.caption + ' -> aligning back to user origin (160, 720)';
+            }
+            cursorEl.style.transition =
+              'left ' + Math.round(cfg.durationMs * 0.75) + 'ms cubic-bezier(0.22, 1, 0.36, 1), ' +
+              'top ' + Math.round(cfg.durationMs * 0.75) + 'ms cubic-bezier(0.22, 1, 0.36, 1)';
+            cursorEl.style.left = '16%';
+            cursorEl.style.top = '72%';
+          }, cfg.durationMs + 420);
+        }
+
+        profileButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const profile = btn.getAttribute('data-speed-profile') || 'adaptive';
+            profileButtons.forEach(function (other) {
+              other.classList.toggle('is-active', other === btn);
+            });
+            playCursorTrajectory(profile);
+          });
+        });
+
+        if (replayBtn) {
+          replayBtn.addEventListener('click', function () {
+            playCursorTrajectory(activeProfile);
+          });
+        }
+      }
+
+      /* =======================================================================
+         MODULE 11: FAQ ACCORDION, MOBILE MENU & SHORTCUTS
+      ======================================================================= */
+      function initFaqAndDrawer() {
+        const faqItems = Array.prototype.slice.call(document.querySelectorAll('.faq-item'));
+        faqItems.forEach(function (item) {
+          const trigger = item.querySelector('.faq-trigger');
+          if (!trigger) return;
+          trigger.addEventListener('click', function () {
+            const willOpen = !item.classList.contains('is-open');
+            faqItems.forEach(function (other) {
+              other.classList.remove('is-open');
+              const otherTrigger = other.querySelector('.faq-trigger');
+              if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+            });
+            item.classList.toggle('is-open', willOpen);
+            trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+          });
+        });
+
+        const toggleBtn = byId('mobile-menu-toggle');
+        const drawerEl = byId('mobile-nav-drawer');
+        if (toggleBtn && drawerEl) {
+          toggleBtn.addEventListener('click', function () {
+            const open = drawerEl.classList.toggle('is-open');
+            toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          });
+          Array.prototype.slice.call(drawerEl.querySelectorAll('a')).forEach(function (link) {
+            link.addEventListener('click', function () {
+              drawerEl.classList.remove('is-open');
+              toggleBtn.setAttribute('aria-expanded', 'false');
+            });
+          });
+        }
+
+        document.addEventListener('keydown', function (ev) {
+          if ((ev.ctrlKey || ev.metaKey) && String(ev.key).toLowerCase() === 'k') {
+            const searchInput = byId('tool-search-input');
+            if (searchInput) {
+              ev.preventDefault();
+              searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              window.setTimeout(function () {
+                try {
+                  searchInput.focus();
+                } catch (_) {}
+              }, 220);
+            }
+          } else if (ev.key === 'Escape' && drawerEl && drawerEl.classList.contains('is-open')) {
+            drawerEl.classList.remove('is-open');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      /* =======================================================================
+         MODULE 12: DUAL-MODE DOWNLOAD & RELEASE INTEGRITY RESOLVER
+      ======================================================================= */
+      function initReleaseResolver() {
+        const exeLinks = [
+          byId('nav-download-cta'),
+          byId('hero-download-exe'),
+          byId('bottom-download-exe')
+        ].filter(Boolean);
+        const zipLink = byId('hero-download-zip');
+        const navVerEl = byId('nav-version-chip');
+        const heroVerEl = byId('hero-release-tag');
+        const heroSourceEl = byId('hero-source-mode');
+        const heroExeMetaEl = byId('hero-exe-meta');
+        const heroZipMetaEl = byId('hero-zip-meta');
+        const heroShaShortEl = byId('hero-sha-short');
+        const specExeSizeEl = byId('spec-exe-size');
+        const specZipSizeEl = byId('spec-zip-size');
+        const specShaEl = byId('spec-exe-sha');
+        const copyShaBtn = byId('hero-copy-sha-btn');
+        const copyVerifyBtn = byId('copy-verify-cmd-btn');
+        const verifyCmdEl = byId('ps-verify-cmd');
+        const toastEl = byId('download-started-toast');
+
+        let latestExeSha256 = '';
+
+        function applyDownloadTargets(exeUrl, zipUrl, sourceLabel) {
+          exeLinks.forEach(function (el) {
+            el.setAttribute('href', exeUrl);
+            el.setAttribute('download', 'Brief-Setup.exe');
+          });
+          if (zipLink) {
+            zipLink.setAttribute('href', zipUrl);
+            zipLink.setAttribute('download', 'Brief-Portable-Windows.zip');
+          }
+          if (heroSourceEl && sourceLabel) {
+            heroSourceEl.textContent = sourceLabel;
+          }
+        }
+
+        function applyReleaseMetrics(opts) {
+          if (opts.version) {
+            const cleanVer = String(opts.version).replace(/^v/i, '');
+            if (navVerEl) navVerEl.textContent = 'v' + cleanVer;
+            if (heroVerEl) heroVerEl.textContent = 'v' + cleanVer;
+          }
+          if (opts.exeBytes) {
+            const exeHuman = formatBytesHuman(opts.exeBytes);
+            if (heroExeMetaEl) heroExeMetaEl.textContent = 'Real Windows Setup Wizard · ' + exeHuman;
+            if (specExeSizeEl) specExeSizeEl.textContent = exeHuman;
+          }
+          if (opts.zipBytes) {
+            const zipHuman = formatBytesHuman(opts.zipBytes);
+            if (heroZipMetaEl) heroZipMetaEl.textContent = 'Complete Windows App · ' + zipHuman;
+            if (specZipSizeEl) specZipSizeEl.textContent = zipHuman;
+          }
+          if (opts.exeSha) {
+            latestExeSha256 = String(opts.exeSha);
+            if (heroShaShortEl) heroShaShortEl.textContent = latestExeSha256.slice(0, 14) + '…';
+            if (specShaEl) specShaEl.textContent = latestExeSha256;
+          } else if (specShaEl && specShaEl.textContent === 'Fetching from release…') {
+            specShaEl.textContent = 'Verify live via PowerShell Get-FileHash below';
+          }
+        }
+
+        function loadFromGitHubReleases() {
+          applyDownloadTargets(GITHUB_LATEST_EXE, GITHUB_LATEST_ZIP, 'GitHub Releases');
+          fetch(GITHUB_RELEASE_API)
+            .then(function (resp) {
+              if (!resp.ok) throw new Error('GitHub API status ' + resp.status);
+              return resp.json();
+            })
+            .then(function (release) {
+              const assets = Array.isArray(release.assets) ? release.assets : [];
+              let exeAsset = null;
+              let zipAsset = null;
+              assets.forEach(function (asset) {
+                if (asset.name === 'Brief-Setup.exe') exeAsset = asset;
+                else if (asset.name === 'brief-package.zip') zipAsset = asset;
+              });
+
+              applyDownloadTargets(
+                (exeAsset && exeAsset.browser_download_url) || GITHUB_LATEST_EXE,
+                (zipAsset && zipAsset.browser_download_url) || GITHUB_LATEST_ZIP,
+                'GitHub Releases'
+              );
+
+              const rawDigest = exeAsset && exeAsset.digest ? String(exeAsset.digest).replace(/^sha256:/i, '') : '';
+              applyReleaseMetrics({
+                version: release.tag_name || '1.0.0',
+                exeBytes: exeAsset ? exeAsset.size : 0,
+                zipBytes: zipAsset ? zipAsset.size : 0,
+                exeSha: rawDigest
+              });
+            })
+            .catch(function () {
+              applyReleaseMetrics({ version: '1.0.0' });
+            });
+        }
+
+        const isStaticPublic =
+          location.hostname.indexOf('github.io') !== -1 ||
+          location.protocol === 'file:';
+
+        if (isStaticPublic) {
+          loadFromGitHubReleases();
+        } else {
+          fetch('/api/release-info')
+            .then(function (resp) {
+              if (!resp.ok) throw new Error('HTTP ' + resp.status);
+              return resp.json();
+            })
+            .then(function (info) {
+              if (!info || !info.installer || !info.installer.exists) {
+                throw new Error('Local installer binary not active');
+              }
+              applyDownloadTargets('/download/Brief-Setup.exe', '/download/brief-package.zip', 'Local Download Server');
+              applyReleaseMetrics({
+                version: info.version || '1.0.0',
+                exeBytes: info.installer.size,
+                zipBytes: info.archive && info.archive.exists ? info.archive.size : 0,
+                exeSha: info.installer.sha256 || ''
+              });
+            })
+            .catch(loadFromGitHubReleases);
+        }
+
+        exeLinks.forEach(function (linkEl) {
+          linkEl.addEventListener('click', function () {
+            if (toastEl) toastEl.classList.add('is-visible');
+          });
+        });
+
+        if (copyShaBtn) {
+          copyShaBtn.addEventListener('click', function () {
+            const payload = latestExeSha256 || 'Get-FileHash "$HOME\\Downloads\\Brief-Setup.exe" -Algorithm SHA256';
+            copyTextSafe(payload).then(function () {
+              if (heroShaShortEl) {
+                const prev = heroShaShortEl.textContent;
+                heroShaShortEl.textContent = 'Copied!';
+                window.setTimeout(function () {
+                  heroShaShortEl.textContent = prev;
+                }, 1600);
               }
             });
-          })
-          .catch(function () {});
+          });
+        }
+
+        if (copyVerifyBtn && verifyCmdEl) {
+          copyVerifyBtn.addEventListener('click', function () {
+            copyTextSafe(verifyCmdEl.textContent || '').then(function () {
+              const oldLabel = copyVerifyBtn.textContent;
+              copyVerifyBtn.textContent = 'Copied Command ✓';
+              window.setTimeout(function () {
+                copyVerifyBtn.textContent = oldLabel;
+              }, 1600);
+            });
+          });
+        }
       }
 
-      var isStaticHost = location.hostname.indexOf('github.io') !== -1 || location.protocol === 'file:';
-      if (isStaticHost) {
-        useGitHubReleasesFallback();
+      /* =======================================================================
+         INITIALIZE ALL INTERACTIVE MODULES ON DOM READY
+      ======================================================================= */
+      function bootstrapDownloadSite() {
+        initParticleBackdrop();
+        initChromeAndGlow();
+        initRevealAndCounters();
+        initHeroStageShowcase();
+        initWindowsWizardPreview();
+        initOnboardingShowcase();
+        initProviderShowcase();
+        initToolsExplorer();
+        initEngineeringTabs();
+        initCursorMotionLab();
+        initFaqAndDrawer();
+        initReleaseResolver();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrapDownloadSite);
       } else {
-        fetch('/api/release-info')
-          .then(function (r) {
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.json();
-          })
-          .then(function (info) {
-            if (info && info.installer && info.installer.exists) {
-              document.getElementById('exe-size-tag').textContent = fmtBytes(info.installer.size);
-              document.getElementById('sha-tag').textContent = (info.installer.sha256 || '').slice(0, 14) + '…';
-            }
-            if (info && info.archive && info.archive.exists) {
-              document.getElementById('zip-size-tag').textContent = fmtBytes(info.archive.size);
-            }
-          })
-          .catch(useGitHubReleasesFallback);
+        bootstrapDownloadSite();
       }
-
-      document.getElementById('btn-download-exe').addEventListener('click', function () {
-        document.getElementById('dl-toast').classList.add('visible');
-      });
     })();
   </script>
 </body>

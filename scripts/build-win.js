@@ -27,7 +27,7 @@ async function main() {
   const briefExe = path.join(TARGET_DIR, 'Brief.exe');
   if (fs.existsSync(existingAppDir) && (fs.existsSync(existingExe) || fs.existsSync(briefExe))) {
     fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(existingAppDir, 'package.json'));
-    fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(existingAppDir, 'index.html'));
+    fs.copyFileSync(path.join(ROOT, 'app.html'), path.join(existingAppDir, 'app.html'));
     fs.cpSync(path.join(ROOT, 'src'), path.join(existingAppDir, 'src'), { recursive: true, force: true });
     fs.cpSync(path.join(ROOT, 'assets'), path.join(existingAppDir, 'assets'), { recursive: true, force: true });
     const installedIco = path.join(TARGET_DIR, 'resources', 'app', 'assets', 'icon.ico');
@@ -96,7 +96,7 @@ async function main() {
   const appDir = path.join(resourcesDir, 'app');
   fs.mkdirSync(appDir, { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(appDir, 'package.json'));
-  fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(appDir, 'index.html'));
+  fs.copyFileSync(path.join(ROOT, 'app.html'), path.join(appDir, 'app.html'));
   fs.cpSync(path.join(ROOT, 'src'), path.join(appDir, 'src'), { recursive: true });
   fs.cpSync(path.join(ROOT, 'assets'), path.join(appDir, 'assets'), { recursive: true });
 

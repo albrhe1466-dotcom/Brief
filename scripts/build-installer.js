@@ -838,7 +838,7 @@ async function main() {
   const resAppDir = path.join(STAGE_APP, 'resources', 'app');
   fs.mkdirSync(resAppDir, { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(resAppDir, 'package.json'));
-  fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(resAppDir, 'index.html'));
+  fs.copyFileSync(path.join(ROOT, 'app.html'), path.join(resAppDir, 'app.html'));
   fs.cpSync(path.join(ROOT, 'src'), path.join(resAppDir, 'src'), { recursive: true });
   fs.cpSync(path.join(ROOT, 'assets'), path.join(resAppDir, 'assets'), { recursive: true });
 

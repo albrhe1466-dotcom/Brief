@@ -57,7 +57,10 @@ for (const rel of jsFiles) {
 
 // 2. Check HTML files & scripts
 const htmlFiles = [
+  'app.html',
   'index.html',
+  'docs/index.html',
+  'download-site/public/index.html',
   'src/renderer/overlay-widget.html',
   'src/renderer/cursor-overlay.html'
 ];
@@ -67,17 +70,25 @@ for (const rel of htmlFiles) {
   const html = fs.readFileSync(full, 'utf8');
   const lines = html.split('\n').length;
 
-  if (rel === 'index.html') {
-    if (lines < 7000 || lines > 25000) {
-      fail(`index.html line count ${lines} is outside required [7000, 25000].`);
+  if (rel === 'index.html' || rel === 'docs/index.html' || rel === 'download-site/public/index.html') {
+    if (lines < 4700) {
+      fail(`${rel} line count ${lines} must be >= 4,700 lines.`);
     } else {
-      ok(`index.html line count: ${lines} (within 7,000 - 25,000)`);
+      ok(`${rel} line count: ${lines} (>= 4,700 lines)`);
+    }
+  }
+
+  if (rel === 'app.html') {
+    if (lines < 7000 || lines > 25000) {
+      fail(`app.html line count ${lines} is outside required [7000, 25000].`);
+    } else {
+      ok(`app.html line count: ${lines} (within 7,000 - 25,000)`);
     }
 
     if (/\bchatgpt\b/i.test(html)) {
-      fail('Found forbidden "ChatGPT" text inside index.html.');
+      fail('Found forbidden "ChatGPT" text inside app.html.');
     } else {
-      ok('No "ChatGPT" text in index.html');
+      ok('No "ChatGPT" text in app.html');
     }
 
     // Check duplicate IDs in HTML markup only (exclude JS strings)
@@ -93,9 +104,9 @@ for (const rel of htmlFiles) {
       if (seen.get(id) === 2) dupes.push(id);
     }
     if (dupes.length) {
-      fail('Duplicate HTML IDs in index.html: ' + dupes.join(', '));
+      fail('Duplicate HTML IDs in app.html: ' + dupes.join(', '));
     } else {
-      ok(`No duplicate IDs in index.html (${seen.size} unique IDs)`);
+      ok(`No duplicate IDs in app.html (${seen.size} unique IDs)`);
     }
 
     // Check $('id') and getElementById('id') targets exist
@@ -106,9 +117,9 @@ for (const rel of htmlFiles) {
       if (!seen.has(m[1])) missing.push(m[1]);
     }
     if (missing.length) {
-      fail('Referenced element IDs missing from HTML: ' + [...new Set(missing)].join(', '));
+      fail('Referenced element IDs missing from app.html: ' + [...new Set(missing)].join(', '));
     } else {
-      ok('All referenced DOM element IDs exist in index.html');
+      ok('All referenced DOM element IDs exist in app.html');
     }
   }
 
