@@ -5020,6 +5020,16 @@
       ==================================================================== */
 
       const api = window.locallyAPI || null;
+      if (!api && !/Electron/i.test(navigator.userAgent || '')) {
+        try {
+          const p = location.pathname || '/';
+          const target = p.endsWith('/index.html')
+            ? p.slice(0, -'index.html'.length) + 'docs/index.html'
+            : (p.endsWith('/') ? p + 'docs/index.html' : p + '/docs/index.html');
+          window.location.replace(target + (location.search || '') + (location.hash || ''));
+          return;
+        } catch (_) {}
+      }
 
       const State = {
         bootstrapped: false,
