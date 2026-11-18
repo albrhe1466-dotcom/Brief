@@ -2185,7 +2185,7 @@
           <img src="assets/icon.png" alt="Brief Icon">
         </span>
         <span>Brief</span>
-        <span class="nav-version-chip" id="nav-version-chip">v1.0.2</span>
+        <span class="nav-version-chip" id="nav-version-chip">v1.0.3</span>
       </a>
 
       <nav class="nav-links" aria-label="Main navigation">
@@ -2260,7 +2260,7 @@
           </div>
 
           <div class="hero-meta-bar">
-            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.2</strong></span>
+            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.3</strong></span>
             <span class="meta-badge-item">Architecture <strong>x64 Windows</strong></span>
             <span class="meta-badge-item">Source <strong id="hero-source-mode">GitHub Releases</strong></span>
             <button class="hash-copy-btn" id="hero-copy-sha-btn" type="button" title="Copy SHA-256 Digest">
@@ -2691,6 +2691,7 @@
                 <div class="provider-model-chip"><span>Gemini 3.8 Flash</span><span class="provider-model-hint">Balanced</span></div>
                 <div class="provider-model-chip"><span>Gemini 4 Hydrogen</span><span class="provider-model-hint">Reasoning</span></div>
                 <div class="provider-model-chip"><span>Gemini 4 Argon</span><span class="provider-model-hint">Strong</span></div>
+                <div class="provider-model-chip"><span>Gemini 4 Carbon</span><span class="provider-model-hint">Frontier</span></div>
               </div>
             </div>
 
@@ -3589,7 +3590,7 @@ Local MCP Bridge:
             { name: 'Gemini 3.5 Flash-Lite', hint: 'Fastest' },
             { name: 'Gemini 3.8 Flash', hint: 'Balanced' },
             { name: 'Gemini 4 Hydrogen', hint: 'Reasoning' },
-            { name: 'Gemini 4 Argon', hint: 'Strong' }
+            { name: 'Gemini 4 Argon / Carbon', hint: 'Strong / Frontier' }
           ]
         },
         openai: {
@@ -3603,8 +3604,8 @@ Local MCP Bridge:
           models: [
             { name: 'GPT-6 Luna', hint: 'Fastest' },
             { name: 'GPT-6.1 Terra', hint: 'Balanced' },
-            { name: 'GPT-6.1 Sol', hint: 'Strong' },
-            { name: 'GPT-6 Astra', hint: 'Agent' }
+            { name: 'GPT-6.2 Sol', hint: 'Strong' },
+            { name: 'GPT-6.2 Astra', hint: 'Agent' }
           ]
         },
         claude: {
@@ -3629,12 +3630,12 @@ Local MCP Bridge:
           prefixText: 'Key format: sk-or-... · Multi-Model Routing',
           badgeText: 'Tri-Color Blue · White · Orange',
           badgeClass: 'pipeline-badge badge-violet',
-          summary: 'Unlocks all 12 curated models across Google Gemini, OpenAI, and Anthropic Claude behind one OpenRouter key with tri-color border styling.',
+          summary: 'Unlocks all active flagship models across Google Gemini, OpenAI, and Anthropic Claude behind one OpenRouter key with tri-color border styling.',
           models: [
-            { name: 'Gemini 3.8 Flash / Hydrogen / Argon', hint: 'Google' },
-            { name: 'GPT-6.1 Terra / Sol / Astra', hint: 'OpenAI' },
+            { name: 'Gemini 3.8 Flash / Hydrogen / Carbon', hint: 'Google' },
+            { name: 'GPT-6.1 Terra / 6.2 Sol / Astra', hint: 'OpenAI' },
             { name: 'Claude Sonnet 5.5 / Opus 5.5 / Fable', hint: 'Anthropic' },
-            { name: '12 Models via 1 Key', hint: 'OpenRouter' }
+            { name: '13+ Live Models via 1 Key', hint: 'OpenRouter' }
           ]
         }
       };
@@ -4672,14 +4673,14 @@ Local MCP Bridge:
 
               const rawDigest = exeAsset && exeAsset.digest ? String(exeAsset.digest).replace(/^sha256:/i, '') : '';
               applyReleaseMetrics({
-                version: release.tag_name || '1.0.2',
+                version: release.tag_name || '1.0.3',
                 exeBytes: exeAsset ? exeAsset.size : 0,
                 zipBytes: zipAsset ? zipAsset.size : 0,
                 exeSha: rawDigest
               });
             })
             .catch(function () {
-              applyReleaseMetrics({ version: '1.0.2' });
+              applyReleaseMetrics({ version: '1.0.3' });
             });
         }
 
@@ -4701,7 +4702,7 @@ Local MCP Bridge:
               }
               applyDownloadTargets('/download/Brief-Setup.exe', '/download/brief-package.zip', 'Local Download Server');
               applyReleaseMetrics({
-                version: info.version || '1.0.2',
+                version: info.version || '1.0.3',
                 exeBytes: info.installer.size,
                 zipBytes: info.archive && info.archive.exists ? info.archive.size : 0,
                 exeSha: info.installer.sha256 || ''

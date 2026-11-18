@@ -1052,10 +1052,7 @@
       display: none !important;
     }
     .msg-avatar,
-    .msg-assistant-head,
-    #model-all-heading,
-    #model-all-list,
-    .custom-model-box {
+    .msg-assistant-head {
       display: none !important;
     }
 
@@ -3012,7 +3009,7 @@
       left: 0;
       width: 440px;
       max-width: calc(100vw - 48px);
-      max-height: 490px;
+      max-height: min(365px, calc(100vh - 245px));
       overflow-y: auto;
     }
 
@@ -4285,7 +4282,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.2">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.3">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -4509,10 +4506,10 @@
               </div>
             </div>
 
-            <div class="custom-model-box" style="display:none;">
+            <div class="custom-model-box">
               <div class="pop-section-label" style="margin: 0;">Custom Model ID</div>
               <div class="input-row">
-                <input class="text-input mono" id="custom-model-input" type="text" placeholder="Type any model ID, e.g. gemini-2.5-flash, gpt-4.1, claude-sonnet-4-5">
+                <input class="text-input mono" id="custom-model-input" type="text" placeholder="Type any model ID, e.g. gemini-4-carbon, gpt-6.2-sol, claude-sonnet-5-5">
                 <button class="btn-secondary" id="custom-model-apply-btn" type="button">Use</button>
                 <button class="btn-primary" id="custom-model-test-btn" type="button">Test</button>
               </div>
@@ -5178,44 +5175,44 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v1.0.2</span>
+          <span class="news-version-pill">News · v1.0.3</span>
         </div>
-        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close (don't show again for v1.0.2)" aria-label="Close What's New">✕</button>
+        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close (don't show again for v1.0.3)" aria-label="Close What's New">✕</button>
       </div>
       <div class="modal-body">
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v1.0.2 — Real Gemini 3 &amp; 4 Models, Multi-Agent Crew Verification &amp; Stability Fixes
+              Brief v1.0.3 — All 4 Model Ecosystems Fixed + Real OS Typing in Roblox Studio &amp; Desktop Apps
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
-              Click any screenshot below to zoom in. Closing this dialog with <strong>✕</strong> marks v1.0.2 as read so it will not pop up again automatically.
+              Click any screenshot below to zoom in. Closing this dialog with <strong>✕</strong> marks v1.0.3 as read so it will not pop up again automatically.
             </div>
           </div>
         </div>
 
         <div class="news-gallery-grid" id="whats-new-gallery">
-          <button class="news-photo-card" type="button" data-news-src="assets/news-gemini-fix.png" data-news-caption="True Gemini 3 &amp; 4 Models (Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen, 4 Argon)">
-            <img class="news-photo-thumb" src="assets/news-gemini-fix.png" alt="Brief Model Selector showing Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen, and 4 Argon">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-gemini-fix.png" data-news-caption="All 4 Providers Fixed — Gemini 3.5/3.8/4 (Hydrogen, Argon, Carbon), GPT-6.2 Sol/Astra &amp; Claude 5.5/5.2">
+            <img class="news-photo-thumb" src="assets/news-gemini-fix.png" alt="Brief Model Selector showing Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen, Argon, and Carbon">
             <div class="news-photo-caption">
-              <div class="news-photo-title">True Gemini 3 &amp; 4 Models</div>
-              <div class="news-photo-sub">Gemini 3.5 Flash-Lite, 3.8 Flash, 4 Hydrogen &amp; 4 Argon directly active — zero legacy 2.5 Pro fallback.</div>
+              <div class="news-photo-title">All 4 Ecosystems Upgraded</div>
+              <div class="news-photo-sub">True Gemini 3/4 (+ Carbon), GPT-6 (Luna, Terra, 6.2 Sol, 6.2 Astra), Claude 5 (Haiku/Sonnet/Opus 5.5, Fable 5.2) &amp; OpenRouter live models.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-studio-crew.png" data-news-caption="Multi-Agent Work Crew, Live Worked Timer &amp; BEFORE/AFTER Verification">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-studio-crew.png" data-news-caption="Real Roblox Studio Typing &amp; Multi-Agent Work Crew Verification">
             <img class="news-photo-thumb" src="assets/news-studio-crew.png" alt="Brief 4-Agent Studio Crew execution steps and QA verification">
             <div class="news-photo-caption">
-              <div class="news-photo-title">4-Agent Crew &amp; QA Proof</div>
-              <div class="news-photo-sub">Planner, WinRT OCR Scout, Specialist &amp; QA Verifier work together with live worked timer &amp; verification checks.</div>
+              <div class="news-photo-title">Real Typing &amp; Studio Crew</div>
+              <div class="news-photo-sub">Hardware VK scancode input, 450ms Qt/Studio clipboard paste &amp; strict foreground checks — zero simulated typing.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v102-setup.png" data-news-caption="Brief v1.0.2 Download Website &amp; Compiled Windows Setup Wizard">
-            <img class="news-photo-thumb" src="assets/news-v102-setup.png" alt="Brief v1.0.2 Download Page and Windows Setup Wizard">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v102-setup.png" data-news-caption="Brief v1.0.3 Download Website &amp; Compiled Windows Setup Wizard">
+            <img class="news-photo-thumb" src="assets/news-v102-setup.png" alt="Brief v1.0.3 Download Page and Windows Setup Wizard">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Brief v1.0.2 Release</div>
-              <div class="news-photo-sub">Updated public Windows Setup Wizard (Brief-Setup.exe) &amp; GitHub Release v1.0.2.</div>
+              <div class="news-photo-title">Brief v1.0.3 Release</div>
+              <div class="news-photo-sub">Updated public Windows Setup Wizard (Brief-Setup.exe) &amp; GitHub Release v1.0.3.</div>
             </div>
           </button>
         </div>
@@ -5224,13 +5221,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v1.0.2</span>
+              <span>What’s New in v1.0.3</span>
             </div>
             <ul class="news-list">
-              <li><strong>True Gemini 3 &amp; 4 Pipeline:</strong> Keeps <em>Gemini 3.5 Flash-Lite</em>, <em>Gemini 3.8 Flash</em>, <em>Gemini 4 Hydrogen</em>, and <em>Gemini 4 Argon</em> intact while dynamically discovering active Gemini 3.x / 4.x models on your key via <code class="mono">v1beta/models</code>.</li>
-              <li><strong>Parallel 4-Agent Studio Crew:</strong> Runs Specialist, WinRT OCR Scout, Executor &amp; QA Verifier together with a live stopwatch (<code class="mono">10–15m</code> minimum / <code class="mono">20–25m</code> max on deep Studio, Blender, CapCut &amp; Adobe jobs).</li>
-              <li><strong>Instant Auto-Paste &amp; <code class="mono">Shift+Enter</code>:</strong> Pastes multi-line text reliably via <code class="mono">Ctrl+V</code> and supports clean soft newlines without premature submission.</li>
-              <li><strong>Centered Release News:</strong> Shows new features &amp; fixes once per version and stays dismissed after closing.</li>
+              <li><strong>All 4 Providers Live Discovery:</strong> Dynamically queries <code class="mono">/v1/models</code> on OpenAI, Anthropic, OpenRouter &amp; Google Gemini so live models (including <em>Gemini 4 Carbon</em>, <em>GPT-6.2 Sol/Astra</em>, and <em>Claude 5.5 / Fable 5.2</em>) appear and stay selected.</li>
+              <li><strong>Hardware Virtual-Key Typing (<code class="mono">VkKeyScan</code>):</strong> Sends real Windows virtual keys + hardware scan codes for ASCII text alongside <code class="mono">Shift+Enter</code> and <code class="mono">450ms</code> Qt clipboard paste (<code class="mono">Ctrl+V</code>).</li>
+              <li><strong>Strict Foreground Verification:</strong> Checks the exact foreground window before &amp; during typing — never fakes typing when focus is missing.</li>
+              <li><strong>4-Agent Crew &amp; News Modal:</strong> Orchestrates Executor, Scout OCR, Specialist &amp; QA Verifier with live timer and once-per-version News.</li>
             </ul>
           </div>
 
@@ -5240,10 +5237,10 @@
               <span>What Has Been Fixed</span>
             </div>
             <ul class="news-list">
-              <li><strong>Eliminated Secret <code class="mono">gemini-2.5-pro</code> Fallback:</strong> Purged all retired <code class="mono">1.5</code>, <code class="mono">2.0</code>, and <code class="mono">2.5</code> model downgrades from Gemini, OpenRouter &amp; Crew fallbacks — stopping Google’s dead-model crash permanently.</li>
-              <li><strong>Stopped “Photo-Only” Premature Done:</strong> Brief’s completion gates reject tasks that only take screenshots without real edits, commands, or UI test verification.</li>
-              <li><strong>Fixed Model Popover Layering:</strong> Resolved z-index stacking &amp; opacity so underlying chat text never bleeds over the Model, Permission, or Attach menus.</li>
-              <li><strong>Before/After Verification Gate:</strong> Confirms real visual &amp; functional change on target apps before reporting Done.</li>
+              <li><strong>Purged ALL Legacy Model Downgrades:</strong> Removed silent fallbacks to retired <code class="mono">gpt-3.5</code>, <code class="mono">gpt-4o</code>, <code class="mono">gpt-4.1</code>, <code class="mono">claude-3*</code>, <code class="mono">gemini-2.5*</code>, and <code class="mono">gemini-1.5*</code> across all 4 providers.</li>
+              <li><strong>Fixed Silent No-Op Typing:</strong> Eliminated the bug where <code class="mono">type_text</code> skipped keystrokes if Brief had focus while still showing “Typing…” on the HUD.</li>
+              <li><strong>Stopped Roblox Studio Focus Hijacking:</strong> <code class="mono">focus_window</code> no longer clicks 3D viewport center, and <code class="mono">type_text</code> no longer steals focus away from clicked Qt/Script Editor inputs.</li>
+              <li><strong>Extended Thinking for Fable 5.2:</strong> Fixed Anthropic thinking detection &amp; non-focusable status widget window on Windows.</li>
             </ul>
           </div>
         </div>
@@ -6407,13 +6404,14 @@
           { key: 'flashlite35', id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest' },
           { key: 'flash38',     id: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced' },
           { key: 'hydrogen',    id: 'gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced' },
-          { key: 'argon',       id: 'gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Strong' }
+          { key: 'argon',       id: 'gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Strong' },
+          { key: 'carbon',      id: 'gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Frontier' }
         ],
         openai: [
           { key: 'gpt6luna',    id: 'gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest' },
           { key: 'gpt61terra',  id: 'gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced' },
-          { key: 'gpt61sol',    id: 'gpt-6.1-sol',           label: 'GPT-6.1 Sol',           hint: 'Strong' },
-          { key: 'gpt6astra',   id: 'gpt-6-astra',           label: 'GPT-6 Astra',           hint: 'Agent' }
+          { key: 'gpt62sol',    id: 'gpt-6.2-sol',           label: 'GPT-6.2 Sol',           hint: 'Strong' },
+          { key: 'gpt62astra',  id: 'gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Agent' }
         ],
         anthropic: [
           { key: 'claudehaiku55',  id: 'claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest' },
@@ -6426,10 +6424,11 @@
           { key: 'or_flash38',     id: 'google/gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced' },
           { key: 'or_hydrogen',    id: 'google/gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced' },
           { key: 'or_argon',       id: 'google/gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Strong' },
+          { key: 'or_carbon',      id: 'google/gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Frontier' },
           { key: 'or_gpt6luna',    id: 'openai/gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest' },
           { key: 'or_gpt61terra',  id: 'openai/gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced' },
-          { key: 'or_gpt61sol',    id: 'openai/gpt-6.1-sol',           label: 'GPT-6.1 Sol',           hint: 'Strong' },
-          { key: 'or_gpt6astra',   id: 'openai/gpt-6-astra',           label: 'GPT-6 Astra',           hint: 'Agent' },
+          { key: 'or_gpt62sol',    id: 'openai/gpt-6.2-sol',           label: 'GPT-6.2 Sol',           hint: 'Strong' },
+          { key: 'or_gpt62astra',  id: 'openai/gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Agent' },
           { key: 'or_haiku55',     id: 'anthropic/claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest' },
           { key: 'or_sonnet55',    id: 'anthropic/claude-sonnet-5-5',  label: 'Claude Sonnet 5.5',     hint: 'Balanced' },
           { key: 'or_opus55',      id: 'anthropic/claude-opus-5-5',    label: 'Claude Opus 5.5',       hint: 'Strong' },
@@ -6638,13 +6637,13 @@
         const defList = PROVIDER_DEFAULT_PRESETS[vis.id] || PROVIDER_DEFAULT_PRESETS.gemini;
         const fallbackDef = defList.find((x) => x.key === presetKey);
         const matchObj = State.match && State.match.presets && State.match.presets[presetKey];
-        const modelId = (fallbackDef && fallbackDef.id) || (matchObj && matchObj.id) || presetKey;
+        const modelId = (matchObj && matchObj.id) || (fallbackDef && fallbackDef.id) || presetKey;
         return {
           key: presetKey,
           label: fallbackDef ? fallbackDef.label : presetKey,
           hint: fallbackDef ? fallbackDef.hint : '',
           id: modelId,
-          available: true
+          available: matchObj ? matchObj.available !== false : true
         };
       }
 
@@ -6662,13 +6661,14 @@
           headingEl.textContent = vis.name + ' Models';
         }
 
-        const matchedActive = State.presets.find((p) => p.id === active || p.key === State.settings.activePreset);
-        if (!matchedActive && State.presets.length) {
+        const matchedPreset = State.presets.find((p) => p.id === active || p.key === State.settings.activePreset);
+        const matchedGen = genModels.find((m) => m.id === active);
+        if (!matchedPreset && !matchedGen && State.presets.length) {
           active = (State.presets[1] || State.presets[0]).id;
           State.settings.activeModel = active;
         }
 
-        let displayLabel = active || 'Select Model';
+        let displayLabel = (matchedGen && matchedGen.displayName) || active || 'Select Model';
         const badge = tLabel;
 
         for (const p of State.presets) {
@@ -6693,17 +6693,19 @@
           } else if (vis.id === 'anthropic') {
             const budget = tLevel === 'high' ? '8,192' : (tLevel === 'low' ? '2,048' : '4,096');
             tNote.textContent = 'Claude extended thinking budget: ' + budget + ' tokens.';
-          } else if (modelMeta && modelMeta.thinking === false && !/pro|hydrogen|argon|gemini-3|gemini-4|gemini-2\.5/i.test(active)) {
+          } else if (modelMeta && modelMeta.thinking === false && !/pro|hydrogen|argon|carbon|gemini-3|gemini-4/i.test(active)) {
             tNote.textContent = active + ' standard fast response mode.';
           } else {
             tNote.textContent = 'Real thinkingLevel: ' + tLevel.toUpperCase() + ' + includeThoughts enabled.';
           }
         }
 
-        // Provider allowlisted preset slots (4 for Gemini, 4 for OpenAI, 4 for Claude, 12 for OpenRouter)
+        // Provider preset slots
+        const shownIds = new Set();
         DOM.modelPresetList.innerHTML = '';
         for (const p of State.presets) {
           const info = getMatchedPresetInfo(p.key);
+          shownIds.add(info.id);
           const isSelected = active === info.id;
 
           const btn = createElement('button', {
@@ -6731,11 +6733,34 @@
           DOM.modelPresetList.appendChild(btn);
         }
 
-        // Show ONLY the allowlisted preset list above (hide extra model lists)
+        // Render additional active live models discovered from the API key
+        const extraModels = genModels.filter((m) => !shownIds.has(m.id));
         DOM.modelAllList.innerHTML = '';
         const allHeading = $('model-all-heading');
-        if (allHeading) allHeading.style.display = 'none';
-        DOM.modelAllList.style.display = 'none';
+        if (extraModels.length) {
+          if (allHeading) allHeading.style.display = 'block';
+          DOM.modelAllList.style.display = 'flex';
+          for (const m of extraModels.slice(0, 12)) {
+            const isSel = active === m.id;
+            const btn = createElement('button', {
+              className: 'model-choice' + (isSel ? ' active' : ''),
+              type: 'button',
+              onClick: (ev) => {
+                ev.stopPropagation();
+                selectActiveModel(m.id, '', m.displayName || m.id);
+              }
+            });
+            const left = createElement('div');
+            left.appendChild(createElement('div', { className: 'model-choice-title', text: m.displayName || m.id }));
+            left.appendChild(createElement('div', { className: 'model-choice-sub', text: m.id }));
+            btn.appendChild(left);
+            btn.appendChild(createElement('span', { className: 'model-tag', text: isSel ? '✓ Active' : 'Live Key Model' }));
+            DOM.modelAllList.appendChild(btn);
+          }
+        } else {
+          if (allHeading) allHeading.style.display = 'none';
+          DOM.modelAllList.style.display = 'none';
+        }
 
         if (State.match && State.match.computerUse) {
           DOM.modelCuSummary.textContent = 'Screen control: ' + State.match.computerUse + ' ready';
@@ -8881,7 +8906,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '1.0.2';
+      const BRIEF_NEWS_VERSION = '1.0.3';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');

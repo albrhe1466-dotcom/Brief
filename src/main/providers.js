@@ -23,18 +23,18 @@ const OPENAI_PRESETS = [
     base: 'gpt-6.1-terra'
   },
   {
-    key: 'gpt61sol',
-    label: 'GPT-6.1 Sol',
+    key: 'gpt62sol',
+    label: 'GPT-6.2 Sol',
     hint: 'Strong',
-    match: (m) => /gpt-?6\.1-?sol/i.test(m.id),
-    base: 'gpt-6.1-sol'
+    match: (m) => /gpt-?6(?:\.[12])?-?sol/i.test(m.id),
+    base: 'gpt-6.2-sol'
   },
   {
-    key: 'gpt6astra',
-    label: 'GPT-6 Astra',
+    key: 'gpt62astra',
+    label: 'GPT-6.2 Astra',
     hint: 'Agent',
-    match: (m) => /gpt-?6(?:\.0)?-?astra/i.test(m.id),
-    base: 'gpt-6-astra'
+    match: (m) => /gpt-?6(?:\.[0-2])?-?astra/i.test(m.id),
+    base: 'gpt-6.2-astra'
   }
 ];
 
@@ -69,34 +69,33 @@ const ANTHROPIC_PRESETS = [
   }
 ];
 
-// Hardcoded allowlist: same 12 models accessible via OpenRouter
+// Hardcoded allowlist: active flagship models accessible via OpenRouter
 const OPENROUTER_PRESETS = [
   // Gemini via OpenRouter
-  { key: 'or_flashlite35', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest', base: 'google/gemini-3.5-flash-lite' },
-  { key: 'or_flash38',     label: 'Gemini 3.8 Flash',     hint: 'Balanced', base: 'google/gemini-3.8-flash' },
-  { key: 'or_hydrogen',    label: 'Gemini 4 Hydrogen',    hint: 'Balanced', base: 'google/gemini-4-hydrogen' },
-  { key: 'or_argon',       label: 'Gemini 4 Argon',       hint: 'Strong',   base: 'google/gemini-4-argon' },
+  { key: 'or_flashlite35', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest',  base: 'google/gemini-3.5-flash-lite' },
+  { key: 'or_flash38',     label: 'Gemini 3.8 Flash',      hint: 'Balanced', base: 'google/gemini-3.8-flash' },
+  { key: 'or_hydrogen',    label: 'Gemini 4 Hydrogen',     hint: 'Balanced', base: 'google/gemini-4-hydrogen' },
+  { key: 'or_argon',       label: 'Gemini 4 Argon',        hint: 'Strong',   base: 'google/gemini-4-argon' },
+  { key: 'or_carbon',      label: 'Gemini 4 Carbon',       hint: 'Frontier', base: 'google/gemini-4-carbon' },
   // OpenAI via OpenRouter
-  { key: 'or_gpt6luna',    label: 'GPT-6 Luna',           hint: 'Fastest',  base: 'openai/gpt-6-luna' },
-  { key: 'or_gpt61terra',  label: 'GPT-6.1 Terra',        hint: 'Balanced', base: 'openai/gpt-6.1-terra' },
-  { key: 'or_gpt61sol',    label: 'GPT-6.1 Sol',          hint: 'Strong',   base: 'openai/gpt-6.1-sol' },
-  { key: 'or_gpt6astra',   label: 'GPT-6 Astra',          hint: 'Agent',    base: 'openai/gpt-6-astra' },
+  { key: 'or_gpt6luna',    label: 'GPT-6 Luna',            hint: 'Fastest',  base: 'openai/gpt-6-luna' },
+  { key: 'or_gpt61terra',  label: 'GPT-6.1 Terra',         hint: 'Balanced', base: 'openai/gpt-6.1-terra' },
+  { key: 'or_gpt62sol',    label: 'GPT-6.2 Sol',           hint: 'Strong',   base: 'openai/gpt-6.2-sol' },
+  { key: 'or_gpt62astra',  label: 'GPT-6.2 Astra',         hint: 'Agent',    base: 'openai/gpt-6.2-astra' },
   // Claude via OpenRouter
-  { key: 'or_haiku55',     label: 'Claude Haiku 5.5',     hint: 'Fastest',  base: 'anthropic/claude-haiku-5-5' },
-  { key: 'or_sonnet55',    label: 'Claude Sonnet 5.5',    hint: 'Balanced', base: 'anthropic/claude-sonnet-5-5' },
-  { key: 'or_opus55',      label: 'Claude Opus 5.5',      hint: 'Strong',   base: 'anthropic/claude-opus-5-5' },
-  { key: 'or_fable52',     label: 'Claude Fable 5.2',     hint: 'Reasoning',base: 'anthropic/claude-fable-5-2' }
+  { key: 'or_haiku55',     label: 'Claude Haiku 5.5',      hint: 'Fastest',  base: 'anthropic/claude-haiku-5-5' },
+  { key: 'or_sonnet55',    label: 'Claude Sonnet 5.5',     hint: 'Balanced', base: 'anthropic/claude-sonnet-5-5' },
+  { key: 'or_opus55',      label: 'Claude Opus 5.5',       hint: 'Strong',   base: 'anthropic/claude-opus-5-5' },
+  { key: 'or_fable52',     label: 'Claude Fable 5.2',      hint: 'Reasoning',base: 'anthropic/claude-fable-5-2' }
 ];
 
-// Hardcoded allowlist: exactly 4 OpenAI models
 const OPENAI_ALLOWLIST = [
   { id: 'gpt-6-luna', name: 'models/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   { id: 'gpt-6.1-terra', name: 'models/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6.1-sol', name: 'models/gpt-6.1-sol', displayName: 'GPT-6.1 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6-astra', name: 'models/gpt-6-astra', displayName: 'GPT-6 Astra', description: 'Agent', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true }
+  { id: 'gpt-6.2-sol', name: 'models/gpt-6.2-sol', displayName: 'GPT-6.2 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'gpt-6.2-astra', name: 'models/gpt-6.2-astra', displayName: 'GPT-6.2 Astra', description: 'Agent', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true }
 ];
 
-// Hardcoded allowlist: exactly 4 Claude models
 const ANTHROPIC_ALLOWLIST = [
   { id: 'claude-haiku-5-5', name: 'models/claude-haiku-5-5', displayName: 'Claude Haiku 5.5', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: false },
   { id: 'claude-sonnet-5-5', name: 'models/claude-sonnet-5-5', displayName: 'Claude Sonnet 5.5', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: true },
@@ -104,19 +103,19 @@ const ANTHROPIC_ALLOWLIST = [
   { id: 'claude-fable-5-2', name: 'models/claude-fable-5-2', displayName: 'Claude Fable 5.2', description: 'Reasoning', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: true }
 ];
 
-// Hardcoded allowlist: exactly 12 models accessible via OpenRouter (4 Gemini, 4 OpenAI, 4 Claude)
 const OPENROUTER_ALLOWLIST = [
-  // Gemini (4 models)
+  // Gemini
   { id: 'google/gemini-3.5-flash-lite', name: 'models/google/gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash-Lite', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-3.8-flash', name: 'models/google/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-4-hydrogen', name: 'models/google/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-4-argon', name: 'models/google/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  // OpenAI (4 models)
+  { id: 'google/gemini-4-carbon', name: 'models/google/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Frontier', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  // OpenAI
   { id: 'openai/gpt-6-luna', name: 'models/openai/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   { id: 'openai/gpt-6.1-terra', name: 'models/openai/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'openai/gpt-6.1-sol', name: 'models/openai/gpt-6.1-sol', displayName: 'GPT-6.1 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'openai/gpt-6-astra', name: 'models/openai/gpt-6-astra', displayName: 'GPT-6 Astra', description: 'Agent', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  // Claude (4 models)
+  { id: 'openai/gpt-6.2-sol', name: 'models/openai/gpt-6.2-sol', displayName: 'GPT-6.2 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'openai/gpt-6.2-astra', name: 'models/openai/gpt-6.2-astra', displayName: 'GPT-6.2 Astra', description: 'Agent', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  // Claude
   { id: 'anthropic/claude-haiku-5-5', name: 'models/anthropic/claude-haiku-5-5', displayName: 'Claude Haiku 5.5', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: false },
   { id: 'anthropic/claude-sonnet-5-5', name: 'models/anthropic/claude-sonnet-5-5', displayName: 'Claude Sonnet 5.5', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: true },
   { id: 'anthropic/claude-opus-5-5', name: 'models/anthropic/claude-opus-5-5', displayName: 'Claude Opus 5.5', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: true },
@@ -187,8 +186,8 @@ function matchPresetsForProvider(provider, models) {
       };
     }
     const gen = list.filter((m) => m.methods && m.methods.includes('generateContent'));
-    const mini = gen.find((m) => /mini|nano|haiku|flash/i.test(m.id));
-    const mid = gen.find((m) => /^(?:gpt-4\.1|gpt-4o|gpt-5)$/i.test(m.id)) || gen.find((m) => !/mini|nano/i.test(m.id));
+    const mini = gen.find((m) => /luna|mini|nano|haiku|flash/i.test(m.id));
+    const mid = gen.find((m) => /^(?:gpt-6|gpt-5)/i.test(m.id) && !/mini|nano|luna/i.test(m.id)) || gen.find((m) => !/mini|nano/i.test(m.id));
     return {
       provider: 'openai',
       presets,
@@ -377,6 +376,16 @@ function openAIToolsFromGemini(payload) {
   return decls;
 }
 
+let LIVE_OPENAI_MODELS = [];
+
+function isModernOpenAIModelId(id) {
+  const clean = stripModelPrefix(id).toLowerCase();
+  if (!clean) return false;
+  if (/^(?:gpt-3|gpt-4(?:\.|o|-|$)|o1(?:-|$)|o4-mini|davinci|babbage|curie|ada)/i.test(clean)) return false;
+  if (/(whisper|tts|dall-e|embedding|moderation|realtime|transcribe|sora|audio|image|search-preview|instruct)/i.test(clean)) return false;
+  return /^(?:gpt-5|gpt-6|gpt-oss|o3|o4-pro|o5)/i.test(clean);
+}
+
 class OpenAIClient {
   constructor(getKey, onRecordUsage) {
     this.getKey = getKey;
@@ -404,13 +413,36 @@ class OpenAIClient {
   }
 
   async listModels(key) {
+    const out = OPENAI_ALLOWLIST.map((m) => Object.assign({}, m));
+    const seen = new Set(out.map((m) => m.id));
     try {
-      await this.raw('models', { key, timeoutMs: 15000 });
+      const res = await this.raw('models', { key, timeoutMs: 15000 });
+      const json = await res.json();
+      const rawModels = (json && Array.isArray(json.data)) ? json.data : [];
+      const discovered = [];
+      for (const rm of rawModels) {
+        const id = stripModelPrefix(rm && rm.id);
+        if (!id || !isModernOpenAIModelId(id)) continue;
+        discovered.push(id);
+        if (!seen.has(id)) {
+          seen.add(id);
+          out.push({
+            id,
+            name: 'models/' + id,
+            displayName: id,
+            description: 'Active OpenAI GPT-5/GPT-6 model',
+            methods: ['generateContent'],
+            inputTokenLimit: 128000,
+            outputTokenLimit: 16384,
+            thinking: true
+          });
+        }
+      }
+      if (discovered.length) LIVE_OPENAI_MODELS = discovered;
     } catch (e) {
       if (e.kind === 'invalid') throw e;
     }
-    // Hardcoded allowlist: show ONLY these 4 OpenAI models
-    return OPENAI_ALLOWLIST.map((m) => Object.assign({}, m));
+    return out;
   }
 
   buildChatPayload(model, payload, stream = false) {
@@ -427,7 +459,7 @@ class OpenAIClient {
     }
     const genCfg = payload.generationConfig || {};
     if (genCfg.maxOutputTokens) body.max_completion_tokens = genCfg.maxOutputTokens;
-    if (genCfg.thinkingConfig && genCfg.thinkingConfig.thinkingLevel && /^(?:o1|o3|o4|o5|gpt-5|gpt-6)/i.test(body.model)) {
+    if (genCfg.thinkingConfig && genCfg.thinkingConfig.thinkingLevel && /^(?:o3|o4|o5|gpt-5|gpt-6)/i.test(body.model)) {
       body.reasoning_effort = String(genCfg.thinkingConfig.thinkingLevel).toLowerCase();
     }
     return body;
@@ -462,12 +494,54 @@ class OpenAIClient {
   }
 
   resolveRuntimeCandidates(model) {
-    const id = stripModelPrefix(model).toLowerCase();
-    if (/luna|mini|nano/.test(id)) return [stripModelPrefix(model), 'gpt-4.1-mini', 'gpt-4o-mini'];
-    if (/terra/.test(id)) return [stripModelPrefix(model), 'gpt-4.1', 'gpt-4o', 'gpt-4.1-mini'];
-    if (/sol/.test(id)) return [stripModelPrefix(model), 'gpt-4o', 'gpt-4.1', 'gpt-4.1-mini'];
-    if (/astra/.test(id)) return [stripModelPrefix(model), 'o4-mini', 'gpt-4.1', 'gpt-4o'];
-    return [stripModelPrefix(model), 'gpt-4.1-mini', 'gpt-4o-mini'];
+    const exact = stripModelPrefix(model);
+    const id = exact.toLowerCase();
+    const out = [];
+    const push = (cand) => {
+      const clean = stripModelPrefix(cand);
+      if (clean && !out.includes(clean)) out.push(clean);
+    };
+    push(exact);
+    const live = Array.isArray(LIVE_OPENAI_MODELS) ? LIVE_OPENAI_MODELS : [];
+    if (/luna|mini|nano/.test(id)) {
+      for (const m of live) if (/luna|mini|nano/i.test(m)) push(m);
+      push('gpt-6-luna');
+      push('gpt-5.6-luna');
+      push('gpt-5.4-mini');
+      return out;
+    }
+    if (/terra/.test(id)) {
+      for (const m of live) if (/terra|gpt-6/i.test(m)) push(m);
+      push('gpt-6.1-terra');
+      push('gpt-5.6-terra');
+      push('gpt-6.2-sol');
+      push('gpt-5.5');
+      return out;
+    }
+    if (/sol/.test(id)) {
+      for (const m of live) if (/sol|gpt-6/i.test(m)) push(m);
+      push('gpt-6.2-sol');
+      push('gpt-6.1-sol');
+      push('gpt-5.6-sol');
+      push('gpt-6.2-astra');
+      push('gpt-5.5');
+      return out;
+    }
+    if (/astra/.test(id)) {
+      for (const m of live) if (/astra|gpt-6/i.test(m)) push(m);
+      push('gpt-6.2-astra');
+      push('gpt-6-astra');
+      push('gpt-6.2-sol');
+      push('gpt-5.5-pro');
+      push('gpt-5.6-sol');
+      return out;
+    }
+    for (const m of live) push(m);
+    push('gpt-6.2-sol');
+    push('gpt-6.1-terra');
+    push('gpt-6-luna');
+    push('gpt-5.5');
+    return out;
   }
 
   async generate(model, payload, { signal, key, timeoutMs = 55000 } = {}) {
@@ -698,6 +772,15 @@ function geminiToAnthropicMessages(payload) {
   return { system, messages };
 }
 
+let LIVE_ANTHROPIC_MODELS = [];
+
+function isModernAnthropicModelId(id) {
+  const clean = stripModelPrefix(id).toLowerCase();
+  if (!clean) return false;
+  if (/^claude-(?:2|instant|3(?:\.|-|$)|sonnet-4-20250514|opus-4-20250514)/i.test(clean)) return false;
+  return /^claude-(?:haiku|sonnet|opus|fable|mythos)?-?(?:4[.-][56]|5(?:[.-]\d+)?)/i.test(clean) || /^claude-(?:fable|mythos)/i.test(clean);
+}
+
 class AnthropicClient {
   constructor(getKey, onRecordUsage) {
     this.getKey = getKey;
@@ -726,13 +809,36 @@ class AnthropicClient {
   }
 
   async listModels(key) {
+    const out = ANTHROPIC_ALLOWLIST.map((m) => Object.assign({}, m));
+    const seen = new Set(out.map((m) => m.id));
     try {
-      await this.raw('models?limit=1', { key, timeoutMs: 15000 });
+      const res = await this.raw('models?limit=100', { key, timeoutMs: 15000 });
+      const json = await res.json();
+      const rawModels = (json && Array.isArray(json.data)) ? json.data : [];
+      const discovered = [];
+      for (const rm of rawModels) {
+        const id = stripModelPrefix(rm && rm.id);
+        if (!id || !isModernAnthropicModelId(id)) continue;
+        discovered.push(id);
+        if (!seen.has(id)) {
+          seen.add(id);
+          out.push({
+            id,
+            name: 'models/' + id,
+            displayName: (rm && rm.display_name) || id,
+            description: 'Active Claude 4.5+/5 model',
+            methods: ['generateContent'],
+            inputTokenLimit: 200000,
+            outputTokenLimit: 16384,
+            thinking: !/haiku/i.test(id)
+          });
+        }
+      }
+      if (discovered.length) LIVE_ANTHROPIC_MODELS = discovered;
     } catch (e) {
       if (e.kind === 'invalid') throw e;
     }
-    // Hardcoded allowlist: show ONLY these 4 Claude models
-    return ANTHROPIC_ALLOWLIST.map((m) => Object.assign({}, m));
+    return out;
   }
 
   buildMessagesPayload(model, payload, stream = false, includeThinking = true) {
@@ -762,7 +868,7 @@ class AnthropicClient {
       if (mode === 'ANY') body.tool_choice = { type: 'any' };
     }
     const tCfg = payload.generationConfig && payload.generationConfig.thinkingConfig;
-    if (includeThinking && tCfg && tCfg.thinkingLevel && /(sonnet-4|opus-4|3-7|4-5|5-5)/i.test(body.model)) {
+    if (includeThinking && tCfg && tCfg.thinkingLevel && /(sonnet|opus|fable|mythos|5-5|5-2|4-6|4-5)/i.test(body.model)) {
       const tier = String(tCfg.thinkingLevel).toUpperCase();
       const budget = tier === 'HIGH' ? 8192 : (tier === 'LOW' ? 1024 : 4096);
       if (body.max_tokens <= budget) body.max_tokens = budget + 2048;
@@ -803,11 +909,43 @@ class AnthropicClient {
   }
 
   resolveRuntimeCandidates(model) {
-    const id = stripModelPrefix(model).toLowerCase();
-    if (/haiku/.test(id)) return [stripModelPrefix(model), 'claude-3-5-haiku-latest', 'claude-3-haiku-20240307'];
-    if (/opus/.test(id)) return [stripModelPrefix(model), 'claude-opus-4-20250514', 'claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest'];
-    if (/fable/.test(id)) return [stripModelPrefix(model), 'claude-3-7-sonnet-latest', 'claude-sonnet-4-20250514', 'claude-3-5-sonnet-latest'];
-    return [stripModelPrefix(model), 'claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest', 'claude-3-5-sonnet-latest'];
+    const exact = stripModelPrefix(model);
+    const id = exact.toLowerCase();
+    const out = [];
+    const push = (cand) => {
+      const clean = stripModelPrefix(cand);
+      if (clean && !out.includes(clean)) out.push(clean);
+    };
+    push(exact);
+    const live = Array.isArray(LIVE_ANTHROPIC_MODELS) ? LIVE_ANTHROPIC_MODELS : [];
+    if (/haiku/.test(id)) {
+      for (const m of live) if (/haiku/i.test(m)) push(m);
+      push('claude-haiku-5-5');
+      push('claude-haiku-4-5');
+      return out;
+    }
+    if (/opus/.test(id)) {
+      for (const m of live) if (/opus/i.test(m)) push(m);
+      push('claude-opus-5-5');
+      push('claude-fable-5-2');
+      push('claude-sonnet-5-5');
+      push('claude-opus-4-5');
+      return out;
+    }
+    if (/fable|mythos/.test(id)) {
+      for (const m of live) if (/fable|mythos|opus/i.test(m)) push(m);
+      push('claude-fable-5-2');
+      push('claude-mythos-5-2');
+      push('claude-opus-5-5');
+      push('claude-sonnet-5-5');
+      return out;
+    }
+    for (const m of live) if (/sonnet|5-5/i.test(m)) push(m);
+    push('claude-sonnet-5-5');
+    push('claude-sonnet-4-5');
+    push('claude-opus-5-5');
+    push('claude-fable-5-2');
+    return out;
   }
 
   async generate(model, payload, { signal, key, timeoutMs = 55000 } = {}) {
@@ -1015,6 +1153,16 @@ class AnthropicClient {
 /* OpenRouter Client (proxies our 12 hardcoded models via openrouter.ai)*/
 /* ------------------------------------------------------------------ */
 
+let LIVE_OPENROUTER_MODELS = [];
+
+function isModernOpenRouterModelId(id) {
+  const clean = stripModelPrefix(id).toLowerCase();
+  if (!clean) return false;
+  if (/gemini-(?:1|2)(?:\.|-|$)|gpt-(?:3|4(?:\.|o|-|$))|claude-(?:2|3(?:\.|-|$)|sonnet-4$|sonnet-4-)|o1|o4-mini/i.test(clean)) return false;
+  if (/(image|tts|audio|embedding|moderation|realtime|whisper|dall-e|sora|:free$)/i.test(clean)) return false;
+  return /^(?:google\/gemini-(?:3|4|5)|openai\/gpt-(?:5|6|oss)|anthropic\/claude-(?:haiku|sonnet|opus|fable|mythos)-?(?:4\.[56]|5))/i.test(clean);
+}
+
 class OpenRouterClient {
   constructor(getKey, onRecordUsage) {
     this.getKey = getKey;
@@ -1091,17 +1239,103 @@ class OpenRouterClient {
   resolveRuntimeCandidates(model) {
     const exact = stripModelPrefix(model);
     const id = exact.toLowerCase();
-    if (/flash.*lite/.test(id)) return [exact, 'google/gemini-3.1-flash-lite-preview', 'google/gemini-3-flash-preview'];
-    if (/hydrogen/.test(id)) return [exact, 'google/gemini-3.8-flash', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview'];
-    if (/flash/.test(id)) return [exact, 'google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite-preview'];
-    if (/argon/.test(id)) return [exact, 'google/gemini-3.1-pro-preview', 'google/gemini-4-hydrogen', 'google/gemini-3.8-flash'];
-    if (/luna/.test(id)) return [exact, 'openai/gpt-5-mini', 'openai/gpt-4.1-mini'];
-    if (/terra/.test(id)) return [exact, 'openai/gpt-5', 'openai/gpt-4.1'];
-    if (/sol|astra/.test(id)) return [exact, 'openai/gpt-5', 'openai/gpt-4.1'];
-    if (/haiku/.test(id)) return [exact, 'anthropic/claude-haiku-4.5', 'anthropic/claude-3.5-haiku'];
-    if (/opus/.test(id)) return [exact, 'anthropic/claude-opus-4.5', 'anthropic/claude-sonnet-4.5'];
-    if (/sonnet|fable/.test(id)) return [exact, 'anthropic/claude-sonnet-4.5', 'anthropic/claude-sonnet-4'];
-    return [exact, 'google/gemini-3-flash-preview', 'google/gemini-3.1-pro-preview'];
+    const out = [];
+    const push = (cand) => {
+      const clean = stripModelPrefix(cand);
+      if (clean && !out.includes(clean)) out.push(clean);
+    };
+    push(exact);
+    const live = Array.isArray(LIVE_OPENROUTER_MODELS) ? LIVE_OPENROUTER_MODELS : [];
+    if (/flash.*lite/.test(id)) {
+      for (const m of live) if (/google\/gemini.*flash.*lite/i.test(m)) push(m);
+      push('google/gemini-3.5-flash-lite');
+      push('google/gemini-3.1-flash-lite-preview');
+      push('google/gemini-3-flash-preview');
+      return out;
+    }
+    if (/carbon/.test(id)) {
+      for (const m of live) if (/google\/gemini-(?:4|3\.1-pro)/i.test(m)) push(m);
+      push('google/gemini-4-carbon');
+      push('google/gemini-4-argon');
+      push('google/gemini-3.1-pro-preview');
+      push('google/gemini-4-hydrogen');
+      return out;
+    }
+    if (/hydrogen/.test(id)) {
+      for (const m of live) if (/google\/gemini-(?:4|3)/i.test(m)) push(m);
+      push('google/gemini-4-hydrogen');
+      push('google/gemini-3.8-flash');
+      push('google/gemini-3.1-pro-preview');
+      push('google/gemini-3-flash-preview');
+      return out;
+    }
+    if (/flash/.test(id)) {
+      for (const m of live) if (/google\/gemini-3/i.test(m) && !/lite/i.test(m)) push(m);
+      push('google/gemini-3.8-flash');
+      push('google/gemini-3-flash-preview');
+      push('google/gemini-3.1-flash-lite-preview');
+      return out;
+    }
+    if (/argon/.test(id)) {
+      for (const m of live) if (/google\/gemini-(?:4|3\.1-pro)/i.test(m)) push(m);
+      push('google/gemini-4-argon');
+      push('google/gemini-4-carbon');
+      push('google/gemini-3.1-pro-preview');
+      push('google/gemini-4-hydrogen');
+      return out;
+    }
+    if (/luna/.test(id)) {
+      for (const m of live) if (/openai\/gpt-(?:6|5).*luna|openai\/gpt-5\.4-mini/i.test(m)) push(m);
+      push('openai/gpt-6-luna');
+      push('openai/gpt-5.6-luna');
+      push('openai/gpt-5.4-mini');
+      return out;
+    }
+    if (/terra/.test(id)) {
+      for (const m of live) if (/openai\/gpt-(?:6|5)/i.test(m)) push(m);
+      push('openai/gpt-6.1-terra');
+      push('openai/gpt-5.6-terra');
+      push('openai/gpt-6.2-sol');
+      push('openai/gpt-5.5');
+      return out;
+    }
+    if (/sol|astra/.test(id)) {
+      for (const m of live) if (/openai\/gpt-(?:6|5)/i.test(m)) push(m);
+      push('openai/gpt-6.2-astra');
+      push('openai/gpt-6.2-sol');
+      push('openai/gpt-6.1-sol');
+      push('openai/gpt-5.6-sol');
+      push('openai/gpt-5.5');
+      return out;
+    }
+    if (/haiku/.test(id)) {
+      for (const m of live) if (/anthropic\/claude-haiku/i.test(m)) push(m);
+      push('anthropic/claude-haiku-5-5');
+      push('anthropic/claude-haiku-4.5');
+      return out;
+    }
+    if (/opus/.test(id)) {
+      for (const m of live) if (/anthropic\/claude-(?:opus|fable)/i.test(m)) push(m);
+      push('anthropic/claude-opus-5-5');
+      push('anthropic/claude-fable-5-2');
+      push('anthropic/claude-opus-4.5');
+      push('anthropic/claude-sonnet-5-5');
+      return out;
+    }
+    if (/sonnet|fable|mythos/.test(id)) {
+      for (const m of live) if (/anthropic\/claude-(?:sonnet|fable|mythos|opus)/i.test(m)) push(m);
+      push('anthropic/claude-fable-5-2');
+      push('anthropic/claude-sonnet-5-5');
+      push('anthropic/claude-mythos-5-2');
+      push('anthropic/claude-sonnet-4.5');
+      return out;
+    }
+    for (const m of live) push(m);
+    push('google/gemini-3.8-flash');
+    push('google/gemini-3.1-pro-preview');
+    push('openai/gpt-6.2-sol');
+    push('anthropic/claude-sonnet-5-5');
+    return out;
   }
 
   async generate(model, payload, { signal, key, timeoutMs = 55000 } = {}) {
@@ -1208,7 +1442,6 @@ class OpenRouterClient {
     };
   }
 
-  // OpenRouter doesn't have a standard model-list endpoint we can filter — use hardcoded list
   async listModels(key) {
     if (key) {
       try {
@@ -1217,7 +1450,36 @@ class OpenRouterClient {
         if (e.kind === 'invalid') throw e;
       }
     }
-    return OPENROUTER_ALLOWLIST.map((m) => Object.assign({}, m));
+    const out = OPENROUTER_ALLOWLIST.map((m) => Object.assign({}, m));
+    const seen = new Set(out.map((m) => m.id));
+    try {
+      const res = await this.raw('models', { key, timeoutMs: 15000 });
+      const json = await res.json();
+      const rawModels = (json && Array.isArray(json.data)) ? json.data : [];
+      const discovered = [];
+      for (const rm of rawModels) {
+        const id = stripModelPrefix(rm && rm.id);
+        if (!id || !isModernOpenRouterModelId(id)) continue;
+        discovered.push(id);
+        if (!seen.has(id)) {
+          seen.add(id);
+          out.push({
+            id,
+            name: 'models/' + id,
+            displayName: (rm && rm.name) || id,
+            description: 'Active OpenRouter 2026 model',
+            methods: ['generateContent'],
+            inputTokenLimit: (rm && rm.context_length) || 200000,
+            outputTokenLimit: 16384,
+            thinking: !/(?:flash-lite|haiku|luna)/i.test(id)
+          });
+        }
+      }
+      if (discovered.length) LIVE_OPENROUTER_MODELS = discovered;
+    } catch (e) {
+      if (e.kind === 'invalid') throw e;
+    }
+    return out;
   }
 
   async validate(key, preferredModel) {
@@ -1358,5 +1620,8 @@ module.exports = {
   OPENROUTER_PRESETS,
   detectKeyProvider,
   providerMeta,
-  matchPresetsForProvider
+  matchPresetsForProvider,
+  isModernOpenAIModelId,
+  isModernAnthropicModelId,
+  isModernOpenRouterModelId
 };

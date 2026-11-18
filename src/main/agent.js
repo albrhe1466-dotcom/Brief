@@ -445,9 +445,13 @@ class AgentRunner extends EventEmitter {
         ].filter((id) => id !== scout), scout);
 
     const qaTester = pickDistinct([
+      m.presets && m.presets.carbon && m.presets.carbon.id,
       m.presets && m.presets.argon && m.presets.argon.id,
+      m.presets && m.presets.gpt62astra && m.presets.gpt62astra.id,
+      m.presets && m.presets.gpt62sol && m.presets.gpt62sol.id,
       m.presets && m.presets.gpt61sol && m.presets.gpt61sol.id,
       m.presets && m.presets.claudeopus55 && m.presets.claudeopus55.id,
+      m.presets && m.presets.claudefable52 && m.presets.claudefable52.id,
       m.bestPro,
       planRole
     ], specialist || executor);
@@ -475,6 +479,7 @@ class AgentRunner extends EventEmitter {
       push(m.presets.hydrogen && m.presets.hydrogen.id);
       push(m.presets.flashlite35 && m.presets.flashlite35.id);
       push(m.presets.argon && m.presets.argon.id);
+      push(m.presets.carbon && m.presets.carbon.id);
     }
     const availableIds = new Set(all.filter((x) => Array.isArray(x.methods) && x.methods.includes('generateContent')).map((x) => x.id));
     for (const modernId of [
@@ -484,6 +489,7 @@ class AgentRunner extends EventEmitter {
       'gemini-3-flash-preview',
       'gemini-3.1-flash-lite-preview',
       'gemini-4-argon',
+      'gemini-4-carbon',
       'gemini-3.1-pro-preview'
     ]) {
       if (availableIds.has(modernId)) push(modernId);
@@ -495,8 +501,8 @@ class AgentRunner extends EventEmitter {
       .map((x) => x.id)
       .filter((id) => !/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools)/i.test(id));
     general.sort((a, b) => {
-      const aHeavy = /\bpro\b|argon|\bopus\b/i.test(a) ? 1 : 0;
-      const bHeavy = /\bpro\b|argon|\bopus\b/i.test(b) ? 1 : 0;
+      const aHeavy = /\bpro\b|argon|carbon|\bopus\b|fable|astra|sol/i.test(a) ? 1 : 0;
+      const bHeavy = /\bpro\b|argon|carbon|\bopus\b|fable|astra|sol/i.test(b) ? 1 : 0;
       if (aHeavy !== bHeavy) return aHeavy - bHeavy;
       const va = parseFloat((/(?:gemini-|gpt-|claude-[^-]*-)(\d+(?:\.\d+)?)/.exec(a) || [])[1] || '0');
       const vb = parseFloat((/(?:gemini-|gpt-|claude-[^-]*-)(\d+(?:\.\d+)?)/.exec(b) || [])[1] || '0');
@@ -504,10 +510,11 @@ class AgentRunner extends EventEmitter {
       return b.localeCompare(a);
     });
     for (const id of general) {
-      if (!/\bpro\b|argon|\bopus\b/i.test(id)) push(id);
+      if (!/\bpro\b|argon|carbon|\bopus\b|fable|astra|sol/i.test(id)) push(id);
     }
     if (m.presets) {
       push(m.presets.argon && m.presets.argon.id);
+      push(m.presets.carbon && m.presets.carbon.id);
       push(m.presets.pro31 && m.presets.pro31.id);
     }
     push(m.bestPro);
@@ -816,6 +823,12 @@ class AgentRunner extends EventEmitter {
       settings: () => this.getSettings(),
       isStopped: () => this.stopped,
       cursor: (evt) => this.cursorEmitter(evt),
+      beforeScreenAction: async () => {
+        if (this.getSettings().minimizeDuringAgent !== false) {
+          this.emit('before-screen-action', { tool: 'screen' });
+          await sleep(160);
+        }
+      },
       registerProcess: (p) => this.activeProcesses.add(p),
       unregisterProcess: (p) => this.activeProcesses.delete(p),
       progress: (txt) => this.emit('command-output', txt)
@@ -1659,7 +1672,7 @@ class AgentRunner extends EventEmitter {
                 seenShot: thumbOf(currentShot)
               }
             });
-            if ((tool && (tool.screen || tool.kind === 'app')) && this.getSettings().showOverlay !== false && this.getSettings().minimizeDuringAgent !== false) {
+            if ((tool && (tool.screen || tool.kind === 'app')) && this.getSettings().minimizeDuringAgent !== false) {
               this.emit('before-screen-action', { tool: name });
               await sleep(160);
             }
@@ -1705,10 +1718,10 @@ class AgentRunner extends EventEmitter {
                   resultObj.loop_warning = `Notice: You have clicked near (${Math.round(nx)}, ${Math.round(ny)}) ${nearHits} times. Look closely at the cyan 0..1000 grid and visible UI elements — if nothing changed, try a different UI button/tab, scroll, drag, click_element, or keyboard shortcut instead of repeating the same click.`;
                 }
               }
-              // After opening or focusing an app/folder/file, move cursor into the newly opened window and click it
+              // After opening or focusing an app/folder/file, glide pointer cleanly inside the window without blindly clicking its dead center (which blurs Script Editor / Command Bar!)
               if (['open_app', 'open_path', 'reveal_in_folder', 'focus_window'].includes(name) && this.getSettings().showOverlay !== false) {
                 try {
-                  await sleep(220);
+                  await sleep(180);
                   const fgAfter = await this.automation.foreground().catch(() => null);
                   if (fgAfter && fgAfter.rect) {
                     const nums = typeof fgAfter.rect === 'string'
@@ -1719,11 +1732,8 @@ class AgentRunner extends EventEmitter {
                       const cy = Math.round(nums[1] + (nums[3] - nums[1]) * 0.45);
                       const { screen: elecScreen } = (process.versions && process.versions.electron) ? require('electron') : {};
                       const dipPt = (elecScreen && typeof elecScreen.screenToDipPoint === 'function') ? elecScreen.screenToDipPoint({ x: cx, y: cy }) : { x: cx, y: cy };
-                      this.cursorEmitter({ kind: 'move', x: dipPt.x, y: dipPt.y, ms: 200, label: desc.slice(0, 48) });
-                      await this.automation.move(cx, cy, 200).catch(() => {});
-                      await sleep(60);
-                      this.cursorEmitter({ kind: 'click', x: dipPt.x, y: dipPt.y, button: 'left', count: 1, label: desc.slice(0, 48) });
-                      await this.automation.click('left', 1).catch(() => {});
+                      this.cursorEmitter({ kind: 'move', x: dipPt.x, y: dipPt.y, ms: 180, label: desc.slice(0, 48) });
+                      await this.automation.move(cx, cy, 180).catch(() => {});
                     }
                   }
                 } catch (_) { /* ignore */ }

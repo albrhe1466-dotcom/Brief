@@ -258,9 +258,54 @@ function isCodeContent(text, filePath = '') {
   return false;
 }
 
+function isSelfOrDesktopForeground(fg) {
+  if (!fg) return false;
+  const proc = String(fg.process || '').trim().toLowerCase();
+  const title = String(fg.title || '').trim().toLowerCase();
+  if (/^(?:locally|brief|electron)$/i.test(proc)) return true;
+  if (/^(?:brief|locally)$/i.test(title) || title.startsWith('brief desktop layer') || title.startsWith('brief status widget')) return true;
+  if (title === 'program manager') return true;
+  return false;
+}
+
+async function ensureTargetForeground(ctx, targetHint = '') {
+  if (!ctx || !ctx.automation || typeof ctx.automation.foreground !== 'function') return null;
+  let fg = await ctx.automation.foreground().catch(() => null);
+  if (isSelfOrDesktopForeground(fg)) {
+    if (typeof ctx.beforeScreenAction === 'function') {
+      await ctx.beforeScreenAction().catch(() => {});
+      await sleep(160);
+    }
+    if (targetHint && typeof ctx.automation.focusWindow === 'function') {
+      await ctx.automation.focusWindow(targetHint).catch(() => {});
+      await sleep(180);
+    }
+    fg = await ctx.automation.foreground().catch(() => null);
+    if (isSelfOrDesktopForeground(fg) && typeof ctx.automation.listWindows === 'function' && typeof ctx.automation.focusWindow === 'function') {
+      const wins = await ctx.automation.listWindows().catch(() => []);
+      const cand = (Array.isArray(wins) ? wins : []).find((w) => {
+        const wt = String((w && w.title) || '').trim().toLowerCase();
+        const wp = String((w && w.process) || '').trim().toLowerCase();
+        return wt && wt !== 'program manager' && !/^(?:locally|brief|electron)$/i.test(wp) && !/^(?:brief|locally)$/i.test(wt) && w.state !== 'minimized';
+      });
+      if (cand) {
+        await ctx.automation.focusWindow(cand.title || cand.process).catch(() => {});
+        await sleep(180);
+        fg = await ctx.automation.foreground().catch(() => null);
+      }
+    }
+    if (isSelfOrDesktopForeground(fg)) {
+      const who = (fg && (fg.title || fg.process)) || 'Brief/Desktop';
+      throw new Error('Cannot type: keyboard focus is still on "' + who + '" instead of the target app. Call focus_window or click the target input field first.');
+    }
+  }
+  return fg;
+}
+
 async function typeText(ctx, text, options = {}) {
   const s = String(text || '').replace(/\r\n/g, '\n');
   if (!s) return 'typed';
+  await ensureTargetForeground(ctx, options.targetHint || '');
   const isCode = options.isCode !== undefined ? !!options.isCode : isCodeContent(s, options.path || '');
   const settingsPaste = !ctx.settings || ctx.settings().pasteLongText !== false;
   const shouldPaste = options.mode === 'paste' || options.paste === true ||
@@ -278,9 +323,9 @@ async function typeText(ctx, text, options = {}) {
         label: 'Paste: ' + s.replace(/\s+/g, ' ').slice(0, 32)
       });
     }
-    await sleep(60);
+    await sleep(90);
     await ctx.automation.keys(IS_MAC ? 'cmd+v' : 'ctrl+v');
-    await sleep(240);
+    await sleep(450);
     if (prevImage && !prevImage.isEmpty()) clipboard.writeImage(prevImage);
     else clipboard.writeText(prevText || '');
     return 'pasted';
@@ -288,9 +333,15 @@ async function typeText(ctx, text, options = {}) {
   const softNewline = options.softNewline !== false;
   let curr = '';
   const rawDelay = ctx.settings ? ctx.settings().typingDelayMs : undefined;
-  const delayMs = rawDelay === 0 ? 0 : Math.max(16, Math.min(50, Number(rawDelay || 28)));
+  const delayMs = rawDelay === 0 ? 0 : Math.max(16, Math.min(50, Number(rawDelay || 24)));
   for (let i = 0; i < s.length; i++) {
     if (ctx.isStopped && ctx.isStopped()) throw new Error('Stopped by user.');
+    if (i > 0 && i % 10 === 0 && ctx.automation && typeof ctx.automation.foreground === 'function') {
+      const fg = await ctx.automation.foreground().catch(() => null);
+      if (isSelfOrDesktopForeground(fg)) {
+        throw new Error('Typing interrupted: focus shifted back to Brief/Desktop mid-typing. Re-focus the target app field.');
+      }
+    }
     curr += s[i];
     if (ctx.cursor) {
       ctx.cursor({
@@ -301,16 +352,7 @@ async function typeText(ctx, text, options = {}) {
         label: 'Typing: ' + curr.slice(-25)
       });
     }
-    let selfFocused = false;
-    if (i % 5 === 0 && ctx.automation && typeof ctx.automation.foreground === 'function') {
-      const fg = await ctx.automation.foreground().catch(() => null);
-      if (fg && (/^(?:locally|brief|electron)$/i.test(String(fg.process || '').trim()) || /^(?:brief|locally)$/i.test(String(fg.title || '').trim()))) {
-        selfFocused = true;
-      }
-    }
-    if (!selfFocused) {
-      await ctx.automation.type(s[i], 0, { softNewline });
-    }
+    await ctx.automation.type(s[i], 0, { softNewline });
     if (delayMs > 0) await sleep(delayMs);
   }
   return 'typed';
@@ -1155,6 +1197,7 @@ const TOOLS = [
     }, required: ['text'] },
     describe: (a) => (a.mode === 'paste' || (a.mode !== 'type' && (String(a.text || '').includes('\n') || String(a.text || '').length > 20)) ? 'Paste "' : 'Type "') + truncateMiddle(a.text, 120) + '"' + (a.target ? ' into "' + a.target + '"' : (a.x !== undefined ? ' at (' + a.x + ', ' + a.y + ')' : ' into the focused field')) + (a.press_enter ? ' and press Enter' : ''),
     async run(a, ctx) {
+      if (ctx.beforeScreenAction) await ctx.beforeScreenAction().catch(() => {});
       let targetHit = null;
       if (a.target) {
         targetHit = await findAndClickUiElement(ctx, { query: a.target, typeFilter: 'input' }) ||
@@ -1164,25 +1207,20 @@ const TOOLS = [
         const m = await pointer(ctx, a.x, a.y, 1000, 'click');
         ctx.cursor({ x: m.dip.x, y: m.dip.y, kind: 'click' });
         await ctx.automation.click('left', 1);
-        await sleep(140);
-        if (ctx.automation && typeof ctx.automation.focusedElement === 'function') {
-          const f = await ctx.automation.focusedElement().catch(() => null);
-          if (!f || !f.canType) {
-            const snap = await findAndClickUiElement(ctx, { typeFilter: 'input', nearNative: m.native, maxDistPx: 240 });
-            if (snap) targetHit = snap;
-          }
-        }
-      } else if (!targetHit && a.x === undefined && ctx.automation && typeof ctx.automation.focusedElement === 'function') {
-        const f = await ctx.automation.focusedElement().catch(() => null);
-        if (!f || !f.canType) {
+        await sleep(180);
+      } else if (!targetHit && a.x === undefined && ctx.automation && typeof ctx.automation.foreground === 'function') {
+        const fgNow = await ctx.automation.foreground().catch(() => null);
+        if (isSelfOrDesktopForeground(fgNow)) {
           targetHit = await findAndClickUiElement(ctx, { query: 'search', typeFilter: 'input' }) ||
             await findAndClickUiElement(ctx, { typeFilter: 'input' });
         }
       }
-      if (a.clear_first) { await ctx.automation.keys(IS_MAC ? 'cmd+a' : 'ctrl+a'); await sleep(60); await ctx.automation.keys('backspace'); await sleep(60); }
-      ctx.cursor({ kind: 'type', label: 'pasting' });
-      const how = await typeText(ctx, a.text || '', { mode: a.mode, softNewline: a.soft_newline !== false });
-      if (a.press_enter) await ctx.automation.keys('enter');
+      const fgBefore = await ensureTargetForeground(ctx, a.target || '');
+      if (a.clear_first) { await ctx.automation.keys(IS_MAC ? 'cmd+a' : 'ctrl+a'); await sleep(70); await ctx.automation.keys('backspace'); await sleep(70); }
+      const willPaste = a.mode === 'paste' || (a.mode !== 'type' && (isCodeContent(a.text || '') || String(a.text || '').includes('\n') || String(a.text || '').length > 20));
+      ctx.cursor({ kind: 'type', label: willPaste ? 'Pasting' : 'Typing' });
+      const how = await typeText(ctx, a.text || '', { mode: a.mode, softNewline: a.soft_newline !== false, targetHint: a.target || '' });
+      if (a.press_enter) { await sleep(80); await ctx.automation.keys('enter'); }
       const finalFocus = (ctx.automation && typeof ctx.automation.focusedElement === 'function')
         ? await ctx.automation.focusedElement().catch(() => null)
         : null;
@@ -1190,6 +1228,8 @@ const TOOLS = [
         typed_chars: String(a.text || '').length,
         method: how,
         pressed_enter: !!a.press_enter,
+        foreground_window: fgBefore ? fgBefore.title : undefined,
+        foreground_process: fgBefore ? fgBefore.process : undefined,
         clicked_element: targetHit && targetHit.element ? targetHit.element.name || targetHit.element.type : undefined,
         focused: finalFocus ? { type: finalFocus.type, name: finalFocus.name, canType: finalFocus.canType } : undefined
       };
@@ -2300,4 +2340,4 @@ function declarations({ includeScreen = true, cuMode = false } = {}) {
 
 function getTool(name) { return TOOLS.find((t) => t.name === name) || null; }
 
-module.exports = { TOOLS, CU_ACTIONS, declarations, getTool, resolvePath, knownFolders, killTree, isPermanentDeleteCommand, pointsOf, launchApp, makeMatcher, categoryOf, runLiveWebSearch, fetchWebPageText };
+module.exports = { TOOLS, CU_ACTIONS, declarations, getTool, resolvePath, knownFolders, killTree, isPermanentDeleteCommand, pointsOf, launchApp, makeMatcher, categoryOf, runLiveWebSearch, fetchWebPageText, isSelfOrDesktopForeground, ensureTargetForeground, typeText };

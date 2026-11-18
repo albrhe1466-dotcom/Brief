@@ -1,7 +1,7 @@
 {
   "name": "locally",
   "productName": "Brief",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Brief — Private local desktop AI agent. Runs exclusively on your computer.",
   "main": "src/main/main.js",
   "private": true,

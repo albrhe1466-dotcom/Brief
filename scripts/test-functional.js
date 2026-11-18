@@ -16,8 +16,9 @@ const path = require('path');
 const os = require('os');
 const assert = require('assert');
 
-const { getTool, resolvePath, declarations, isPermanentDeleteCommand } = require('../src/main/tools');
+const { getTool, resolvePath, declarations, isPermanentDeleteCommand, isSelfOrDesktopForeground, ensureTargetForeground, typeText } = require('../src/main/tools');
 const { matchPresets, buildThinkingConfig, resolveGeminiRuntimeCandidates, isModernGeminiModelId } = require('../src/main/gemini');
+const { OpenAIClient, AnthropicClient, OpenRouterClient, isModernOpenAIModelId, isModernAnthropicModelId, isModernOpenRouterModelId } = require('../src/main/providers');
 const { DEFAULT_SETTINGS } = require('../src/main/store');
 const { KeyStore } = require('../src/main/keystore');
 
@@ -186,23 +187,87 @@ async function runFunctionalTests(screen, automation) {
     fail('thinking-config', e);
   }
 
-  // 8. v1.0.2 modern Gemini 3/4 candidates (zero 1.5/2.0/2.5 fallbacks) & seenNewsVersion default
+  // 8. All 4 Providers modern routing (zero 3.5/4o/4.1/claude-3/gemini-2.x downgrades) & seenNewsVersion default
   try {
-    for (const modelId of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-4-argon']) {
+    for (const modelId of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-4-argon', 'gemini-4-carbon']) {
       const cands = resolveGeminiRuntimeCandidates(modelId);
-      assert.strictEqual(cands[0], modelId, 'Exact requested model must come first: ' + modelId);
+      assert.strictEqual(cands[0], modelId, 'Exact Gemini model must come first: ' + modelId);
       const legacy = cands.filter((c) => /^gemini-(1|2)(?:\.|$|-)/i.test(c));
-      assert.strictEqual(legacy.length, 0, 'Legacy 1.x/2.x models forbidden in candidates for ' + modelId + ': ' + legacy.join(', '));
+      assert.strictEqual(legacy.length, 0, 'Legacy 1.x/2.x Gemini models forbidden: ' + legacy.join(', '));
+    }
+    const openai = new OpenAIClient(() => '', () => {});
+    for (const modelId of ['gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'gpt-6.2-astra']) {
+      const cands = openai.resolveRuntimeCandidates(modelId);
+      assert.strictEqual(cands[0], modelId, 'Exact OpenAI model must come first: ' + modelId);
+      const legacy = cands.filter((c) => /^(?:gpt-3|gpt-4|o1|o4-mini)/i.test(c));
+      assert.strictEqual(legacy.length, 0, 'Legacy OpenAI models forbidden: ' + legacy.join(', '));
+    }
+    const anthropic = new AnthropicClient(() => '', () => {});
+    for (const modelId of ['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5', 'claude-fable-5-2']) {
+      const cands = anthropic.resolveRuntimeCandidates(modelId);
+      assert.strictEqual(cands[0], modelId, 'Exact Claude model must come first: ' + modelId);
+      const legacy = cands.filter((c) => /^claude-(?:2|instant|3|sonnet-4-20250514)/i.test(c));
+      assert.strictEqual(legacy.length, 0, 'Legacy Claude models forbidden: ' + legacy.join(', '));
+    }
+    const orClient = new OpenRouterClient(() => '', () => {});
+    for (const modelId of ['google/gemini-4-carbon', 'openai/gpt-6.2-sol', 'anthropic/claude-haiku-5-5', 'anthropic/claude-fable-5-2']) {
+      const cands = orClient.resolveRuntimeCandidates(modelId);
+      assert.strictEqual(cands[0], modelId, 'Exact OpenRouter model must come first: ' + modelId);
+      const legacy = cands.filter((c) => !isModernOpenRouterModelId(c) && c !== modelId);
+      assert.strictEqual(legacy.length, 0, 'Legacy OpenRouter models forbidden: ' + legacy.join(', '));
     }
     assert.strictEqual(isModernGeminiModelId('gemini-2.5-pro'), false);
-    assert.strictEqual(isModernGeminiModelId('gemini-2.0-flash'), false);
-    assert.strictEqual(isModernGeminiModelId('gemini-1.5-pro'), false);
-    assert.strictEqual(isModernGeminiModelId('gemini-3.1-pro-preview'), true);
-    assert.strictEqual(isModernGeminiModelId('gemini-4-hydrogen'), true);
+    assert.strictEqual(isModernGeminiModelId('gemini-4-carbon'), true);
+    assert.strictEqual(isModernOpenAIModelId('gpt-3.5-turbo'), false);
+    assert.strictEqual(isModernOpenAIModelId('gpt-4o'), false);
+    assert.strictEqual(isModernOpenAIModelId('gpt-6.2-sol'), true);
+    assert.strictEqual(isModernAnthropicModelId('claude-3-haiku-20240307'), false);
+    assert.strictEqual(isModernAnthropicModelId('claude-fable-5-2'), true);
     assert.strictEqual(DEFAULT_SETTINGS.seenNewsVersion, '');
-    pass('modern-gemini-routing-v102', 'Zero 1.5/2.0/2.5 fallback verified across all 4 Gemini models + seenNewsVersion initialized');
+    pass('all-4-providers-modern-routing-v103', 'Verified zero legacy downgrades across Gemini (+ Carbon), OpenAI, Claude & OpenRouter + seenNewsVersion');
   } catch (e) {
-    fail('modern-gemini-routing-v102', e);
+    fail('all-4-providers-modern-routing-v103', e);
+  }
+
+  // 9. Typing foreground safety check (never simulate typing when Brief/Desktop is focused; deliver when Roblox/target is focused)
+  try {
+    assert.strictEqual(isSelfOrDesktopForeground({ process: 'Brief', title: 'Brief' }), true);
+    assert.strictEqual(isSelfOrDesktopForeground({ process: 'explorer', title: 'Program Manager' }), true);
+    assert.strictEqual(isSelfOrDesktopForeground({ process: 'RobloxStudioBeta', title: 'Baseplate - Roblox Studio' }), false);
+
+    let typedBuffer = '';
+    const briefFocusedCtx = Object.assign({}, ctx, {
+      automation: {
+        foreground: async () => ({ process: 'Brief', title: 'Brief' }),
+        listWindows: async () => [],
+        focusWindow: async () => null,
+        type: async (ch) => { typedBuffer += ch; },
+        keys: async () => {}
+      }
+    });
+    let threwOnSelf = false;
+    try {
+      await typeText(briefFocusedCtx, 'print("hello")', { mode: 'type' });
+    } catch (err) {
+      threwOnSelf = /Cannot type: keyboard focus/i.test(err.message);
+    }
+    assert.strictEqual(threwOnSelf, true, 'Must throw error instead of simulating typing on Brief window');
+    assert.strictEqual(typedBuffer, '', 'Must not send fake keystrokes when self-focused');
+
+    const studioCtx = Object.assign({}, ctx, {
+      automation: {
+        foreground: async () => ({ process: 'RobloxStudioBeta', title: 'MyGame - Roblox Studio' }),
+        type: async (ch) => { typedBuffer += ch; },
+        keys: async () => {}
+      }
+    });
+    const studioRes = await typeText(studioCtx, 'hi', { mode: 'type' });
+    assert.strictEqual(studioRes, 'typed');
+    assert.strictEqual(typedBuffer, 'hi', 'Must actually deliver characters when target app (Roblox Studio) is foreground');
+    await ensureTargetForeground(studioCtx);
+    pass('typing-foreground-enforcement-v103', 'Verified no-simulation error on Brief focus & real delivery when Roblox Studio is focused');
+  } catch (e) {
+    fail('typing-foreground-enforcement-v103', e);
   }
 
   return {

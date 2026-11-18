@@ -422,6 +422,7 @@ function createWidgetWindow() {
     frame: false,
     transparent: true,
     resizable: false,
+    focusable: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     show: false,

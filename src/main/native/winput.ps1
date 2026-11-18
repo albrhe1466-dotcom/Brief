@@ -80,6 +80,7 @@ public static class LocallyInput
     [DllImport("user32.dll", SetLastError = true)] static extern bool SetCursorPos(int X, int Y);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT lpPoint);
     [DllImport("user32.dll")] static extern uint MapVirtualKey(uint uCode, uint uMapType);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern short VkKeyScan(char ch);
     [DllImport("user32.dll")] static extern uint GetDoubleClickTime();
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -700,6 +701,32 @@ public static class LocallyInput
             {
                 Send(new INPUT[] { KeyInput(0x09, false), KeyInput(0x09, true) });
             }
+            else if (ch >= 0x20 && ch <= 0x7E)
+            {
+                short vkRes = VkKeyScan(ch);
+                int vk = vkRes & 0xFF;
+                int shiftState = (vkRes >> 8) & 0xFF;
+                if (vkRes != -1 && vk != 0 && vk != 0xFF && (shiftState == 0 || shiftState == 1))
+                {
+                    if (shiftState == 1)
+                    {
+                        Send(new INPUT[] {
+                            KeyInput(0x10, false),
+                            KeyInput((ushort)vk, false),
+                            KeyInput((ushort)vk, true),
+                            KeyInput(0x10, true)
+                        });
+                    }
+                    else
+                    {
+                        Send(new INPUT[] { KeyInput((ushort)vk, false), KeyInput((ushort)vk, true) });
+                    }
+                }
+                else
+                {
+                    Send(new INPUT[] { UnicodeInput(ch, false), UnicodeInput(ch, true) });
+                }
+            }
             else
             {
                 Send(new INPUT[] { UnicodeInput(ch, false), UnicodeInput(ch, true) });
@@ -841,6 +868,12 @@ public static class LocallyInput
         try { Send(new INPUT[] { KeyInput(0x12, false), KeyInput(0x12, true) }); } catch { }
         BringWindowToTop(found);
         SetForegroundWindow(found);
+        Thread.Sleep(45);
+        if (GetForegroundWindow() != found)
+        {
+            BringWindowToTop(found);
+            SetForegroundWindow(found);
+        }
         if (attached) AttachThreadInput(myThread, fgThread, false);
         return foundTitle;
     }

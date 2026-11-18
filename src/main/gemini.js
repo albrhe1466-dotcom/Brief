@@ -27,7 +27,7 @@ const PRESETS = [
     key: 'hydrogen',
     label: 'Gemini 4 Hydrogen',
     hint: 'Balanced',
-    match: (m) => /(hydrogen|gemini-?4(?:\.0)?(?!(?:.*argon|.*pro|.*flash-lite)))/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && !/argon/i.test(m.id + ' ' + m.displayName) && isGeneral(m),
+    match: (m) => /(hydrogen|gemini-?4(?:\.0)?(?!(?:.*argon|.*carbon|.*pro|.*flash-lite)))/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && !/(?:argon|carbon)/i.test(m.id + ' ' + m.displayName) && isGeneral(m),
     base: 'gemini-4-hydrogen'
   },
   {
@@ -36,6 +36,13 @@ const PRESETS = [
     hint: 'Strong',
     match: (m) => /argon|gemini-?4(?:\.0)?-?argon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
     base: 'gemini-4-argon'
+  },
+  {
+    key: 'carbon',
+    label: 'Gemini 4 Carbon',
+    hint: 'Frontier',
+    match: (m) => /carbon|gemini-?4(?:\.0)?-?carbon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
+    base: 'gemini-4-carbon'
   }
 ];
 
@@ -67,7 +74,7 @@ function buildThinkingConfig(modelId, level, modelsList) {
   if (!id || /computer-use|image|tts|embedding/.test(id)) return null;
 
   const meta = Array.isArray(modelsList) ? modelsList.find((m) => m.id.toLowerCase() === id) : null;
-  if (meta && meta.thinking === false && !/pro|thinking|hydrogen|argon|gemini-3|gemini-4|gemini-2\.5/.test(id)) {
+  if (meta && meta.thinking === false && !/pro|thinking|hydrogen|argon|carbon|gemini-3|gemini-4|gemini-2\.5/.test(id)) {
     return null;
   }
 
@@ -75,7 +82,7 @@ function buildThinkingConfig(modelId, level, modelsList) {
     const budget = tier === 'LOW' ? 1024 : (tier === 'HIGH' ? 24576 : 8192);
     return { thinkingBudget: budget, includeThoughts: true };
   }
-  if (/gemini-(3|4)|hydrogen|argon|thinking/.test(id) || (meta && meta.thinking)) {
+  if (/gemini-(3|4)|hydrogen|argon|carbon|thinking/.test(id) || (meta && meta.thinking)) {
     return { thinkingLevel: tier, includeThoughts: true };
   }
   return null;
@@ -192,7 +199,7 @@ function isModernGeminiModelId(id) {
   if (!clean) return false;
   if (/^gemini-(1|2)(?:\.|$|-)/.test(clean)) return false;
   if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|bison|gecko|learnlm)/i.test(clean)) return false;
-  return /^(gemini-(?:3|4|5)|.*hydrogen|.*argon)/.test(clean);
+  return /^(gemini-(?:3|4|5)|.*hydrogen|.*argon|.*carbon)/.test(clean);
 }
 
 function resolveGeminiRuntimeCandidates(model) {
@@ -221,6 +228,15 @@ function resolveGeminiRuntimeCandidates(model) {
     push('gemini-3.1-flash-lite-preview');
     return out;
   }
+  if (/carbon/.test(id)) {
+    for (const m of live) if (/carbon|argon|gemini-4|3\.1-pro/i.test(m)) push(m);
+    push('gemini-4-carbon');
+    push('gemini-4-argon');
+    push('gemini-3.1-pro-preview');
+    push('gemini-4-hydrogen');
+    push('gemini-3.8-flash');
+    return out;
+  }
   if (/hydrogen/.test(id)) {
     for (const m of live) if (/hydrogen|gemini-4/i.test(m) && !/argon/i.test(m)) push(m);
     push('gemini-4-hydrogen');
@@ -231,12 +247,14 @@ function resolveGeminiRuntimeCandidates(model) {
     return out;
   }
   if (/argon|pro/.test(id)) {
-    for (const m of live) if (/argon|3\.1-pro|gemini-4/i.test(m)) push(m);
+    for (const m of live) if (/argon|carbon|3\.1-pro|gemini-4/i.test(m)) push(m);
     push('gemini-4-argon');
+    push('gemini-4-carbon');
     push('gemini-3.1-pro-preview');
     for (const m of live) if (/hydrogen|3\.8|3-flash/i.test(m)) push(m);
     push('gemini-4-hydrogen');
     push('gemini-3.8-flash');
+    push('gemini-3-flash-preview');
     return out;
   }
   for (const m of live) push(m);
@@ -294,7 +312,8 @@ const GEMINI_ALLOWLIST = [
   { id: 'gemini-3.5-flash-lite', name: 'models/gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash-Lite', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'gemini-3.8-flash', name: 'models/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'gemini-4-hydrogen', name: 'models/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
+  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-carbon', name: 'models/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Frontier', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
 ];
 
 class GeminiClient {

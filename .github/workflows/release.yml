@@ -40,19 +40,19 @@ jobs:
           BRIEF_DOWNLOAD_URL: https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip
         run: node scripts/build-installer.js
 
-      - name: Publish to GitHub Release v1.0.2
+      - name: Publish to GitHub Release v1.0.3
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          $tag = "v1.0.2"
+          $tag = "v1.0.3"
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `
               download-site/public/downloads/Brief-Setup.exe `
               download-site/public/downloads/brief-package.zip `
               --title "Brief $tag" `
-              --notes "Brief v1.0.2: Removed legacy 1.5/2.0/2.5 model fallbacks, added true Gemini 3/4 discovery with live v1beta/models, centered What's New news modal with screenshots, multi-agent Studio crew verification, and native Windows Setup Wizard." `
+              --notes "Brief v1.0.3: Fixed all 4 model providers (Gemini + Carbon, OpenAI GPT-6.2, Claude 5.5/5.2, OpenRouter live models with zero legacy downgrades), hardware VkKeyScanW typing + strict foreground verification for Roblox Studio, and centered News dialog." `
               --latest
           } else {
             gh release upload $tag `
