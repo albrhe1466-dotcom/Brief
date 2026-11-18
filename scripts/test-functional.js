@@ -19,7 +19,7 @@ const assert = require('assert');
 const { getTool, resolvePath, declarations, isPermanentDeleteCommand, isSelfOrDesktopForeground, ensureTargetForeground, typeText } = require('../src/main/tools');
 const { matchPresets, buildThinkingConfig, resolveGeminiRuntimeCandidates, isModernGeminiModelId, PRESETS: GEMINI_PRESETS } = require('../src/main/gemini');
 const { OpenAIClient, AnthropicClient, OpenRouterClient, isModernOpenAIModelId, isModernAnthropicModelId, isModernOpenRouterModelId } = require('../src/main/providers');
-const { DEFAULT_SETTINGS } = require('../src/main/store');
+const { DEFAULT_SETTINGS, sanitizeModelIdValue } = require('../src/main/store');
 const { KeyStore } = require('../src/main/keystore');
 
 async function runFunctionalTests(screen, automation) {
@@ -196,7 +196,7 @@ async function runFunctionalTests(screen, automation) {
       assert.strictEqual(legacy.length, 0, 'Legacy 1.x/2.x Gemini models forbidden: ' + legacy.join(', '));
     }
     const openai = new OpenAIClient(() => '', () => {});
-    for (const modelId of ['gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'gpt-6.2-astra']) {
+    for (const modelId of ['gpt-6-luna', 'gpt-6.1-terra', 'gpt-6-sol', 'gpt-6-astra']) {
       const cands = openai.resolveRuntimeCandidates(modelId);
       assert.strictEqual(cands[0], modelId, 'Exact OpenAI model must come first: ' + modelId);
       const legacy = cands.filter((c) => /^(?:gpt-3|gpt-4|o1|o4-mini)/i.test(c));
@@ -210,23 +210,26 @@ async function runFunctionalTests(screen, automation) {
       assert.strictEqual(legacy.length, 0, 'Legacy Claude models forbidden: ' + legacy.join(', '));
     }
     const orClient = new OpenRouterClient(() => '', () => {});
-    for (const modelId of ['google/gemini-4-carbon', 'openai/gpt-6.2-sol', 'anthropic/claude-haiku-5-5', 'anthropic/claude-fable-5-2']) {
+    for (const modelId of ['google/gemini-4-carbon', 'openai/gpt-6-sol', 'openai/gpt-6-astra', 'anthropic/claude-haiku-5-5', 'anthropic/claude-fable-5-2']) {
       const cands = orClient.resolveRuntimeCandidates(modelId);
       assert.strictEqual(cands[0], modelId, 'Exact OpenRouter model must come first: ' + modelId);
       const legacy = cands.filter((c) => !isModernOpenRouterModelId(c) && c !== modelId);
       assert.strictEqual(legacy.length, 0, 'Legacy OpenRouter models forbidden: ' + legacy.join(', '));
     }
     assert.strictEqual(isModernGeminiModelId('gemini-2.5-pro'), false);
+    assert.strictEqual(resolveGeminiRuntimeCandidates('gemini-2.5-pro').some((c) => /gemini-(1|2)\./i.test(c)), false, 'gemini-2.5-pro runtime candidates must never run retired 2.5');
+    assert.strictEqual(sanitizeModelIdValue('gemini-2.5-pro'), '');
+    assert.strictEqual(sanitizeModelIdValue('gpt-6.2-sol'), 'gpt-6-sol');
     assert.strictEqual(isModernGeminiModelId('gemini-4-carbon'), true);
     assert.strictEqual(isModernOpenAIModelId('gpt-3.5-turbo'), false);
     assert.strictEqual(isModernOpenAIModelId('gpt-4o'), false);
-    assert.strictEqual(isModernOpenAIModelId('gpt-6.2-sol'), true);
+    assert.strictEqual(isModernOpenAIModelId('gpt-6-sol'), true);
     assert.strictEqual(isModernAnthropicModelId('claude-3-haiku-20240307'), false);
     assert.strictEqual(isModernAnthropicModelId('claude-fable-5-2'), true);
     assert.strictEqual(DEFAULT_SETTINGS.seenNewsVersion, '');
-    pass('all-4-providers-modern-routing-v103', 'Verified zero legacy downgrades across Gemini (+ Carbon), OpenAI, Claude & OpenRouter + seenNewsVersion');
+    pass('all-4-providers-modern-routing-v105', 'Verified zero legacy downgrades across Gemini (+ Carbon), OpenAI (GPT-6 Sol/Astra), Claude & OpenRouter + legacy sanitization');
   } catch (e) {
-    fail('all-4-providers-modern-routing-v103', e);
+    fail('all-4-providers-modern-routing-v105', e);
   }
 
   // 9. Typing foreground safety check (never simulate typing when Brief/Desktop is focused; deliver when Roblox/target is focused)
@@ -283,12 +286,18 @@ async function runFunctionalTests(screen, automation) {
     const anthropic = new AnthropicClient(() => '', () => {});
     const claudeHigh = anthropic.buildMessagesPayload('claude-fable-5-2', {
       contents: [{ role: 'user', parts: [{ text: 'Think deeply' }] }],
+      tools: [{ functionDeclarations: [{ name: 'click', description: 'click', parameters: { type: 'object', properties: {} } }] }],
+      toolConfig: { functionCallingConfig: { mode: 'ANY' } },
       generationConfig: { thinkingConfig: { thinkingLevel: 'HIGH', includeThoughts: true } }
     }, false, true);
     assert(claudeHigh.thinking && claudeHigh.thinking.budget_tokens >= 8192, 'Claude high thinking must send extended budget');
-    pass('challenger-and-real-thinking-v104', 'Verified Gemini 4 Carbon Challenger badge + real HIGH reasoning payloads across Gemini, OpenRouter & Claude');
+    assert.strictEqual(claudeHigh.tool_choice, undefined, 'Claude must never send tool_choice=any alongside extended thinking');
+    const ks = new KeyStore(os.tmpdir());
+    ks.cache = 'AQ.AbCdEfGhIjKlMnOpQrStUvWxYz01234567890123456789AQkA';
+    assert(ks.masked().length <= 16, 'Masked key must remain short and compact so Settings UI never overflows: ' + ks.masked());
+    pass('challenger-real-thinking-and-compact-mask-v105', 'Verified Challenger Carbon, OpenRouter/Claude thinking compatibility & compact API key mask');
   } catch (e) {
-    fail('challenger-and-real-thinking-v104', e);
+    fail('challenger-real-thinking-and-compact-mask-v105', e);
   }
 
   return {

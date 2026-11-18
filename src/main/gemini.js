@@ -215,7 +215,10 @@ function resolveGeminiRuntimeCandidates(model) {
     const clean = stripModelPrefix(cand);
     if (clean && !out.includes(clean)) out.push(clean);
   };
-  push(exact);
+  // Never run retired 1.x / 2.x Gemini models even if left over in old config
+  if (isModernGeminiModelId(exact) && !/^gemini-(?:1|2)(?:\.|$|-)/i.test(id)) {
+    push(exact);
+  }
 
   const live = Array.isArray(LIVE_GEMINI_34_MODELS) ? LIVE_GEMINI_34_MODELS : [];
   if (/3\.5.*flash.*lite|flash.*lite/.test(id)) {
@@ -454,7 +457,8 @@ class GeminiClient {
           payload = ensureThoughtSignatures(payload, true);
           continue;
         }
-        if ((e.kind === 'noaccess' || e.status === 404 || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server') && candIdx + 1 < runtimeCands.length) {
+        const modelRetiredOrMissing = /no longer available|deprecated|retired|unknown model|not found|not supported for generateContent/i.test(e.message || '');
+        if ((e.kind === 'noaccess' || e.status === 404 || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server' || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
           candIdx += 1;
           targetModel = runtimeCands[candIdx];
           payload = adaptGeminiPayloadForTarget(body, targetModel);
@@ -501,7 +505,8 @@ class GeminiClient {
           payload = ensureThoughtSignatures(payload, true);
           continue;
         }
-        if ((e.kind === 'noaccess' || e.status === 404 || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server') && candIdx + 1 < runtimeCands.length) {
+        const modelRetiredOrMissing = /no longer available|deprecated|retired|unknown model|not found|not supported for generateContent/i.test(e.message || '');
+        if ((e.kind === 'noaccess' || e.status === 404 || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server' || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
           candIdx += 1;
           targetModel = runtimeCands[candIdx];
           payload = adaptGeminiPayloadForTarget(body, targetModel);

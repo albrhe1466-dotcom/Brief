@@ -40,19 +40,19 @@ jobs:
           BRIEF_DOWNLOAD_URL: https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip
         run: node scripts/build-installer.js
 
-      - name: Publish to GitHub Release v1.0.4
+      - name: Publish to GitHub Release v1.0.5
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          $tag = "v1.0.4"
+          $tag = "v1.0.5"
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag `
               download-site/public/downloads/Brief-Setup.exe `
               download-site/public/downloads/brief-package.zip `
               --title "Brief $tag" `
-              --notes "Brief v1.0.4: Plain-English model cards (zero coding IDs), Gemini 4 Carbon Challenger badge, real 3-tier thinking (Low/Medium/High) with honest self-correction & expanded multi-agent crew, crisp orange arrow HTML icon, and live Download Site What's New gallery." `
+              --notes "Brief v1.0.5: Auto-Glasses click zoom & smart UIA center-snap across all 4 providers, eliminated stale gemini-2.5-pro config crashes, GPT-6 Sol & GPT-6 Astra OpenAI naming, always opens on Main Menu (New Chat), removed Custom Model ID box, and fixed API Key UI overflow." `
               --latest
           } else {
             gh release upload $tag `

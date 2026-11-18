@@ -1037,7 +1037,7 @@ public static class LocallyInput
         string fgT = TitleOf(fg);
         string fgP = ProcessOf(fg);
         if (IsBriefWindow(fgT, fgP)) return items;
-        int limit = Math.Max(16, Math.Min(220, maxItems > 0 ? maxItems : 160));
+        int limit = Math.Max(20, Math.Min(260, maxItems > 0 ? maxItems : 200));
         try
         {
             AutomationElement root = AutomationElement.FromHandle(fg);
@@ -1046,7 +1046,7 @@ public static class LocallyInput
             Queue<AutomationElement> q = new Queue<AutomationElement>();
             q.Enqueue(root);
             int visited = 0;
-            while (q.Count > 0 && items.Count < limit && visited < 2600 && sw.ElapsedMilliseconds < 260)
+            while (q.Count > 0 && items.Count < limit && visited < 4500 && sw.ElapsedMilliseconds < 460)
             {
                 AutomationElement cur = q.Dequeue();
                 visited++;
@@ -1086,7 +1086,7 @@ public static class LocallyInput
                     if (isClickable && (isInput || name.Length > 0 || autoId.Length > 0))
                     {
                         System.Windows.Rect rect = cur.Current.BoundingRectangle;
-                        if (!rect.IsEmpty && rect.Width >= 8 && rect.Height >= 8 && rect.Width < 3000 && rect.Height < 1200)
+                        if (!rect.IsEmpty && rect.Width >= 6 && rect.Height >= 6 && rect.Width < 3600 && rect.Height < 1400)
                         {
                             int cx = (int)Math.Round(rect.Left + rect.Width / 2.0);
                             int cy = (int)Math.Round(rect.Top + rect.Height / 2.0);
@@ -1096,10 +1096,10 @@ public static class LocallyInput
                             items.Add(new string[] { typeName, safeName, autoId, cx.ToString(), cy.ToString(), rStr, isInput ? "1" : "0" });
                         }
                     }
-                    if (ct == ControlType.MenuBar || ct == ControlType.ScrollBar) continue;
+                    if (ct == ControlType.ScrollBar) continue;
                     AutomationElement child = TreeWalker.ControlViewWalker.GetFirstChild(cur);
                     int guard = 0;
-                    while (child != null && guard < 48 && q.Count < 900 && sw.ElapsedMilliseconds < 140)
+                    while (child != null && guard < 64 && q.Count < 1400 && sw.ElapsedMilliseconds < 280)
                     {
                         guard++;
                         q.Enqueue(child);

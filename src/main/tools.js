@@ -535,6 +535,11 @@ async function findAndClickUiElement(ctx, { query = '', typeFilter = 'any', near
   }
   if (!best) return null;
   const dip = ctx.screen.nativeToDip(best.x, best.y);
+  const b = (ctx.screen && typeof ctx.screen.currentDisplay === 'function' && ctx.screen.currentDisplay() && ctx.screen.currentDisplay().bounds) || { x: 0, y: 0, width: 1920, height: 1080 };
+  const normPt = {
+    x: Math.max(0, Math.min(999, Math.round(((dip.x - b.x) / Math.max(1, b.width)) * 1000))),
+    y: Math.max(0, Math.min(999, Math.round(((dip.y - b.y) / Math.max(1, b.height)) * 1000)))
+  };
   const ms = await computeAdaptiveMoveMs(ctx, { x: best.x, y: best.y }, '', true);
   ctx.cursor({ x: dip.x, y: dip.y, ms, label: best.name ? ('Focus: ' + best.name.slice(0, 28)) : 'Focus control', kind: 'move' });
   await ctx.automation.move(best.x, best.y, ms);
@@ -543,7 +548,7 @@ async function findAndClickUiElement(ctx, { query = '', typeFilter = 'any', near
     await ctx.automation.click('left', 1);
     await sleep(140);
   }
-  return { element: best, dip, physical: { x: best.x, y: best.y } };
+  return { element: best, dip, norm: normPt, physical: { x: best.x, y: best.y } };
 }
 
 async function findOcrMatchesOnDisplay(ctx, query = '') {
@@ -596,6 +601,54 @@ async function findOcrMatchesOnDisplay(ctx, query = '') {
 /* tool definitions                                                     */
 /* ------------------------------------------------------------------ */
 
+/** Precision Glasses snap: if clicking within ~12 normalized units of a small UIA control center, snap dead-center so small buttons aren't missed on edges. */
+async function resolveSmartClickPoint(ctx, nx, ny) {
+  const m = ctx.screen.mapPoint(nx, ny, { scale: 1000 });
+  if (!ctx || !ctx.automation || typeof ctx.automation.inspectUi !== 'function') {
+    return { nx: m.normalized.x, ny: m.normalized.y, m, snapped: null };
+  }
+  try {
+    const els = await ctx.automation.inspectUi(140).catch(() => []);
+    if (!Array.isArray(els) || !els.length) return { nx: m.normalized.x, ny: m.normalized.y, m, snapped: null };
+    const disp = (ctx.screen && typeof ctx.screen.currentDisplay === 'function') ? ctx.screen.currentDisplay() : null;
+    const sf = (disp && disp.scaleFactor) || 1;
+    const maxSnapPx = Math.round(20 * sf);
+    let best = null;
+    let bestDist = maxSnapPx + 1;
+    for (const el of els) {
+      if (!el || typeof el.x !== 'number' || typeof el.y !== 'number') continue;
+      if (!/^(Button|SplitButton|MenuItem|TabItem|CheckBox|RadioButton|Edit|Hyperlink)$/i.test(String(el.type || ''))) continue;
+      if (el.rect) {
+        const parts = String(el.rect).split(',').map(Number);
+        if (parts.length === 4 && parts.every(isFinite)) {
+          const w = parts[2] - parts[0];
+          const h = parts[3] - parts[1];
+          // Don't snap if the point is already comfortably inside a large region/box
+          if (w > 220 * sf || h > 90 * sf) continue;
+        }
+      }
+      const dist = Math.hypot(el.x - m.native.x, el.y - m.native.y);
+      if (dist <= maxSnapPx && dist < bestDist) {
+        bestDist = dist;
+        best = el;
+      }
+    }
+    if (best && bestDist >= 3) {
+      const dip = ctx.screen.nativeToDip(best.x, best.y);
+      const b = (disp && disp.bounds) || { x: 0, y: 0, width: 1920, height: 1080 };
+      const snx = Math.max(0, Math.min(999, Math.round(((dip.x - b.x) / Math.max(1, b.width)) * 1000)));
+      const sny = Math.max(0, Math.min(999, Math.round(((dip.y - b.y) / Math.max(1, b.height)) * 1000)));
+      return {
+        nx: snx,
+        ny: sny,
+        m: { dip, native: { x: best.x, y: best.y }, display: disp, normalized: { x: snx, y: sny, scale: 1000 } },
+        snapped: best.name || best.type || 'UI Control'
+      };
+    }
+  } catch (_) { /* ignore */ }
+  return { nx: m.normalized.x, ny: m.normalized.y, m, snapped: null };
+}
+
 const XY = {
   x: { type: 'integer', description: 'Horizontal position on the current screenshot, 0 (left edge) to 1000 (right edge).' },
   y: { type: 'integer', description: 'Vertical position on the current screenshot, 0 (top edge) to 1000 (bottom edge).' }
@@ -611,7 +664,8 @@ const TOOLS = [
       clicks: { type: 'integer', description: '1 = single click, 2 = double click, 3 = triple click (default 1).' },
       hold_ms: { type: 'integer', description: 'Hold mouse button down for this many milliseconds (long press, e.g. 1500-30000) before releasing.' },
       long_press: { type: 'boolean', description: 'Set true to long-press (~2000ms) at (x, y) if hold_ms is omitted.' },
-      speed: { type: 'string', enum: ['adaptive', 'slow', 'medium', 'fast'], description: 'Optional cursor speed ("slow" for tiny/precision buttons, "medium", "fast", or "adaptive").' }
+      speed: { type: 'string', enum: ['adaptive', 'slow', 'medium', 'fast'], description: 'Optional cursor speed ("slow" for tiny/precision buttons, "medium", "fast", or "adaptive").' },
+      exact: { type: 'boolean', description: 'Set true to disable UIA button-center snap (for canvas/art coordinates).' }
     }), required: ['x', 'y'] },
     describe: (a) => {
       const h = resolveHoldMs(a, 0);
@@ -620,15 +674,19 @@ const TOOLS = [
     async run(a, ctx) {
       const btn = a.button || 'left';
       const holdMs = resolveHoldMs(a, 0);
-      const m = await pointer(ctx, a.x, a.y, 1000, holdMs > 80 ? 'long-press' : 'click', a.speed || '', true);
+      const snap = (!a.exact && holdMs <= 80 && btn === 'left') ? await resolveSmartClickPoint(ctx, a.x, a.y) : null;
+      const tx = snap ? snap.nx : a.x;
+      const ty = snap ? snap.ny : a.y;
+      const m = await pointer(ctx, tx, ty, 1000, holdMs > 80 ? 'long-press' : (snap && snap.snapped ? ('Click ' + String(snap.snapped).slice(0, 22)) : 'click'), a.speed || '', true);
       if (holdMs > 80) {
         await performMouseHold(ctx, btn, holdMs, m.dip);
-        return { clicked: true, long_press: true, hold_ms: holdMs, button: btn, physical: m.native };
+        return { clicked: true, long_press: true, hold_ms: holdMs, button: btn, norm: { x: tx, y: ty }, physical: m.native };
       }
       const count = Math.max(1, Math.min(3, Number(a.clicks) || 1));
       ctx.cursor({ x: m.dip.x, y: m.dip.y, kind: 'click', button: btn, count });
       await ctx.automation.click(btn, count);
-      return { clicked: true, button: btn, clicks: count, physical: m.native };
+      await sleep(110);
+      return { clicked: true, button: btn, clicks: count, norm: { x: tx, y: ty }, snapped_control: (snap && snap.snapped) || undefined, physical: m.native };
     }
   },
   {
@@ -696,12 +754,12 @@ const TOOLS = [
     async run(a, ctx) {
       const holdMs = resolveHoldMs(a, 0);
       const hit = await findAndClickUiElement(ctx, { query: a.query, typeFilter: a.type_filter || 'any', skipClick: holdMs > 80 });
-      if (!hit) throw new Error('Could not find visible UI element matching "' + a.query + '". Use click(x, y) from the screenshot grid instead.');
+      if (!hit) throw new Error('Could not find visible UI element matching "' + a.query + '". Use zoom_region / read_screen_text / click(x, y) instead.');
       if (holdMs > 80) {
         await performMouseHold(ctx, 'left', holdMs, hit.dip);
-        return { clicked: true, long_press: true, hold_ms: holdMs, element: hit.element.name || a.query, type: hit.element.type, physical: hit.physical };
+        return { clicked: true, long_press: true, hold_ms: holdMs, element: hit.element.name || a.query, type: hit.element.type, norm: hit.norm, physical: hit.physical };
       }
-      return { clicked: true, element: hit.element.name || a.query, type: hit.element.type, physical: hit.physical };
+      return { clicked: true, element: hit.element.name || a.query, type: hit.element.type, norm: hit.norm, physical: hit.physical };
     }
   },
   {
@@ -754,7 +812,7 @@ const TOOLS = [
         }
         const holdMs = resolveHoldMs(a, 0);
         if (holdMs > 80) await performMouseHold(ctx, a.button || 'left', holdMs, uiFallback.dip);
-        return { clicked: true, via: 'uia', matched: uiFallback.element.name || a.query, physical: uiFallback.physical };
+        return { clicked: true, via: 'uia', matched: uiFallback.element.name || a.query, norm: uiFallback.norm, physical: uiFallback.physical };
       }
       const tx = Math.max(2, Math.min(997, hit.norm.x + (Number(a.offset_x) || 0)));
       const ty = Math.max(2, Math.min(997, hit.norm.y + (Number(a.offset_y) || 0)));
@@ -768,6 +826,7 @@ const TOOLS = [
       const count = Math.max(1, Math.min(3, Number(a.clicks) || 1));
       ctx.cursor({ x: m.dip.x, y: m.dip.y, kind: 'click', button: btn, count, label: hit.text.slice(0, 26) });
       await ctx.automation.click(btn, count);
+      await sleep(110);
       return { clicked: true, via: 'ocr', matched: hit.text, norm: { x: tx, y: ty }, physical: m.native };
     }
   },
@@ -805,10 +864,12 @@ const TOOLS = [
     parameters: { type: 'object', properties: XY, required: ['x', 'y'] },
     describe: (a) => 'Double-click at (' + a.x + ', ' + a.y + ')',
     async run(a, ctx) {
-      const m = await pointer(ctx, a.x, a.y, 1000, 'double-click');
+      const snap = await resolveSmartClickPoint(ctx, a.x, a.y);
+      const m = await pointer(ctx, snap.nx, snap.ny, 1000, snap.snapped ? ('Double-click ' + String(snap.snapped).slice(0, 18)) : 'double-click', '', true);
       ctx.cursor({ x: m.dip.x, y: m.dip.y, kind: 'click', count: 2 });
       await ctx.automation.click('left', 2);
-      return { clicked: true, clicks: 2, physical: m.native };
+      await sleep(110);
+      return { clicked: true, clicks: 2, norm: { x: snap.nx, y: snap.ny }, snapped_control: snap.snapped || undefined, physical: m.native };
     }
   },
   {

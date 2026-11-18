@@ -14,6 +14,7 @@
 
 const { EventEmitter } = require('events');
 const { stripModelPrefix, buildThinkingConfig, abortError, sleep } = require('./gemini');
+const { sanitizeModelIdValue } = require('./store');
 const { TOOLS, CU_ACTIONS, declarations, getTool, pointsOf, isPermanentDeleteCommand, runLiveWebSearch } = require('./tools');
 const { buildChatSystemPrompt, buildWorkSystemPrompt } = require('./systemPrompt');
 
@@ -100,7 +101,7 @@ async function describeForegroundElements(screen, automation) {
     const physH = Math.round(b.height * sf);
 
     const [els, focused, ocr] = await Promise.all([
-      typeof automation.inspectUi === 'function' ? automation.inspectUi(180).catch(() => []) : Promise.resolve([]),
+      typeof automation.inspectUi === 'function' ? automation.inspectUi(220).catch(() => []) : Promise.resolve([]),
       typeof automation.focusedElement === 'function' ? automation.focusedElement().catch(() => null) : Promise.resolve(null),
       typeof automation.ocrScreen === 'function' ? automation.ocrScreen(physOrigin.x, physOrigin.y, physW, physH).catch(() => null) : Promise.resolve(null)
     ]);
@@ -120,11 +121,20 @@ async function describeForegroundElements(screen, automation) {
     if (Array.isArray(els) && els.length) {
       const inputs = els.filter((e) => e.isInput || /^(Edit|ComboBox|Document)$/i.test(e.type || ''));
       const others = els.filter((e) => !inputs.includes(e));
-      for (const el of [...inputs.slice(0, 35), ...others.slice(0, 105)]) {
+      for (const el of [...inputs.slice(0, 40), ...others.slice(0, 125)]) {
         const { nx, ny } = normCoord(el.x, el.y);
         const tag = (el.isInput || /^(Edit|ComboBox|Document)$/i.test(el.type || '')) ? '[INPUT] ' : '';
         const lbl = el.name || el.autoId || el.type;
-        lines.push(`- UIA ${tag}${el.type || 'Control'} "${lbl}" at (${nx}, ${ny})`);
+        let szTag = '';
+        if (el.rect) {
+          const rp = String(el.rect).split(',').map(Number);
+          if (rp.length === 4 && rp.every(isFinite)) {
+            const nw = Math.max(1, Math.round(((rp[2] - rp[0]) / Math.max(1, b.width * sf)) * 1000));
+            const nh = Math.max(1, Math.round(((rp[3] - rp[1]) / Math.max(1, b.height * sf)) * 1000));
+            szTag = ` [${nw}x${nh}]`;
+          }
+        }
+        lines.push(`- UIA ${tag}${el.type || 'Control'} "${lbl}" at (${nx}, ${ny})${szTag}`);
       }
     }
     if (ocr && Array.isArray(ocr.lines) && ocr.lines.length) {
@@ -139,7 +149,7 @@ async function describeForegroundElements(screen, automation) {
         if (seen.has(sigKey)) continue;
         seen.add(sigKey);
         lines.push(`- OCR "${txt.slice(0, 48)}" at (${nx}, ${ny})`);
-        if (++ocrAdded >= 180) break;
+        if (++ocrAdded >= 220) break;
       }
     }
     return lines.length ? ('\n[Scout Eyes — Visible UI Controls & Windows OCR Text (exact 0..1000 coordinates — prefer click_text/click_element or exact x,y):\n' + lines.join('\n') + '\n]') : '';
@@ -374,12 +384,12 @@ class AgentRunner extends EventEmitter {
     return true;
   }
 
-  /** Resolves which real Gemini model ID to use for a job ('chat' | 'agent' | 'fast' | 'screen' | 'planner'). */
+  /** Resolves which real modern model ID to use for a job ('chat' | 'agent' | 'fast' | 'screen' | 'planner'). */
   resolveModelForJob(job) {
     const s = this.getSettings();
     const m = this.getMatch() || { presets: {} };
-    const active = stripModelPrefix(s.activeModel || s.customModel || '');
-    const roleVal = stripModelPrefix((s.roles && s.roles[job]) || '');
+    const active = stripModelPrefix(sanitizeModelIdValue(s.activeModel || '') || '');
+    const roleVal = stripModelPrefix(sanitizeModelIdValue((s.roles && s.roles[job]) || '') || '');
     if (job === 'screen') {
       if (roleVal === 'auto' || !roleVal) {
         if (m.computerUse) return { id: m.computerUse, isComputerUse: true };
@@ -447,9 +457,8 @@ class AgentRunner extends EventEmitter {
     const qaTester = pickDistinct([
       m.presets && m.presets.carbon && m.presets.carbon.id,
       m.presets && m.presets.argon && m.presets.argon.id,
-      m.presets && m.presets.gpt62astra && m.presets.gpt62astra.id,
-      m.presets && m.presets.gpt62sol && m.presets.gpt62sol.id,
-      m.presets && m.presets.gpt61sol && m.presets.gpt61sol.id,
+      m.presets && m.presets.gpt6astra && m.presets.gpt6astra.id,
+      m.presets && m.presets.gpt6sol && m.presets.gpt6sol.id,
       m.presets && m.presets.claudeopus55 && m.presets.claudeopus55.id,
       m.presets && m.presets.claudefable52 && m.presets.claudefable52.id,
       m.bestPro,
@@ -1479,7 +1488,7 @@ class AgentRunner extends EventEmitter {
           const missingHold = wantsLongPress && !didHoldAction;
 
           // Gate 1: Reject photo-only / zero real action attempts deterministically
-          if ((mutStepsNow.length === 0 || missingHold) && zeroWorkRejections < 5 && step < maxSteps && withinMaxTime) {
+          if ((mutStepsNow.length === 0 || missingHold) && zeroWorkRejections < 7 && step < maxSteps && withinMaxTime) {
             zeroWorkRejections += 1;
             forceToolNextTurn = !usingDirectCu;
             if (visibleText) this.emit('work-note', { runId, chatId, step, text: visibleText });
@@ -1488,13 +1497,13 @@ class AgentRunner extends EventEmitter {
               role: 'user',
               parts: [{ text: missingHold
                 ? 'REJECTED: You have NOT executed a long-press or hold action yet! Call `mouse_button({ action: "long_press", x, y, duration_ms: 2500 })`, `click({ x, y, hold_ms: 2500 })`, `click_element({ query, hold_ms: 2500 })`, or `hold_key({ key, action: "long_press", duration_ms: 2500 })` right now.'
-                : `[REJECTED BY QA GATE — Time Worked: ${formatWorkedTime(elapsedNow)}]\nYou only looked / took screenshots / focused windows (${stepLog.length} passive action(s), ZERO real edits/builds!). Stop just taking photos and explaining what you see. Call real mutating tools NOW (\`click_text\`, \`click\`, \`type_text\`, \`drag\`, \`press_keys\`, \`write_file\`, \`run_command\`, or \`mcp__\`) to actually create, animate, or fix the work inside the app!` }]
+                : `[REJECTED BY QA GATE — Time Worked: ${formatWorkedTime(elapsedNow)}]\nDo NOT stop, hesitate, or summarize! You have ${stepLog.length} passive step(s) and ZERO real edits yet. Put on your Glasses (\`zoom_region\` / \`read_screen_text\`), locate the exact button/input, and call real action tools NOW (\`click_text\`, \`click_element\`, \`click\`, \`type_text\`, \`press_keys\`, \`write_file\`, \`run_command\`)!` }]
             });
             continue;
           }
 
           // Gate 2: Require live app / animation / Play / command testing before completion on build tasks
-          if (taskProfile.requiresAppTest && tstStepsNow.length === 0 && untestedRejections < 4 && step < maxSteps && withinMaxTime) {
+          if (taskProfile.requiresAppTest && tstStepsNow.length === 0 && untestedRejections < 5 && step < maxSteps && withinMaxTime) {
             untestedRejections += 1;
             forceToolNextTurn = !usingDirectCu;
             const testDirective = taskProfile.isRoblox
@@ -1791,9 +1800,32 @@ class AgentRunner extends EventEmitter {
             }
           }
 
-          // Silently capture fresh desktop state for the model without flashing or attaching screenshot thumbnails in UI
+          // Silently capture fresh desktop state + Auto-Glasses visual diff check on clicks!
+          const preStepShot = currentShot;
           await sleep(tool && tool.screen ? 200 : 80);
           currentShot = await this.screen.capture({ format: 'jpeg' });
+
+          if (stepOk && ['click', 'double_click', 'click_text', 'click_element'].includes(name) && resultObj && typeof resultObj === 'object') {
+            const diffPct = computeVisualDiffPct(preStepShot, currentShot);
+            if (diffPct !== null) resultObj.visual_change_pct = diffPct;
+            const clickNx = Number((resultObj.norm && resultObj.norm.x !== undefined) ? resultObj.norm.x : args.x);
+            const clickNy = Number((resultObj.norm && resultObj.norm.y !== undefined) ? resultObj.norm.y : args.y);
+            if (diffPct !== null && diffPct <= 0.12 && isFinite(clickNx) && isFinite(clickNy) && this.screen && typeof this.screen.captureRegion === 'function') {
+              resultObj.glasses_check = `Screen pixels changed only ${diffPct}% after clicking (${Math.round(clickNx)}, ${Math.round(clickNy)}). Look closely at the attached magnified Auto-Glasses zoom crop to verify whether the mouse missed the control slightly, hit a disabled area, or needs click_text / click_element / keyboard shortcut instead!`;
+              try {
+                const gz = await this.screen.captureRegion({
+                  x1: Math.max(0, Math.round(clickNx - 90)),
+                  y1: Math.max(0, Math.round(clickNy - 70)),
+                  x2: Math.min(999, Math.round(clickNx + 90)),
+                  y2: Math.min(999, Math.round(clickNy + 70)),
+                  grid: true
+                });
+                if (gz && gz.base64) {
+                  extraVisionImages.push({ label: `Auto-Glasses Magnified Check around (${Math.round(clickNx)}, ${Math.round(clickNy)})`, image: { mime: gz.mime || 'image/png', base64: gz.base64 } });
+                }
+              } catch (_) { /* ignore */ }
+            }
+          }
 
           const stepItem = {
             step,

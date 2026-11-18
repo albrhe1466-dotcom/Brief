@@ -50,7 +50,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Brief Setup")]
 [assembly: AssemblyDescription("Brief Windows Installer Setup Wizard")]
 [assembly: AssemblyProduct("Brief Setup")]
-[assembly: AssemblyVersion("1.0.4.0")]
+[assembly: AssemblyVersion("1.0.5.0")]
 
 namespace BriefSetupWizard
 {
@@ -298,7 +298,7 @@ namespace BriefSetupWizard
                 Size = new Size(342, 42),
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = Color.FromArgb(100, 110, 125),
-                Text = "Target: Windows 10 / 11 (64-bit) · Version 1.0.4"
+                Text = "Target: Windows 10 / 11 (64-bit) · Version 1.0.5"
             };
             p.Controls.Add(title);
             p.Controls.Add(body);
@@ -785,7 +785,7 @@ namespace BriefSetupWizard
                 {
                     if (key == null) return;
                     key.SetValue("DisplayName", "Brief");
-                    key.SetValue("DisplayVersion", "1.0.4");
+                    key.SetValue("DisplayVersion", "1.0.5");
                     key.SetValue("Publisher", "Brief Desktop");
                     key.SetValue("InstallLocation", installDir);
                     key.SetValue("DisplayIcon", File.Exists(iconPath) ? iconPath : exePath);

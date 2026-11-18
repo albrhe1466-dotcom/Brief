@@ -7,6 +7,48 @@
 const fs = require('fs');
 const path = require('path');
 
+const LEGACY_MODEL_RE = /(?:^|\/)(?:gemini-(?:1|2)(?:\.|_|-|$)|gpt-(?:3|4)(?:\.|o|_|-|$)|o1(?:-|$)|o4-mini|claude-(?:2|instant|3)(?:\.|_|-|$)|claude-sonnet-4-2025|claude-opus-4-2025)/i;
+
+function sanitizeModelIdValue(val) {
+  const s = String(val || '').trim();
+  if (!s) return '';
+  if (LEGACY_MODEL_RE.test(s)) return '';
+  if (/gpt-?6\.2-?sol/i.test(s)) return s.replace(/gpt-?6\.2-?sol/i, 'gpt-6-sol');
+  if (/gpt-?6\.2-?astra/i.test(s)) return s.replace(/gpt-?6\.2-?astra/i, 'gpt-6-astra');
+  return s;
+}
+
+function sanitizeSettingsData(data) {
+  if (!data || typeof data !== 'object') return data;
+  let dirty = false;
+  if (data.customModel) {
+    data.customModel = '';
+    dirty = true;
+  }
+  const nextActive = sanitizeModelIdValue(data.activeModel);
+  if (nextActive !== (data.activeModel || '')) {
+    data.activeModel = nextActive;
+    dirty = true;
+  }
+  if (/gpt62/i.test(data.activePreset || '')) {
+    data.activePreset = String(data.activePreset).replace(/gpt62/i, 'gpt6');
+    dirty = true;
+  }
+  if (data.roles && typeof data.roles === 'object') {
+    for (const rk of ['chat', 'agent', 'fast', 'planner', 'screen']) {
+      if (data.roles[rk] && data.roles[rk] !== 'auto') {
+        const cleaned = sanitizeModelIdValue(data.roles[rk]);
+        if (cleaned !== data.roles[rk]) {
+          data.roles[rk] = rk === 'screen' ? 'auto' : cleaned;
+          dirty = true;
+        }
+      }
+    }
+  }
+  data._sanitizedDirty = dirty;
+  return data;
+}
+
 class JsonStore {
   constructor(file, defaults) {
     this.file = file;
@@ -20,7 +62,13 @@ class JsonStore {
     try {
       const raw = fs.readFileSync(this.file, 'utf8');
       const parsed = JSON.parse(raw);
-      this.data = deepMerge(clone(this.defaults), parsed);
+      this.data = sanitizeSettingsData(deepMerge(clone(this.defaults), parsed));
+      if (this.data._sanitizedDirty) {
+        delete this.data._sanitizedDirty;
+        this.saveSoon();
+      } else {
+        delete this.data._sanitizedDirty;
+      }
     } catch (_) {
       this.data = clone(this.defaults);
     }
@@ -31,7 +79,8 @@ class JsonStore {
 
   set(patch) {
     this.load();
-    this.data = deepMerge(this.data, patch || {});
+    this.data = sanitizeSettingsData(deepMerge(this.data, patch || {}));
+    delete this.data._sanitizedDirty;
     this.saveSoon();
     return this.data;
   }
@@ -121,4 +170,4 @@ const DEFAULT_SETTINGS = {
 
 const DEFAULT_CHATS = { chats: [], projects: [] };
 
-module.exports = { JsonStore, DEFAULT_SETTINGS, DEFAULT_CHATS, deepMerge };
+module.exports = { JsonStore, DEFAULT_SETTINGS, DEFAULT_CHATS, deepMerge, sanitizeModelIdValue };

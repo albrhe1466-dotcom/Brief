@@ -197,10 +197,10 @@ class KeyStore {
     const k = provider ? this.get(provider) : this.cache;
     if (!k) {
       const f = provider ? this.providerFile(provider) : this.file;
-      return fs.existsSync(f) ? '••••••••••••' : '';
+      return fs.existsSync(f) ? '••••••' : '';
     }
-    if (k.length <= 10) return '•'.repeat(k.length);
-    return k.slice(0, 4) + '•'.repeat(Math.max(6, k.length - 8)) + k.slice(-4);
+    if (k.length <= 10) return '•'.repeat(Math.min(6, k.length));
+    return k.slice(0, 4) + '••••••' + k.slice(-4);
   }
 
   slots() {

@@ -561,7 +561,7 @@ function chooseDefaultModelIfNeeded(match, models, provider) {
   if (prov === 'openai') {
     pick = (p.gpt61terra && p.gpt61terra.id) ||
       (p.gpt6luna && p.gpt6luna.id) ||
-      (p.gpt61sol && p.gpt61sol.id) ||
+      (p.gpt6sol && p.gpt6sol.id) ||
       (p.gpt6astra && p.gpt6astra.id) ||
       (match && match.bestFlash) ||
       (match && match.fast) ||
@@ -1295,16 +1295,16 @@ app.whenReady().then(async () => {
     });
   }
   {
-    const legacyRe = /3\.7|2\.[05]|1\.[05]|pro-?3\.1|3\.1-?flash-?lite/i;
+    const legacyRe = /3\.7|2\.[05]|1\.[05]|gpt-?(?:3|4)|claude-(?:2|3)|pro-?3\.1|3\.1-?flash-?lite/i;
     const fix = {};
     if (legacyRe.test(initialSettings.activeModel || '')) fix.activeModel = '';
-    if (legacyRe.test(initialSettings.customModel || '')) fix.customModel = '';
-    if (/flash37|flashlite31|pro31/i.test(initialSettings.activePreset || '')) fix.activePreset = '';
+    if (initialSettings.customModel) fix.customModel = '';
+    if (/flash37|flashlite31|pro31|gpt62/i.test(initialSettings.activePreset || '')) fix.activePreset = '';
     if (initialSettings.roles && typeof initialSettings.roles === 'object') {
       const nextR = Object.assign({}, initialSettings.roles);
       let rMod = false;
-      for (const rk of ['chat', 'agent', 'fast', 'planner']) {
-        if (legacyRe.test(nextR[rk] || '')) { nextR[rk] = ''; rMod = true; }
+      for (const rk of ['chat', 'agent', 'fast', 'planner', 'screen']) {
+        if (legacyRe.test(nextR[rk] || '')) { nextR[rk] = rk === 'screen' ? 'auto' : ''; rMod = true; }
       }
       if (rMod) fix.roles = nextR;
     }

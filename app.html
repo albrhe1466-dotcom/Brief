@@ -4288,7 +4288,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.4">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.5">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -4370,7 +4370,7 @@
                     <span class="gate-privacy-pill" id="gate-storage-info" style="padding:5px 11px;">OS keychain / DPAPI encryption</span>
                   </div>
 
-                  <div id="gate-key-slots" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;"></div>
+                  <div id="gate-key-slots" style="display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:12px;"></div>
 
                   <div style="text-align:center;">
                     <div id="gate-scan-pill" class="welcome-provider-pill" style="display:none;margin:0 auto 10px;">Scanning key provider…</div>
@@ -4512,17 +4512,8 @@
               </div>
             </div>
 
-            <div class="custom-model-box">
-              <div class="pop-section-label" style="margin: 0;">Custom Model ID</div>
-              <div class="input-row">
-                <input class="text-input mono" id="custom-model-input" type="text" placeholder="Type any model ID, e.g. gemini-4-carbon, gpt-6.2-sol, claude-sonnet-5-5">
-                <button class="btn-secondary" id="custom-model-apply-btn" type="button">Use</button>
-                <button class="btn-primary" id="custom-model-test-btn" type="button">Test</button>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span class="field-hint" id="model-cu-summary">Computer-Use model check pending validation</span>
-                <button class="btn-secondary" id="model-jobs-shortcut-btn" type="button" style="padding: 5px 10px; font-size: 12px;">Assign by Job…</button>
-              </div>
+            <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span class="field-hint" id="model-cu-summary" style="margin:0;">Screen vision &amp; aligned desktop control ready</span>
             </div>
           </div>
 
@@ -4742,11 +4733,11 @@
                 Brief has no telemetry, no accounts, and no cloud sync — your key is sent only to its respective provider endpoint.
               </div>
               <div class="field-group">
-                <div class="field-label">
+                <div class="field-label" style="gap:8px;flex-wrap:wrap;">
                   <span>Active Key</span>
-                  <span class="mono" id="settings-key-masked">None saved</span>
+                  <span class="mono" id="settings-key-masked" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">None saved</span>
                 </div>
-                <div id="settings-key-slots" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;"></div>
+                <div id="settings-key-slots" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;"></div>
               </div>
               <div class="field-group">
                 <label class="field-label" for="settings-key-input">Paste API Key — auto-detects provider (Gemini <code class="mono">AIza/AQ.</code>, OpenAI <code class="mono">sk-</code>, Claude <code class="mono">sk-ant-</code>, OpenRouter <code class="mono">sk-or-</code>)</label>
@@ -5181,44 +5172,44 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v1.0.4</span>
+          <span class="news-version-pill">News · v1.0.5</span>
         </div>
-        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close (don't show again for v1.0.4)" aria-label="Close What's New">✕</button>
+        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close (don't show again for v1.0.5)" aria-label="Close What's New">✕</button>
       </div>
       <div class="modal-body">
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v1.0.4 — Clean Model Cards (Challenger Carbon), Real High Thinking &amp; Honest Multi-Agent Crew
+              Brief v1.0.5 — Auto-Glasses Eyesight, GPT-6 Sol &amp; Astra, Startup to Main Menu &amp; Clean API Key UI
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
-              Click any screenshot below to zoom in. Closing this dialog with <strong>✕</strong> marks v1.0.4 as read so it will not pop up again automatically.
+              Click any screenshot below to zoom in. Closing this dialog with <strong>✕</strong> marks v1.0.5 as read so it will not pop up again automatically.
             </div>
           </div>
         </div>
 
         <div class="news-gallery-grid" id="whats-new-gallery">
-          <button class="news-photo-card" type="button" data-news-src="assets/news-gemini-fix.png" data-news-caption="Clean Model Cards — Plain-English descriptions, Gemini 4 Carbon Challenger, and Real 3-Tier Thinking">
-            <img class="news-photo-thumb" src="assets/news-gemini-fix.png" alt="Brief Model Selector showing friendly descriptions, Challenger badge on Gemini 4 Carbon, and 3 thinking levels">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-gemini-fix.png" data-news-caption="Clean Model Selector (No Custom Model ID) — Gemini 4 Carbon Challenger, GPT-6 Sol/Astra, Claude 5.5/5.2 &amp; Real 3-Tier Thinking">
+            <img class="news-photo-thumb" src="assets/news-gemini-fix.png" alt="Brief Model Selector without Custom Model ID showing Gemini 4 Carbon Challenger and 3 Thinking tiers">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Plain-English Model Cards</div>
-              <div class="news-photo-sub">Zero coding IDs under model names. Clear daily/research roles + Challenger badge for Gemini 4 Carbon across all 4 providers.</div>
+              <div class="news-photo-title">Cleaner Model Menu &amp; GPT-6 Sol / Astra</div>
+              <div class="news-photo-sub">Removed Custom Model ID box, kept Challenger Carbon &amp; updated OpenAI models to GPT-6 Sol &amp; GPT-6 Astra across all 4 providers.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-studio-crew.png" data-news-caption="Real Parallel Crew + Honest Self-Correction &amp; Hardware Typing">
-            <img class="news-photo-thumb" src="assets/news-studio-crew.png" alt="Brief Multi-Agent Crew with Scout, Specialist, Critic self-correction &amp; QA Verifier">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-studio-crew.png" data-news-caption="Auto-Glasses Magnified Check, UIA Center Snap &amp; Persistent 5-Role Crew">
+            <img class="news-photo-thumb" src="assets/news-studio-crew.png" alt="Brief Auto-Glasses vision improvement and Studio Multi-Agent Crew">
             <div class="news-photo-caption">
-              <div class="news-photo-title">True Multi-Agent &amp; High Thinking</div>
-              <div class="news-photo-sub">Unthrottled High reasoning + Critic agent that spots mistakes aloud and works alongside Executor, Scout &amp; QA.</div>
+              <div class="news-photo-title">Better Glasses &amp; Mouse Aim</div>
+              <div class="news-photo-sub">Detects 0% pixel-change clicks, auto-snaps zoomed Glasses crop, snaps onto small UIA controls, and continues persistently.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v102-setup.png" data-news-caption="Brief v1.0.4 Public Website &amp; Compiled Windows Setup Wizard">
-            <img class="news-photo-thumb" src="assets/news-v102-setup.png" alt="Brief v1.0.4 Download Page and Windows Setup Wizard">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v102-setup.png" data-news-caption="Brief v1.0.5 Public Website &amp; Compiled Windows Setup Wizard">
+            <img class="news-photo-thumb" src="assets/news-v102-setup.png" alt="Brief v1.0.5 Download Page and Windows Setup Wizard">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Brief v1.0.4 Website &amp; Installer</div>
-              <div class="news-photo-sub">Public What’s New gallery with zoomed screenshots right on the download page + Brief-Setup.exe v1.0.4.</div>
+              <div class="news-photo-title">Brief v1.0.5 Website &amp; Setup</div>
+              <div class="news-photo-sub">Always opens cleanly on Main Menu (New Chat), short compact API key pills &amp; updated Brief-Setup.exe v1.0.5.</div>
             </div>
           </button>
         </div>
@@ -5227,13 +5218,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v1.0.4</span>
+              <span>What’s New in v1.0.5</span>
             </div>
             <ul class="news-list">
-              <li><strong>Friendly Model Cards (Zero Coding Clutter):</strong> Removed technical slug IDs from the model menu and added short everyday descriptions across <strong>Gemini (5)</strong>, <strong>OpenAI (4)</strong>, <strong>Claude (4)</strong>, and <strong>OpenRouter (13)</strong>, with <em>Gemini 4 Carbon</em> titled <strong>Challenger</strong>.</li>
-              <li><strong>Unthrottled Real Thinking Levels:</strong> <strong>Low</strong> (fast), <strong>Medium</strong> (balanced default), and <strong>High</strong> (true deep reasoning &amp; verification across Gemini, OpenAI, Claude &amp; OpenRouter).</li>
-              <li><strong>Honest Mistake Admission &amp; Critic Agent:</strong> Parallel Crew now includes a live Critic agent that openly admits missteps (<em>“Actually, we made a mistake there…”</em>) and course-corrects immediately.</li>
-              <li><strong>Live Website Screenshots Gallery:</strong> Real screenshots of every update now appear on the public Brief download site alongside the centered app News modal.</li>
+              <li><strong>Better Eyesight (“Glasses”) &amp; Smarter Mouse Aim:</strong> Auto-snaps to exact small UIA buttons/tabs/menus, expands MenuBar &amp; UI tree inspection, and automatically captures a magnified Glasses crop whenever a click triggers 0% screen change.</li>
+              <li><strong>Opens Straight to Main Menu (New Chat):</strong> Starting Brief now always lands on a fresh New Chat screen (with Recents one click away in the sidebar) alongside <em>“Coffee time and Brief”</em> greetings.</li>
+              <li><strong>Fixed OpenAI Lineup:</strong> Updated to <strong>GPT-6 Luna</strong>, <strong>GPT-6.1 Terra</strong>, <strong>GPT-6 Sol</strong>, and <strong>GPT-6 Astra</strong> across OpenAI &amp; OpenRouter.</li>
+              <li><strong>Cleaner Model &amp; Key UI:</strong> Removed the Custom Model ID box from the model selector and replaced wide logo key cards with compact fit-to-width pills.</li>
             </ul>
           </div>
 
@@ -5243,10 +5234,10 @@
               <span>What Has Been Fixed</span>
             </div>
             <ul class="news-list">
-              <li><strong>Fixed High Thinking Throttle in Chat:</strong> Removed the silent cap that lowered <code class="mono">High</code> thinking down to <code class="mono">Medium</code> in Chat responses, and wired real OpenRouter reasoning effort &amp; delta streaming.</li>
-              <li><strong>Fixed HTML Icon Appearance:</strong> Replaced the tiny cluttered HTML shield icon with crisp orange <code class="mono">&lt;/&gt;</code> angle-bracket arrows inside inline tech pills &amp; badges.</li>
-              <li><strong>Cleaned Raw Key Model Lists:</strong> Hid noisy raw API coding IDs in the model selector while keeping custom ID entry available below.</li>
-              <li><strong>Zero Legacy Models + Real OS Typing:</strong> Preserved v1.0.3’s clean 2026 model routing and strict foreground hardware <code class="mono">VkKeyScan</code> typing for Roblox Studio &amp; desktop apps.</li>
+              <li><strong>Eliminated Stale <code class="mono">gemini-2.5-pro</code> Errors:</strong> Auto-migrates old saved settings on load, blocks retired 1.x/2.x Gemini, GPT-3/4, and Claude-3 IDs at every layer, and fails over cleanly if an endpoint retires a model.</li>
+              <li><strong>Fixed Long Masked API Key Overflow:</strong> Shortened masked keys to compact format (<code class="mono">AQ.A••••••AQkA</code>) so provider buttons never clip off-screen.</li>
+              <li><strong>Fixed Claude &amp; OpenRouter Tool Choice Conflicts:</strong> Prevented invalid forced <code class="mono">tool_choice</code> + extended thinking HTTP 400 errors so all 4 providers keep working reliably without quitting mid-task.</li>
+              <li><strong>Full Persistence &amp; Verification:</strong> Kept v1.0.4’s unthrottled High thinking, honest Critic self-correction, and crisp orange <code class="mono">&lt;/&gt;</code> HTML arrows.</li>
             </ul>
           </div>
         </div>
@@ -5439,11 +5430,7 @@
         modelPopover: $('model-popover'),
         modelPresetList: $('model-preset-list'),
         modelAllList: $('model-all-list'),
-        customModelInput: $('custom-model-input'),
-        customModelApplyBtn: $('custom-model-apply-btn'),
-        customModelTestBtn: $('custom-model-test-btn'),
         modelCuSummary: $('model-cu-summary'),
-        modelJobsShortcutBtn: $('model-jobs-shortcut-btn'),
         permTriggerBtn: $('perm-trigger-btn'),
         permTriggerDot: $('perm-trigger-dot'),
         permTriggerLabel: $('perm-trigger-label'),
@@ -6416,8 +6403,8 @@
         openai: [
           { key: 'gpt6luna',    id: 'gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',    desc: 'Super fast helper — quick replies for everyday questions' },
           { key: 'gpt61terra',  id: 'gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced',   desc: 'Balanced for everyday use — steady help across daily work' },
-          { key: 'gpt62sol',    id: 'gpt-6.2-sol',           label: 'GPT-6.2 Sol',           hint: 'Strong',     desc: 'Strong for complex work — great for deep analyzing & research' },
-          { key: 'gpt62astra',  id: 'gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Challenger', desc: 'Challenger agent tier — built for demanding multi-step workflows' }
+          { key: 'gpt6sol',     id: 'gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',     desc: 'Strong for complex work — great for deep analyzing & research' },
+          { key: 'gpt6astra',   id: 'gpt-6-astra',           label: 'GPT-6 Astra',           hint: 'Challenger', desc: 'Challenger agent tier — built for demanding multi-step workflows' }
         ],
         anthropic: [
           { key: 'claudehaiku55',  id: 'claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest',    desc: 'Super fast helper — crisp speed for everyday tasks' },
@@ -6433,8 +6420,8 @@
           { key: 'or_carbon',      id: 'google/gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Challenger', desc: 'Google Gemini · Challenger tier for hardest reasoning' },
           { key: 'or_gpt6luna',    id: 'openai/gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',    desc: 'OpenAI · Super fast helper for everyday questions' },
           { key: 'or_gpt61terra',  id: 'openai/gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced',   desc: 'OpenAI · Balanced for everyday work' },
-          { key: 'or_gpt62sol',    id: 'openai/gpt-6.2-sol',           label: 'GPT-6.2 Sol',           hint: 'Strong',     desc: 'OpenAI · Built for complex analyzing & research' },
-          { key: 'or_gpt62astra',  id: 'openai/gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Challenger', desc: 'OpenAI · Heavy multi-step desktop agent' },
+          { key: 'or_gpt6sol',     id: 'openai/gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',     desc: 'OpenAI · Built for complex analyzing & research' },
+          { key: 'or_gpt6astra',   id: 'openai/gpt-6-astra',           label: 'GPT-6 Astra',           hint: 'Challenger', desc: 'OpenAI · Heavy multi-step desktop agent' },
           { key: 'or_haiku55',     id: 'anthropic/claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest',    desc: 'Anthropic · Super fast everyday assistant' },
           { key: 'or_sonnet55',    id: 'anthropic/claude-sonnet-5-5',  label: 'Claude Sonnet 5.5',     hint: 'Balanced',   desc: 'Anthropic · Balanced writing & daily work' },
           { key: 'or_opus55',      id: 'anthropic/claude-opus-5-5',    label: 'Claude Opus 5.5',       hint: 'Strong',     desc: 'Anthropic · Deep coding & complex research' },
@@ -6500,12 +6487,12 @@
         const who = name ? (', ' + name) : '';
         const phrases = [
           "What's on the agenda" + who + '?',
-          'Coffee time with Brief' + who + '?',
+          'Coffee time and Brief' + who + '?',
           'Happy ' + weekday + who + '!',
           'Happy ' + weekday + '! What are we making' + who + '?',
           'Ready when you are' + who + '.',
           "What's on the agenda today" + who + '?',
-          'Coffee time with Brief?'
+          'Coffee time and Brief?'
         ];
         if (State.greetingSeed === undefined) State.greetingSeed = Math.floor(Math.random() * 1000);
         const idx = Math.abs(Number(State.greetingIdx || 0) + State.greetingSeed) % phrases.length;
@@ -6772,29 +6759,6 @@
           await api.updateSettings({ thinkingLevel: norm }).catch(() => {});
         }
         showToast('Thinking level set to ' + norm.toUpperCase(), 'ok');
-      }
-
-      async function applyCustomModel(alsoTest) {
-        const id = DOM.customModelInput.value.trim();
-        if (!id) {
-          showToast('Enter a Gemini model ID first.', 'warn');
-          return;
-        }
-        State.settings.customModel = id;
-        await selectActiveModel(id, '');
-        if (alsoTest && api && api.testCustomModel) {
-          DOM.customModelTestBtn.disabled = true;
-          DOM.customModelTestBtn.textContent = 'Testing…';
-          try {
-            const res = await api.testCustomModel(id);
-            showToast(res.icon + ' ' + res.title + ': ' + res.message, res.status === 'valid' ? 'ok' : (res.status === 'rate' ? 'warn' : 'error'));
-          } catch (e) {
-            showToast('Model test failed: ' + e.message, 'error');
-          } finally {
-            DOM.customModelTestBtn.disabled = false;
-            DOM.customModelTestBtn.textContent = 'Test';
-          }
-        }
       }
 
       function renderPermissionAndModeUI() {
@@ -8234,11 +8198,17 @@
       }
 
       function renderKeySlots() {
+        const shortMask = (m) => {
+          const s = String(m || '').trim();
+          if (!s) return '';
+          if (s.length <= 16) return s;
+          return s.slice(0, 4) + '••••••' + s.slice(-4);
+        };
         const slotDefs = [
-          { id: 'gemini',     name: 'Gemini',     logo: 'assets/gemini-logo.png',            prefix: 'AIza… / AQ.…' },
-          { id: 'openai',     name: 'OpenAI',     logo: 'assets/openai-logo.png',     prefix: 'sk-…' },
-          { id: 'anthropic',  name: 'Claude',     logo: 'assets/claude-logo.png',     prefix: 'sk-ant-…' },
-          { id: 'openrouter', name: 'OpenRouter', logo: 'assets/openrouter-logo.png', prefix: 'sk-or-…' }
+          { id: 'gemini',     name: 'Gemini',     prefix: 'AIza… / AQ.…' },
+          { id: 'openai',     name: 'OpenAI',     prefix: 'sk-…' },
+          { id: 'anthropic',  name: 'Claude',     prefix: 'sk-ant-…' },
+          { id: 'openrouter', name: 'OpenRouter', prefix: 'sk-or-…' }
         ];
         const slots = State.keySlots || {};
         for (const containerId of ['gate-key-slots', 'settings-key-slots']) {
@@ -8248,18 +8218,19 @@
           for (const d of slotDefs) {
             const info = slots[d.id] || { has: State.hasKey && State.provider === d.id, masked: State.provider === d.id ? State.keyMasked : '' };
             const isActive = State.provider === d.id;
+            const maskText = info.has ? (shortMask(info.masked) || 'Saved') : d.prefix;
             const btn = createElement('button', {
               type: 'button',
-              style: 'display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border-radius:10px;border:1px solid ' +
-                (isActive ? 'rgba(96,165,250,0.85)' : 'rgba(255,255,255,0.12)') +
-                ';background:' + (isActive ? 'rgba(37,99,235,0.18)' : 'rgba(255,255,255,0.03)') +
-                ';color:#fff;cursor:pointer;text-align:center;',
+              style: 'display:inline-flex;align-items:center;gap:6px;padding:6px 11px;max-width:100%;border-radius:999px;border:1px solid ' +
+                (isActive ? 'rgba(96,165,250,0.85)' : 'rgba(255,255,255,0.14)') +
+                ';background:' + (isActive ? 'rgba(37,99,235,0.22)' : 'rgba(255,255,255,0.04)') +
+                ';color:#fff;cursor:pointer;font-size:12px;',
               onClick: async () => {
                 if (info.has && api && api.switchKeySlot) {
                   try {
                     const bundle = await api.switchKeySlot(d.id);
                     applyKeyValidationBundle(bundle);
-                    showToast('Switched active API key slot to ' + d.name + '.', 'ok');
+                    showToast('Switched active API key to ' + d.name + '.', 'ok');
                     return;
                   } catch (_) { /* fall through to input focus */ }
                 }
@@ -8274,16 +8245,11 @@
                 }
               }
             });
-            btn.appendChild(createElement('img', {
-              src: d.logo,
-              alt: d.name,
-              style: 'width:20px;height:20px;object-fit:contain;background:transparent;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.65));'
-            }));
-            btn.appendChild(createElement('span', { style: 'font-size:11.5px;font-weight:700;', text: d.name }));
+            btn.appendChild(createElement('span', { style: 'font-weight:700;white-space:nowrap;', text: (isActive ? '✓ ' : '') + d.name }));
             btn.appendChild(createElement('span', {
               className: 'mono',
-              style: 'font-size:10px;color:' + (info.has ? '#86efac' : 'var(--text-muted)') + ';',
-              text: info.has ? (info.masked || 'Saved') : d.prefix
+              style: 'font-size:11px;color:' + (info.has ? '#86efac' : 'var(--text-muted)') + ';max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;',
+              text: maskText
             }));
             el.appendChild(btn);
           }
@@ -8886,7 +8852,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '1.0.4';
+      const BRIEF_NEWS_VERSION = '1.0.5';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');
@@ -9648,15 +9614,6 @@
           e.stopPropagation();
           togglePopover(DOM.permPopover);
         });
-        DOM.customModelApplyBtn.addEventListener('click', () => applyCustomModel(false));
-        DOM.customModelTestBtn.addEventListener('click', () => applyCustomModel(true));
-        DOM.customModelInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') applyCustomModel(true);
-        });
-        DOM.modelJobsShortcutBtn.addEventListener('click', () => {
-          closePopovers();
-          openSettingsModal('models');
-        });
         document.querySelectorAll('.thinking-tier-btn').forEach((btn) => {
           btn.addEventListener('click', () => setThinkingLevel(btn.dataset.thinking));
         });
@@ -10272,10 +10229,9 @@
           if (showOnboarding) {
             setOnboardingStep(data.firstRunRequested || !hasSavedName ? 0 : 2);
             setView('key-gate');
-          } else if (State.chats.length) {
-            selectChat(State.chats[0].id);
           } else {
-            setView('welcome');
+            // Always open cleanly on the Main Menu (New Chat) instead of auto-opening a recent thread
+            startNewChat();
             if (!hasSavedName) {
               setTimeout(() => { try { $('welcome-name-input').focus(); } catch (_) {} }, 120);
             }

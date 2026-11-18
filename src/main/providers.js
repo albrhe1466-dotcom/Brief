@@ -23,18 +23,18 @@ const OPENAI_PRESETS = [
     base: 'gpt-6.1-terra'
   },
   {
-    key: 'gpt62sol',
-    label: 'GPT-6.2 Sol',
+    key: 'gpt6sol',
+    label: 'GPT-6 Sol',
     hint: 'Strong',
-    match: (m) => /gpt-?6(?:\.[12])?-?sol/i.test(m.id),
-    base: 'gpt-6.2-sol'
+    match: (m) => /gpt-?6(?:\.[0-2])?-?sol/i.test(m.id),
+    base: 'gpt-6-sol'
   },
   {
-    key: 'gpt62astra',
-    label: 'GPT-6.2 Astra',
-    hint: 'Agent',
+    key: 'gpt6astra',
+    label: 'GPT-6 Astra',
+    hint: 'Challenger',
     match: (m) => /gpt-?6(?:\.[0-2])?-?astra/i.test(m.id),
-    base: 'gpt-6.2-astra'
+    base: 'gpt-6-astra'
   }
 ];
 
@@ -78,10 +78,10 @@ const OPENROUTER_PRESETS = [
   { key: 'or_argon',       label: 'Gemini 4 Argon',        hint: 'Strong',   base: 'google/gemini-4-argon' },
   { key: 'or_carbon',      label: 'Gemini 4 Carbon',       hint: 'Challenger', base: 'google/gemini-4-carbon' },
   // OpenAI via OpenRouter
-  { key: 'or_gpt6luna',    label: 'GPT-6 Luna',            hint: 'Fastest',  base: 'openai/gpt-6-luna' },
-  { key: 'or_gpt61terra',  label: 'GPT-6.1 Terra',         hint: 'Balanced', base: 'openai/gpt-6.1-terra' },
-  { key: 'or_gpt62sol',    label: 'GPT-6.2 Sol',           hint: 'Strong',   base: 'openai/gpt-6.2-sol' },
-  { key: 'or_gpt62astra',  label: 'GPT-6.2 Astra',         hint: 'Agent',    base: 'openai/gpt-6.2-astra' },
+  { key: 'or_gpt6luna',    label: 'GPT-6 Luna',            hint: 'Fastest',    base: 'openai/gpt-6-luna' },
+  { key: 'or_gpt61terra',  label: 'GPT-6.1 Terra',         hint: 'Balanced',   base: 'openai/gpt-6.1-terra' },
+  { key: 'or_gpt6sol',     label: 'GPT-6 Sol',             hint: 'Strong',     base: 'openai/gpt-6-sol' },
+  { key: 'or_gpt6astra',   label: 'GPT-6 Astra',           hint: 'Challenger', base: 'openai/gpt-6-astra' },
   // Claude via OpenRouter
   { key: 'or_haiku55',     label: 'Claude Haiku 5.5',      hint: 'Fastest',  base: 'anthropic/claude-haiku-5-5' },
   { key: 'or_sonnet55',    label: 'Claude Sonnet 5.5',     hint: 'Balanced', base: 'anthropic/claude-sonnet-5-5' },
@@ -92,8 +92,8 @@ const OPENROUTER_PRESETS = [
 const OPENAI_ALLOWLIST = [
   { id: 'gpt-6-luna', name: 'models/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   { id: 'gpt-6.1-terra', name: 'models/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6.2-sol', name: 'models/gpt-6.2-sol', displayName: 'GPT-6.2 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6.2-astra', name: 'models/gpt-6.2-astra', displayName: 'GPT-6.2 Astra', description: 'Agent', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true }
+  { id: 'gpt-6-sol', name: 'models/gpt-6-sol', displayName: 'GPT-6 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'gpt-6-astra', name: 'models/gpt-6-astra', displayName: 'GPT-6 Astra', description: 'Challenger', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true }
 ];
 
 const ANTHROPIC_ALLOWLIST = [
@@ -113,8 +113,8 @@ const OPENROUTER_ALLOWLIST = [
   // OpenAI
   { id: 'openai/gpt-6-luna', name: 'models/openai/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   { id: 'openai/gpt-6.1-terra', name: 'models/openai/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'openai/gpt-6.2-sol', name: 'models/openai/gpt-6.2-sol', displayName: 'GPT-6.2 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'openai/gpt-6.2-astra', name: 'models/openai/gpt-6.2-astra', displayName: 'GPT-6.2 Astra', description: 'Agent', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'openai/gpt-6-sol', name: 'models/openai/gpt-6-sol', displayName: 'GPT-6 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'openai/gpt-6-astra', name: 'models/openai/gpt-6-astra', displayName: 'GPT-6 Astra', description: 'Challenger', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   // Claude
   { id: 'anthropic/claude-haiku-5-5', name: 'models/anthropic/claude-haiku-5-5', displayName: 'Claude Haiku 5.5', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: false },
   { id: 'anthropic/claude-sonnet-5-5', name: 'models/anthropic/claude-sonnet-5-5', displayName: 'Claude Sonnet 5.5', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 200000, outputTokenLimit: 8192, thinking: true },
@@ -514,30 +514,29 @@ class OpenAIClient {
       for (const m of live) if (/terra|gpt-6/i.test(m)) push(m);
       push('gpt-6.1-terra');
       push('gpt-5.6-terra');
-      push('gpt-6.2-sol');
+      push('gpt-6-sol');
       push('gpt-5.5');
       return out;
     }
     if (/sol/.test(id)) {
       for (const m of live) if (/sol|gpt-6/i.test(m)) push(m);
-      push('gpt-6.2-sol');
-      push('gpt-6.1-sol');
+      push('gpt-6-sol');
+      push('gpt-6-astra');
+      push('gpt-6.1-terra');
       push('gpt-5.6-sol');
-      push('gpt-6.2-astra');
       push('gpt-5.5');
       return out;
     }
     if (/astra/.test(id)) {
       for (const m of live) if (/astra|gpt-6/i.test(m)) push(m);
-      push('gpt-6.2-astra');
       push('gpt-6-astra');
-      push('gpt-6.2-sol');
+      push('gpt-6-sol');
       push('gpt-5.5-pro');
       push('gpt-5.6-sol');
       return out;
     }
     for (const m of live) push(m);
-    push('gpt-6.2-sol');
+    push('gpt-6-sol');
     push('gpt-6.1-terra');
     push('gpt-6-luna');
     push('gpt-5.5');
@@ -869,15 +868,17 @@ class AnthropicClient {
         }
       }
     }
+    const tCfg = payload.generationConfig && payload.generationConfig.thinkingConfig;
+    const willThink = !!(includeThinking && tCfg && tCfg.thinkingLevel && /(sonnet|opus|fable|mythos|5-5|5-2|4-6|4-5)/i.test(body.model));
     if (tools.length) {
       body.tools = tools;
       const mode = payload.toolConfig && payload.toolConfig.functionCallingConfig && payload.toolConfig.functionCallingConfig.mode;
-      if (mode === 'ANY') body.tool_choice = { type: 'any' };
+      // Anthropic API forbids tool_choice="any" when extended thinking is active.
+      if (mode === 'ANY' && !willThink) body.tool_choice = { type: 'any' };
     }
-    const tCfg = payload.generationConfig && payload.generationConfig.thinkingConfig;
-    if (includeThinking && tCfg && tCfg.thinkingLevel && /(sonnet|opus|fable|mythos|5-5|5-2|4-6|4-5)/i.test(body.model)) {
+    if (willThink) {
       const tier = String(tCfg.thinkingLevel).toUpperCase();
-      const budget = tier === 'HIGH' ? 8192 : (tier === 'LOW' ? 1024 : 4096);
+      const budget = tier === 'HIGH' ? 8192 : (tier === 'LOW' ? 2048 : 4096);
       if (body.max_tokens <= budget) body.max_tokens = budget + 2048;
       body.thinking = { type: 'enabled', budget_tokens: budget };
     }
@@ -1207,17 +1208,19 @@ class OpenRouterClient {
       stream
     };
     const tools = openAIToolsFromGemini(payload);
+    const genCfg = payload.generationConfig || {};
+    let wantReasoning = null;
+    if (genCfg.thinkingConfig && genCfg.thinkingConfig.thinkingLevel && !/(?:flash-lite|haiku|luna)/i.test(body.model)) {
+      const lvl = String(genCfg.thinkingConfig.thinkingLevel).toLowerCase();
+      wantReasoning = { effort: lvl === 'low' ? 'low' : (lvl === 'high' ? 'high' : 'medium') };
+      body.reasoning = wantReasoning;
+    }
     if (tools.length) {
       body.tools = tools;
       const mode = payload.toolConfig && payload.toolConfig.functionCallingConfig && payload.toolConfig.functionCallingConfig.mode;
-      if (mode === 'ANY') body.tool_choice = 'required';
+      if (mode === 'ANY' && !(wantReasoning && /anthropic\/claude/i.test(body.model))) body.tool_choice = 'required';
     }
-    const genCfg = payload.generationConfig || {};
     if (genCfg.maxOutputTokens) body.max_completion_tokens = genCfg.maxOutputTokens;
-    if (genCfg.thinkingConfig && genCfg.thinkingConfig.thinkingLevel && !/(?:flash-lite|haiku|luna)/i.test(body.model)) {
-      const lvl = String(genCfg.thinkingConfig.thinkingLevel).toLowerCase();
-      body.reasoning = { effort: lvl === 'low' ? 'low' : (lvl === 'high' ? 'high' : 'medium') };
-    }
     return body;
   }
 
@@ -1308,15 +1311,15 @@ class OpenRouterClient {
       for (const m of live) if (/openai\/gpt-(?:6|5)/i.test(m)) push(m);
       push('openai/gpt-6.1-terra');
       push('openai/gpt-5.6-terra');
-      push('openai/gpt-6.2-sol');
+      push('openai/gpt-6-sol');
       push('openai/gpt-5.5');
       return out;
     }
     if (/sol|astra/.test(id)) {
       for (const m of live) if (/openai\/gpt-(?:6|5)/i.test(m)) push(m);
-      push('openai/gpt-6.2-astra');
-      push('openai/gpt-6.2-sol');
-      push('openai/gpt-6.1-sol');
+      push('openai/gpt-6-astra');
+      push('openai/gpt-6-sol');
+      push('openai/gpt-6.1-terra');
       push('openai/gpt-5.6-sol');
       push('openai/gpt-5.5');
       return out;
@@ -1346,7 +1349,7 @@ class OpenRouterClient {
     for (const m of live) push(m);
     push('google/gemini-3.8-flash');
     push('google/gemini-3.1-pro-preview');
-    push('openai/gpt-6.2-sol');
+    push('openai/gpt-6-sol');
     push('anthropic/claude-sonnet-5-5');
     return out;
   }
