@@ -259,23 +259,33 @@ function isCodeContent(text, filePath = '') {
 }
 
 async function typeText(ctx, text, options = {}) {
-  const s = String(text || '');
+  const s = String(text || '').replace(/\r\n/g, '\n');
   if (!s) return 'typed';
   const isCode = options.isCode !== undefined ? !!options.isCode : isCodeContent(s, options.path || '');
-  if (isCode) {
-    // Code exception: when writing or editing code, pasting is fine. Keep the visible mouse movement and clicks there.
+  const settingsPaste = !ctx.settings || ctx.settings().pasteLongText !== false;
+  const shouldPaste = options.mode === 'paste' || options.paste === true ||
+    (options.mode !== 'type' && options.paste !== false && (isCode || s.includes('\n') || (settingsPaste && s.length > 20)));
+  if (shouldPaste && clipboard && typeof clipboard.writeText === 'function') {
+    // Paste multi-line, prompt, or code blocks cleanly in one Ctrl+V shot so \n NEVER splits or submits messages early.
     const prevText = clipboard.readText();
     const prevImage = clipboard.readImage();
     clipboard.writeText(s);
+    if (ctx.cursor) {
+      ctx.cursor({
+        kind: 'type',
+        text: '[Pasted block]',
+        fullText: s,
+        label: 'Paste: ' + s.replace(/\s+/g, ' ').slice(0, 32)
+      });
+    }
     await sleep(60);
     await ctx.automation.keys(IS_MAC ? 'cmd+v' : 'ctrl+v');
-    await sleep(250);
-    if (!prevImage.isEmpty()) clipboard.writeImage(prevImage);
-    else clipboard.writeText(prevText);
+    await sleep(240);
+    if (prevImage && !prevImage.isEmpty()) clipboard.writeImage(prevImage);
+    else clipboard.writeText(prevText || '');
     return 'pasted';
   }
-  // Typing: when it types in files, search boxes, the file explorer or the terminal,
-  // type visibly character by character. I should see the text appear as it's typed.
+  const softNewline = options.softNewline !== false;
   let curr = '';
   const rawDelay = ctx.settings ? ctx.settings().typingDelayMs : undefined;
   const delayMs = rawDelay === 0 ? 0 : Math.max(16, Math.min(50, Number(rawDelay || 28)));
@@ -299,7 +309,7 @@ async function typeText(ctx, text, options = {}) {
       }
     }
     if (!selfFocused) {
-      await ctx.automation.type(s[i], 0);
+      await ctx.automation.type(s[i], 0, { softNewline });
     }
     if (delayMs > 0) await sleep(delayMs);
   }
@@ -1132,16 +1142,18 @@ const TOOLS = [
   },
   {
     name: 'type_text', kind: 'screen', screen: true,
-    description: 'Type text with the real keyboard into a Search box or input field. Pass target (e.g. "Search") and/or (x, y) so Brief reliably clicks dead-center inside the box BEFORE typing visibly character-by-character.',
+    description: 'Enter text into any input, editor, search box, or chat box. Automatically PASTES (Ctrl+V) multi-line blocks and long text cleanly in one piece so newlines NEVER trigger premature Enter submits, and uses Shift+Enter for manual soft newlines when typing character-by-character.',
     parameters: { type: 'object', properties: {
-      text: { type: 'string', description: 'Exact text to type. Use \\n for new lines.' },
+      text: { type: 'string', description: 'Exact text to paste or type. \\n is preserved cleanly without sending/submitting early.' },
       target: { type: 'string', description: 'Name/label of the Search box or text field to focus & click first (e.g. "Search", "Address and search bar", "Search YouTube").' },
       x: { type: 'integer', description: 'Optional: click here first (0-1000).' },
       y: { type: 'integer', description: 'Optional: click here first (0-1000).' },
+      mode: { type: 'string', enum: ['auto', 'paste', 'type'], description: 'auto (default: pastes multi-line/long text via Ctrl+V cleanly, types short search terms), paste (always Ctrl+V), or type (char-by-char with Shift+Enter on \\n).' },
+      soft_newline: { type: 'boolean', description: 'When typing char-by-char, use Shift+Enter for \\n instead of plain Enter (default true).' },
       clear_first: { type: 'boolean', description: 'Select all and delete existing text first.' },
-      press_enter: { type: 'boolean', description: 'Press Enter after typing.' }
+      press_enter: { type: 'boolean', description: 'Press Enter ONCE at the very end after the full text is pasted/typed.' }
     }, required: ['text'] },
-    describe: (a) => 'Type "' + truncateMiddle(a.text, 120) + '"' + (a.target ? ' into "' + a.target + '"' : (a.x !== undefined ? ' at (' + a.x + ', ' + a.y + ')' : ' into the focused field')) + (a.press_enter ? ' and press Enter' : ''),
+    describe: (a) => (a.mode === 'paste' || (a.mode !== 'type' && (String(a.text || '').includes('\n') || String(a.text || '').length > 20)) ? 'Paste "' : 'Type "') + truncateMiddle(a.text, 120) + '"' + (a.target ? ' into "' + a.target + '"' : (a.x !== undefined ? ' at (' + a.x + ', ' + a.y + ')' : ' into the focused field')) + (a.press_enter ? ' and press Enter' : ''),
     async run(a, ctx) {
       let targetHit = null;
       if (a.target) {
@@ -1168,8 +1180,8 @@ const TOOLS = [
         }
       }
       if (a.clear_first) { await ctx.automation.keys(IS_MAC ? 'cmd+a' : 'ctrl+a'); await sleep(60); await ctx.automation.keys('backspace'); await sleep(60); }
-      ctx.cursor({ kind: 'type', label: 'typing' });
-      const how = await typeText(ctx, a.text || '');
+      ctx.cursor({ kind: 'type', label: 'pasting' });
+      const how = await typeText(ctx, a.text || '', { mode: a.mode, softNewline: a.soft_newline !== false });
       if (a.press_enter) await ctx.automation.keys('enter');
       const finalFocus = (ctx.automation && typeof ctx.automation.focusedElement === 'function')
         ? await ctx.automation.focusedElement().catch(() => null)
@@ -1185,9 +1197,9 @@ const TOOLS = [
   },
   {
     name: 'press_keys', kind: 'screen', screen: true,
-    description: 'Press or long-press a key or hotkey combination on the real keyboard, e.g. "enter", "ctrl+s", "alt+tab", "space", "w", "pagedown". Pass hold_ms (e.g. 1500-30000) to hold the key down.',
+    description: 'Press or long-press a key or hotkey combination on the real keyboard, e.g. "shift+enter" / "rshift+enter" (continue writing on a new line without submitting!), "ctrl+v" (paste), "enter", "ctrl+s", "alt+tab", "space", "w", "pagedown". Pass hold_ms (e.g. 1500-30000) to hold the key down.',
     parameters: { type: 'object', properties: {
-      keys: { type: 'string', description: 'Keys joined with +, e.g. "ctrl+c", "space", "w", "pagedown".' },
+      keys: { type: 'string', description: 'Keys joined with +, e.g. "shift+enter", "rshift+enter", "ctrl+v", "ctrl+c", "space", "w", "pagedown".' },
       repeat: { type: 'integer', description: 'How many times to press it (default 1, max 30).' },
       hold_ms: { type: 'integer', description: 'Optional: hold the key(s) down for this many milliseconds (up to 30000ms) for long press.' },
       long_press: { type: 'boolean', description: 'Set true to long-press the key (~2000ms).' }

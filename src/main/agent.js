@@ -100,7 +100,7 @@ async function describeForegroundElements(screen, automation) {
     const physH = Math.round(b.height * sf);
 
     const [els, focused, ocr] = await Promise.all([
-      typeof automation.inspectUi === 'function' ? automation.inspectUi(100).catch(() => []) : Promise.resolve([]),
+      typeof automation.inspectUi === 'function' ? automation.inspectUi(180).catch(() => []) : Promise.resolve([]),
       typeof automation.focusedElement === 'function' ? automation.focusedElement().catch(() => null) : Promise.resolve(null),
       typeof automation.ocrScreen === 'function' ? automation.ocrScreen(physOrigin.x, physOrigin.y, physW, physH).catch(() => null) : Promise.resolve(null)
     ]);
@@ -120,7 +120,7 @@ async function describeForegroundElements(screen, automation) {
     if (Array.isArray(els) && els.length) {
       const inputs = els.filter((e) => e.isInput || /^(Edit|ComboBox|Document)$/i.test(e.type || ''));
       const others = els.filter((e) => !inputs.includes(e));
-      for (const el of [...inputs.slice(0, 14), ...others.slice(0, 26)]) {
+      for (const el of [...inputs.slice(0, 35), ...others.slice(0, 105)]) {
         const { nx, ny } = normCoord(el.x, el.y);
         const tag = (el.isInput || /^(Edit|ComboBox|Document)$/i.test(el.type || '')) ? '[INPUT] ' : '';
         const lbl = el.name || el.autoId || el.type;
@@ -139,7 +139,7 @@ async function describeForegroundElements(screen, automation) {
         if (seen.has(sigKey)) continue;
         seen.add(sigKey);
         lines.push(`- OCR "${txt.slice(0, 48)}" at (${nx}, ${ny})`);
-        if (++ocrAdded >= 48) break;
+        if (++ocrAdded >= 180) break;
       }
     }
     return lines.length ? ('\n[Scout Eyes — Visible UI Controls & Windows OCR Text (exact 0..1000 coordinates — prefer click_text/click_element or exact x,y):\n' + lines.join('\n') + '\n]') : '';
@@ -1313,7 +1313,7 @@ class AgentRunner extends EventEmitter {
           const workTCfg = buildThinkingConfig(activeStepModel, settings.thinkingLevel || 'medium', this.getModels());
           const workPayload = {
             systemInstruction: { parts: [{ text: sysPrompt }] },
-            contents: pruneHistoryScreenshots(contents, 2),
+            contents: pruneHistoryScreenshots(contents, 3),
             tools: toolPayload
           };
           if (forceToolNextTurn && !usingDirectCu) {

@@ -24,7 +24,7 @@ const { spawn, execFile } = require('child_process');
 
 const KEY_ALIASES = {
   control: 'ctrl', ctl: 'ctrl', ctrl: 'ctrl', lctrl: 'ctrl', rctrl: 'ctrl',
-  shift: 'shift', lshift: 'shift', rshift: 'shift',
+  shift: 'shift', lshift: 'lshift', rshift: 'rshift', rightshift: 'rshift', leftshift: 'lshift',
   alt: 'alt', option: 'alt', opt: 'alt', menu: 'alt', lalt: 'alt', ralt: 'alt', altgr: 'alt',
   win: 'win', windows: 'win', meta: 'win', super: 'win', cmd: 'win', command: 'win', os: 'win', start: 'win',
   enter: 'enter', return: 'enter', ret: 'enter',
@@ -67,6 +67,13 @@ function parseCombo(input) {
   } else {
     let s = String(input || '').trim();
     if (!s) return [];
+    const low = s.toLowerCase().replace(/[\s-]+/g, '_');
+    if (low === 'shift_enter' || low === 'continue_line' || low === 'soft_enter' || low === 'newline') {
+      return ['shift', 'enter'];
+    }
+    if (low === 'rshift_enter' || low === 'right_shift_enter') {
+      return ['rshift', 'enter'];
+    }
     let plusKey = false;
     if (s.endsWith('++')) { plusKey = true; s = s.slice(0, -2); }
     else if (s === '+') { return ['=']; }
@@ -84,7 +91,7 @@ function parseCombo(input) {
 }
 
 const WIN_VK = {
-  ctrl: 0x11, shift: 0x10, alt: 0x12, win: 0x5B, apps: 0x5D,
+  ctrl: 0x11, shift: 0x10, lshift: 0xA0, rshift: 0xA1, alt: 0x12, win: 0x5B, apps: 0x5D,
   enter: 0x0D, tab: 0x09, esc: 0x1B, space: 0x20, backspace: 0x08, delete: 0x2E, insert: 0x2D,
   home: 0x24, end: 0x23, pageup: 0x21, pagedown: 0x22, up: 0x26, down: 0x28, left: 0x25, right: 0x27,
   capslock: 0x14, printscreen: 0x2C, numlock: 0x90, scrolllock: 0x91, pause: 0x13,
@@ -231,7 +238,10 @@ class WindowsBackend {
     return this.call('drawpath', { xs, ys, msPerSeg: Math.round(msPerSeg) }, estMs);
   }
   scroll(dx, dy) { return this.call('scroll', { dx: Math.round(dx), dy: Math.round(dy) }); }
-  type(text, delay = 6) { return this.call('type', { text: String(text), delay }, 120000); }
+  type(text, delay = 6, opts = {}) {
+    const softNewline = opts && opts.softNewline !== undefined ? !!opts.softNewline : true;
+    return this.call('type', { text: String(text), delay, softNewline }, 120000);
+  }
 
   comboToVks(combo) {
     const names = parseCombo(combo);
@@ -405,13 +415,14 @@ class MacBackend {
   async scroll(dx, dy) {
     await this.jxa('ObjC.import("CoreGraphics");var e=$.CGEventCreateScrollWheelEvent(null,1,2,' + (-Math.round(dy) * 3) + ',' + (-Math.round(dx) * 3) + ');$.CGEventPost($.kCGHIDEventTap,e); "ok"');
   }
-  async type(text) {
+  async type(text, _delay, opts = {}) {
     const safe = String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
     const lines = safe.split('\n');
+    const softNewline = !opts || opts.softNewline !== false;
     let script = 'tell application "System Events"\n';
     lines.forEach((l, i) => {
       if (l) script += 'keystroke "' + l.replace(/\r/g, '') + '"\n';
-      if (i < lines.length - 1) script += 'key code 36\n';
+      if (i < lines.length - 1) script += softNewline ? 'key code 36 using {shift down}\n' : 'key code 36\n';
     });
     script += 'end tell';
     await this.apple(script);
@@ -422,7 +433,7 @@ class MacBackend {
     let main = null;
     for (const n of names) {
       if (n === 'ctrl') mods.push('control down');
-      else if (n === 'shift') mods.push('shift down');
+      else if (n === 'shift' || n === 'lshift' || n === 'rshift') mods.push('shift down');
       else if (n === 'alt') mods.push('option down');
       else if (n === 'win') mods.push('command down');
       else main = n;

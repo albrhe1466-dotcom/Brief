@@ -675,7 +675,7 @@ public static class LocallyInput
         }
     }
 
-    public static void TypeText(string text, int charDelay)
+    public static void TypeText(string text, int charDelay, bool softNewline)
     {
         EnsureThreadDpi();
         foreach (char ch in text)
@@ -683,7 +683,18 @@ public static class LocallyInput
             if (ch == '\r') continue;
             if (ch == '\n')
             {
-                Send(new INPUT[] { KeyInput(0x0D, false), KeyInput(0x0D, true) });
+                if (softNewline)
+                {
+                    // Shift+Enter continues on a new line inside chat boxes & rich editors without submitting early.
+                    Send(new INPUT[] {
+                        KeyInput(0x10, false), KeyInput(0x0D, false),
+                        KeyInput(0x0D, true), KeyInput(0x10, true)
+                    });
+                }
+                else
+                {
+                    Send(new INPUT[] { KeyInput(0x0D, false), KeyInput(0x0D, true) });
+                }
             }
             else if (ch == '\t')
             {
@@ -993,7 +1004,7 @@ public static class LocallyInput
         string fgT = TitleOf(fg);
         string fgP = ProcessOf(fg);
         if (IsBriefWindow(fgT, fgP)) return items;
-        int limit = Math.Max(16, Math.Min(140, maxItems > 0 ? maxItems : 100));
+        int limit = Math.Max(16, Math.Min(220, maxItems > 0 ? maxItems : 160));
         try
         {
             AutomationElement root = AutomationElement.FromHandle(fg);
@@ -1002,7 +1013,7 @@ public static class LocallyInput
             Queue<AutomationElement> q = new Queue<AutomationElement>();
             q.Enqueue(root);
             int visited = 0;
-            while (q.Count > 0 && items.Count < limit && visited < 1400 && sw.ElapsedMilliseconds < 140)
+            while (q.Count > 0 && items.Count < limit && visited < 2600 && sw.ElapsedMilliseconds < 260)
             {
                 AutomationElement cur = q.Dequeue();
                 visited++;
@@ -1155,10 +1166,30 @@ public static class LocallyInput
             }
             using (System.IO.MemoryStream msOut = new System.IO.MemoryStream())
             {
-                bmp.Save(msOut, pngFormat ? System.Drawing.Imaging.ImageFormat.Png : System.Drawing.Imaging.ImageFormat.Jpeg);
+                if (pngFormat) bmp.Save(msOut, System.Drawing.Imaging.ImageFormat.Png);
+                else SaveJpegHQ(bmp, msOut, 95L);
                 return Convert.ToBase64String(msOut.ToArray());
             }
         }
+    }
+
+    private static void SaveJpegHQ(Bitmap bmp, System.IO.Stream outStream, long quality)
+    {
+        System.Drawing.Imaging.ImageCodecInfo jpgCodec = null;
+        foreach (var codec in System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders())
+        {
+            if (codec.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid) { jpgCodec = codec; break; }
+        }
+        if (jpgCodec != null)
+        {
+            using (var ep = new System.Drawing.Imaging.EncoderParameters(1))
+            {
+                ep.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+                bmp.Save(outStream, jpgCodec, ep);
+                return;
+            }
+        }
+        bmp.Save(outStream, System.Drawing.Imaging.ImageFormat.Jpeg);
     }
 
     public static string DrawVisionGrid(string b64Input)
@@ -1173,12 +1204,21 @@ public static class LocallyInput
             g.DrawImage(srcImg, 0, 0, srcImg.Width, srcImg.Height);
             int w = bmp.Width;
             int h = bmp.Height;
-            using (Pen gridPen = new Pen(Color.FromArgb(90, 0, 210, 255), Math.Max(1f, w / 1600f)))
-            using (Font f = new Font("Consolas", Math.Max(11f, w / 115f), FontStyle.Bold))
-            using (SolidBrush bgBrush = new SolidBrush(Color.FromArgb(185, 10, 14, 24)))
-            using (SolidBrush fgBrush = new SolidBrush(Color.FromArgb(245, 125, 225, 255)))
+            using (Pen minorPen = new Pen(Color.FromArgb(40, 0, 210, 255), 1f))
+            using (Pen gridPen = new Pen(Color.FromArgb(95, 0, 210, 255), Math.Max(1f, w / 1600f)))
+            using (Font f = new Font("Consolas", Math.Max(12f, w / 110f), FontStyle.Bold))
+            using (SolidBrush bgBrush = new SolidBrush(Color.FromArgb(195, 10, 14, 24)))
+            using (SolidBrush fgBrush = new SolidBrush(Color.FromArgb(250, 145, 232, 255)))
             {
+                minorPen.DashPattern = new float[] { 3f, 7f };
                 gridPen.DashPattern = new float[] { 6f, 6f };
+                for (int k = 50; k <= 950; k += 100)
+                {
+                    float x = (k / 1000f) * w;
+                    float y = (k / 1000f) * h;
+                    g.DrawLine(minorPen, x, 0, x, h);
+                    g.DrawLine(minorPen, 0, y, w, y);
+                }
                 for (int k = 100; k <= 900; k += 100)
                 {
                     float x = (k / 1000f) * w;
@@ -1195,7 +1235,7 @@ public static class LocallyInput
             }
             using (System.IO.MemoryStream msOut = new System.IO.MemoryStream())
             {
-                bmp.Save(msOut, System.Drawing.Imaging.ImageFormat.Jpeg);
+                SaveJpegHQ(bmp, msOut, 95L);
                 return Convert.ToBase64String(msOut.ToArray());
             }
         }
@@ -1299,7 +1339,10 @@ while ($true) {
             'button' { [LocallyInput]::MouseButton([string]$req.button, [bool]$req.down) }
             'drag' { [LocallyInput]::Drag([int]$req.x1, [int]$req.y1, [int]$req.x2, [int]$req.y2, [int]$req.ms) }
             'scroll' { [LocallyInput]::Scroll([int]$req.dx, [int]$req.dy) }
-            'type' { [LocallyInput]::TypeText([string]$req.text, [int]$req.delay) }
+            'type' {
+                $softNl = if ($null -eq $req.softNewline) { $true } else { [bool]$req.softNewline }
+                [LocallyInput]::TypeText([string]$req.text, [int]$req.delay, $softNl)
+            }
             'keys' { [LocallyInput]::KeyCombo([int[]]@($req.vks), [int]$req.hold) }
             'keystate' { [LocallyInput]::KeyState([int]$req.vk, [bool]$req.down) }
             'release' { [LocallyInput]::ReleaseAll() }
