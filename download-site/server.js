@@ -54,7 +54,7 @@ function getReleaseInfo() {
   if (!cachedReleaseInfo || now - cachedReleaseAt > 5000) {
     cachedReleaseInfo = {
       name: 'Brief',
-      version: '1.0.3',
+      version: '1.0.4',
       platform: 'Windows 10 / 11 (64-bit)',
       installer: Object.assign({ filename: 'Brief-Setup.exe', url: '/download/Brief-Setup.exe' }, fileMeta('Brief-Setup.exe')),
       archive: Object.assign({ filename: 'brief-package.zip', url: '/download/brief-package.zip' }, fileMeta('brief-package.zip'))

@@ -456,8 +456,18 @@ class AgentRunner extends EventEmitter {
       planRole
     ], specialist || executor);
 
-    const distinctCount = new Set([executor, scout, specialist, qaTester].filter(Boolean)).size;
-    return { executor, scout, specialist, qaTester, distinctCount };
+    const critic = pickDistinct([
+      m.presets && m.presets.flash38 && m.presets.flash38.id,
+      m.presets && m.presets.hydrogen && m.presets.hydrogen.id,
+      m.presets && m.presets.argon && m.presets.argon.id,
+      m.presets && m.presets.gpt61terra && m.presets.gpt61terra.id,
+      m.presets && m.presets.claudesonnet55 && m.presets.claudesonnet55.id,
+      m.bestFlash,
+      m.bestPro
+    ].filter((id) => id !== specialist && id !== scout), scout || specialist || executor);
+
+    const distinctCount = new Set([executor, scout, specialist, critic, qaTester].filter(Boolean)).size;
+    return { executor, scout, specialist, critic, qaTester, distinctCount };
   }
 
   /** Ordered list of healthy general Gemini fallback model IDs from the user's account, excluding failedModels. */
@@ -644,9 +654,9 @@ class AgentRunner extends EventEmitter {
       let activeChatModel = modelInfo.id;
       let res = null;
       for (let attempt = 0; attempt < 8; attempt++) {
-        const tCfg = buildThinkingConfig(activeChatModel, s.thinkingLevel === 'high' ? 'medium' : s.thinkingLevel, this.getModels());
+        const tCfg = buildThinkingConfig(activeChatModel, s.thinkingLevel || 'medium', this.getModels());
         const chatPayload = {
-          systemInstruction: { parts: [{ text: buildChatSystemPrompt({ screenShare }) }] },
+          systemInstruction: { parts: [{ text: buildChatSystemPrompt({ screenShare, thinkingLevel: s.thinkingLevel || 'medium' }) }] },
           contents
         };
         if (tCfg) chatPayload.generationConfig = { thinkingConfig: tCfg };
@@ -1002,19 +1012,19 @@ class AgentRunner extends EventEmitter {
       state: 'observing',
       mode: 'work',
       model: agentModel.id,
-      crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+      crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
       elapsedMs: 0,
       elapsedLabel: '0s',
       step: 0,
       maxSteps,
-      stepText: `Multi-Agent Crew (${roster.distinctCount} model${roster.distinctCount === 1 ? '' : 's'}) opening workspace...`
+      stepText: `Multi-Agent Crew (${roster.distinctCount} models) opening workspace...`
     });
     this.emitLog({
       kind: 'task',
       status: 'started',
       model: agentModel.id,
       tool: 'work_start',
-      detail: `${task} [Crew: Exec=${roster.executor}, Scout=${roster.scout}, Specialist=${roster.specialist}, QA=${roster.qaTester}]`
+      detail: `${task} [Crew: Exec=${roster.executor}, Scout=${roster.scout}, Specialist=${roster.specialist}, Critic=${roster.critic}, QA=${roster.qaTester}]`
     });
 
     try {
@@ -1092,7 +1102,7 @@ class AgentRunner extends EventEmitter {
         describeForegroundElements(this.screen, this.automation)
       ]);
 
-      // PARALLEL MULTI-AGENT CREW: Instead of blocking Step 1 for 25s waiting on analysis, launch Specialist + Scout CONCURRENTLY
+      // PARALLEL MULTI-AGENT CREW: Launch Specialist + Scout + Critic/Tactician CONCURRENTLY
       // while Executor immediately jumps into Step 1 actions!
       let planText = '';
       let specialistInjected = false;
@@ -1102,50 +1112,72 @@ class AgentRunner extends EventEmitter {
 
       const specialistModelId = (roster.specialist && !/computer-use/i.test(roster.specialist)) ? roster.specialist : (plannerModel.id || agentModel.id);
       const scoutModelId = (roster.scout && !/computer-use/i.test(roster.scout)) ? roster.scout : (fastModel.id || agentModel.id);
+      const criticModelId = (roster.critic && !/computer-use/i.test(roster.critic)) ? roster.critic : specialistModelId;
+      const crewList = [
+        this.gemini.generate(specialistModelId, {
+          contents: [{
+            role: 'user',
+            parts: [
+              {
+                text: 'You are Brief\'s Specialist Architect working IN PARALLEL alongside the Desktop Executor.\n' +
+                  'Do NOT stall with vague essays. Provide:\n' +
+                  '1) Concrete objects/scripts/keyframes/UI buttons needed so nothing is missing or broken.\n' +
+                  '2) Exact app test steps required to prove it works (Roblox Studio: Play/Run F5/F8 + check Output; Blender/CapCut/Higgsfield/Adobe: multi-frame keyframes + Space/Play playback scrub verify; Code: run tests).\n' +
+                  'Task: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 8).map((w) => w.title).join(' | ') || 'none')
+              },
+              { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 420, temperature: 0.2 }
+        }, { signal: this.abortController.signal, retries: 0 })
+      ];
+      if (scoutModelId) {
+        crewList.push(
+          this.gemini.generate(scoutModelId, {
+            contents: [{
+              role: 'user',
+              parts: [
+                {
+                  text: 'You are Brief\'s Fast Scout Agent. In 4 crisp bullets, list the exact visible UI controls/tabs/menus in the screenshot and OCR map that the Executor should click or watch out for.\nTask: ' + task + '\n' + initUiMap
+                },
+                { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
+              ]
+            }],
+            generationConfig: { maxOutputTokens: 220, temperature: 0.1 }
+          }, { signal: this.abortController.signal, retries: 0 })
+        );
+      }
+      if (criticModelId && String(settings.thinkingLevel || 'medium').toLowerCase() !== 'low') {
+        crewList.push(
+          this.gemini.generate(criticModelId, {
+            contents: [{
+              role: 'user',
+              parts: [
+                {
+                  text: 'You are Brief\'s Tactician & Edge-Case Critic Agent collaborating in parallel. In 3 crisp bullets, name the top pitfalls, wrong-window hazards, or missing verification checks that would make the Executor fail or accidentally pretend it finished.\nTask: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 6).map((w) => w.title).join(' | ') || 'none')
+                }
+              ]
+            }],
+            generationConfig: { maxOutputTokens: 200, temperature: 0.15 }
+          }, { signal: this.abortController.signal, retries: 0 })
+        );
+      }
 
       const concurrentCrewPromise = (enableParallel && settings.usePlanner !== false && specialistModelId)
-        ? Promise.allSettled([
-            this.gemini.generate(specialistModelId, {
-              contents: [{
-                role: 'user',
-                parts: [
-                  {
-                    text: 'You are Brief\'s Specialist Architect working IN PARALLEL alongside the Desktop Executor.\n' +
-                      'Do NOT stall with vague essays. Provide:\n' +
-                      '1) Concrete objects/scripts/keyframes/UI buttons needed so nothing is missing or ugly.\n' +
-                      '2) Exact app test steps required to prove it works (Roblox Studio: Play/Run F5/F8 + check Output; Blender/CapCut/Higgsfield/Adobe: multi-frame keyframes + Space/Play playback scrub verify; Code: run tests).\n' +
-                      'Task: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 8).map((w) => w.title).join(' | ') || 'none')
-                  },
-                  { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
-                ]
-              }],
-              generationConfig: { maxOutputTokens: 420, temperature: 0.2 }
-            }, { signal: this.abortController.signal, retries: 0 }),
-            (scoutModelId && scoutModelId !== specialistModelId)
-              ? this.gemini.generate(scoutModelId, {
-                  contents: [{
-                    role: 'user',
-                    parts: [
-                      {
-                        text: 'You are Brief\'s Fast Scout Agent. In 4 crisp bullets, list the exact visible UI controls/tabs/menus in the screenshot and OCR map that the Executor should click or watch out for.\nTask: ' + task + '\n' + initUiMap
-                      },
-                      { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
-                    ]
-                  }],
-                  generationConfig: { maxOutputTokens: 220, temperature: 0.1 }
-                }, { signal: this.abortController.signal, retries: 0 })
-              : Promise.resolve(null)
-          ]).then((settled) => {
+        ? Promise.allSettled(crewList).then((settled) => {
             const chunks = [];
-            const specRes = settled[0] && settled[0].status === 'fulfilled' ? settled[0].value : null;
-            const sCand = specRes && (specRes.candidates || [])[0];
-            const specTxt = ((sCand && sCand.content && sCand.content.parts) || []).map((p) => p.text || '').join('').trim();
+            const extractTxt = (sIdx) => {
+              const r = settled[sIdx] && settled[sIdx].status === 'fulfilled' ? settled[sIdx].value : null;
+              const c = r && (r.candidates || [])[0];
+              return ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
+            };
+            const specTxt = extractTxt(0);
             if (specTxt) chunks.push(`[Specialist (${specialistModelId}) Blueprint]\n${specTxt}`);
-
-            const scoutRes = settled[1] && settled[1].status === 'fulfilled' ? settled[1].value : null;
-            const scCand = scoutRes && (scoutRes.candidates || [])[0];
-            const scTxt = ((scCand && scCand.content && scCand.content.parts) || []).map((p) => p.text || '').join('').trim();
+            const scTxt = scoutModelId ? extractTxt(1) : '';
             if (scTxt) chunks.push(`[Scout (${scoutModelId}) UI Map]\n${scTxt}`);
+            const critIdx = scoutModelId ? 2 : 1;
+            const critTxt = crewList[critIdx] ? extractTxt(critIdx) : '';
+            if (critTxt) chunks.push(`[Critic (${criticModelId}) Guardrails]\n${critTxt}`);
 
             planText = chunks.join('\n\n');
             if (planText) {
@@ -1161,7 +1193,7 @@ class AgentRunner extends EventEmitter {
         runId,
         chatId,
         model: agentModel.id,
-        plan: `Parallel Crew Launched — Executor: ${roster.executor} · Scout: ${roster.scout} · Specialist: ${roster.specialist} · QA Tester: ${roster.qaTester}` +
+        plan: `Parallel Crew Launched — Executor: ${roster.executor} · Scout: ${roster.scout} · Specialist: ${roster.specialist} · Critic: ${roster.critic} · QA Tester: ${roster.qaTester}` +
           (taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0
             ? `\nDeep Studio Mode active (target ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m build, live testing & polish).`
             : '')
@@ -1213,7 +1245,8 @@ class AgentRunner extends EventEmitter {
         mcpServers: connectedMcp,
         openWindows,
         openTabs,
-        screenShare
+        screenShare,
+        thinkingLevel: settings.thinkingLevel || 'medium'
       });
 
       const decls = [...declarations({ includeScreen: true, cuMode: usingDirectCu }), ...mcpDecls.filter((d) => !BLOCKED_STORE_TOOL_RE.test(d.name))];
@@ -1284,7 +1317,7 @@ class AgentRunner extends EventEmitter {
           state: 'thinking',
           mode: 'work',
           model: activeStepModel,
-          crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+          crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
           elapsedMs: Date.now() - workStartMs,
           elapsedLabel: curElapsed,
           mutatingCount: stepLog.filter(isMutatingWorkStep).length,
@@ -1309,7 +1342,7 @@ class AgentRunner extends EventEmitter {
               state: 'thinking',
               mode: 'work',
               model: activeStepModel,
-              crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+              crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
               elapsedMs: Date.now() - workStartMs,
               elapsedLabel: elapsedStr,
               mutatingCount: stepLog.filter(isMutatingWorkStep).length,
@@ -1487,7 +1520,7 @@ class AgentRunner extends EventEmitter {
               state: 'thinking',
               mode: 'work',
               model: qaModelId,
-              crew: [roster.executor, roster.scout, roster.specialist, roster.qaTester],
+              crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
               elapsedMs: elapsedNow,
               elapsedLabel: formatWorkedTime(elapsedNow),
               step,
@@ -1813,22 +1846,30 @@ class AgentRunner extends EventEmitter {
               responseParts.push({ inlineData: { mimeType: ex.image.mime || 'image/png', data: ex.image.base64 } });
             }
           }
-          if (enableParallel && mutNow > 0 && mutNow % 5 === 0 && !scoutMidAuditPromise && scoutModelId) {
-            scoutMidAuditPromise = this.gemini.generate(scoutModelId, {
+          if (enableParallel && ((mutNow > 0 && mutNow % 4 === 0) || stepLog.slice(-calls.length).some((st) => st && !st.ok)) && !scoutMidAuditPromise && (criticModelId || scoutModelId)) {
+            const auditModel = criticModelId || scoutModelId;
+            const lastFailed = stepLog.slice(-calls.length).find((st) => st && !st.ok);
+            const auditPrompt = lastFailed
+              ? `You are Brief's Critic & Honest Recovery Agent auditing step ${step} after tool "${lastFailed.tool}" failed (${lastFailed.result && lastFailed.result.error ? lastFailed.result.error : 'action failed'}). Be candid: start with "Actually, we made a mistake there —" explain briefly what went wrong and the exact better click/hotkey/tool fix on this screen.\nGoal: ${task}\n${afterUiMap}`
+              : `You are Brief's Critic & Scout Agent auditing progress mid-run after ${mutNow} edits (${timeNow}). If anything looks wrong, misplaced, missing a button/keyframe, or stuck, say so candidly (e.g. "Actually, we missed...") and give 2 crisp corrective actions; otherwise confirm it looks solid + next test to run.\nGoal: ${task}\n${afterUiMap}`;
+            scoutMidAuditPromise = this.gemini.generate(auditModel, {
               contents: [{
                 role: 'user',
                 parts: [
-                  { text: `You are Scout Agent auditing progress mid-run after ${mutNow} edits (${timeNow}). List any missing buttons/objects, red errors, static un-animated items, or next test to run cleanly in 2-3 short lines.\nGoal: ${task}\n${afterUiMap}` },
+                  { text: auditPrompt },
                   { inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } }
                 ]
               }],
-              generationConfig: { maxOutputTokens: 160, temperature: 0.1 }
+              generationConfig: { maxOutputTokens: 180, temperature: 0.1 }
             }, { signal: this.abortController.signal, retries: 0 }).then((r) => {
               const c = (r && r.candidates || [])[0];
               const txt = ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
               if (txt) {
-                scoutAuditNote = `[Scout (${scoutModelId}) Mid-Run Audit @ ${timeNow}]:\n${txt}`;
-                this.emitLog({ kind: 'verify', status: 'ok', model: scoutModelId, tool: 'scout_audit', detail: txt });
+                scoutAuditNote = `[Critic (${auditModel}) Mid-Run Check @ ${timeNow}]:\n${txt}`;
+                this.emitLog({ kind: 'verify', status: lastFailed ? 'warn' : 'ok', model: auditModel, tool: 'critic_audit', detail: txt });
+                if (lastFailed || /\bactually\b|\bmistake\b|\bmissed\b|\bwrong\b/i.test(txt)) {
+                  this.emit('work-note', { runId, chatId, step, text: `🤔 ${txt}` });
+                }
               }
             }).catch(() => {}).finally(() => { scoutMidAuditPromise = null; });
           }
@@ -1840,7 +1881,7 @@ class AgentRunner extends EventEmitter {
       const finalElapsedLabel = formatWorkedTime(finalElapsedMs);
       const finalMutCount = stepLog.filter(isMutatingWorkStep).length;
       const finalTestCount = stepLog.filter(isTestEvidenceStep).length;
-      const usedCrewModels = [...new Set([roster.executor, roster.scout, roster.specialist, roster.qaTester, activeStepModel].filter(Boolean))];
+      const usedCrewModels = [...new Set([roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester, activeStepModel].filter(Boolean))];
 
       if (!finalAnswer) {
         const summarizer = fastModel.id || activeStepModel;

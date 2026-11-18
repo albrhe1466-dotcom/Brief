@@ -76,7 +76,7 @@ const OPENROUTER_PRESETS = [
   { key: 'or_flash38',     label: 'Gemini 3.8 Flash',      hint: 'Balanced', base: 'google/gemini-3.8-flash' },
   { key: 'or_hydrogen',    label: 'Gemini 4 Hydrogen',     hint: 'Balanced', base: 'google/gemini-4-hydrogen' },
   { key: 'or_argon',       label: 'Gemini 4 Argon',        hint: 'Strong',   base: 'google/gemini-4-argon' },
-  { key: 'or_carbon',      label: 'Gemini 4 Carbon',       hint: 'Frontier', base: 'google/gemini-4-carbon' },
+  { key: 'or_carbon',      label: 'Gemini 4 Carbon',       hint: 'Challenger', base: 'google/gemini-4-carbon' },
   // OpenAI via OpenRouter
   { key: 'or_gpt6luna',    label: 'GPT-6 Luna',            hint: 'Fastest',  base: 'openai/gpt-6-luna' },
   { key: 'or_gpt61terra',  label: 'GPT-6.1 Terra',         hint: 'Balanced', base: 'openai/gpt-6.1-terra' },
@@ -109,7 +109,7 @@ const OPENROUTER_ALLOWLIST = [
   { id: 'google/gemini-3.8-flash', name: 'models/google/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-4-hydrogen', name: 'models/google/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-4-argon', name: 'models/google/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'google/gemini-4-carbon', name: 'models/google/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Frontier', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'google/gemini-4-carbon', name: 'models/google/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Challenger', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
   // OpenAI
   { id: 'openai/gpt-6-luna', name: 'models/openai/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   { id: 'openai/gpt-6.1-terra', name: 'models/openai/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
@@ -562,7 +562,7 @@ class OpenAIClient {
     throw lastErr;
   }
 
-  async stream(model, payload, { signal, onText, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000 } = {}) {
+  async stream(model, payload, { signal, onText, onThought, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000 } = {}) {
     const cands = this._orderGood(model, this.resolveRuntimeCandidates(model));
     let res;
     let lastErr;
@@ -584,6 +584,7 @@ class OpenAIClient {
     const decoder = new TextDecoder('utf-8');
     let buf = '';
     let full = '';
+    let thoughtFull = '';
     let finishReason = 'stop';
     let usage = null;
     const toolMap = new Map();
@@ -635,6 +636,11 @@ class OpenAIClient {
         if (!ch) continue;
         if (ch.finish_reason) finishReason = ch.finish_reason;
         const delta = ch.delta || {};
+        const rDelta = typeof delta.reasoning_content === 'string' ? delta.reasoning_content : (typeof delta.reasoning === 'string' ? delta.reasoning : '');
+        if (rDelta) {
+          thoughtFull += rDelta;
+          if (onThought) onThought(rDelta, thoughtFull);
+        }
         if (typeof delta.content === 'string' && delta.content) {
           full += delta.content;
           if (onText) onText(delta.content, full);
@@ -650,10 +656,11 @@ class OpenAIClient {
           }
         }
       }
-      if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: toolMap.size, thoughtChars: 0, textChars: full.length });
+      if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: toolMap.size, thoughtChars: thoughtFull.length, textChars: full.length });
     }
 
     const parts = [];
+    if (thoughtFull) parts.push({ text: thoughtFull, thought: true });
     if (full) parts.push({ text: full });
     for (const [, tc] of Array.from(toolMap.entries()).sort((a, b) => a[0] - b[0])) {
       let args = {};
@@ -663,7 +670,7 @@ class OpenAIClient {
     if (usage) this.recordUsage(model, usage);
     return {
       text: full,
-      thought: '',
+      thought: thoughtFull,
       parts,
       candidates: parts.length ? [{ content: { role: 'model', parts }, finishReason }] : [],
       usage,
@@ -1207,6 +1214,10 @@ class OpenRouterClient {
     }
     const genCfg = payload.generationConfig || {};
     if (genCfg.maxOutputTokens) body.max_completion_tokens = genCfg.maxOutputTokens;
+    if (genCfg.thinkingConfig && genCfg.thinkingConfig.thinkingLevel && !/(?:flash-lite|haiku|luna)/i.test(body.model)) {
+      const lvl = String(genCfg.thinkingConfig.thinkingLevel).toLowerCase();
+      body.reasoning = { effort: lvl === 'low' ? 'low' : (lvl === 'high' ? 'high' : 'medium') };
+    }
     return body;
   }
 
@@ -1214,6 +1225,8 @@ class OpenRouterClient {
     const ch = (json.choices || [])[0] || {};
     const m = ch.message || {};
     const parts = [];
+    const rTxt = typeof m.reasoning_content === 'string' ? m.reasoning_content : (typeof m.reasoning === 'string' ? m.reasoning : '');
+    if (rTxt) parts.push({ text: rTxt, thought: true });
     if (typeof m.content === 'string' && m.content) parts.push({ text: m.content });
     if (Array.isArray(m.tool_calls)) {
       for (const tc of m.tool_calls) {
@@ -1230,7 +1243,7 @@ class OpenRouterClient {
     if (u) this.recordUsage(model, u);
     return {
       text: typeof m.content === 'string' ? m.content : '',
-      thought: '', parts,
+      thought: rTxt, parts,
       candidates: parts.length ? [{ content: { role: 'model', parts }, finishReason: ch.finish_reason || 'stop' }] : [],
       usage: u, usageMetadata: u
     };
@@ -1355,7 +1368,7 @@ class OpenRouterClient {
     throw lastErr;
   }
 
-  async stream(model, payload, { signal, onText, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000 } = {}) {
+  async stream(model, payload, { signal, onText, onThought, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000 } = {}) {
     const cands = this._orderGood(model, this.resolveRuntimeCandidates(model));
     let res;
     let lastErr;
@@ -1376,7 +1389,7 @@ class OpenRouterClient {
     // Reuse the OpenAI streaming parser (identical SSE format)
     const reader = res.body.getReader();
     const decoder = new TextDecoder('utf-8');
-    let buf = '', full = '', finishReason = 'stop', usage = null;
+    let buf = '', full = '', thoughtFull = '', finishReason = 'stop', usage = null;
     const toolMap = new Map();
     let totalBytes = 0;
 
@@ -1414,6 +1427,8 @@ class OpenRouterClient {
         const ch = (obj.choices || [])[0]; if (!ch) continue;
         if (ch.finish_reason) finishReason = ch.finish_reason;
         const delta = ch.delta || {};
+        const rDelta = typeof delta.reasoning_content === 'string' ? delta.reasoning_content : (typeof delta.reasoning === 'string' ? delta.reasoning : '');
+        if (rDelta) { thoughtFull += rDelta; if (onThought) onThought(rDelta, thoughtFull); }
         if (typeof delta.content === 'string' && delta.content) { full += delta.content; if (onText) onText(delta.content, full); }
         if (Array.isArray(delta.tool_calls)) {
           for (const tc of delta.tool_calls) {
@@ -1426,9 +1441,10 @@ class OpenRouterClient {
           }
         }
       }
-      if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: toolMap.size, thoughtChars: 0, textChars: full.length });
+      if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: toolMap.size, thoughtChars: thoughtFull.length, textChars: full.length });
     }
     const parts = [];
+    if (thoughtFull) parts.push({ text: thoughtFull, thought: true });
     if (full) parts.push({ text: full });
     for (const [, tc] of Array.from(toolMap.entries()).sort((a, b) => a[0] - b[0])) {
       let args = {}; try { args = JSON.parse(tc.arguments || '{}'); } catch (_) { args = {}; }
@@ -1436,7 +1452,7 @@ class OpenRouterClient {
     }
     if (usage) this.recordUsage(model, usage);
     return {
-      text: full, thought: '', parts,
+      text: full, thought: thoughtFull, parts,
       candidates: parts.length ? [{ content: { role: 'model', parts }, finishReason }] : [],
       usage, usageMetadata: usage
     };

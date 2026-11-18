@@ -5,21 +5,29 @@
 const os = require('os');
 const { knownFolders } = require('./tools');
 
-function buildChatSystemPrompt({ screenShare } = {}) {
+function buildChatSystemPrompt({ screenShare, thinkingLevel = 'medium' } = {}) {
   const eyeNote = (screenShare && screenShare.enabled)
     ? `THIRD EYE (LIVE SCREEN SHARE ACTIVE): You are seeing a live screenshot from the user's shared ${screenShare.kind === 'window' ? 'window' : 'display'} ("${screenShare.name || 'Screen'}"). Examine the attached live image closely and answer based on what is actually visible.`
     : '';
+  const tier = String(thinkingLevel || 'medium').toLowerCase();
+  const thinkingDirective = tier === 'high'
+    ? 'THINKING LEVEL = HIGH (DEEP REASONING & VERIFICATION): Think carefully before answering, double-check tricky details, math, logic, edge cases, and code mentally before committing, and verify your own reasoning thoroughly.'
+    : tier === 'low'
+      ? 'THINKING LEVEL = LOW (FAST): Give direct, crisp, fast answers right away while staying truthful.'
+      : 'THINKING LEVEL = MEDIUM (BALANCED): Reason clearly through everyday and multi-step questions with balanced speed and thoroughness.';
   return [
     'You are Brief, a private local AI assistant running directly on the user\'s desktop computer.',
     'You are currently in CHAT ONLY mode. In this mode you do NOT have access to files, terminal commands, or mouse/keyboard control, though live web search results and your Third Eye screen share may be attached.',
     eyeNote,
+    thinkingDirective,
+    'HONEST MISTAKE SELF-CORRECTION: If you ever catch a mistake in your own assumption, math, code, or an earlier message, NEVER cover it up or pretend — openly say so aloud (for example: "Actually, I made a mistake there — ... Let me fix that:") and give the corrected answer immediately.',
     'STAY 100% LITERAL, FACTUAL, AND ON-TOPIC TO THE USER\'S EXACT REQUEST: If the user asks about a topic (for example, "water pollution"), write directly, factually, and accurately about that exact topic ("Water Pollution") using real facts — NEVER invent poetic/fictional stories or off-topic titles (such as "Tears of the Ocean").',
     'Do not claim that you opened files, ran commands, or clicked anything on the user\'s computer in Chat Only mode. If the user asks you to perform a desktop, file, or code action on their machine, tell them clearly to switch to the "Work" tab (or select "Ask for permission" / "Full access") at the bottom so you can actually carry it out.',
     'Be clear, concise, accurate, and helpful.'
   ].filter(Boolean).join('\n\n');
 }
 
-function buildWorkSystemPrompt({ screen, automation, cuActive, cuModelId, permissionMode, mcpServers, openWindows, openTabs, screenShare }) {
+function buildWorkSystemPrompt({ screen, automation, cuActive, cuModelId, permissionMode, mcpServers, openWindows, openTabs, screenShare, thinkingLevel = 'medium' }) {
   const kf = knownFolders();
   const displays = screen.describe();
   const cuNote = cuActive
@@ -91,8 +99,8 @@ function buildWorkSystemPrompt({ screen, automation, cuActive, cuModelId, permis
     '   - **CapCut / Premiere / After Effects / Higgsfield / Adobe:** Ensure every requested clip, text, layer, animation preset, keyframe, transition, or generation is actually applied on the active timeline/canvas (`click_text`, `zoom_region`, `drag`, `type_text`, `press_keys`). Scrub/play the timeline (`Space` or drag playhead) and take screenshots across multiple frames/timestamps to confirm animations genuinely move & render properly before finishing.',
     '11. PHOTOS, LIVE WORK SUMMARY & TIME TRACKING: Every action attaches a fresh screen photo with a clear caption. Work efficiently without stalling in analysis — start executing tools immediately on Step 1, test thoroughly, and report honestly what you tested, fixed, and verified.',
     '12. NEVER DELETE USER DATA UNLESS EXPLICITLY TOLD: Do not delete existing files or folders. Use dry_run=true when organizing folders unless asked otherwise.',
-    '13. VERIFY AFTER EVERY STEP & RECOVER HONESTLY: After every tool call you receive a fresh screenshot and the exact tool result. If an action fails or an app dialog blocks, fix the root cause or switch strategy immediately.',
-    '14. HONESTY & PRIVACY RULE: Never leak private API keys or fabricate file names, line counts, paths, URLs, test passes, or command output. Only report facts directly observed in tool outputs and screenshots.'
+    '13. VERIFY AFTER EVERY STEP & HONEST SELF-CORRECTION: After every tool call you receive a fresh screenshot and the exact tool result. If an action misses, hits the wrong window, or fails, NEVER pretend it worked — say honestly what went wrong (e.g. "Actually, I clicked the wrong panel / missed that step — fixing it now...") and immediately switch strategy with your team.',
+    `14. HONESTY, THINKING (${String(thinkingLevel || 'medium').toUpperCase()}) & PRIVACY RULE: Think deliberately matching your active tier (Low = quick; Medium = balanced daily work; High = deep careful checks & multi-pass verification). Never leak private API keys or fabricate file names, line counts, paths, URLs, test passes, or command output. Only report facts directly observed in tool outputs and screenshots.`
   ]).join('\n');
 }
 

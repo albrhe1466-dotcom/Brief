@@ -17,7 +17,7 @@ const os = require('os');
 const assert = require('assert');
 
 const { getTool, resolvePath, declarations, isPermanentDeleteCommand, isSelfOrDesktopForeground, ensureTargetForeground, typeText } = require('../src/main/tools');
-const { matchPresets, buildThinkingConfig, resolveGeminiRuntimeCandidates, isModernGeminiModelId } = require('../src/main/gemini');
+const { matchPresets, buildThinkingConfig, resolveGeminiRuntimeCandidates, isModernGeminiModelId, PRESETS: GEMINI_PRESETS } = require('../src/main/gemini');
 const { OpenAIClient, AnthropicClient, OpenRouterClient, isModernOpenAIModelId, isModernAnthropicModelId, isModernOpenRouterModelId } = require('../src/main/providers');
 const { DEFAULT_SETTINGS } = require('../src/main/store');
 const { KeyStore } = require('../src/main/keystore');
@@ -268,6 +268,27 @@ async function runFunctionalTests(screen, automation) {
     pass('typing-foreground-enforcement-v103', 'Verified no-simulation error on Brief focus & real delivery when Roblox Studio is focused');
   } catch (e) {
     fail('typing-foreground-enforcement-v103', e);
+  }
+
+  // 10. Carbon Challenger badge & real High thinking payload on Gemini + OpenRouter + Claude + OpenAI
+  try {
+    const carbonPreset = GEMINI_PRESETS.find((p) => p.key === 'carbon');
+    assert(carbonPreset && carbonPreset.hint === 'Challenger', 'Gemini 4 Carbon must be titled Challenger');
+    const orClient = new OpenRouterClient(() => '', () => {});
+    const orBody = orClient.buildChatPayload('google/gemini-4-carbon', {
+      contents: [{ role: 'user', parts: [{ text: 'Think deeply' }] }],
+      generationConfig: { thinkingConfig: { thinkingLevel: 'HIGH', includeThoughts: true } }
+    }, false);
+    assert.deepStrictEqual(orBody.reasoning, { effort: 'high' }, 'OpenRouter high thinking must send reasoning.effort="high"');
+    const anthropic = new AnthropicClient(() => '', () => {});
+    const claudeHigh = anthropic.buildMessagesPayload('claude-fable-5-2', {
+      contents: [{ role: 'user', parts: [{ text: 'Think deeply' }] }],
+      generationConfig: { thinkingConfig: { thinkingLevel: 'HIGH', includeThoughts: true } }
+    }, false, true);
+    assert(claudeHigh.thinking && claudeHigh.thinking.budget_tokens >= 8192, 'Claude high thinking must send extended budget');
+    pass('challenger-and-real-thinking-v104', 'Verified Gemini 4 Carbon Challenger badge + real HIGH reasoning payloads across Gemini, OpenRouter & Claude');
+  } catch (e) {
+    fail('challenger-and-real-thinking-v104', e);
   }
 
   return {

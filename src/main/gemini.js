@@ -13,6 +13,7 @@ const PRESETS = [
     key: 'flashlite35',
     label: 'Gemini 3.5 Flash-Lite',
     hint: 'Fastest',
+    desc: 'Super fast everyday helper — jumps in and assists right away',
     match: (m) => /gemini-?3\.5-?flash-?lite/i.test(m.id) && isGeneral(m),
     base: 'gemini-3.5-flash-lite'
   },
@@ -20,6 +21,7 @@ const PRESETS = [
     key: 'flash38',
     label: 'Gemini 3.8 Flash',
     hint: 'Balanced',
+    desc: 'Balanced for everyday use — steady, reliable help on daily tasks',
     match: (m) => /gemini-?3\.8-?flash(?!-?lite)/i.test(m.id) && !/lite/i.test(m.id) && isGeneral(m),
     base: 'gemini-3.8-flash'
   },
@@ -27,6 +29,7 @@ const PRESETS = [
     key: 'hydrogen',
     label: 'Gemini 4 Hydrogen',
     hint: 'Balanced',
+    desc: 'Balanced for everyday use — smooth for daily work and multi-step tasks',
     match: (m) => /(hydrogen|gemini-?4(?:\.0)?(?!(?:.*argon|.*carbon|.*pro|.*flash-lite)))/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && !/(?:argon|carbon)/i.test(m.id + ' ' + m.displayName) && isGeneral(m),
     base: 'gemini-4-hydrogen'
   },
@@ -34,13 +37,15 @@ const PRESETS = [
     key: 'argon',
     label: 'Gemini 4 Argon',
     hint: 'Strong',
+    desc: 'Strongest for complex work — ideal for deep analyzing and research',
     match: (m) => /argon|gemini-?4(?:\.0)?-?argon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
     base: 'gemini-4-argon'
   },
   {
     key: 'carbon',
     label: 'Gemini 4 Carbon',
-    hint: 'Frontier',
+    hint: 'Challenger',
+    desc: 'Challenger tier — built for the hardest reasoning and problem solving',
     match: (m) => /carbon|gemini-?4(?:\.0)?-?carbon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
     base: 'gemini-4-carbon'
   }
@@ -309,11 +314,11 @@ function adaptGeminiPayloadForTarget(payload, targetId) {
 }
 
 const GEMINI_ALLOWLIST = [
-  { id: 'gemini-3.5-flash-lite', name: 'models/gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash-Lite', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-3.8-flash', name: 'models/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-hydrogen', name: 'models/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-carbon', name: 'models/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Frontier', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
+  { id: 'gemini-3.5-flash-lite', name: 'models/gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash-Lite', description: 'Super fast everyday helper — jumps in and assists right away', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-3.8-flash', name: 'models/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced for everyday use — steady, reliable help on daily tasks', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-hydrogen', name: 'models/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced for everyday use — smooth for daily work and multi-step tasks', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strongest for complex work — ideal for deep analyzing and research', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-carbon', name: 'models/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Challenger', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
 ];
 
 class GeminiClient {
