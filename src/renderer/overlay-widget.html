@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Brief Status Widget</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #f5f5f5;
+    user-select: none;
+  }
+  .widget {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(20, 20, 20, 0.96);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-app-region: drag;
+  }
+  .row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .brand img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  .title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #f5f5f5;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #d4d4d4;
+  }
+  .dot.running {
+    background: #3b82f6;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot.approval {
+    background: #f59e0b;
+    animation: pulse 0.9s ease-in-out infinite;
+  }
+  .dot.error, .dot.stopped {
+    background: #ef4444;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.45); opacity: 0.55; }
+  }
+  .step-box {
+    margin: 7px 0;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: rgba(12, 12, 12, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 12.5px;
+    line-height: 1.38;
+    color: #e5e5e5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: #a3a3a3;
+    margin-bottom: 8px;
+  }
+  .model-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 210px;
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-app-region: no-drag;
+  }
+  button {
+    font-family: Georgia, 'Times New Roman', serif;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    transition: transform 0.14s ease, background 0.15s ease, opacity 0.15s ease;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-show {
+    flex: 1;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+  .btn-show:hover { background: rgba(255, 255, 255, 0.2); }
+  .btn-stop {
+    flex: 1.25;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #ffffff;
+    border: 1px solid rgba(252, 165, 165, 0.45);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.38);
+  }
+  .btn-stop:hover { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+  .btn-stop:disabled {
+    opacity: 0.48;
+    cursor: default;
+    box-shadow: none;
+  }
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="row-top">
+    <div class="brand">
+      <img src="../../assets/logo.png" alt="Brief">
+      <span class="title">Brief</span>
+    </div>
+    <div class="status-pill">
+      <span class="dot" id="dot"></span>
+      <span id="state-text">Idle</span>
+    </div>
+  </div>
+  <div class="step-box" id="step-text">Desktop control active</div>
+  <div class="meta">
+    <span class="model-name" id="model-text">Model: —</span>
+    <span id="step-count">Mode: Ask</span>
+  </div>
+  <div class="actions">
+    <button class="btn-show" id="btn-show" type="button">Open Brief</button>
+    <button class="btn-stop" id="btn-stop" type="button" disabled>■ STOP</button>
+  </div>
+</div>
+<script>
+  const dot = document.getElementById('dot');
+  const stateText = document.getElementById('state-text');
+  const stepText = document.getElementById('step-text');
+  const modelText = document.getElementById('model-text');
+  const stepCount = document.getElementById('step-count');
+  const btnStop = document.getElementById('btn-stop');
+  const btnShow = document.getElementById('btn-show');
+
+  btnStop.addEventListener('click', () => window.overlayAPI && window.overlayAPI.stop());
+  btnShow.addEventListener('click', () => window.overlayAPI && window.overlayAPI.showMain());
+
+  const labels = {
+    idle: 'Idle',
+    observing: 'Observing',
+    thinking: 'Thinking',
+    acting: 'Acting',
+    approval: 'Needs Allow',
+    stopped: 'Stopped',
+    error: 'Error'
+  };
+
+  if (window.overlayAPI) {
+    window.overlayAPI.onStatus((s) => {
+      if (!s) return;
+      const st = s.state || 'idle';
+      dot.className = 'dot ' + (s.running ? (st === 'approval' ? 'approval' : 'running') : st);
+      stateText.textContent = labels[st] || st;
+      if (s.stepText) stepText.textContent = s.stepText;
+      if (s.model) modelText.textContent = 'Model: ' + s.model;
+      const modeLabel = s.permissionMode === 'full' ? 'Full Access' : s.permissionMode === 'chat' ? 'Chat Only' : 'Ask';
+      stepCount.textContent = s.step ? ('Step ' + s.step + (s.maxSteps ? '/' + s.maxSteps : '')) : modeLabel;
+      btnStop.disabled = !s.running && st !== 'approval';
+    });
+  }
+</script>
+</body>
+</html>

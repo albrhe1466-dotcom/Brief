@@ -1,0 +1,15 @@
+$ORIGIN <DOMAIN>.
+$TTL 300
+@       IN SOA  ns1.<DOMAIN>. hostmaster.<DOMAIN>. (
+                2026111801 ; serial
+                3600       ; refresh
+                900        ; retry
+                604800     ; expire
+                300        ; minimum TTL
+)
+@       IN NS   ns1.<DOMAIN>.
+@       IN NS   ns2.<DOMAIN>.
+@       IN A    <SERVER_IP>
+www     IN A    <SERVER_IP>
+ns1     IN A    <SERVER_IP>
+ns2     IN A    <SERVER_IP>

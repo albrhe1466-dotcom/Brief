@@ -1,0 +1,24 @@
+# Dependencies & caches
+node_modules/
+.cache/
+*.log
+
+# Environment / local secrets
+.env
+.env.*
+
+# Large binaries (>100 MB GitHub git limit) — published via GitHub Releases
+download-site/public/downloads/*.zip
+*.zip
+*.exe
+
+# Legacy / unrelated workspace files (never push API keys or unused templates)
+/server.js
+/public/
+/fount.ai.js
+/chatter-ai/
+/weppy-project-sync/
+
+# Windows metadata
+Thumbs.db
+Desktop.ini

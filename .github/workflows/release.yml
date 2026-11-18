@@ -1,0 +1,62 @@
+name: Build & Publish Brief Windows Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'index.html'
+      - 'src/**'
+      - 'assets/**'
+      - 'scripts/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
+
+      - name: Run static checks
+        run: npm run check
+
+      - name: Build Brief Windows Setup & Archive
+        env:
+          BRIEF_DOWNLOAD_URL: https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip
+        run: node scripts/build-installer.js
+
+      - name: Publish to GitHub Release v1.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = "v1.0.0"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              download-site/public/downloads/Brief-Setup.exe `
+              download-site/public/downloads/brief-package.zip `
+              --title "Brief $tag" `
+              --notes "Native Windows Setup Wizard (Brief-Setup.exe) and complete Brief Windows bundle (brief-package.zip)." `
+              --latest
+          } else {
+            gh release upload $tag `
+              download-site/public/downloads/Brief-Setup.exe `
+              download-site/public/downloads/brief-package.zip `
+              --clobber
+          }

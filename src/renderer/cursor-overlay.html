@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Brief Desktop Layer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    pointer-events: none;
+    user-select: none;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+
+  /* Provider Desktop Layout Overlay Layer (blue=Gemini, white=OpenAI, orange=Claude, tri-color moving=OpenRouter) */
+  #blue-layout-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.24s ease;
+    border: 3px solid rgba(59, 130, 246, 0.92);
+    box-shadow:
+      inset 0 0 42px rgba(37, 99, 235, 0.34),
+      inset 0 0 110px rgba(37, 99, 235, 0.14);
+  }
+  #blue-layout-layer.active {
+    opacity: 1;
+  }
+  #blue-layout-layer[data-provider="openai"] {
+    border-color: rgba(255, 255, 255, 0.94);
+    box-shadow:
+      inset 0 0 42px rgba(255, 255, 255, 0.32),
+      inset 0 0 110px rgba(255, 255, 255, 0.14);
+  }
+  #blue-layout-layer[data-provider="anthropic"] {
+    border-color: rgba(249, 115, 22, 0.94);
+    box-shadow:
+      inset 0 0 42px rgba(249, 115, 22, 0.36),
+      inset 0 0 110px rgba(234, 88, 12, 0.16);
+  }
+  #blue-layout-layer[data-provider="openrouter"] {
+    border-color: transparent;
+    box-shadow:
+      inset 0 0 46px rgba(59, 130, 246, 0.28),
+      inset 0 0 90px rgba(249, 115, 22, 0.22);
+    animation: openRouterShadow 3.6s linear infinite;
+  }
+  #blue-layout-layer[data-provider="openrouter"]::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    padding: 4px;
+    background: linear-gradient(90deg, #3b82f6, #ffffff, #f97316, #3b82f6, #ffffff, #f97316);
+    background-size: 300% 300%;
+    animation: openRouterBorderMove 2.8s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  @keyframes openRouterBorderMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  @keyframes openRouterShadow {
+    0% { box-shadow: inset 0 0 46px rgba(59, 130, 246, 0.34), inset 0 0 110px rgba(249, 115, 22, 0.14); }
+    33% { box-shadow: inset 0 0 46px rgba(255, 255, 255, 0.34), inset 0 0 110px rgba(59, 130, 246, 0.16); }
+    66% { box-shadow: inset 0 0 46px rgba(249, 115, 22, 0.36), inset 0 0 110px rgba(255, 255, 255, 0.14); }
+    100% { box-shadow: inset 0 0 46px rgba(59, 130, 246, 0.34), inset 0 0 110px rgba(249, 115, 22, 0.14); }
+  }
+  .corner {
+    position: fixed;
+    width: 24px;
+    height: 24px;
+    border-color: #60a5fa;
+    border-style: solid;
+    pointer-events: none;
+  }
+  #blue-layout-layer[data-provider="openai"] .corner { border-color: #ffffff; }
+  #blue-layout-layer[data-provider="anthropic"] .corner { border-color: #fb923c; }
+  #blue-layout-layer[data-provider="openrouter"] .corner.tl { border-color: #3b82f6; }
+  #blue-layout-layer[data-provider="openrouter"] .corner.tr { border-color: #ffffff; }
+  #blue-layout-layer[data-provider="openrouter"] .corner.bl { border-color: #f97316; }
+  #blue-layout-layer[data-provider="openrouter"] .corner.br { border-color: #60a5fa; }
+  .corner.tl { top: 4px; left: 4px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+  .corner.tr { top: 4px; right: 4px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
+  .corner.bl { bottom: 4px; left: 4px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
+  .corner.br { bottom: 4px; right: 4px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+
+  .layer-banner {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: rgba(12, 13, 18, 0.92);
+    border: 1.5px solid rgba(96, 165, 250, 0.85);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.65), 0 0 18px rgba(59, 130, 246, 0.32);
+    color: #f8fafc;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 20;
+  }
+  #blue-layout-layer.controlling .layer-banner {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  #blue-layout-layer[data-provider="openai"] .layer-banner { border-color: rgba(255, 255, 255, 0.88); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(255,255,255,0.28); }
+  #blue-layout-layer[data-provider="anthropic"] .layer-banner { border-color: rgba(249, 115, 22, 0.88); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(249,115,22,0.32); }
+  #blue-layout-layer[data-provider="openrouter"] .layer-banner { border-color: rgba(255, 255, 255, 0.78); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(59,130,246,0.28); }
+  .layer-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    box-shadow: 0 0 10px #60a5fa;
+    animation: pulseBlueDot 1.2s ease-in-out infinite;
+  }
+  #blue-layout-layer[data-provider="openai"] .layer-dot { background: #ffffff; box-shadow: 0 0 10px #ffffff; }
+  #blue-layout-layer[data-provider="anthropic"] .layer-dot { background: #f97316; box-shadow: 0 0 10px #fb923c; }
+  #blue-layout-layer[data-provider="openrouter"] .layer-dot { background: linear-gradient(135deg, #3b82f6, #ffffff, #f97316); box-shadow: 0 0 10px #ffffff; }
+  @keyframes pulseBlueDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.55; }
+  }
+
+  #stage {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Visible Black Cursor (like Codex's) */
+  #cursor-wrap {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translate3d(-120px, -120px, 0);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    will-change: transform, opacity;
+    z-index: 99999;
+  }
+  #cursor-wrap.visible {
+    opacity: 1;
+  }
+  /* Hide the fallback SVG arrow whenever the real Windows provider cursor is active (keeps ONLY ONE cursor on screen) */
+  #cursor-wrap.native-cursor .cursor-arrow {
+    display: none !important;
+  }
+  .cursor-arrow {
+    width: 30px;
+    height: 30px;
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+  }
+  #cursor-wrap.native-cursor .cursor-pill {
+    left: 18px;
+    top: 18px;
+  }
+  .cursor-pill {
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(10, 12, 16, 0.94);
+    border: 1.5px solid rgba(96, 165, 250, 0.9);
+    color: #ffffff;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.2;
+    white-space: nowrap;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    max-width: 460px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cursor-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #3b82f6;
+    box-shadow: 0 0 8px #60a5fa;
+  }
+  body[data-provider="openai"] .cursor-pill { border-color: rgba(255, 255, 255, 0.92); }
+  body[data-provider="openai"] .cursor-dot { background: #ffffff; box-shadow: 0 0 8px #ffffff; }
+  body[data-provider="anthropic"] .cursor-pill { border-color: rgba(249, 115, 22, 0.92); }
+  body[data-provider="anthropic"] .cursor-dot { background: #f97316; box-shadow: 0 0 8px #fb923c; }
+  body[data-provider="openrouter"] .cursor-pill { border-color: rgba(255, 255, 255, 0.85); }
+  body[data-provider="openrouter"] .cursor-dot { background: #f97316; box-shadow: 0 0 8px #3b82f6; }
+  .ripple {
+    position: fixed;
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    margin-top: -9px;
+    border-radius: 50%;
+    border: 2.5px solid #60a5fa;
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.35), rgba(59, 130, 246, 0.08));
+    pointer-events: none;
+    animation: ringOut 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+  }
+  .ripple.right {
+    border-color: #f59e0b;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.35), rgba(245, 158, 11, 0.08));
+  }
+  .ripple.double {
+    animation-duration: 0.54s;
+    border-width: 3px;
+  }
+  .click-core {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 12px #60a5fa, 0 0 22px #3b82f6;
+    pointer-events: none;
+    animation: corePop 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    will-change: transform, opacity;
+  }
+  .click-core.right {
+    box-shadow: 0 0 12px #fbbf24, 0 0 22px #f59e0b;
+  }
+  .click-sparks {
+    position: fixed;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .click-spark {
+    position: fixed;
+    width: 12px;
+    height: 2.5px;
+    margin-left: -6px;
+    margin-top: -1.25px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #93c5fd, #ffffff);
+    pointer-events: none;
+    animation: sparkOut 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+  }
+  .click-spark.right {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fbbf24, #ffffff);
+  }
+  .move-trail {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    margin-top: -3px;
+    border-radius: 50%;
+    background: rgba(96, 165, 250, 0.72);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.65);
+    pointer-events: none;
+    animation: trailFade 0.22s ease-out forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes ringOut {
+    0% { transform: scale(0.35); opacity: 1; }
+    100% { transform: scale(4.1); opacity: 0; }
+  }
+  @keyframes corePop {
+    0% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.1); opacity: 0; }
+  }
+  @keyframes sparkOut {
+    0% { transform: rotate(var(--ang)) translateX(4px) scaleX(0.4); opacity: 1; }
+    100% { transform: rotate(var(--ang)) translateX(30px) scaleX(1.1); opacity: 0; }
+  }
+  @keyframes trailFade {
+    0% { transform: scale(1); opacity: 0.75; }
+    100% { transform: scale(0.2); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="blue-layout-layer">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <div class="layer-banner">
+    <span class="layer-dot"></span>
+    <span id="layer-status-text">Brief · Desktop Control Active · Ctrl+Alt+Q to Stop</span>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="cursor-wrap">
+    <!-- Visible Black Cursor like Codex's with crisp white/blue edge for dark & bright windows -->
+    <svg class="cursor-arrow" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 2.5L23.5 16.5L13.8 18.4L18.2 27.6L14.5 29.4L10.1 20.1L3.5 25.8V2.5Z"
+            fill="#050507" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M5.5 6.2L19.6 15.8L12.1 17.3L16.1 25.6L14.3 26.5L10.3 18.1L5.5 22.3V6.2Z"
+            fill="#050507"/>
+    </svg>
+    <div class="cursor-pill" id="cursor-pill">
+      <span class="cursor-dot"></span>
+      <span id="cursor-label">Brief</span>
+      <span id="cursor-typing-text" style="display:none; font-family: ui-monospace, Consolas, monospace; color: #93c5fd; margin-left: 4px; font-weight: 600;"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const layer = document.getElementById('blue-layout-layer');
+  const layerText = document.getElementById('layer-status-text');
+  const wrap = document.getElementById('cursor-wrap');
+  const label = document.getElementById('cursor-label');
+  const stage = document.getElementById('stage');
+
+  let curX = 240;
+  let curY = 240;
+  let animRaf = null;
+  let isAnimating = false;
+  let cursorHideTimer = null;
+  let isWorkActive = false;
+
+  function renderPos(x, y) {
+    curX = x;
+    curY = y;
+    wrap.style.transform = 'translate3d(' + Math.round(x) + 'px,' + Math.round(y) + 'px,0)';
+  }
+
+  let lastTrailAt = 0;
+  function animateTo(tx, ty, duration) {
+    if (animRaf) cancelAnimationFrame(animRaf);
+    isAnimating = true;
+    const sx = curX;
+    const sy = curY;
+    const d = Math.max(24, Number(duration) || 200);
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / d);
+      const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const nx = sx + (tx - sx) * ease;
+      const ny = sy + (ty - sy) * ease;
+      renderPos(nx, ny);
+      if (t > 0.05 && t < 0.95 && now - lastTrailAt >= 26) {
+        lastTrailAt = now;
+        const dot = document.createElement('div');
+        dot.className = 'move-trail';
+        dot.style.left = Math.round(nx) + 'px';
+        dot.style.top = Math.round(ny) + 'px';
+        stage.appendChild(dot);
+        setTimeout(() => dot.remove(), 240);
+      }
+      if (t < 1) {
+        animRaf = requestAnimationFrame(step);
+      } else {
+        animRaf = null;
+        isAnimating = false;
+      }
+    }
+    animRaf = requestAnimationFrame(step);
+  }
+
+  function spawnClickBurst(x, y, button) {
+    const px = Math.round(x);
+    const py = Math.round(y);
+    const core = document.createElement('div');
+    core.className = 'click-core' + (button === 'right' ? ' right' : '');
+    core.style.left = px + 'px';
+    core.style.top = py + 'px';
+    stage.appendChild(core);
+    setTimeout(() => core.remove(), 360);
+
+    const angles = [45, 135, 225, 315];
+    for (const ang of angles) {
+      const sp = document.createElement('div');
+      sp.className = 'click-spark' + (button === 'right' ? ' right' : '');
+      sp.style.left = px + 'px';
+      sp.style.top = py + 'px';
+      sp.style.setProperty('--ang', ang + 'deg');
+      stage.appendChild(sp);
+      setTimeout(() => sp.remove(), 450);
+    }
+  }
+
+  function spawnRipple(x, y, button, count) {
+    spawnClickBurst(x, y, button);
+    const el = document.createElement('div');
+    el.className = 'ripple' + (button === 'right' ? ' right' : '') + (count >= 2 ? ' double' : '');
+    el.style.left = Math.round(x) + 'px';
+    el.style.top = Math.round(y) + 'px';
+    stage.appendChild(el);
+    setTimeout(() => el.remove(), 620);
+    if (count >= 2) {
+      setTimeout(() => {
+        spawnClickBurst(x, y, button);
+        const el2 = document.createElement('div');
+        el2.className = 'ripple double';
+        el2.style.left = Math.round(x) + 'px';
+        el2.style.top = Math.round(y) + 'px';
+        stage.appendChild(el2);
+        setTimeout(() => el2.remove(), 620);
+      }, 95);
+    }
+  }
+
+  if (window.overlayAPI) {
+    function applyOverlayProvider(rawProv) {
+      const p = String(rawProv || '').toLowerCase();
+      const norm = (p === 'claude' || p === 'anthropic') ? 'anthropic'
+        : (p === 'openai' || p === 'chatgpt' || p === 'codex') ? 'openai'
+        : (p === 'openrouter' ? 'openrouter' : (p ? 'gemini' : ''));
+      if (!norm) return;
+      layer.setAttribute('data-provider', norm);
+      document.body.setAttribute('data-provider', norm);
+    }
+
+    window.overlayAPI.onStatus((s) => {
+      if (!s) return;
+      if (s.provider) applyOverlayProvider(s.provider);
+      isWorkActive = !!s.running && s.mode === 'work';
+      layer.classList.toggle('active', isWorkActive);
+      layer.classList.toggle('controlling', isWorkActive && s.state === 'acting');
+      if (typeof s.nativeCursor === 'boolean') {
+        wrap.classList.toggle('native-cursor', s.nativeCursor);
+      }
+      if (isWorkActive && s.stepText) {
+        layerText.textContent = 'Please do NOT move mouse or keyboard · ' + s.stepText.slice(0, 52) + ' · Ctrl+Alt+Q to Stop';
+        label.textContent = s.stepText.slice(0, 44);
+      }
+      if (!s.running) {
+        layer.classList.remove('controlling');
+        wrap.classList.remove('visible');
+        wrap.classList.remove('native-cursor');
+      }
+    });
+
+    window.overlayAPI.onCursor((evt) => {
+      if (!evt) return;
+      if (evt.provider) applyOverlayProvider(evt.provider);
+      clearTimeout(cursorHideTimer);
+      if (evt.kind === 'hide') {
+        isWorkActive = false;
+        isAnimating = false;
+        if (animRaf) { cancelAnimationFrame(animRaf); animRaf = null; }
+        layer.classList.remove('active');
+        layer.classList.remove('controlling');
+        wrap.classList.remove('visible');
+        wrap.classList.remove('native-cursor');
+        return;
+      }
+      if (typeof evt.nativeCursor === 'boolean') {
+        wrap.classList.toggle('native-cursor', evt.nativeCursor);
+      }
+      layer.classList.add('active');
+      if (['move', 'click', 'drag', 'type', 'scroll'].includes(evt.kind)) {
+        layer.classList.add('controlling');
+      }
+      wrap.classList.add('visible');
+      if (evt.label) label.textContent = evt.label;
+      if (typeof evt.x === 'number' && typeof evt.y === 'number') {
+        if (evt.kind === 'move' || evt.kind === 'drag') {
+          animateTo(evt.x, evt.y, evt.ms || 200);
+        } else if (!isAnimating) {
+          renderPos(evt.x, evt.y);
+        }
+      }
+      if (evt.kind === 'click') {
+        spawnRipple(typeof evt.x === 'number' ? evt.x : curX, typeof evt.y === 'number' ? evt.y : curY, evt.button || 'left', evt.count || 1);
+      }
+      const typingEl = document.getElementById('cursor-typing-text');
+      if (evt.kind === 'type') {
+        if (evt.text) {
+          label.textContent = evt.label || 'Typing:';
+          if (typingEl) {
+            typingEl.style.display = 'inline';
+            typingEl.textContent = evt.text;
+          }
+        } else {
+          label.textContent = evt.label ? (evt.label.startsWith('Typing') ? evt.label : 'Typing: ' + evt.label) : 'Typing…';
+          if (typingEl) typingEl.style.display = 'none';
+        }
+      } else if (evt.kind !== 'layer-only') {
+        if (typingEl) typingEl.style.display = 'none';
+      }
+      if (evt.kind === 'scroll') {
+        label.textContent = 'Scrolling ' + (evt.direction || 'down');
+      }
+      if (!isWorkActive) {
+        cursorHideTimer = setTimeout(() => {
+          if (!isWorkActive) wrap.classList.remove('visible');
+        }, 6000);
+      }
+    });
+  }
+</script>
+</body>
+</html>

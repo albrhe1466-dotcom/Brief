@@ -1,0 +1,5 @@
+zone "<DOMAIN>" {
+    type primary;
+    file "/etc/bind/zones/db.<DOMAIN>.zone";
+    allow-transfer { none; };
+};

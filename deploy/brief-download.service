@@ -1,0 +1,16 @@
+[Unit]
+Description=Brief Download Website & Windows Installer Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/brief-download
+Environment=HOST=127.0.0.1
+Environment=PORT=4173
+ExecStart=/usr/bin/node /opt/brief-download/download-site/server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
