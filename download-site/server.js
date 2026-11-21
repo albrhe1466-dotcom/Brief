@@ -25,7 +25,11 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.zip': 'application/zip',
-  '.exe': 'application/vnd.microsoft.portable-executable'
+  '.exe': 'application/vnd.microsoft.portable-executable',
+  '.apk': 'application/vnd.android.package-archive',
+  '.deb': 'application/vnd.debian.binary-package',
+  '.gz': 'application/gzip',
+  '.appimage': 'application/octet-stream'
 };
 
 function fileMeta(filename) {
@@ -54,10 +58,14 @@ function getReleaseInfo() {
   if (!cachedReleaseInfo || now - cachedReleaseAt > 5000) {
     cachedReleaseInfo = {
       name: 'Brief',
-      version: '1.0.5',
-      platform: 'Windows 10 / 11 (64-bit)',
+      version: '1.0.7',
+      platform: 'Windows, Linux (X11) & Android (No Root)',
       installer: Object.assign({ filename: 'Brief-Setup.exe', url: '/download/Brief-Setup.exe' }, fileMeta('Brief-Setup.exe')),
-      archive: Object.assign({ filename: 'brief-package.zip', url: '/download/brief-package.zip' }, fileMeta('brief-package.zip'))
+      archive: Object.assign({ filename: 'brief-package.zip', url: '/download/brief-package.zip' }, fileMeta('brief-package.zip')),
+      android: Object.assign({ filename: 'Brief-Android.apk', url: '/download/Brief-Android.apk' }, fileMeta('Brief-Android.apk')),
+      linuxDeb: Object.assign({ filename: 'Brief-Linux-x64.deb', url: '/download/Brief-Linux-x64.deb' }, fileMeta('Brief-Linux-x64.deb')),
+      linuxAppImage: Object.assign({ filename: 'Brief-Linux-x64.AppImage', url: '/download/Brief-Linux-x64.AppImage' }, fileMeta('Brief-Linux-x64.AppImage')),
+      linuxTar: Object.assign({ filename: 'Brief-Linux-x64.tar.gz', url: '/download/Brief-Linux-x64.tar.gz' }, fileMeta('Brief-Linux-x64.tar.gz'))
     };
     cachedReleaseAt = now;
   }
@@ -134,6 +142,22 @@ function createDownloadServer() {
     }
     if (urlPath === '/download/brief-package.zip') {
       sendDownloadFile(req, res, 'brief-package.zip', 'Brief-Portable-Windows.zip', 'application/zip');
+      return;
+    }
+    if (urlPath === '/download/Brief-Android.apk') {
+      sendDownloadFile(req, res, 'Brief-Android.apk', 'Brief-Android.apk', 'application/vnd.android.package-archive');
+      return;
+    }
+    if (urlPath === '/download/Brief-Linux-x64.deb') {
+      sendDownloadFile(req, res, 'Brief-Linux-x64.deb', 'Brief-Linux-x64.deb', 'application/vnd.debian.binary-package');
+      return;
+    }
+    if (urlPath === '/download/Brief-Linux-x64.AppImage') {
+      sendDownloadFile(req, res, 'Brief-Linux-x64.AppImage', 'Brief-Linux-x64.AppImage', 'application/octet-stream');
+      return;
+    }
+    if (urlPath === '/download/Brief-Linux-x64.tar.gz') {
+      sendDownloadFile(req, res, 'Brief-Linux-x64.tar.gz', 'Brief-Linux-x64.tar.gz', 'application/gzip');
       return;
     }
     if (urlPath.startsWith('/assets/')) {

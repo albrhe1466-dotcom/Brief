@@ -199,6 +199,68 @@ function killTree(child) {
   }
 }
 
+const TERMINAL_SESSIONS = new Map();
+let nextTerminalSessionNum = 1;
+
+function createTerminalSession({ exe, args, shell, command, cwd, interactive, emitStream }) {
+  const id = 'term-' + (nextTerminalSessionNum++);
+  const child = spawn(exe, args, {
+    cwd,
+    windowsHide: true,
+    detached: !IS_WIN,
+    env: process.env,
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  const sess = {
+    id,
+    shell,
+    cwd,
+    interactive: !!interactive,
+    lastCommand: String(command || ''),
+    child,
+    running: true,
+    exitCode: null,
+    output: '',
+    emitStream: typeof emitStream === 'function' ? emitStream : null
+  };
+  const append = (buf, streamName) => {
+    const s = buf.toString('utf8');
+    sess.output += s;
+    if (sess.output.length > 250000) sess.output = sess.output.slice(-250000);
+    if (sess.emitStream) {
+      try { sess.emitStream(s, streamName, { sessionId: id, running: sess.running }); } catch (_) { /* ignore */ }
+    }
+  };
+  if (child.stdout) child.stdout.on('data', (d) => append(d, 'stdout'));
+  if (child.stderr) child.stderr.on('data', (d) => append(d, 'stderr'));
+  child.on('close', (code) => {
+    sess.running = false;
+    sess.exitCode = code;
+    if (sess.emitStream) {
+      try { sess.emitStream('', 'meta', { sessionId: id, running: false, exitCode: code }); } catch (_) { /* ignore */ }
+    }
+  });
+  child.on('error', (err) => {
+    sess.running = false;
+    sess.output += '\n[terminal error] ' + (err.message || String(err)) + '\n';
+  });
+  TERMINAL_SESSIONS.set(id, sess);
+  return sess;
+}
+
+function stopAllTerminalSessions() {
+  let count = 0;
+  for (const [id, sess] of Array.from(TERMINAL_SESSIONS.entries())) {
+    if (sess && sess.child && sess.running) {
+      killTree(sess.child);
+      sess.running = false;
+      count += 1;
+    }
+    TERMINAL_SESSIONS.delete(id);
+  }
+  return count;
+}
+
 function psQuote(s) { return "'" + String(s).replace(/'/g, "''") + "'"; }
 
 function runPowerShell(script, timeoutMs = 30000) {
@@ -222,7 +284,10 @@ async function computeAdaptiveMoveMs(ctx, targetNative, speedOverride = '', prec
   let dist = 300;
   if (ctx && ctx.automation && typeof ctx.automation.position === 'function' && targetNative) {
     try {
-      const cur = await ctx.automation.position();
+      const cur = await Promise.race([
+        ctx.automation.position().catch(() => null),
+        sleep(220).then(() => null)
+      ]);
       if (cur && isFinite(cur.x) && isFinite(cur.y)) {
         dist = Math.hypot(targetNative.x - cur.x, targetNative.y - cur.y);
       }
@@ -302,16 +367,26 @@ async function ensureTargetForeground(ctx, targetHint = '') {
   return fg;
 }
 
+function isCodeEditorProcess(fg) {
+  if (!fg || typeof fg !== 'object') return false;
+  const p = String(fg.process || '').toLowerCase();
+  const t = String(fg.title || '').toLowerCase();
+  if (/^(?:code|notepad|notepad\+\+|robloxstudiobeta|cursor|sublime_text|devenv|pycharm64|idea64|webstorm64|windsurf|zed|atom|powershell|pwsh|windowsterminal|cmd|wt)$/i.test(p)) {
+    return true;
+  }
+  return /\b(visual studio code|vs code|notepad\+\+|notepad|roblox studio|cursor|sublime text|powershell|command prompt|terminal|script editor)\b/i.test(t);
+}
+
 async function typeText(ctx, text, options = {}) {
   const s = String(text || '').replace(/\r\n/g, '\n');
   if (!s) return 'typed';
-  await ensureTargetForeground(ctx, options.targetHint || '');
-  const isCode = options.isCode !== undefined ? !!options.isCode : isCodeContent(s, options.path || '');
-  const settingsPaste = !ctx.settings || ctx.settings().pasteLongText !== false;
+  const fgTarget = await ensureTargetForeground(ctx, options.targetHint || '');
+  const settingsPaste = !!(ctx.settings && ctx.settings().pasteLongText === true);
+  // Type visibly character-by-character by default so the user sees the real typing animation.
+  // Only paste via Ctrl+V when mode==='paste' / paste===true (or if pasteLongText is explicitly enabled for huge >1200-char blocks).
   const shouldPaste = options.mode === 'paste' || options.paste === true ||
-    (options.mode !== 'type' && options.paste !== false && (isCode || s.includes('\n') || (settingsPaste && s.length > 20)));
+    (options.mode !== 'type' && options.paste !== false && settingsPaste && s.length > 1200);
   if (shouldPaste && clipboard && typeof clipboard.writeText === 'function') {
-    // Paste multi-line, prompt, or code blocks cleanly in one Ctrl+V shot so \n NEVER splits or submits messages early.
     const prevText = clipboard.readText();
     const prevImage = clipboard.readImage();
     clipboard.writeText(s);
@@ -325,15 +400,19 @@ async function typeText(ctx, text, options = {}) {
     }
     await sleep(90);
     await ctx.automation.keys(IS_MAC ? 'cmd+v' : 'ctrl+v');
-    await sleep(450);
+    await sleep(320);
     if (prevImage && !prevImage.isEmpty()) clipboard.writeImage(prevImage);
     else clipboard.writeText(prevText || '');
     return 'pasted';
   }
-  const softNewline = options.softNewline !== false;
+  // In code editors/IDEs/terminals use real Enter for \n; in chat/browser inputs use Shift+Enter so messages do not submit early.
+  const softNewline = options.softNewline !== undefined
+    ? !!options.softNewline
+    : !isCodeEditorProcess(fgTarget);
   let curr = '';
   const rawDelay = ctx.settings ? ctx.settings().typingDelayMs : undefined;
-  const delayMs = rawDelay === 0 ? 0 : Math.max(16, Math.min(50, Number(rawDelay || 24)));
+  // Balanced, clearly visible character-by-character typing animation (not too fast, not too slow)
+  const delayMs = rawDelay === 0 ? 0 : Math.max(28, Math.min(130, Number(rawDelay || 45)));
   for (let i = 0; i < s.length; i++) {
     if (ctx.isStopped && ctx.isStopped()) throw new Error('Stopped by user.');
     if (i > 0 && i % 10 === 0 && ctx.automation && typeof ctx.automation.foreground === 'function') {
@@ -608,7 +687,10 @@ async function resolveSmartClickPoint(ctx, nx, ny) {
     return { nx: m.normalized.x, ny: m.normalized.y, m, snapped: null };
   }
   try {
-    const els = await ctx.automation.inspectUi(140).catch(() => []);
+    const els = await Promise.race([
+      ctx.automation.inspectUi(100).catch(() => []),
+      sleep(320).then(() => [])
+    ]);
     if (!Array.isArray(els) || !els.length) return { nx: m.normalized.x, ny: m.normalized.y, m, snapped: null };
     const disp = (ctx.screen && typeof ctx.screen.currentDisplay === 'function') ? ctx.screen.currentDisplay() : null;
     const sf = (disp && disp.scaleFactor) || 1;
@@ -1245,18 +1327,18 @@ const TOOLS = [
   },
   {
     name: 'type_text', kind: 'screen', screen: true,
-    description: 'Enter text into any input, editor, search box, or chat box. Automatically PASTES (Ctrl+V) multi-line blocks and long text cleanly in one piece so newlines NEVER trigger premature Enter submits, and uses Shift+Enter for manual soft newlines when typing character-by-character.',
+    description: 'Type text visibly character-by-character into any editor, code file, search box, or input field so the user can clearly watch the typing animation. Uses real Enter in code editors/IDEs and Shift+Enter in chat inputs. Pass clear_first=true to Ctrl+A + Delete old text first, or mode="paste" ONLY when explicitly asked to paste via Ctrl+V.',
     parameters: { type: 'object', properties: {
-      text: { type: 'string', description: 'Exact text to paste or type. \\n is preserved cleanly without sending/submitting early.' },
-      target: { type: 'string', description: 'Name/label of the Search box or text field to focus & click first (e.g. "Search", "Address and search bar", "Search YouTube").' },
+      text: { type: 'string', description: 'Exact text or code to type visibly.' },
+      target: { type: 'string', description: 'Name/label of the editor, search box, or text field to focus & click first (e.g. "Editor", "Search", "Address and search bar").' },
       x: { type: 'integer', description: 'Optional: click here first (0-1000).' },
       y: { type: 'integer', description: 'Optional: click here first (0-1000).' },
-      mode: { type: 'string', enum: ['auto', 'paste', 'type'], description: 'auto (default: pastes multi-line/long text via Ctrl+V cleanly, types short search terms), paste (always Ctrl+V), or type (char-by-char with Shift+Enter on \\n).' },
-      soft_newline: { type: 'boolean', description: 'When typing char-by-char, use Shift+Enter for \\n instead of plain Enter (default true).' },
-      clear_first: { type: 'boolean', description: 'Select all and delete existing text first.' },
-      press_enter: { type: 'boolean', description: 'Press Enter ONCE at the very end after the full text is pasted/typed.' }
+      mode: { type: 'string', enum: ['type', 'auto', 'paste'], description: 'type / auto (default: visible character-by-character typing animation), or paste (Ctrl+V only when explicitly requested).' },
+      soft_newline: { type: 'boolean', description: 'Optional override: true = Shift+Enter for \\n (chat apps), false = real Enter for \\n (code editors). Auto-detected if omitted.' },
+      clear_first: { type: 'boolean', description: 'Click, Ctrl+A, and Delete existing code/text before typing.' },
+      press_enter: { type: 'boolean', description: 'Press Enter ONCE at the very end after the full text is typed.' }
     }, required: ['text'] },
-    describe: (a) => (a.mode === 'paste' || (a.mode !== 'type' && (String(a.text || '').includes('\n') || String(a.text || '').length > 20)) ? 'Paste "' : 'Type "') + truncateMiddle(a.text, 120) + '"' + (a.target ? ' into "' + a.target + '"' : (a.x !== undefined ? ' at (' + a.x + ', ' + a.y + ')' : ' into the focused field')) + (a.press_enter ? ' and press Enter' : ''),
+    describe: (a) => (a.mode === 'paste' ? 'Paste "' : 'Type "') + truncateMiddle(a.text, 120) + '"' + (a.target ? ' into "' + a.target + '"' : (a.x !== undefined ? ' at (' + a.x + ', ' + a.y + ')' : ' into the focused field')) + (a.press_enter ? ' and press Enter' : ''),
     async run(a, ctx) {
       if (ctx.beforeScreenAction) await ctx.beforeScreenAction().catch(() => {});
       let targetHit = null;
@@ -1277,10 +1359,12 @@ const TOOLS = [
         }
       }
       const fgBefore = await ensureTargetForeground(ctx, a.target || '');
-      if (a.clear_first) { await ctx.automation.keys(IS_MAC ? 'cmd+a' : 'ctrl+a'); await sleep(70); await ctx.automation.keys('backspace'); await sleep(70); }
-      const willPaste = a.mode === 'paste' || (a.mode !== 'type' && (isCodeContent(a.text || '') || String(a.text || '').includes('\n') || String(a.text || '').length > 20));
+      if (a.clear_first) { await ctx.automation.keys(IS_MAC ? 'cmd+a' : 'ctrl+a'); await sleep(90); await ctx.automation.keys('delete'); await sleep(90); }
+      const willPaste = a.mode === 'paste';
       ctx.cursor({ kind: 'type', label: willPaste ? 'Pasting' : 'Typing' });
-      const how = await typeText(ctx, a.text || '', { mode: a.mode, softNewline: a.soft_newline !== false, targetHint: a.target || '' });
+      const typeOpts = { mode: a.mode || 'type', targetHint: a.target || '' };
+      if (typeof a.soft_newline === 'boolean') typeOpts.softNewline = a.soft_newline;
+      const how = await typeText(ctx, a.text || '', typeOpts);
       if (a.press_enter) { await sleep(80); await ctx.automation.keys('enter'); }
       const finalFocus = (ctx.automation && typeof ctx.automation.focusedElement === 'function')
         ? await ctx.automation.focusedElement().catch(() => null)
@@ -1298,32 +1382,75 @@ const TOOLS = [
   },
   {
     name: 'press_keys', kind: 'screen', screen: true,
-    description: 'Press or long-press a key or hotkey combination on the real keyboard, e.g. "shift+enter" / "rshift+enter" (continue writing on a new line without submitting!), "ctrl+v" (paste), "enter", "ctrl+s", "alt+tab", "space", "w", "pagedown". Pass hold_ms (e.g. 1500-30000) to hold the key down.',
+    description: 'Full real keyboard control: click into a target (optional x, y or target) and execute any single key, shortcut, or multi-step keyboard sequence — e.g. "ctrl+c" (copy), "ctrl+v" (paste), "ctrl+a" (select all), "delete" / "backspace" (remove selected code/snippet), "ctrl+f" (find), "ctrl+h" (find & replace), "ctrl+s" (save), "ctrl+z" (undo), "ctrl+x" (cut), "shift+enter" (soft newline), "pagedown", "pageup", "home", "end", "ctrl+home", "ctrl+end", "f5", "f8", arrows, or chained combos like sequence: ["ctrl+a", "delete"] or keys: "ctrl+a -> delete".',
     parameters: { type: 'object', properties: {
-      keys: { type: 'string', description: 'Keys joined with +, e.g. "shift+enter", "rshift+enter", "ctrl+v", "ctrl+c", "space", "w", "pagedown".' },
-      repeat: { type: 'integer', description: 'How many times to press it (default 1, max 30).' },
+      keys: { type: 'string', description: 'Single key/combo joined with + (e.g. "ctrl+c", "ctrl+v", "ctrl+a", "ctrl+f", "ctrl+s", "delete", "backspace", "pagedown", "shift+enter") OR "->" chained combos like "ctrl+a -> delete" or "ctrl+a -> ctrl+c".' },
+      sequence: { type: 'array', items: { type: 'string' }, description: 'Optional ordered list of key combos to execute step-by-step, e.g. ["ctrl+a", "delete"], ["ctrl+a", "ctrl+c"], ["ctrl+v", "ctrl+s"].' },
+      target: { type: 'string', description: 'Optional: UI element/editor name to click & focus before pressing the keys.' },
+      x: { type: 'integer', description: 'Optional: click here (0-1000) before pressing the keys (e.g. click code editor -> Ctrl+A -> Delete).' },
+      y: { type: 'integer', description: 'Optional: click here (0-1000) before pressing the keys.' },
+      repeat: { type: 'integer', description: 'How many times to repeat the key or sequence (default 1, max 30).' },
+      delay_ms: { type: 'integer', description: 'Delay between keys in a sequence in ms (default 120ms).' },
       hold_ms: { type: 'integer', description: 'Optional: hold the key(s) down for this many milliseconds (up to 30000ms) for long press.' },
       long_press: { type: 'boolean', description: 'Set true to long-press the key (~2000ms).' }
-    }, required: ['keys'] },
+    } },
     describe: (a) => {
       const h = resolveHoldMs(a, 0);
-      return (h > 100 ? 'Long-press ' + a.keys + ' (' + h + 'ms)' : ('Press ' + a.keys + (a.repeat > 1 ? ' ×' + a.repeat : '')));
+      const seqLabel = Array.isArray(a.sequence) && a.sequence.length ? a.sequence.join(' -> ') : (a.keys || '');
+      const loc = a.target ? (' in "' + a.target + '"') : (a.x !== undefined && a.y !== undefined ? (' at (' + a.x + ', ' + a.y + ')') : '');
+      return (h > 100 ? 'Long-press ' + seqLabel + ' (' + h + 'ms)' : ('Press ' + seqLabel + (a.repeat > 1 ? ' ×' + a.repeat : ''))) + loc;
     },
-    dangerous: (a) => (/shift\s*\+\s*(delete|del)\b|(delete|del)\s*\+\s*shift/i.test(a.keys || '') ? 'Shift+Delete permanently deletes the selected item(s) in Explorer.' : null),
+    dangerous: (a) => {
+      const all = [];
+      if (a && a.keys) all.push(String(a.keys));
+      if (a && Array.isArray(a.sequence)) for (const k of a.sequence) all.push(String(k || ''));
+      return all.some((s) => /shift\s*\+\s*(delete|del)\b|(delete|del)\s*\+\s*shift/i.test(s))
+        ? 'Shift+Delete permanently deletes the selected item(s) in Explorer.'
+        : null;
+    },
     async run(a, ctx) {
+      if (ctx.beforeScreenAction) await ctx.beforeScreenAction().catch(() => {});
+      let clicked = null;
+      if (a.target) {
+        clicked = await findAndClickUiElement(ctx, { query: a.target, typeFilter: 'any' });
+      }
+      if (!clicked && a.x !== undefined && a.y !== undefined) {
+        const m = await pointer(ctx, a.x, a.y, 1000, 'click');
+        ctx.cursor({ x: m.dip.x, y: m.dip.y, kind: 'click', label: 'Focus for keys' });
+        await ctx.automation.click('left', 1);
+        await sleep(140);
+      }
+      const seq = [];
+      if (Array.isArray(a.sequence) && a.sequence.length) {
+        for (const item of a.sequence) {
+          const clean = String(item || '').trim();
+          if (clean) seq.push(clean);
+        }
+      } else if (a.keys) {
+        const parts = String(a.keys).split(/\s*->\s*/).map((s) => s.trim()).filter(Boolean);
+        for (const p of parts) seq.push(p);
+      }
+      if (!seq.length) throw new Error('press_keys requires either "keys" or a non-empty "sequence" array.');
       const holdMs = resolveHoldMs(a, 0);
-      ctx.cursor({ kind: 'type', label: holdMs > 100 ? ('Hold ' + a.keys + ' ' + holdMs + 'ms') : a.keys });
-      if (holdMs > 100 && typeof ctx.automation.keyState === 'function') {
-        await performKeyHold(ctx, a.keys, holdMs);
-        return { held: a.keys, hold_ms: holdMs };
+      if (seq.length === 1 && holdMs > 100 && typeof ctx.automation.keyState === 'function') {
+        ctx.cursor({ kind: 'type', label: 'Hold ' + seq[0] + ' ' + holdMs + 'ms' });
+        await performKeyHold(ctx, seq[0], holdMs);
+        return { held: seq[0], hold_ms: holdMs };
       }
       const n = Math.max(1, Math.min(30, Number(a.repeat) || 1));
-      for (let i = 0; i < n; i++) {
-        if (ctx.isStopped()) throw new Error('Stopped by user.');
-        await ctx.automation.keys(a.keys, holdMs || 40);
-        if (n > 1) await sleep(60);
+      const stepDelay = Math.max(40, Math.min(1000, Number(a.delay_ms) || 120));
+      const executed = [];
+      for (let r = 0; r < n; r++) {
+        for (let i = 0; i < seq.length; i++) {
+          if (ctx.isStopped && ctx.isStopped()) throw new Error('Stopped by user.');
+          const combo = seq[i];
+          ctx.cursor({ kind: 'type', label: combo });
+          await ctx.automation.keys(combo, holdMs || 45);
+          executed.push(combo);
+          if (i < seq.length - 1 || r < n - 1) await sleep(stepDelay);
+        }
       }
-      return { pressed: a.keys, times: n };
+      return { pressed: seq.length === 1 ? seq[0] : seq, sequence: executed, times: n };
     }
   },
   {
@@ -1362,10 +1489,28 @@ const TOOLS = [
   },
   {
     name: 'focus_window', kind: 'app',
-    description: 'Bring an already-open window to the front by part of its title or process name (e.g. "Notepad", "Chrome", "Documents").',
+    description: 'Bring an already-open window to the front by part of its title or process name (e.g. "Notepad", "Chrome", "Documents", "Roblox Studio").',
     parameters: { type: 'object', properties: { title: { type: 'string' } }, required: ['title'] },
     describe: (a) => 'Bring the "' + a.title + '" window to the front',
-    async run(a, ctx) { const r = await ctx.automation.focusWindow(a.title); await sleep(400); return r; }
+    async run(a, ctx) {
+      const r = await ctx.automation.focusWindow(a.title);
+      try {
+        if (ctx.cursor && ctx.automation && typeof ctx.automation.foreground === 'function') {
+          const fg = await ctx.automation.foreground().catch(() => null);
+          if (fg && fg.rect) {
+            const rp = String(fg.rect).split(',').map(Number);
+            if (rp.length === 4 && rp.every(isFinite)) {
+              const cx = Math.round((rp[0] + rp[2]) / 2);
+              const cy = Math.round((rp[1] + rp[3]) / 2);
+              const dip = (ctx.screen && typeof ctx.screen.nativeToDip === 'function') ? ctx.screen.nativeToDip(cx, cy) : { x: cx, y: cy };
+              ctx.cursor({ kind: 'move', x: dip.x, y: dip.y, ms: 280, label: 'Focused ' + (fg.title || a.title) });
+            }
+          }
+        }
+      } catch (_) { /* ignore cursor error */ }
+      await sleep(400);
+      return r;
+    }
   },
   {
     name: 'window_control', kind: 'app',
@@ -2085,17 +2230,19 @@ const TOOLS = [
     }
   },
 
-  /* ---------------- code & terminal ---------------- */
+  /* ---------------- code & full terminal / command prompt control ---------------- */
   {
     name: 'run_command', kind: 'command',
-    description: 'Run a real terminal command and return its output. Windows default shell is PowerShell (use shell="cmd" for cmd.exe). Use it for git, npm, python, building projects, and quick file queries. Do not start interactive programs that wait for input.',
+    description: 'Run a real Windows Command Prompt (shell="cmd") or PowerShell (shell="powershell") command with live streaming output. Supports one-shot commands, background dev servers/watchers (background=true returning a session_id for terminal_read/terminal_send/terminal_stop), or opening a visible Command Prompt window on desktop (open_window=true).',
     parameters: { type: 'object', properties: {
-      command: { type: 'string' },
-      cwd: { type: 'string', description: 'Working folder (default: home).' },
-      shell: { type: 'string', enum: ['powershell', 'cmd', 'bash'] },
-      timeout_sec: { type: 'integer', description: 'Default 120, max 1800.' }
+      command: { type: 'string', description: 'Exact command to run in Command Prompt or PowerShell.' },
+      cwd: { type: 'string', description: 'Working folder (supports Desktop, Documents, Downloads, or full path; default: home).' },
+      shell: { type: 'string', enum: ['cmd', 'powershell', 'bash'], description: 'Use "cmd" for Windows Command Prompt (cmd.exe) or "powershell" for PowerShell (default on Windows: powershell).' },
+      background: { type: 'boolean', description: 'Set true for long-running servers/watchers/tasks to keep running in the background and return session_id.' },
+      open_window: { type: 'boolean', description: 'Set true to launch a real visible Command Prompt / PowerShell window on the desktop.' },
+      timeout_sec: { type: 'integer', description: 'Timeout in seconds for foreground commands (default 120, max 1800).' }
     }, required: ['command'] },
-    describe: (a) => 'Run in ' + (a.shell || (IS_WIN ? 'PowerShell' : 'bash')) + (a.cwd ? ' (in ' + a.cwd + ')' : '') + ': ' + a.command,
+    describe: (a) => 'Run in ' + (a.shell === 'cmd' ? 'Command Prompt' : (a.shell || (IS_WIN ? 'PowerShell' : 'bash'))) + (a.cwd ? ' (in ' + a.cwd + ')' : '') + ': ' + a.command,
     dangerous: (a) => (isPermanentDeleteCommand(a.command) ? 'This command looks like it permanently deletes files (deletions from the terminal skip the Recycle Bin).' : null),
     async run(a, ctx) {
       if (a.command && ctx && ctx.cursor) {
@@ -2112,18 +2259,63 @@ const TOOLS = [
             fullText: curr,
             label: 'Terminal: ' + curr.slice(-30)
           });
-          if (!fastTest) await sleep(Math.min(26, Math.max(10, Math.floor(500 / cmdStr.length))));
+          if (!fastTest) await sleep(Math.min(24, Math.max(8, Math.floor(420 / Math.max(1, cmdStr.length)))));
         }
       }
       const cwd = a.cwd ? resolvePath(a.cwd) : os.homedir();
-      const limit = Math.max(5, Math.min(1800, Number(a.timeout_sec) || Number(ctx.settings().commandTimeoutSec) || 120)) * 1000;
+      const which = a.shell || (IS_WIN ? 'powershell' : 'bash');
+      const shellLabel = which === 'cmd' ? 'CMD' : (which === 'bash' ? 'Bash' : 'PowerShell');
+
+      if (IS_WIN && a.open_window) {
+        const winArgs = which === 'cmd'
+          ? ['/c', 'start', '"Brief Command Prompt"', '/D', cwd, 'cmd.exe', '/k', String(a.command || '')]
+          : ['/c', 'start', '"Brief PowerShell"', '/D', cwd, 'powershell.exe', '-NoExit', '-Command', String(a.command || '')];
+        spawn('cmd.exe', winArgs, { cwd, detached: true, windowsHide: false, stdio: 'ignore' }).unref();
+        await sleep(700);
+        return { ok: true, opened_window: true, shell: shellLabel, cwd, command: a.command };
+      }
+
+      const emitStream = (chunk, streamName, extra) => {
+        if (ctx && typeof ctx.onCommandOutput === 'function') {
+          ctx.onCommandOutput(Object.assign({
+            shell: shellLabel,
+            command: String(a.command || ''),
+            cwd,
+            chunk: String(chunk || ''),
+            stream: streamName || 'stdout',
+            running: true
+          }, extra || {}));
+        } else if (ctx && typeof ctx.progress === 'function' && chunk) {
+          ctx.progress(String(chunk));
+        }
+      };
+
       let exe;
       let args;
-      const which = a.shell || (IS_WIN ? 'powershell' : 'bash');
       if (IS_WIN && which === 'cmd') { exe = 'cmd.exe'; args = ['/d', '/s', '/c', a.command]; }
       else if (IS_WIN) { exe = 'powershell.exe'; args = ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', '[Console]::OutputEncoding=[Text.Encoding]::UTF8; $ProgressPreference=\'SilentlyContinue\'; ' + a.command]; }
       else { exe = '/bin/bash'; args = ['-lc', a.command]; }
+
+      if (a.background) {
+        const sess = createTerminalSession({ exe, args, shell: shellLabel, command: String(a.command || ''), cwd, interactive: false, emitStream });
+        if (ctx && ctx.registerProcess) ctx.registerProcess(sess.child);
+        await sleep(Math.min(1800, Math.max(250, Number(a.wait_ms) || 700)));
+        return {
+          ok: true,
+          background: true,
+          session_id: sess.id,
+          pid: sess.child.pid,
+          shell: sess.shell,
+          cwd: sess.cwd,
+          running: sess.running,
+          exit_code: sess.exitCode,
+          output: truncateMiddle(sess.output, 12000)
+        };
+      }
+
+      const limit = Math.max(5, Math.min(1800, Number(a.timeout_sec) || Number(ctx.settings().commandTimeoutSec) || 120)) * 1000;
       const started = Date.now();
+      emitStream('', 'meta', { running: true });
       return await new Promise((resolve, reject) => {
         let out = '';
         let err = '';
@@ -2134,16 +2326,198 @@ const TOOLS = [
         } catch (e) { reject(e); return; }
         ctx.registerProcess(child);
         const timer = setTimeout(() => { timedOut = true; killTree(child); }, limit);
-        child.stdout.on('data', (d) => { out += d.toString('utf8'); if (out.length > 400000) out = out.slice(-400000); ctx.progress && ctx.progress(d.toString('utf8')); });
-        child.stderr.on('data', (d) => { err += d.toString('utf8'); if (err.length > 200000) err = err.slice(-200000); });
+        child.stdout.on('data', (d) => {
+          const s = d.toString('utf8');
+          out += s;
+          if (out.length > 400000) out = out.slice(-400000);
+          emitStream(s, 'stdout', { running: true });
+        });
+        child.stderr.on('data', (d) => {
+          const s = d.toString('utf8');
+          err += s;
+          if (err.length > 200000) err = err.slice(-200000);
+          emitStream(s, 'stderr', { running: true });
+        });
         child.on('error', (e) => { clearTimeout(timer); ctx.unregisterProcess(child); reject(e); });
         child.on('close', (code) => {
           clearTimeout(timer);
           ctx.unregisterProcess(child);
+          emitStream('', 'meta', { running: false, exitCode: code });
           if (ctx.isStopped()) { reject(new Error('Stopped by user (process killed).')); return; }
-          resolve({ exit_code: code, ok: code === 0 && !timedOut, timed_out: timedOut, cwd, duration_sec: ((Date.now() - started) / 1000).toFixed(1), stdout: truncateMiddle(out, 24000), stderr: truncateMiddle(err, 8000) });
+          resolve({
+            shell: shellLabel,
+            command: a.command,
+            exit_code: code,
+            ok: code === 0 && !timedOut,
+            timed_out: timedOut,
+            cwd,
+            duration_sec: ((Date.now() - started) / 1000).toFixed(1),
+            stdout: truncateMiddle(out, 24000),
+            stderr: truncateMiddle(err, 8000)
+          });
         });
       });
+    }
+  },
+  {
+    name: 'terminal_open', kind: 'command',
+    description: 'Open a persistent interactive Command Prompt (cmd.exe) or PowerShell terminal session that remembers its working directory, environment variables, and running state across multiple terminal_send commands.',
+    parameters: { type: 'object', properties: {
+      shell: { type: 'string', enum: ['cmd', 'powershell', 'bash'], description: 'Shell to open (default on Windows: cmd).' },
+      cwd: { type: 'string', description: 'Starting working directory (default: home).' },
+      initial_command: { type: 'string', description: 'Optional first command to run right after opening the terminal.' }
+    } },
+    describe: (a) => 'Open interactive ' + (a.shell === 'powershell' ? 'PowerShell' : 'Command Prompt') + (a.cwd ? ' in ' + a.cwd : ''),
+    dangerous: (a) => (a.initial_command && isPermanentDeleteCommand(a.initial_command) ? 'The initial terminal command may permanently delete files.' : null),
+    async run(a, ctx) {
+      const cwd = a.cwd ? resolvePath(a.cwd) : os.homedir();
+      const which = a.shell || (IS_WIN ? 'cmd' : 'bash');
+      const shellLabel = which === 'powershell' ? 'PowerShell' : (which === 'bash' ? 'Bash' : 'CMD');
+      const exe = IS_WIN ? (which === 'powershell' ? 'powershell.exe' : 'cmd.exe') : '/bin/bash';
+      const args = IS_WIN
+        ? (which === 'powershell' ? ['-NoLogo', '-NoExit', '-ExecutionPolicy', 'Bypass'] : ['/Q', '/K'])
+        : [];
+      const emitStream = (chunk, streamName, extra) => {
+        if (ctx && typeof ctx.onCommandOutput === 'function') {
+          ctx.onCommandOutput(Object.assign({
+            shell: shellLabel,
+            command: a.initial_command || ('open ' + shellLabel),
+            cwd,
+            chunk: String(chunk || ''),
+            stream: streamName || 'stdout',
+            running: true
+          }, extra || {}));
+        }
+      };
+      const sess = createTerminalSession({ exe, args, shell: shellLabel, command: a.initial_command || shellLabel, cwd, interactive: true, emitStream });
+      if (ctx && ctx.registerProcess) ctx.registerProcess(sess.child);
+      if (a.initial_command) {
+        await sleep(160);
+        sess.child.stdin.write(String(a.initial_command) + '\r\n');
+      }
+      await sleep(550);
+      return {
+        ok: true,
+        session_id: sess.id,
+        pid: sess.child.pid,
+        shell: sess.shell,
+        cwd: sess.cwd,
+        running: sess.running,
+        output: truncateMiddle(sess.output, 12000)
+      };
+    }
+  },
+  {
+    name: 'terminal_send', kind: 'command',
+    description: 'Send a command or input line into an active Command Prompt / PowerShell terminal session opened with terminal_open or run_command(background=true), and read the live response.',
+    parameters: { type: 'object', properties: {
+      session_id: { type: 'string', description: 'The session_id returned by terminal_open or run_command(background=true).' },
+      input: { type: 'string', description: 'Command or text to write into the terminal.' },
+      press_enter: { type: 'boolean', description: 'Append newline to execute the command (default true).' },
+      wait_ms: { type: 'integer', description: 'Milliseconds to wait for output after sending (default 700, max 15000).' }
+    }, required: ['session_id', 'input'] },
+    describe: (a) => 'Send to terminal ' + a.session_id + ': ' + truncateMiddle(a.input, 90),
+    dangerous: (a) => (isPermanentDeleteCommand(a.input) ? 'This terminal command may permanently delete files.' : null),
+    async run(a, ctx) {
+      const sess = TERMINAL_SESSIONS.get(String(a.session_id || ''));
+      if (!sess) throw new Error('Terminal session not found: ' + a.session_id + '. Call terminal_open or list_terminals first.');
+      if (!sess.running || !sess.child || !sess.child.stdin || sess.child.stdin.destroyed) {
+        throw new Error('Terminal session ' + sess.id + ' is no longer running (exit_code=' + sess.exitCode + ').');
+      }
+      const beforeLen = sess.output.length;
+      const text = String(a.input || '') + (a.press_enter === false ? '' : '\r\n');
+      sess.lastCommand = String(a.input || '');
+      if (ctx && typeof ctx.onCommandOutput === 'function') {
+        sess.emitStream = (chunk, streamName, extra) => ctx.onCommandOutput(Object.assign({
+          sessionId: sess.id,
+          shell: sess.shell,
+          command: sess.lastCommand,
+          cwd: sess.cwd,
+          chunk: String(chunk || ''),
+          stream: streamName || 'stdout',
+          running: sess.running
+        }, extra || {}));
+      }
+      sess.child.stdin.write(text);
+      const wait = Math.max(120, Math.min(15000, Number(a.wait_ms) || 700));
+      await sleepInterruptible(wait, ctx);
+      const delta = sess.output.slice(beforeLen);
+      return {
+        ok: true,
+        session_id: sess.id,
+        shell: sess.shell,
+        running: sess.running,
+        exit_code: sess.exitCode,
+        new_output: truncateMiddle(delta, 16000),
+        output_tail: truncateMiddle(sess.output.slice(-6000), 6000)
+      };
+    }
+  },
+  {
+    name: 'terminal_read', kind: 'command', readOnly: true,
+    description: 'Read live output and running status from a background or interactive Command Prompt / PowerShell terminal session.',
+    parameters: { type: 'object', properties: {
+      session_id: { type: 'string', description: 'The session_id to inspect.' },
+      wait_ms: { type: 'integer', description: 'Optional milliseconds to wait before reading (default 250, max 10000).' }
+    }, required: ['session_id'] },
+    describe: (a) => 'Read output from terminal ' + a.session_id,
+    async run(a, ctx) {
+      const sess = TERMINAL_SESSIONS.get(String(a.session_id || ''));
+      if (!sess) throw new Error('Terminal session not found: ' + a.session_id);
+      const wait = Math.max(0, Math.min(10000, Number(a.wait_ms) || 250));
+      if (wait > 0 && sess.running) await sleepInterruptible(wait, ctx);
+      return {
+        ok: true,
+        session_id: sess.id,
+        shell: sess.shell,
+        cwd: sess.cwd,
+        pid: sess.child ? sess.child.pid : null,
+        running: sess.running,
+        exit_code: sess.exitCode,
+        output: truncateMiddle(sess.output, 20000)
+      };
+    }
+  },
+  {
+    name: 'terminal_stop', kind: 'command',
+    description: 'Stop and close an active Command Prompt / PowerShell terminal session (or pass session_id="all" to close all active sessions).',
+    parameters: { type: 'object', properties: {
+      session_id: { type: 'string', description: 'Session ID to stop, or "all".' }
+    }, required: ['session_id'] },
+    describe: (a) => 'Stop terminal session ' + a.session_id,
+    async run(a) {
+      const id = String(a.session_id || '');
+      if (id === 'all') {
+        const count = stopAllTerminalSessions();
+        return { ok: true, stopped_count: count };
+      }
+      const sess = TERMINAL_SESSIONS.get(id);
+      if (!sess) return { ok: true, stopped: false, note: 'Session already closed.' };
+      if (sess.child && sess.running) killTree(sess.child);
+      sess.running = false;
+      TERMINAL_SESSIONS.delete(id);
+      return { ok: true, stopped: true, session_id: id };
+    }
+  },
+  {
+    name: 'list_terminals', kind: 'command', readOnly: true,
+    description: 'List all active Command Prompt / PowerShell terminal sessions managed by Brief.',
+    parameters: { type: 'object', properties: {} },
+    describe: () => 'List active terminal sessions',
+    async run() {
+      const list = [];
+      for (const s of TERMINAL_SESSIONS.values()) {
+        list.push({
+          session_id: s.id,
+          shell: s.shell,
+          cwd: s.cwd,
+          pid: s.child ? s.child.pid : null,
+          running: s.running,
+          exit_code: s.exitCode,
+          last_command: s.lastCommand
+        });
+      }
+      return { count: list.length, sessions: list };
     }
   },
   {
@@ -2401,4 +2775,4 @@ function declarations({ includeScreen = true, cuMode = false } = {}) {
 
 function getTool(name) { return TOOLS.find((t) => t.name === name) || null; }
 
-module.exports = { TOOLS, CU_ACTIONS, declarations, getTool, resolvePath, knownFolders, killTree, isPermanentDeleteCommand, pointsOf, launchApp, makeMatcher, categoryOf, runLiveWebSearch, fetchWebPageText, isSelfOrDesktopForeground, ensureTargetForeground, typeText };
+module.exports = { TOOLS, CU_ACTIONS, declarations, getTool, resolvePath, knownFolders, killTree, stopAllTerminalSessions, isPermanentDeleteCommand, pointsOf, launchApp, makeMatcher, categoryOf, runLiveWebSearch, fetchWebPageText, isSelfOrDesktopForeground, ensureTargetForeground, typeText };

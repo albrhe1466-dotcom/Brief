@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Brief</string>
+    <string name="accessibility_service_desc">Enables Brief to read visible screen labels, tap, swipe, scroll, navigate Back/Home, and type text on your Android phone without root. Only runs when you start a Work task and can be stopped anytime.</string>
+</resources>

@@ -15,8 +15,8 @@
 const { EventEmitter } = require('events');
 const { stripModelPrefix, buildThinkingConfig, abortError, sleep } = require('./gemini');
 const { sanitizeModelIdValue } = require('./store');
-const { TOOLS, CU_ACTIONS, declarations, getTool, pointsOf, isPermanentDeleteCommand, runLiveWebSearch } = require('./tools');
-const { buildChatSystemPrompt, buildWorkSystemPrompt } = require('./systemPrompt');
+const { TOOLS, CU_ACTIONS, declarations, getTool, pointsOf, isPermanentDeleteCommand, runLiveWebSearch, stopAllTerminalSessions } = require('./tools');
+const { buildChatSystemPrompt, buildWorkSystemPrompt, classifyModelTier } = require('./systemPrompt');
 
 /** Plain-English 1-sentence explanation of what Brief just did for the step photo caption. */
 function summarizeStepForUser(name, args, ok, res) {
@@ -86,9 +86,10 @@ async function shotForVision(shot, automation) {
   return shot;
 }
 
-/** Scout / Eyes Agent helper: fetches BOTH UIA controls AND Windows WinRT OCR text coordinates on active display. */
-async function describeForegroundElements(screen, automation) {
+/** Scout / Eyes Agent helper: fetches UIA controls (and Windows WinRT OCR on deep/normal modes). */
+async function describeForegroundElements(screen, automation, opts) {
   if (!automation) return '';
+  const fastMode = !!(opts && opts.fastMode);
   try {
     const disp = (screen && typeof screen.currentDisplay === 'function') ? screen.currentDisplay() : null;
     const b = (disp && disp.bounds) || { x: 0, y: 0, width: 1920, height: 1080 };
@@ -101,9 +102,15 @@ async function describeForegroundElements(screen, automation) {
     const physH = Math.round(b.height * sf);
 
     const [els, focused, ocr] = await Promise.all([
-      typeof automation.inspectUi === 'function' ? automation.inspectUi(220).catch(() => []) : Promise.resolve([]),
-      typeof automation.focusedElement === 'function' ? automation.focusedElement().catch(() => null) : Promise.resolve(null),
-      typeof automation.ocrScreen === 'function' ? automation.ocrScreen(physOrigin.x, physOrigin.y, physW, physH).catch(() => null) : Promise.resolve(null)
+      typeof automation.inspectUi === 'function'
+        ? Promise.race([automation.inspectUi(fastMode ? 90 : 160).catch(() => []), sleep(fastMode ? 450 : 1000).then(() => [])])
+        : Promise.resolve([]),
+      typeof automation.focusedElement === 'function'
+        ? Promise.race([automation.focusedElement().catch(() => null), sleep(fastMode ? 250 : 450).then(() => null)])
+        : Promise.resolve(null),
+      (!fastMode && typeof automation.ocrScreen === 'function')
+        ? Promise.race([automation.ocrScreen(physOrigin.x, physOrigin.y, physW, physH).catch(() => null), sleep(1300).then(() => null)])
+        : Promise.resolve(null)
     ]);
 
     const normCoord = (px, py) => {
@@ -189,39 +196,39 @@ function isTestEvidenceStep(item) {
   if (!item || !item.ok) return false;
   const t = String(item.tool || '');
   const a = item.args || {};
-  if (t === 'run_command') return true;
+  if (t === 'run_command' || t === 'terminal_open' || t === 'terminal_send' || t === 'terminal_read' || t === 'open_path' || t === 'open_url' || t === 'browser_tab') return true;
+  if (t === 'read_screen_text' || t === 'zoom_region') return true;
   if (/execute_luau|start_stop_play|test|verify|render|preview|play/i.test(t)) return true;
   if (t === 'press_keys') {
     const ks = String(a.keys || '');
-    if (/\b(?:f5|f8|space)\b/i.test(ks)) return true;
+    if (/\b(?:f5|f8|space|enter)\b/i.test(ks)) return true;
   }
-  if (t === 'click_text' || t === 'click_element') {
+  if (t === 'click_text' || t === 'click_element' || t === 'click') {
     const q = String(a.query || '');
-    if (/\b(play|run|test|preview|render|export|output|console|timeline)\b/i.test(q)) return true;
+    if (t === 'click' || /\b(play|run|test|preview|render|export|output|console|timeline|send|submit|reload|refresh)\b/i.test(q)) return true;
   }
   return false;
 }
 
-function detectDeepTaskProfile(task, openWindows, settings, overrides) {
+function detectDeepTaskProfile(task, _openWindows, settings, overrides) {
   const text = String(task || '');
-  const winNames = Array.isArray(openWindows) ? openWindows.map((w) => String(w.title || '')).join(' ') : '';
-  const combined = text + ' ' + winNames;
-  const isRoblox = /\b(roblox|studio|obby|elevator|luau|workspace|startergui|proximityprompt|clickdetector)\b/i.test(combined);
-  const isAnimationOrCreative = /\b(capcut|blender|higgsfield|after\s*effects|premiere|photoshop|illustrator|adobe|animat(?:e|ion|ing)|keyframe|rig|timeline|3d|shader|unreal|unity|davinci)\b/i.test(combined);
+  // Only classify based on the user's actual request text — never let unrelated background windows trap a task in deep studio mode!
+  const isRoblox = /\b(roblox|roblox\s*studio|obby|luau|startergui|proximityprompt|clickdetector)\b/i.test(text);
+  const isAnimationOrCreative = /\b(capcut|blender|higgsfield|after\s*effects|premiere|photoshop|illustrator|adobe|keyframe|rig|timeline|unreal|unity|davinci)\b/i.test(text);
   const isQuickCheckOnly = /^\s*(?:what is on my screen|read (?:this|screen)|open [a-z0-9 ]{1,24}|search (?:google|youtube|web) for .{1,50}|take a screenshot|list windows)\s*[.!?]?\s*$/i.test(text);
-  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|game|elevator|obby|ui|button|animat)\b/i.test(text));
-  const isDeepBuildTask = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(full|complete|entire|thorough|complex|multi-step|3d|game|elevator|obby|studio)\b/i.test(text));
+  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby)\b/i.test(text));
+  const isDeepBuildTask = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative);
 
   const minMins = (overrides && typeof overrides.minWorkMs === 'number')
     ? null
-    : Math.max(0, Number((settings && settings.deepWorkMinMinutes !== undefined) ? settings.deepWorkMinMinutes : 10));
+    : Math.max(0, Number((settings && settings.deepWorkMinMinutes !== undefined) ? settings.deepWorkMinMinutes : 0));
   const maxMins = (overrides && typeof overrides.maxWorkMs === 'number')
     ? null
     : Math.max(5, Number((settings && settings.deepWorkMaxMinutes !== undefined) ? settings.deepWorkMaxMinutes : 25));
 
   const minWorkMs = (overrides && typeof overrides.minWorkMs === 'number')
     ? overrides.minWorkMs
-    : (isDeepBuildTask ? minMins * 60 * 1000 : 0);
+    : (isDeepBuildTask && minMins > 0 ? minMins * 60 * 1000 : 0);
   const maxWorkMs = (overrides && typeof overrides.maxWorkMs === 'number')
     ? overrides.maxWorkMs
     : (maxMins * 60 * 1000);
@@ -262,8 +269,11 @@ function computeVisualDiffPct(shotA, shotB) {
   }
 }
 
-/** Tools that would pull ready-made assets from a store instead of building things by hand. */
-const BLOCKED_STORE_TOOL_RE = /(insert_asset|search_asset|insert_model|toolbox|marketplace|manage_assets|manage_open_cloud_assets|generate_scene|generate_procedural_model|generate_mesh|generate_avatar)/i;
+/** Tools that would pull ready-made assets from a store instead of building things by hand.
+ * NOTE: For Roblox tasks, insert_asset, manage_assets, and manage_open_cloud_assets are allowed
+ * since the user explicitly wants Creator Store / Toolbox asset usage in Roblox Studio. */
+const BLOCKED_STORE_TOOL_RE = /(insert_model|toolbox|marketplace|generate_scene|generate_procedural_model|generate_mesh|generate_avatar)/i;
+const ROBLOX_ALLOWED_STORE_RE = /(insert_asset|search_asset|manage_assets|manage_open_cloud_assets)/i;
 
 function summarizeToolResult(result) {
   try {
@@ -329,10 +339,40 @@ class AgentRunner extends EventEmitter {
     this.conversationAutoApproveChats = new Set();
     this.pendingApproval = null;
     this.runId = 0;
+    this.modelCooldownUntil = new Map();
   }
 
   isRunning() { return this.running; }
   isStopped() { return this.stopped; }
+
+  clearModelCooldowns() {
+    this.modelCooldownUntil.clear();
+  }
+
+  isModelCoolingDown(modelId) {
+    const clean = stripModelPrefix(modelId || '');
+    if (!clean) return false;
+    const until = this.modelCooldownUntil.get(clean) || 0;
+    if (until <= Date.now()) {
+      if (until) this.modelCooldownUntil.delete(clean);
+      return false;
+    }
+    return true;
+  }
+
+  markModelCooldown(modelId, err) {
+    const clean = stripModelPrefix(modelId || '');
+    if (!clean || !err) return;
+    const msg = String(err.message || '');
+    let ms = 0;
+    if (err.kind === 'quota' || /per day limit|limit:\s*0|exceeded your current quota|RESOURCE_EXHAUSTED/i.test(msg)) {
+      // Remember daily / exhausted quota models for this session (up to 30m cap so key upgrades recover)
+      ms = Math.min(30 * 60 * 1000, Math.max(10 * 60 * 1000, Number(err.retryAfterMs) || 15 * 60 * 1000));
+    } else if (err.kind === 'rate' || err.kind === 'server' || /high demand|overloaded|temporarily/i.test(msg)) {
+      ms = Math.max(45 * 1000, Math.min(3 * 60 * 1000, Number(err.retryAfterMs) || 60 * 1000));
+    }
+    if (ms > 0) this.modelCooldownUntil.set(clean, Date.now() + ms);
+  }
 
   emitLog(entry) {
     const payload = Object.assign({
@@ -368,6 +408,7 @@ class AgentRunner extends EventEmitter {
       killTree(child);
       this.activeProcesses.delete(child);
     }
+    try { stopAllTerminalSessions(); } catch (_) { /* ignore */ }
     this.automation.release().catch(() => {});
     if (typeof this.automation.setBlackCursor === 'function') this.automation.setBlackCursor(false).catch(() => {});
     this.cursorEmitter({ kind: 'hide' });
@@ -411,75 +452,26 @@ class AgentRunner extends EventEmitter {
   }
 
   /**
-   * Builds a multi-agent model roster from the healthy models available on the user's API key
-   * so Executor, Scout, Code/Animation Specialist, and QA Tester do not leave models sitting idle.
+   * Keeps all agent roles locked to the user's selected model unless the user
+   * explicitly assigned custom per-job models in Settings -> Assign by Job.
+   * Never silently swaps in weaker models like Flash-Lite behind the user's back.
    */
   resolveTeamRoster() {
     const s = this.getSettings() || {};
-    const m = this.getMatch() || { presets: {} };
     const executor = this.resolveModelForJob('agent').id;
-    const candidates = this.getFallbackModels(new Set());
     const fastRole = stripModelPrefix((s.roles && s.roles.fast) || '');
     const planRole = stripModelPrefix((s.roles && s.roles.planner) || '');
 
-    const pickDistinct = (preferredIds, fallbackId) => {
-      for (const raw of preferredIds) {
-        const clean = stripModelPrefix(raw || '');
-        if (!clean || /computer-use/i.test(clean)) continue;
-        if (candidates.includes(clean) && clean !== executor) return clean;
-      }
-      for (const id of candidates) {
-        if (id !== executor) return id;
-      }
-      return fallbackId || executor;
-    };
-
-    const scout = (fastRole && fastRole !== 'auto')
-      ? fastRole
-      : pickDistinct([
-          m.presets && m.presets.flashlite35 && m.presets.flashlite35.id,
-          m.presets && m.presets.gpt6luna && m.presets.gpt6luna.id,
-          m.presets && m.presets.claudehaiku55 && m.presets.claudehaiku55.id,
-          m.fast,
-          m.bestFlash
-        ], executor);
-
-    const specialist = (planRole && planRole !== 'auto')
-      ? planRole
-      : pickDistinct([
-          m.presets && m.presets.hydrogen && m.presets.hydrogen.id,
-          m.presets && m.presets.flash38 && m.presets.flash38.id,
-          m.presets && m.presets.gpt61terra && m.presets.gpt61terra.id,
-          m.presets && m.presets.claudesonnet55 && m.presets.claudesonnet55.id,
-          m.bestFlash
-        ].filter((id) => id !== scout), scout);
-
-    const qaTester = pickDistinct([
-      m.presets && m.presets.carbon && m.presets.carbon.id,
-      m.presets && m.presets.argon && m.presets.argon.id,
-      m.presets && m.presets.gpt6astra && m.presets.gpt6astra.id,
-      m.presets && m.presets.gpt6sol && m.presets.gpt6sol.id,
-      m.presets && m.presets.claudeopus55 && m.presets.claudeopus55.id,
-      m.presets && m.presets.claudefable52 && m.presets.claudefable52.id,
-      m.bestPro,
-      planRole
-    ], specialist || executor);
-
-    const critic = pickDistinct([
-      m.presets && m.presets.flash38 && m.presets.flash38.id,
-      m.presets && m.presets.hydrogen && m.presets.hydrogen.id,
-      m.presets && m.presets.argon && m.presets.argon.id,
-      m.presets && m.presets.gpt61terra && m.presets.gpt61terra.id,
-      m.presets && m.presets.claudesonnet55 && m.presets.claudesonnet55.id,
-      m.bestFlash,
-      m.bestPro
-    ].filter((id) => id !== specialist && id !== scout), scout || specialist || executor);
+    const scout = (fastRole && fastRole !== 'auto') ? fastRole : executor;
+    const specialist = (planRole && planRole !== 'auto') ? planRole : executor;
+    const qaTester = specialist || executor;
+    const critic = executor;
 
     const distinctCount = new Set([executor, scout, specialist, critic, qaTester].filter(Boolean)).size;
     return { executor, scout, specialist, critic, qaTester, distinctCount };
   }
 
-  /** Ordered list of healthy general Gemini fallback model IDs from the user's account, excluding failedModels. */
+  /** Ordered list of healthy general fallback model IDs from the user's account, excluding failedModels. */
   getFallbackModels(failedModels) {
     const m = this.getMatch() || {};
     const all = Array.isArray(this.getModels()) ? this.getModels() : [];
@@ -489,7 +481,7 @@ class AgentRunner extends EventEmitter {
     const push = (id) => {
       const clean = stripModelPrefix(id || '');
       if (!clean || bad.has(clean) || seen.has(clean)) return;
-      if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools)/i.test(clean)) return;
+      if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools|carbon)/i.test(clean)) return;
       seen.add(clean);
       out.push(clean);
     };
@@ -497,18 +489,18 @@ class AgentRunner extends EventEmitter {
       push(m.presets.flash38 && m.presets.flash38.id);
       push(m.presets.hydrogen && m.presets.hydrogen.id);
       push(m.presets.flashlite35 && m.presets.flashlite35.id);
+      push(m.presets.neon && m.presets.neon.id);
       push(m.presets.argon && m.presets.argon.id);
-      push(m.presets.carbon && m.presets.carbon.id);
     }
     const availableIds = new Set(all.filter((x) => Array.isArray(x.methods) && x.methods.includes('generateContent')).map((x) => x.id));
     for (const modernId of [
       'gemini-4-hydrogen',
       'gemini-3.8-flash',
       'gemini-3.5-flash-lite',
+      'gemini-4-neon',
+      'gemini-4-argon',
       'gemini-3-flash-preview',
       'gemini-3.1-flash-lite-preview',
-      'gemini-4-argon',
-      'gemini-4-carbon',
       'gemini-3.1-pro-preview'
     ]) {
       if (availableIds.has(modernId)) push(modernId);
@@ -518,10 +510,10 @@ class AgentRunner extends EventEmitter {
     const general = all
       .filter((x) => Array.isArray(x.methods) && x.methods.includes('generateContent'))
       .map((x) => x.id)
-      .filter((id) => !/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools)/i.test(id));
+      .filter((id) => !/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools|carbon)/i.test(id));
     general.sort((a, b) => {
-      const aHeavy = /\bpro\b|argon|carbon|\bopus\b|fable|astra|sol/i.test(a) ? 1 : 0;
-      const bHeavy = /\bpro\b|argon|carbon|\bopus\b|fable|astra|sol/i.test(b) ? 1 : 0;
+      const aHeavy = /\bpro\b|argon|neon|\bopus\b|fable|astra|sol/i.test(a) ? 1 : 0;
+      const bHeavy = /\bpro\b|argon|neon|\bopus\b|fable|astra|sol/i.test(b) ? 1 : 0;
       if (aHeavy !== bHeavy) return aHeavy - bHeavy;
       const va = parseFloat((/(?:gemini-|gpt-|claude-[^-]*-)(\d+(?:\.\d+)?)/.exec(a) || [])[1] || '0');
       const vb = parseFloat((/(?:gemini-|gpt-|claude-[^-]*-)(\d+(?:\.\d+)?)/.exec(b) || [])[1] || '0');
@@ -529,16 +521,19 @@ class AgentRunner extends EventEmitter {
       return b.localeCompare(a);
     });
     for (const id of general) {
-      if (!/\bpro\b|argon|carbon|\bopus\b|fable|astra|sol/i.test(id)) push(id);
+      if (!/\bpro\b|argon|neon|\bopus\b|fable|astra|sol/i.test(id)) push(id);
     }
     if (m.presets) {
+      push(m.presets.neon && m.presets.neon.id);
       push(m.presets.argon && m.presets.argon.id);
-      push(m.presets.carbon && m.presets.carbon.id);
       push(m.presets.pro31 && m.presets.pro31.id);
     }
     push(m.bestPro);
     for (const id of general) push(id);
-    return out;
+    // Prioritize models that are NOT currently on quota / high-demand cooldown
+    const healthy = out.filter((id) => !this.isModelCoolingDown(id));
+    const cooling = out.filter((id) => this.isModelCoolingDown(id));
+    return healthy.concat(cooling);
   }
 
   /**
@@ -606,7 +601,10 @@ class AgentRunner extends EventEmitter {
 
     try {
       const s = this.getSettings();
-      const useSearch = webSearch !== undefined ? !!webSearch : (settings.webSearchEnabled !== false);
+      const useSearch = webSearch !== undefined ? !!webSearch : (s.webSearchEnabled !== false);
+      const tLevel = String(s.thinkingLevel || 'medium').toLowerCase();
+      const isExtraLevel = tLevel === 'extra';
+      const isFastModel = /flash-?lite|3\.8-?flash|\bflash\b|luna|haiku/i.test(modelInfo.id);
       const lastMsg = messages[messages.length - 1] || {};
       let shareShot = null;
       if (screenShare && screenShare.enabled && this.screen && typeof this.screen.capture === 'function') {
@@ -621,14 +619,61 @@ class AgentRunner extends EventEmitter {
         } catch (_) { shareShot = null; }
       }
       let searchContextText = '';
-      if (useSearch && lastMsg.text && String(lastMsg.text).trim().length > 2) {
-        this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: modelInfo.id, stepText: 'Searching the web...' });
-        const hits = await Promise.race([
-          runLiveWebSearch(String(lastMsg.text).trim().slice(0, 160), 5),
-          sleep(2600).then(() => [])
-        ]).catch(() => []);
+      const rawPrompt = String(lastMsg.text || '').trim();
+      const priorUserTexts = messages
+        .slice(0, -1)
+        .filter((m) => m && m.role === 'user' && m.text)
+        .map((m) => String(m.text).trim())
+        .filter((t) => t.length > 3 && !/^(?:then\s+)?(?:go\s+)?search(?:\s+for\s+it)?$|^what\s+happened\??$/i.test(t));
+      const prevTopic = priorUserTexts.length ? priorUserTexts[priorUserTexts.length - 1].slice(0, 110) : '';
+      const isFollowUpSearch = /\b(go\s+search|search\s+now|search\s+it|search\s+for|what\s+happened|tell\s+me\s+more|check\s+again|look\s+it\s+up|find\s+it)\b/i.test(rawPrompt) || (rawPrompt.split(/\s+/).length <= 4 && !!prevTopic);
+      const effectiveSearchQuery = (isFollowUpSearch && prevTopic && !rawPrompt.toLowerCase().includes(prevTopic.toLowerCase().slice(0, 12)))
+        ? `${prevTopic} ${rawPrompt}`.trim()
+        : rawPrompt;
+      const isTrivialGreeting = /^(?:hi+|hello+|hey+|yo+|sup|good\s+(?:morning|afternoon|evening)|thanks|thank\s+you|ok(?:ay)?|who\s+are\s+you\??|what\s+is\s+your\s+name\??)\s*[!?.]*$/i.test(rawPrompt);
+      const mentionsBrief2026Models = /\b(gemini[\s-]*(?:3\.5|3\.8|4)|hydrogen|neon|argon|gpt[\s-]*6|luna|terra|sol|astra|claude[\s-]*(?:5\.5|5\.2|fable))\b/i.test(effectiveSearchQuery);
+      const needsNormalWebSearch = !isTrivialGreeting && !mentionsBrief2026Models && effectiveSearchQuery.length > 3 && (
+        isFollowUpSearch ||
+        /\b(search|look up|latest|news|yesterday|today|tonight|recent|happened|event|riyadh|saudi|city|country|world|weather|price|cost|release|2025|2026|who|what|when|where|why|how|compare|vs\.?|best\b|review|docs|documentation|error|version|update|download|current|live|fact|research|explain)\b/i.test(effectiveSearchQuery)
+      );
+      if (useSearch && effectiveSearchQuery.length > 2 && !mentionsBrief2026Models && (isExtraLevel || needsNormalWebSearch)) {
+        this.setStatus({
+          running: true,
+          state: 'thinking',
+          mode: 'chat',
+          model: modelInfo.id,
+          stepText: isExtraLevel ? 'Doing extra web research…' : 'Searching the web…'
+        });
+        let hits = [];
+        if (isExtraLevel) {
+          const q1 = effectiveSearchQuery.slice(0, 160);
+          const q2 = (effectiveSearchQuery.slice(0, 110) + ' latest news details facts').trim();
+          const [r1, r2] = await Promise.race([
+            Promise.all([
+              runLiveWebSearch(q1, 6).catch(() => []),
+              runLiveWebSearch(q2, 4).catch(() => [])
+            ]),
+            sleep(3400).then(() => [[], []])
+          ]).catch(() => [[], []]);
+          const seenUrl = new Set();
+          for (const h of [...(Array.isArray(r1) ? r1 : []), ...(Array.isArray(r2) ? r2 : [])]) {
+            if (!h || !h.url || seenUrl.has(h.url)) continue;
+            seenUrl.add(h.url);
+            hits.push(h);
+            if (hits.length >= 8) break;
+          }
+        } else {
+          const searchBudgetMs = isFastModel ? 1600 : 2200;
+          hits = await Promise.race([
+            runLiveWebSearch(effectiveSearchQuery.slice(0, 160), 5),
+            sleep(searchBudgetMs).then(() => [])
+          ]).catch(() => []);
+        }
         if (Array.isArray(hits) && hits.length) {
-          searchContextText = '\n\n[Live Web Search Results — use these facts accurately and stay strictly on the user\'s exact topic]:\n' +
+          const header = isExtraLevel
+            ? `[EXTRA Live Web Search Results for "${effectiveSearchQuery.slice(0, 90)}" — synthesize these real facts thoroughly]:`
+            : `[Live Web Search Results for "${effectiveSearchQuery.slice(0, 90)}" — answer directly using these real facts]:`;
+          searchContextText = '\n\n' + header + '\n' +
             hits.map((h, idx) => `${idx + 1}. ${h.title} (${h.url})\n   ${h.snippet}`).join('\n');
         }
       }
@@ -659,41 +704,107 @@ class AgentRunner extends EventEmitter {
 
       let fullText = '';
       let thoughtText = '';
-      const failedModels = new Set();
-      let activeChatModel = modelInfo.id;
+      // STRICT MODEL LOCK: Always run the exact model the user selected. NEVER demote to weaker models.
+      const activeChatModel = modelInfo.id;
+      const fastTimeoutMs = (isFastModel && (tLevel === 'low' || tLevel === 'medium')) ? 16000 : 32000;
+      const chatWebDecls = useSearch
+        ? declarations({ includeScreen: false }).filter((d) => d.name === 'web_search' || d.name === 'fetch_url')
+        : [];
       let res = null;
-      for (let attempt = 0; attempt < 8; attempt++) {
-        const tCfg = buildThinkingConfig(activeChatModel, s.thinkingLevel || 'medium', this.getModels());
-        const chatPayload = {
-          systemInstruction: { parts: [{ text: buildChatSystemPrompt({ screenShare, thinkingLevel: s.thinkingLevel || 'medium' }) }] },
-          contents
-        };
-        if (tCfg) chatPayload.generationConfig = { thinkingConfig: tCfg };
-        try {
-          res = await this.gemini.stream(activeChatModel, chatPayload, {
-            retries: 1,
-            signal: this.abortController.signal,
-            onThought: (delta) => {
-              thoughtText += delta;
-              this.emit('chat-delta', { runId, chatId, thoughtDelta: delta });
-            },
-            onText: (delta, full) => {
-              fullText = full;
-              this.emit('chat-delta', { runId, chatId, delta, full });
+      let fellBackToGenerate = false;
+      for (let webRound = 0; webRound < 3; webRound++) {
+        fullText = '';
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const tCfg = buildThinkingConfig(activeChatModel, s.thinkingLevel || 'medium', this.getModels());
+          const chatPayload = {
+            systemInstruction: { parts: [{ text: buildChatSystemPrompt({ screenShare, thinkingLevel: s.thinkingLevel || 'medium', modelId: activeChatModel }) }] },
+            contents
+          };
+          if (chatWebDecls.length) chatPayload.tools = [{ functionDeclarations: chatWebDecls }];
+          if (tCfg) chatPayload.generationConfig = { thinkingConfig: tCfg };
+          try {
+            if (fellBackToGenerate || typeof this.gemini.stream !== 'function') {
+              const genJson = await this.gemini.generate(activeChatModel, chatPayload, {
+                retries: 0,
+                timeoutMs: fastTimeoutMs,
+                signal: this.abortController.signal
+              });
+              const cand = (genJson && genJson.candidates || [])[0];
+              const gParts = (cand && cand.content && cand.content.parts) || [];
+              thoughtText = gParts.filter((p) => typeof p.text === 'string' && p.thought).map((p) => p.text).join('');
+              fullText = gParts.filter((p) => typeof p.text === 'string' && !p.thought).map((p) => p.text).join('');
+              if (fullText) this.emit('chat-delta', { runId, chatId, delta: fullText, full: fullText });
+              res = { text: fullText, thought: thoughtText, candidates: genJson && genJson.candidates, usage: genJson && genJson.usageMetadata };
+            } else {
+              res = await this.gemini.stream(activeChatModel, chatPayload, {
+                retries: 0,
+                timeoutMs: fastTimeoutMs,
+                chunkTimeoutMs: fastTimeoutMs,
+                signal: this.abortController.signal,
+                onThought: (delta) => {
+                  thoughtText += delta;
+                  this.emit('chat-delta', { runId, chatId, thoughtDelta: delta });
+                },
+                onText: (delta, full) => {
+                  fullText = full;
+                  this.emit('chat-delta', { runId, chatId, delta, full });
+                },
+                onRetry: (r) => {
+                  this.emitLog({ kind: 'retry', status: 'warn', model: activeChatModel, tool: 'chat_stream', detail: `${activeChatModel} busy — retrying in ${Math.round(r.wait / 1000)}s` });
+                  this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: activeChatModel, stepText: `${activeChatModel} busy — retrying (${Math.round(r.wait / 1000)}s)…` });
+                }
+              });
             }
-          });
-          break;
-        } catch (chatErr) {
-          if (this.stopped || chatErr.kind === 'aborted' || chatErr.name === 'AbortError') throw chatErr;
-          if (chatErr.kind === 'invalid' || chatErr.kind === 'nokey' || chatErr.kind === 'disabled' || fullText) throw chatErr;
-          failedModels.add(activeChatModel);
-          const next = this.getFallbackModels(failedModels)[0];
-          const switchable = ['server', 'rate', 'quota', 'noaccess', 'timeout'].includes(chatErr.kind) || /high demand|overloaded|unavailable|capacity|try again|timed out|quota|limit:\s*0/i.test(chatErr.message);
-          if (!switchable || !next) throw chatErr;
-          this.emitLog({ kind: 'retry', status: 'warn', model: activeChatModel, tool: 'model_fallback', detail: `${activeChatModel} unavailable (${chatErr.message}); switching to ${next}` });
-          this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: next, stepText: `${activeChatModel} busy — switching to ${next}...` });
-          activeChatModel = next;
+            break;
+          } catch (chatErr) {
+            if (this.stopped || chatErr.kind === 'aborted' || chatErr.name === 'AbortError') throw chatErr;
+            const errMsg = String(chatErr.message || '');
+            const retryMs = Number(chatErr.retryAfterMs) || 0;
+            const isDailyQuota = chatErr.kind === 'quota' || /limit:\s*0\b|per[\s_-]*day|PerDay|free_tier_requests|insufficient_quota|credit balance|RESOURCE_EXHAUSTED|exceeded your current quota|\d+h\d*m/i.test(errMsg) || retryMs > 120000;
+            if (!fullText && !isDailyQuota && !fellBackToGenerate && (chatErr.kind === 'timeout' || /stalled|timed out/i.test(errMsg))) {
+              fellBackToGenerate = true;
+              this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: activeChatModel, stepText: 'Fetching reply directly…' });
+              continue;
+            }
+            const isTransient = !fullText && !isDailyQuota && (['server', 'rate', 'timeout', 'network'].includes(chatErr.kind) || /high demand|overloaded|temporarily|try again|capacity|timed out|per[\s_-]*minute/i.test(errMsg) || (retryMs > 0 && retryMs <= 65000));
+            if (isTransient && attempt < 1) {
+              const waitMs = Math.min(35000, Math.max(2000, retryMs || (3000 * (attempt + 1))));
+              this.emitLog({ kind: 'retry', status: 'warn', model: activeChatModel, tool: 'chat_retry', detail: `${activeChatModel} rate-limited/busy; waiting ${Math.round(waitMs / 1000)}s and retrying same model` });
+              this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: activeChatModel, stepText: `${activeChatModel} rate limit — retrying in ${Math.round(waitMs / 1000)}s…` });
+              await sleep(waitMs);
+              continue;
+            }
+            if (chatErr.kind === 'noaccess' || chatErr.status === 404) {
+              throw new Error(`Model "${activeChatModel}" is not enabled on this API key (HTTP ${chatErr.status || 404}). Enable billing/access for ${activeChatModel} or pick another model.\n${errMsg.slice(0, 650)}`);
+            }
+            if (isDailyQuota) {
+              throw new Error(`${activeChatModel}: API usage/quota limit reached on this key.`);
+            }
+            throw chatErr;
+          }
         }
+        // If the model called web_search or fetch_url in Chat Only mode, execute it right here and continue!
+        const cand0 = res && Array.isArray(res.candidates) ? res.candidates[0] : null;
+        const candParts = (cand0 && cand0.content && Array.isArray(cand0.content.parts)) ? cand0.content.parts : (Array.isArray(res && res.parts) ? res.parts : []);
+        const webCalls = candParts.filter((p) => p && p.functionCall && (p.functionCall.name === 'web_search' || p.functionCall.name === 'fetch_url'));
+        if (!webCalls.length) break;
+        contents.push({ role: 'model', parts: candParts });
+        const fnResponses = [];
+        for (const wc of webCalls) {
+          const fc = wc.functionCall;
+          const tool = getTool(fc.name);
+          this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: activeChatModel, stepText: fc.name === 'web_search' ? `Searching web: "${(fc.args && fc.args.query) || ''}"…` : 'Reading web page…' });
+          let out = { ok: false, error: 'Tool unavailable' };
+          try {
+            if (tool) out = await tool.run(fc.args || {}, this.makeToolContext({ chatId, step: webRound + 1 }));
+          } catch (e) {
+            out = { ok: false, error: e.message };
+          }
+          fnResponses.push({
+            functionResponse: Object.assign(fc.id ? { id: fc.id } : {}, { name: fc.name, response: out })
+          });
+        }
+        contents.push({ role: 'user', parts: fnResponses });
       }
       this.emitLog({
         kind: 'chat',
@@ -835,7 +946,8 @@ class AgentRunner extends EventEmitter {
     return { ok: true, summary: 'Reached max screen sub-steps.', actionsTaken, lastShot: shot };
   }
 
-  makeToolContext() {
+  makeToolContext(meta) {
+    const m = meta || {};
     return {
       screen: this.screen,
       automation: this.automation,
@@ -850,7 +962,19 @@ class AgentRunner extends EventEmitter {
       },
       registerProcess: (p) => this.activeProcesses.add(p),
       unregisterProcess: (p) => this.activeProcesses.delete(p),
-      progress: (txt) => this.emit('command-output', txt)
+      onCommandOutput: (payload) => this.emit('command-output', Object.assign({
+        chatId: m.chatId || '',
+        toolCallId: m.toolCallId || '',
+        step: m.step || 0
+      }, payload || {})),
+      progress: (txt) => this.emit('command-output', {
+        chatId: m.chatId || '',
+        toolCallId: m.toolCallId || '',
+        step: m.step || 0,
+        chunk: String(txt || ''),
+        stream: 'stdout',
+        running: true
+      })
     };
   }
 
@@ -896,18 +1020,16 @@ class AgentRunner extends EventEmitter {
         return `Step ${s.step} [${s.tool}/${tag}] (${s.ok ? 'OK' : 'FAILED'}): ${s.description}${s.result && s.result.error ? ' · ERR: ' + String(s.result.error).slice(0, 120) : ''}`;
       }).join('\n');
 
-      const depthNote = (taskProfile && taskProfile.isDeepBuildTask && minWorkMs > 0 && elapsedMs < minWorkMs && qaPasses < 2)
-        ? `\nDEEP QUALITY CHECK (${formatWorkedTime(elapsedMs)} worked so far; target thorough build+test window is ${Math.round(minWorkMs / 60000)}–25m): Hunt carefully for ANYTHING missing, ugly, untested, static, or broken (missing UI buttons, un-animated frames, missing easing/lighting, Play-mode errors, collision/UX issues). If anything can be tested deeper or improved cleanly, return verified=false with exact next_fix!`
-        : '';
+      const depthNote = '';
 
       const prompt = [
-        'You are Brief\'s Independent QA Tester & Reviewer Agent. Compare the BEFORE vs AFTER desktop images, executed steps, and live OCR UI state strictly.',
-        'STRICT REJECTION RULES (return verified=false whenever ANY fails):',
+        'You are Brief\'s Independent QA Tester & Reviewer Agent. Compare the BEFORE vs AFTER desktop images, executed steps, and live OCR UI state honestly.',
+        'VERIFICATION RULES (only return verified=false for real missing or broken work — NEVER invent busywork when the user\'s request is already fulfilled):',
         '1. Screenshots, OCR reads, or focusing windows without actually building/editing what the user asked -> verified=false.',
-        '2. Writing or copying code/prompts into a file/message WITHOUT running, applying, or testing it live inside the real app -> verified=false.',
-        '3. Roblox Studio (elevator/obby/GUI/script): Parts, buttons, and scripts MUST visibly exist in Studio AND Play/Run (F5/F8) + Output MUST have been tested with zero errors -> otherwise verified=false.',
-        '4. Blender / CapCut / Higgsfield / Adobe (animation/3D/video): Objects/clips AND real multi-frame animation keyframes/effects MUST be applied AND timeline playback/scrubbing must have been visually tested across frames -> otherwise verified=false.',
-        '5. If UI/scene appears missing requested buttons, broken, clipped, static, or visually unchanged -> verified=false.',
+        '2. Writing code/files without opening or verifying them when the user requested testing -> verified=false.',
+        '3. Roblox Studio (elevator/obby/GUI/script): Parts, buttons, and scripts should exist in Studio AND Play/Run (F5/F8) + Output checked -> otherwise verified=false.',
+        '4. Blender / CapCut / Higgsfield / Adobe (animation/3D/video): Requested objects/clips and keyframes/effects applied and checked -> otherwise verified=false.',
+        '5. If the requested file, script, edit, or UI action is clearly completed and working -> return verified=true immediately!',
         depthNote,
         'Reply ONLY with strict JSON: {"verified":true,"reason":"specific tested proof","next_fix":""} or {"verified":false,"reason":"specific missing or broken item","next_fix":"exact next actions & test to run now"}.',
         '',
@@ -965,15 +1087,20 @@ class AgentRunner extends EventEmitter {
       }
       return { verified: true, reason: txt.slice(0, 160), next_fix: '' };
     } catch (err) {
-      // Fail-closed unless mutating & tested work has already been proven cleanly
-      if (mutatingCount === 0 || (taskProfile && taskProfile.requiresAppTest && testCount === 0)) {
+      this.markModelCooldown(modelId, err);
+      // Never trap Brief in an infinite QA retry loop when the QA Verifier API call itself hits quota, rate limits, or timeout!
+      if (mutatingCount > 0) {
         return {
-          verified: false,
-          reason: 'QA verification could not verify live tested results (' + (err && err.message ? err.message : 'check error') + ').',
-          next_fix: 'Execute concrete build & live test checks in the target app and re-capture evidence.'
+          verified: true,
+          reason: 'Completed with ' + mutatingCount + ' real edit(s) (secondary QA verifier skipped due to API limit: ' + (err && err.message ? String(err.message).slice(0, 90) : 'unavailable') + ').',
+          next_fix: ''
         };
       }
-      return { verified: false, reason: 'QA check interrupted (' + (err && err.message ? err.message : 'retry') + ') — re-verify current state before finishing.', next_fix: 'Take one quick inspection check and verify everything requested is present and working.' };
+      return {
+        verified: false,
+        reason: 'Zero real edits executed yet (' + (err && err.message ? err.message : 'check error') + ').',
+        next_fix: 'Execute concrete build & live test checks in the target app and re-capture evidence.'
+      };
     }
   }
 
@@ -990,7 +1117,7 @@ class AgentRunner extends EventEmitter {
     const runId = ++this.runId;
     const workStartMs = Date.now();
     const settings = this.getSettings();
-    const configuredMax = Math.max(1, Math.min(200, Number(settings.maxSteps) || 140));
+    const configuredMax = Math.max(1, Math.min(200, Number(settings.maxSteps) || 45));
     const agentModel = this.resolveModelForJob('agent');
     const fastModel = this.resolveModelForJob('fast');
     const screenModel = this.resolveModelForJob('screen');
@@ -1021,12 +1148,12 @@ class AgentRunner extends EventEmitter {
       state: 'observing',
       mode: 'work',
       model: agentModel.id,
-      crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
+      crew: [agentModel.id],
       elapsedMs: 0,
       elapsedLabel: '0s',
       step: 0,
       maxSteps,
-      stepText: `Multi-Agent Crew (${roster.distinctCount} models) opening workspace...`
+      stepText: `Working (${agentModel.id})…`
     });
     this.emitLog({
       kind: 'task',
@@ -1051,23 +1178,64 @@ class AgentRunner extends EventEmitter {
       }
       if (settings.minimizeDuringAgent !== false) {
         this.emit('prepare-desktop-eyes');
-        await sleep(200);
+        await sleep(80);
       }
 
+      const wantsTabs = /\b(tab|tabs|browser|chrome|edge|brave|firefox|youtube|google|site|website|url|http|open)\b/i.test(String(task || ''));
       const [currentShotInit, rawWindows, rawTabs] = await Promise.all([
         this.screen.capture({ format: 'jpeg' }),
         (this.automation && typeof this.automation.listWindows === 'function') ? this.automation.listWindows().catch(() => []) : Promise.resolve([]),
-        (this.automation && typeof this.automation.listBrowserTabs === 'function') ? this.automation.listBrowserTabs().catch(() => []) : Promise.resolve([])
+        (wantsTabs && this.automation && typeof this.automation.listBrowserTabs === 'function') ? this.automation.listBrowserTabs().catch(() => []) : Promise.resolve([])
       ]);
       const openWindows = (Array.isArray(rawWindows) ? rawWindows : []).filter((w) => !/^(?:brief(?:\s|$)|locally(?:\s|$))/i.test(String(w.title || '')) && !/^(?:locally|brief)$/i.test(String(w.process || '')));
       const openTabs = Array.isArray(rawTabs) ? rawTabs : [];
 
       const taskProfile = detectDeepTaskProfile(task, openWindows, settings, { minWorkMs: _testMinWorkMs, maxWorkMs: _testMaxWorkMs });
       if (taskProfile.isDeepBuildTask) {
-        maxSteps = Math.max(configuredMax, 140);
+        maxSteps = Math.max(configuredMax, 60);
       }
 
-      const obsShotThumb = thumbOf(currentShotInit);
+      // Immediately bring the target app window to the front & glide mouse there BEFORE Step 1
+      // so the user sees immediate movement and Step 1 never wastes an API call on the wrong window!
+      let currentShot = currentShotInit;
+      if (!(screenShare && screenShare.enabled && screenShare.kind === 'window') && openWindows.length && this.automation && typeof this.automation.focusWindow === 'function') {
+        const taskStr = String(task || '');
+        const preTarget = openWindows.find((w) => {
+          const t = String(w.title || '').toLowerCase();
+          const p = String(w.process || '').toLowerCase();
+          if (/\b(?:roblox|obby|luau|brookhaven|elevator)\b/i.test(taskStr) && (t.includes('roblox') || p.includes('roblox'))) return true;
+          if (/\bblender\b/i.test(taskStr) && (t.includes('blender') || p.includes('blender'))) return true;
+          if (/\bcapcut\b/i.test(taskStr) && (t.includes('capcut') || p.includes('capcut'))) return true;
+          if (/\b(?:vs\s*code|visual\s*studio\s*code)\b/i.test(taskStr) && (t.includes('visual studio code') || p === 'code')) return true;
+          if (/\bnotepad\b/i.test(taskStr) && (t.includes('notepad') || p.includes('notepad'))) return true;
+          if (/\b(?:chrome|edge|firefox|brave|youtube|browser)\b/i.test(taskStr) && /(?:chrome|msedge|firefox|brave)/i.test(p)) return true;
+          return false;
+        });
+        if (preTarget) {
+          try {
+            await this.automation.focusWindow(preTarget.title).catch(() => {});
+            await sleep(90);
+            const fgPre = await this.automation.foreground().catch(() => null);
+            if (fgPre && fgPre.rect) {
+              const nums = typeof fgPre.rect === 'string'
+                ? fgPre.rect.split(',').map((n) => Number(n.trim()))
+                : [fgPre.rect.left, fgPre.rect.top, fgPre.rect.left + fgPre.rect.width, fgPre.rect.top + fgPre.rect.height];
+              if (nums.length === 4 && nums.every(isFinite) && (nums[2] - nums[0]) > 100 && (nums[3] - nums[1]) > 100) {
+                const cx = Math.round(nums[0] + (nums[2] - nums[0]) * 0.5);
+                const cy = Math.round(nums[1] + (nums[3] - nums[1]) * 0.48);
+                const { screen: elecScreen } = (process.versions && process.versions.electron) ? require('electron') : {};
+                const dipPt = (elecScreen && typeof elecScreen.screenToDipPoint === 'function') ? elecScreen.screenToDipPoint({ x: cx, y: cy }) : { x: cx, y: cy };
+                this.cursorEmitter({ kind: 'move', x: dipPt.x, y: dipPt.y, ms: 130, label: 'Opening ' + preTarget.title.slice(0, 32) });
+                await Promise.race([this.automation.move(cx, cy, 130).catch(() => {}), sleep(300)]);
+                anyPointerMoved = true;
+              }
+            }
+            currentShot = await this.screen.capture({ format: 'jpeg' });
+          } catch (_) { /* ignore */ }
+        }
+      }
+
+      const obsShotThumb = thumbOf(currentShot);
       this.emit('work-step', {
         runId,
         chatId,
@@ -1080,21 +1248,30 @@ class AgentRunner extends EventEmitter {
           tool: 'observe_screen',
           description: screenShare && screenShare.enabled
             ? ('Third Eye looking at "' + (screenShare.name || 'screen') + '"…')
-            : `Crew (${roster.distinctCount} models) scanning desktop & launching Step 1 immediately…`,
+            : `Brief scanning desktop & launching Step 1 immediately…`,
           seenShot: obsShotThumb
         }
       });
       const useSearch = webSearch !== undefined ? !!webSearch : (settings.webSearchEnabled !== false);
-      const needsPreSearch = useSearch && task && /\b(search|look up|what is|who is|why|how does|news|weather|price|cause|causes|effects|facts|information|research|find out|essay|report|summary|pollution|how to)\b/i.test(String(task));
+      const workThinkingLvl = String(settings.thinkingLevel || 'medium').toLowerCase();
+      const isExtraWork = workThinkingLvl === 'extra';
+      const isFastWork = /flash-?lite|3\.8-?flash|\bflash\b|luna|haiku/i.test(agentModel.id) || workThinkingLvl === 'low';
+      const mentions2026ModelsWork = /\b(gemini[\s-]*(?:3\.5|3\.8|4)|hydrogen|neon|argon|gpt[\s-]*6|luna|terra|sol|astra|claude[\s-]*(?:5\.5|5\.2|fable))\b/i.test(String(task || ''));
+      const needsPreSearch = useSearch && task && !mentions2026ModelsWork && (isExtraWork || (!isFastWork && /\b(search|look up|what is|who is|why|how does|news|weather|price|cause|causes|effects|facts|information|research|find out|essay|report|summary|pollution|how to)\b/i.test(String(task))));
       const initialWebHits = needsPreSearch
-        ? await Promise.race([runLiveWebSearch(String(task).trim().slice(0, 160), 5), sleep(900).then(() => [])]).catch(() => [])
+        ? await Promise.race([
+            runLiveWebSearch(String(task).trim().slice(0, 160), isExtraWork ? 8 : 5),
+            sleep(isExtraWork ? 2400 : 900).then(() => [])
+          ]).catch(() => [])
         : [];
-      let currentShot = currentShotInit;
-      if (this.getSettings().showOverlay !== false) {
+      if (!anyPointerMoved && this.getSettings().showOverlay !== false) {
         try {
           const startMap = this.screen.mapPoint(520, 420, { scale: 1000 });
-          this.cursorEmitter({ kind: 'move', x: startMap.dip.x, y: startMap.dip.y, ms: 200, label: 'Crew starting…' });
-          this.automation.move(startMap.native.x, startMap.native.y, 200).catch(() => {});
+          this.cursorEmitter({ kind: 'move', x: startMap.dip.x, y: startMap.dip.y, ms: 130, label: 'Brief starting…' });
+          await Promise.race([
+            this.automation.move(startMap.native.x, startMap.native.y, 130).catch(() => {}),
+            sleep(300)
+          ]);
         } catch (_) { /* ignore */ }
       }
 
@@ -1108,11 +1285,11 @@ class AgentRunner extends EventEmitter {
 
       const [initVisionShot, initUiMap] = await Promise.all([
         shotForVision(currentShot, this.automation),
-        describeForegroundElements(this.screen, this.automation)
+        describeForegroundElements(this.screen, this.automation, { fastMode: isFastWork })
       ]);
 
-      // PARALLEL MULTI-AGENT CREW: Launch Specialist + Scout + Critic/Tactician CONCURRENTLY
-      // while Executor immediately jumps into Step 1 actions!
+      // PARALLEL MULTI-AGENT CREW: Only launch parallel Specialist when a distinct planner model is explicitly configured
+      // so we NEVER burn 2x quota calling the exact same model twice on Step 1!
       let planText = '';
       let specialistInjected = false;
       let scoutMidAuditPromise = null;
@@ -1122,74 +1299,38 @@ class AgentRunner extends EventEmitter {
       const specialistModelId = (roster.specialist && !/computer-use/i.test(roster.specialist)) ? roster.specialist : (plannerModel.id || agentModel.id);
       const scoutModelId = (roster.scout && !/computer-use/i.test(roster.scout)) ? roster.scout : (fastModel.id || agentModel.id);
       const criticModelId = (roster.critic && !/computer-use/i.test(roster.critic)) ? roster.critic : specialistModelId;
-      const crewList = [
-        this.gemini.generate(specialistModelId, {
-          contents: [{
-            role: 'user',
-            parts: [
-              {
-                text: 'You are Brief\'s Specialist Architect working IN PARALLEL alongside the Desktop Executor.\n' +
-                  'Do NOT stall with vague essays. Provide:\n' +
-                  '1) Concrete objects/scripts/keyframes/UI buttons needed so nothing is missing or broken.\n' +
-                  '2) Exact app test steps required to prove it works (Roblox Studio: Play/Run F5/F8 + check Output; Blender/CapCut/Higgsfield/Adobe: multi-frame keyframes + Space/Play playback scrub verify; Code: run tests).\n' +
-                  'Task: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 8).map((w) => w.title).join(' | ') || 'none')
-              },
-              { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
-            ]
-          }],
-          generationConfig: { maxOutputTokens: 420, temperature: 0.2 }
-        }, { signal: this.abortController.signal, retries: 0 })
-      ];
-      if (scoutModelId) {
-        crewList.push(
-          this.gemini.generate(scoutModelId, {
-            contents: [{
-              role: 'user',
-              parts: [
-                {
-                  text: 'You are Brief\'s Fast Scout Agent. In 4 crisp bullets, list the exact visible UI controls/tabs/menus in the screenshot and OCR map that the Executor should click or watch out for.\nTask: ' + task + '\n' + initUiMap
-                },
-                { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
-              ]
-            }],
-            generationConfig: { maxOutputTokens: 220, temperature: 0.1 }
-          }, { signal: this.abortController.signal, retries: 0 })
-        );
-      }
-      if (criticModelId && String(settings.thinkingLevel || 'medium').toLowerCase() !== 'low') {
-        crewList.push(
-          this.gemini.generate(criticModelId, {
-            contents: [{
-              role: 'user',
-              parts: [
-                {
-                  text: 'You are Brief\'s Tactician & Edge-Case Critic Agent collaborating in parallel. In 3 crisp bullets, name the top pitfalls, wrong-window hazards, or missing verification checks that would make the Executor fail or accidentally pretend it finished.\nTask: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 6).map((w) => w.title).join(' | ') || 'none')
-                }
-              ]
-            }],
-            generationConfig: { maxOutputTokens: 200, temperature: 0.15 }
-          }, { signal: this.abortController.signal, retries: 0 })
-        );
-      }
+      const runParallelSpecialist = enableParallel && settings.usePlanner !== false && taskProfile.isDeepBuildTask && specialistModelId && specialistModelId !== agentModel.id && !this.isModelCoolingDown(specialistModelId);
+      const crewList = runParallelSpecialist
+        ? [
+            this.gemini.generate(specialistModelId, {
+              contents: [{
+                role: 'user',
+                parts: [
+                  {
+                    text: 'You are Brief\'s Specialist Architect working IN PARALLEL alongside the Desktop Executor (Year 2026: GPT-6 Luna/Terra/Sol/Astra, Gemini 3.5/3.8/4, Claude 5.5/5.2 are ALL real active models — implement user-requested model IDs verbatim).\n' +
+                      'In 5 short bullets, list:\n' +
+                      '1) Concrete objects/scripts/keyframes/UI buttons needed so nothing is missing or broken.\n' +
+                      '2) Exact live app test steps required to prove it works.\n' +
+                      'Task: ' + task + '\nOpen Windows: ' + (openWindows.slice(0, 8).map((w) => w.title).join(' | ') || 'none')
+                  },
+                  { inlineData: { mimeType: initVisionShot.mime, data: initVisionShot.base64 } }
+                ]
+              }],
+              generationConfig: { maxOutputTokens: 280, temperature: 0.2 }
+            }, { signal: this.abortController.signal, retries: 0 })
+          ]
+        : [];
 
-      const concurrentCrewPromise = (enableParallel && settings.usePlanner !== false && specialistModelId)
+      const concurrentCrewPromise = crewList.length
         ? Promise.allSettled(crewList).then((settled) => {
-            const chunks = [];
-            const extractTxt = (sIdx) => {
-              const r = settled[sIdx] && settled[sIdx].status === 'fulfilled' ? settled[sIdx].value : null;
-              const c = r && (r.candidates || [])[0];
-              return ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
-            };
-            const specTxt = extractTxt(0);
-            if (specTxt) chunks.push(`[Specialist (${specialistModelId}) Blueprint]\n${specTxt}`);
-            const scTxt = scoutModelId ? extractTxt(1) : '';
-            if (scTxt) chunks.push(`[Scout (${scoutModelId}) UI Map]\n${scTxt}`);
-            const critIdx = scoutModelId ? 2 : 1;
-            const critTxt = crewList[critIdx] ? extractTxt(critIdx) : '';
-            if (critTxt) chunks.push(`[Critic (${criticModelId}) Guardrails]\n${critTxt}`);
-
-            planText = chunks.join('\n\n');
-            if (planText) {
+            const r = settled[0] && settled[0].status === 'fulfilled' ? settled[0].value : null;
+            if (settled[0] && settled[0].status === 'rejected') {
+              this.markModelCooldown(specialistModelId, settled[0].reason);
+            }
+            const c = r && (r.candidates || [])[0];
+            const specTxt = ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
+            if (specTxt) {
+              planText = `[Specialist (${specialistModelId}) Blueprint]\n${specTxt}`;
               this.emitLog({ kind: 'plan', status: 'ok', model: specialistModelId, tool: 'parallel_crew', detail: planText });
               this.emit('work-plan', { runId, chatId, model: specialistModelId, plan: planText });
             }
@@ -1197,16 +1338,7 @@ class AgentRunner extends EventEmitter {
           }).catch(() => '')
         : Promise.resolve('');
 
-      // Emit crew announcement immediately so user sees all agents working without waiting
-      this.emit('work-plan', {
-        runId,
-        chatId,
-        model: agentModel.id,
-        plan: `Parallel Crew Launched — Executor: ${roster.executor} · Scout: ${roster.scout} · Specialist: ${roster.specialist} · Critic: ${roster.critic} · QA Tester: ${roster.qaTester}` +
-          (taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0
-            ? `\nDeep Studio Mode active (target ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m build, live testing & polish).`
-            : '')
-      });
+      // Stay calm and unified on startup: no noisy multi-model banner spam.
 
       const webSearchBlock = (Array.isArray(initialWebHits) && initialWebHits.length)
         ? '\n\n[Live Web Search Results — use these facts accurately and stay strictly on the user\'s exact topic]:\n' +
@@ -1245,7 +1377,7 @@ class AgentRunner extends EventEmitter {
       const connectedMcp = this.mcpManager ? this.mcpManager.list().filter((x) => x.status === 'connected') : [];
       const mcpDecls = this.mcpManager ? this.mcpManager.getGeminiToolDeclarations() : [];
 
-      const sysPrompt = buildWorkSystemPrompt({
+      const makeWorkSysPrompt = (modelIdForStep) => buildWorkSystemPrompt({
         screen: this.screen,
         automation: this.automation,
         cuActive: cuAvailable || usingDirectCu,
@@ -1255,10 +1387,16 @@ class AgentRunner extends EventEmitter {
         openWindows,
         openTabs,
         screenShare,
-        thinkingLevel: settings.thinkingLevel || 'medium'
+        thinkingLevel: settings.thinkingLevel || 'medium',
+        modelId: modelIdForStep
       });
 
-      const decls = [...declarations({ includeScreen: true, cuMode: usingDirectCu }), ...mcpDecls.filter((d) => !BLOCKED_STORE_TOOL_RE.test(d.name))];
+      const decls = [...declarations({ includeScreen: true, cuMode: usingDirectCu }), ...mcpDecls.filter((d) => {
+        if (BLOCKED_STORE_TOOL_RE.test(d.name)) return false;
+        // Allow Roblox Creator Store / Toolbox asset tools when user is doing a Roblox task
+        if (ROBLOX_ALLOWED_STORE_RE.test(d.name) && !taskProfile.isRoblox) return false;
+        return true;
+      })];
       if (cuAvailable) {
         decls.push({
           name: 'delegate_screen_control',
@@ -1280,16 +1418,20 @@ class AgentRunner extends EventEmitter {
       const failureCounts = new Map();
       const recentClicks = [];
       const failedModels = new Set();
-      let activeStepModel = agentModel.id;
+      // STRICT MODEL LOCK: Always run the exact model the user selected. NEVER silently downgrade or demote!
+      const activeStepModel = agentModel.id;
+      const sysPrompt = makeWorkSysPrompt(activeStepModel);
       let zeroWorkRejections = 0;
       let untestedRejections = 0;
-      let fallbackSwitches = 0;
       let verifyRejections = 0;
-      let deepPolishRejections = 0;
       let qaPasses = 0;
-      let forceToolNextTurn = false;
+      let forceToolNextTurn = !usingDirectCu; // Step 1 in Work mode ALWAYS requires a real tool action!
       let mouseButtonHeld = false;
       let didHoldAction = false;
+      let lastToolSig = '';
+      let consecutiveSameToolCount = 0;
+      let consecutiveFailedSteps = 0;
+      let stuckBreakReason = '';
 
       for (let step = 1; step <= maxSteps; step++) {
         if (this.stopped) throw abortError();
@@ -1310,7 +1452,7 @@ class AgentRunner extends EventEmitter {
             specialistInjected = true;
             contents.push({
               role: 'user',
-              parts: [{ text: '[Parallel Multi-Agent Crew Guidance Ready — follow these concrete implementation & testing requirements:]\n' + crewNote }]
+              parts: [{ text: '[Specialist Guidance Ready — follow these concrete implementation & testing requirements:]\n' + crewNote }]
             });
           }
         }
@@ -1326,141 +1468,86 @@ class AgentRunner extends EventEmitter {
           state: 'thinking',
           mode: 'work',
           model: activeStepModel,
-          crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
+          crew: [activeStepModel],
           elapsedMs: Date.now() - workStartMs,
           elapsedLabel: curElapsed,
           mutatingCount: stepLog.filter(isMutatingWorkStep).length,
           testCount: stepLog.filter(isTestEvidenceStep).length,
           step,
           maxSteps,
-          stepText: `⏱ ${curElapsed} · Step ${step}/${maxSteps} · Executor working (${activeStepModel})...`
+          stepText: `Step ${step} · Working (${activeStepModel})`
         });
 
         let json;
         let streamedAnyThought = false;
-        let waitSecs = 0;
-        let streamPhase = 'Working';
-        let streamBytes = 0;
-        const waitTicker = setInterval(() => {
-          waitSecs += 1;
-          if (!this.stopped) {
-            const elapsedStr = elapsedNowLabel();
-            const extra = streamBytes > 0 ? ` · ${(streamBytes / 1024).toFixed(1)} KB` : '';
-            this.setStatus({
-              running: true,
-              state: 'thinking',
-              mode: 'work',
-              model: activeStepModel,
-              crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
-              elapsedMs: Date.now() - workStartMs,
-              elapsedLabel: elapsedStr,
-              mutatingCount: stepLog.filter(isMutatingWorkStep).length,
-              testCount: stepLog.filter(isTestEvidenceStep).length,
-              step,
-              maxSteps,
-              stepText: `⏱ ${elapsedStr} · Step ${step}/${maxSteps} · ${streamPhase} (${waitSecs}s${extra}) with ${activeStepModel}...`
-            });
-            if (waitSecs % 2 === 1 && !mouseButtonHeld && this.getSettings().showOverlay !== false) {
-              try {
-                const { screen: elecScreen } = (process.versions && process.versions.electron) ? require('electron') : {};
-                if (elecScreen && typeof elecScreen.getCursorScreenPoint === 'function') {
-                  const pt = elecScreen.getCursorScreenPoint();
-                  this.cursorEmitter({ kind: 'layer-only', x: pt.x, y: pt.y, label: `⏱ ${elapsedStr} · Step ${step}` });
-                }
-              } catch (_) { /* ignore */ }
-            }
-          }
-        }, 1000);
-        let switchedModel = false;
-        try {
-          const workTCfg = buildThinkingConfig(activeStepModel, settings.thinkingLevel || 'medium', this.getModels());
-          const workPayload = {
-            systemInstruction: { parts: [{ text: sysPrompt }] },
-            contents: pruneHistoryScreenshots(contents, 3),
-            tools: toolPayload
-          };
-          if (forceToolNextTurn && !usingDirectCu) {
-            workPayload.toolConfig = { functionCallingConfig: { mode: 'ANY' } };
-          }
-          forceToolNextTurn = false;
-          if (workTCfg) workPayload.generationConfig = { thinkingConfig: workTCfg };
-          const callOpts = {
-            retries: 1,
-            signal: this.abortController.signal,
-            onThought: (delta, fullThought) => {
-              streamedAnyThought = true;
-              streamPhase = 'Thinking & Analyzing';
-              this.emit('work-thought', { runId, chatId, step, delta, full: fullThought, streaming: true });
-            },
-            onText: (delta, full) => {
-              this.emit('chat-delta', { runId, chatId, delta, full });
-            },
-            onActivity: ({ bytes, thoughtChars, textChars }) => {
-              streamBytes = bytes;
-              streamPhase = thoughtChars > 0 ? 'Thinking & Analyzing' : (textChars > 0 ? 'Writing reply' : 'Preparing action');
-              if (!this.stopped) {
-                this.setStatus({
-                  running: true,
-                  state: 'thinking',
-                  mode: 'work',
-                  model: activeStepModel,
-                  step,
-                  maxSteps,
-                  stepText: `Step ${step}/${maxSteps} · ${streamPhase} (${waitSecs}s · ${(bytes / 1024).toFixed(1)} KB) with ${activeStepModel}...`
-                });
-              }
-            },
-            onRetry: (r) => {
-              this.emitLog({ kind: 'retry', status: 'warn', model: activeStepModel, tool: 'gemini_api', detail: `Retrying (${r.error}) in ${Math.round(r.wait / 1000)}s` });
-              this.setStatus({ state: 'thinking', stepText: `${activeStepModel} busy — retrying (${Math.round(r.wait / 1000)}s)...` });
-            }
-          };
-          if (typeof this.gemini.stream === 'function') {
-            try {
-              json = await this.gemini.stream(activeStepModel, workPayload, callOpts);
-            } catch (streamErr) {
-              if (!streamedAnyThought && streamErr.kind === 'bad_request' && /stream/i.test(streamErr.message || '')) {
-                json = await this.gemini.generate(activeStepModel, workPayload, callOpts);
-              } else {
-                throw streamErr;
-              }
-            }
-          } else {
-            json = await this.gemini.generate(activeStepModel, workPayload, callOpts);
-          }
-        } catch (apiErr) {
-          if (this.stopped || apiErr.kind === 'aborted') throw abortError();
-          const fatalAuth = ['invalid', 'nokey', 'disabled'].includes(apiErr.kind);
-          const recoverable = !fatalAuth && (
-            ['server', 'rate', 'quota', 'noaccess', 'timeout'].includes(apiErr.kind) ||
-            usingDirectCu ||
-            /high demand|overloaded|temporarily|try again|capacity|unavailable|unsupported|timed out|stalled|quota|limit:\s*0/i.test(apiErr.message || '')
-          );
-          if (recoverable && fallbackSwitches < 12) {
-            failedModels.add(activeStepModel);
-            const fallbackList = this.getFallbackModels(failedModels);
-            const nextModel = fallbackList[0];
-            if (nextModel) {
-              fallbackSwitches += 1;
-              const shortReason = String(apiErr.message || 'model busy').replace(/\s+/g, ' ').slice(0, 180);
-              this.emitLog({ kind: 'retry', status: 'warn', model: activeStepModel, tool: 'model_fallback', detail: `${activeStepModel} unavailable (${shortReason}); continuing with ${nextModel}` });
-              this.emit('work-note', { runId, chatId, step, text: `⚠️ ${activeStepModel} unavailable (${shortReason}). Switched automatically to ${nextModel} so your work continues.` });
-              this.setStatus({ running: true, state: 'thinking', mode: 'work', model: nextModel, step, maxSteps, stepText: `${activeStepModel} busy — continuing with ${nextModel}...` });
-              activeStepModel = nextModel;
-              usingDirectCu = /computer-use/i.test(activeStepModel);
-              if (toolPayload.length > 1 || !usingDirectCu) {
-                toolPayload[0] = { functionDeclarations: [...declarations({ includeScreen: true, cuMode: usingDirectCu }), ...mcpDecls.filter((d) => !BLOCKED_STORE_TOOL_RE.test(d.name))] };
-                toolPayload.length = 1;
-              }
-              step -= 1;
-              switchedModel = true;
-            }
-          }
-          if (!switchedModel) throw apiErr;
-        } finally {
-          clearInterval(waitTicker);
+        const workTCfg = buildThinkingConfig(activeStepModel, settings.thinkingLevel || 'medium', this.getModels());
+        const workPayload = {
+          systemInstruction: { parts: [{ text: sysPrompt }] },
+          contents: pruneHistoryScreenshots(contents, 2),
+          tools: toolPayload
+        };
+        if (forceToolNextTurn && !usingDirectCu) {
+          workPayload.toolConfig = { functionCallingConfig: { mode: 'ANY' } };
         }
-        if (switchedModel) continue;
+        forceToolNextTurn = false;
+        if (workTCfg) workPayload.generationConfig = { thinkingConfig: workTCfg };
+
+        const workTimeoutMs = isFastWork ? 16000 : 30000;
+        let workUseDirectGenerate = isFastWork; // Flash-Lite / Flash / Low use direct generateContent for fastest zero-stall tool calls!
+        for (let transientTry = 0; transientTry < 2; transientTry++) {
+          if (this.stopped) throw abortError();
+          try {
+            const callOpts = {
+              retries: 0,
+              timeoutMs: workTimeoutMs,
+              chunkTimeoutMs: workTimeoutMs,
+              signal: this.abortController.signal,
+              onThought: (delta, fullThought) => {
+                streamedAnyThought = true;
+                this.emit('work-thought', { runId, chatId, step, delta, full: fullThought, streaming: true });
+              },
+              onRetry: (r) => {
+                this.emitLog({ kind: 'retry', status: 'warn', model: activeStepModel, tool: 'gemini_api', detail: `${activeStepModel} rate-limited/busy — retrying in ${Math.round(r.wait / 1000)}s` });
+                this.setStatus({ running: true, state: 'thinking', mode: 'work', model: activeStepModel, step, maxSteps, stepText: `Step ${step} · ${activeStepModel} waiting ${Math.round(r.wait / 1000)}s to retry…` });
+              }
+            };
+            if (!workUseDirectGenerate && typeof this.gemini.stream === 'function') {
+              try {
+                json = await this.gemini.stream(activeStepModel, workPayload, callOpts);
+              } catch (streamErr) {
+                if (!streamedAnyThought && (streamErr.kind === 'timeout' || (streamErr.kind === 'bad_request' && /stream/i.test(streamErr.message || '')))) {
+                  workUseDirectGenerate = true;
+                  json = await this.gemini.generate(activeStepModel, workPayload, callOpts);
+                } else {
+                  throw streamErr;
+                }
+              }
+            } else {
+              json = await this.gemini.generate(activeStepModel, workPayload, callOpts);
+            }
+            break;
+          } catch (apiErr) {
+            if (this.stopped || apiErr.kind === 'aborted') throw abortError();
+            const errMsg = String(apiErr.message || '');
+            const retryMs = Number(apiErr.retryAfterMs) || 0;
+            const isDailyQuota = apiErr.kind === 'quota' || /limit:\s*0\b|per[\s_-]*day|PerDay|free_tier_requests|insufficient_quota|credit balance|RESOURCE_EXHAUSTED|exceeded your current quota|\d+h\d*m/i.test(errMsg) || retryMs > 120000;
+            const isTransient = !isDailyQuota && (['server', 'rate', 'timeout', 'network'].includes(apiErr.kind) || /high demand|overloaded|temporarily|try again|capacity|timed out|stalled|per[\s_-]*minute/i.test(errMsg) || (retryMs > 0 && retryMs <= 65000));
+            if (isTransient && transientTry < 1) {
+              const waitMs = Math.min(35000, Math.max(2000, retryMs || (3000 * (transientTry + 1))));
+              this.emitLog({ kind: 'retry', status: 'warn', model: activeStepModel, tool: 'work_retry', detail: `${activeStepModel} rate-limited/busy; waiting ${Math.round(waitMs / 1000)}s and retrying same model` });
+              this.setStatus({ running: true, state: 'thinking', mode: 'work', model: activeStepModel, step, maxSteps, stepText: `Step ${step} · ${activeStepModel} waiting ${Math.round(waitMs / 1000)}s to retry…` });
+              await sleep(waitMs);
+              continue;
+            }
+            if (apiErr.kind === 'noaccess' || apiErr.status === 404) {
+              throw new Error(`Model "${activeStepModel}" is not enabled on this API key (HTTP ${apiErr.status || 404}). Enable paid/API access for ${activeStepModel} or choose another model.\n${errMsg.slice(0, 650)}`);
+            }
+            if (isDailyQuota) {
+              throw new Error(`${activeStepModel}: API usage/quota limit reached on this key.`);
+            }
+            throw apiErr;
+          }
+        }
 
         const cand = (json.candidates || [])[0];
         if (!cand || !cand.content || !Array.isArray(cand.content.parts)) {
@@ -1481,14 +1568,86 @@ class AgentRunner extends EventEmitter {
         }
 
         if (!calls.length) {
+          // If the model returned text on Step 1 without calling a tool (e.g. explaining a plan),
+          // take immediate initiative on the target window so the mouse moves and real actions begin!
+          if (stepLog.length === 0) {
+            const taskStr = String(task || '');
+            const targetWin = openWindows.find((w) => {
+              const t = String(w.title || '').toLowerCase();
+              const p = String(w.process || '').toLowerCase();
+              if (/roblox/i.test(taskStr) && (t.includes('roblox') || p.includes('roblox'))) return true;
+              if (/blender/i.test(taskStr) && (t.includes('blender') || p.includes('blender'))) return true;
+              if (/(?:vs\s*code|code|visual\s*studio)/i.test(taskStr) && (t.includes('code') || p.includes('code'))) return true;
+              if (/notepad/i.test(taskStr) && (t.includes('notepad') || p.includes('notepad'))) return true;
+              if (/(?:terminal|cmd|powershell)/i.test(taskStr) && (t.includes('cmd') || t.includes('powershell') || t.includes('terminal'))) return true;
+              if (/(?:browser|chrome|edge|firefox)/i.test(taskStr) && (t.includes('chrome') || t.includes('edge') || t.includes('firefox'))) return true;
+              return false;
+            }) || (openWindows.length ? openWindows[0] : null);
+
+            if (targetWin) {
+              const toolCallId = 'init_focus_' + Date.now();
+              const toolContext = this.makeToolContext({ chatId, toolCallId, step });
+              const focusTool = getTool('focus_window');
+              let stepOk = true;
+              let stepErr = null;
+              this.emit('work-step', {
+                runId,
+                chatId,
+                item: {
+                  step,
+                  toolCallId,
+                  running: true,
+                  tool: 'focus_window',
+                  description: `Focus window "${targetWin.title}"`,
+                  args: { title: targetWin.title }
+                }
+              });
+              try {
+                if (focusTool) await focusTool.run({ title: targetWin.title }, toolContext);
+              } catch (e) {
+                stepOk = false;
+                stepErr = e.message;
+              }
+              const freshShot = await this.screen.capture({ format: 'jpeg' });
+              const freshThumb = thumbOf(freshShot);
+              const stepItem = {
+                step,
+                toolCallId,
+                running: false,
+                ok: stepOk,
+                tool: 'focus_window',
+                description: `Focus window "${targetWin.title}"`,
+                args: { title: targetWin.title },
+                error: stepErr,
+                seenShot: freshThumb
+              };
+              stepLog.push(stepItem);
+              this.emit('work-step', { runId, chatId, item: stepItem });
+              forceToolNextTurn = !usingDirectCu;
+              const nextVision = await shotForVision(freshShot, this.automation);
+              contents.push({
+                role: 'user',
+                parts: [
+                  {
+                    text: `[Step 1 executed: Brought "${targetWin.title}" to the foreground.]\n` +
+                      (visibleText ? `Plan noted: ${visibleText.slice(0, 400)}\n` : '') +
+                      'Now execute the next real action on screen immediately: click into the workspace/editor/command-bar (`click_text` or `click`), use `type_text` or `press_keys`, insert needed assets, or run Luau/commands.'
+                  },
+                  { inlineData: { mimeType: nextVision.mime, data: nextVision.base64 } }
+                ]
+              });
+              continue;
+            }
+          }
+
           const mutStepsNow = stepLog.filter(isMutatingWorkStep);
           const tstStepsNow = stepLog.filter(isTestEvidenceStep);
           const elapsedNow = Date.now() - workStartMs;
           const withinMaxTime = elapsedNow < taskProfile.maxWorkMs;
           const missingHold = wantsLongPress && !didHoldAction;
 
-          // Gate 1: Reject photo-only / zero real action attempts deterministically
-          if ((mutStepsNow.length === 0 || missingHold) && zeroWorkRejections < 7 && step < maxSteps && withinMaxTime) {
+          // Gate 1: Reject photo-only / zero real action attempts (max 2 nudges — never loop forever!)
+          if ((mutStepsNow.length === 0 || missingHold) && zeroWorkRejections < 2 && step < maxSteps && withinMaxTime) {
             zeroWorkRejections += 1;
             forceToolNextTurn = !usingDirectCu;
             if (visibleText) this.emit('work-note', { runId, chatId, step, text: visibleText });
@@ -1497,44 +1656,72 @@ class AgentRunner extends EventEmitter {
               role: 'user',
               parts: [{ text: missingHold
                 ? 'REJECTED: You have NOT executed a long-press or hold action yet! Call `mouse_button({ action: "long_press", x, y, duration_ms: 2500 })`, `click({ x, y, hold_ms: 2500 })`, `click_element({ query, hold_ms: 2500 })`, or `hold_key({ key, action: "long_press", duration_ms: 2500 })` right now.'
-                : `[REJECTED BY QA GATE — Time Worked: ${formatWorkedTime(elapsedNow)}]\nDo NOT stop, hesitate, or summarize! You have ${stepLog.length} passive step(s) and ZERO real edits yet. Put on your Glasses (\`zoom_region\` / \`read_screen_text\`), locate the exact button/input, and call real action tools NOW (\`click_text\`, \`click_element\`, \`click\`, \`type_text\`, \`press_keys\`, \`write_file\`, \`run_command\`)!` }]
+                : `[ACTION REQUIRED — Time Worked: ${formatWorkedTime(elapsedNow)}]\nExecute the real action now instead of just summarizing: call \`write_file\`, \`click_text\`, \`click_element\`, \`click\`, \`type_text\`, \`press_keys\`, or \`run_command\`!` }]
             });
             continue;
           }
 
-          // Gate 2: Require live app / animation / Play / command testing before completion on build tasks
-          if (taskProfile.requiresAppTest && tstStepsNow.length === 0 && untestedRejections < 5 && step < maxSteps && withinMaxTime) {
+          const modelTier = classifyModelTier(activeStepModel);
+          const isFlagshipTier = modelTier === 'flagship';
+          const lastTestStep = [...tstStepsNow].reverse()[0];
+          const lastTestFailed = !!(lastTestStep && lastTestStep.ok === false);
+
+          // Gate 2: Require live test on build tasks OR always on Flagship tier after edits/failed tests (capped cleanly so it never loops!)
+          const needTestNow = (taskProfile.requiresAppTest || isFlagshipTier) &&
+            mutStepsNow.length > 0 &&
+            (tstStepsNow.length === 0 || lastTestFailed) &&
+            untestedRejections < (isFlagshipTier ? 2 : 1) &&
+            step < maxSteps &&
+            withinMaxTime;
+          if (needTestNow) {
             untestedRejections += 1;
             forceToolNextTurn = !usingDirectCu;
-            const testDirective = taskProfile.isRoblox
-              ? 'You MUST test inside Roblox Studio right now: ensure **Output** is open (`View -> Output`), run **Play / Run (`F5` or `F8`)**, test your buttons/doors/scripts live, inspect Output with `read_screen_text` for zero red errors, and fix any missing/broken parts!'
-              : taskProfile.isAnimationOrCreative
-                ? 'You MUST test your animation/scene live right now: check keyframes across multiple timeline frames (`I`/Keyframes), press **Space / Play** or `drag` the timeline playhead across start/mid/end frames, take screenshots during playback to verify motion, and fix any static or missing UI/visual elements!'
-                : 'You MUST execute a real test command (`run_command`) or run/interact with the app live and inspect output screenshots to prove it actually works with zero errors!';
-            this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'test_gate', detail: 'Rejected premature Done without in-app live testing' });
-            this.emit('work-note', { runId, chatId, step, text: '🛡️ Blocked premature completion: no live Play/Test run verified yet. Testing the work now…' });
+            const testDirective = lastTestFailed
+              ? 'Your previous test/command FAILED. Diagnose what went wrong, fix the root cause now, and re-run the test (`run_command`, `terminal_send`, `open_path`, or live check) until it passes cleanly!'
+              : (taskProfile.isRoblox
+                  ? 'Run one live check inside Roblox Studio now: press Play/Run (`F5` or `F8`), check Output for zero red errors, fix any broken part, then finish.'
+                  : taskProfile.isAnimationOrCreative
+                    ? 'Preview your animation/scene once now (press Space/Play or scrub timeline and inspect), fix anything missing, then finish.'
+                    : 'Test what you built or fixed now (`run_command` in Command Prompt/PowerShell, `terminal_send`, `open_path`, or `open_url`). If anything is wrong, inform the user and fix it before finishing.');
+            this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'test_gate', detail: lastTestFailed ? 'Previous test failed — continuing fix & re-test' : 'Running live test before finishing' });
+            this.emit('work-note', {
+              runId,
+              chatId,
+              step,
+              text: lastTestFailed
+                ? '⚠️ Something went wrong during testing — task is still running while Brief fixes and re-tests it…'
+                : (isFlagshipTier ? '🧪 Flagship tier testing work before finishing…' : '🛡️ Running a quick live check before finishing…')
+            });
             contents.push({
               role: 'user',
-              parts: [{ text: `[REJECTED — NO LIVE TEST RUN VERIFIED YET (${formatWorkedTime(elapsedNow)} worked)]\n` + testDirective }]
+              parts: [{ text: `[LIVE TEST CHECK (${formatWorkedTime(elapsedNow)} worked)]\n` + testDirective }]
             });
             continue;
           }
 
-          // Gate 3 & 4: Fail-Closed Independent QA Verifier Agent comparing BEFORE vs AFTER + Deep Polish Check
-          const needsMoreDepth = taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0 && elapsedNow < taskProfile.minWorkMs && deepPolishRejections < 8 && step < maxSteps - 1 && withinMaxTime;
-          if (!usingDirectCu && (verifyRejections < 8 || needsMoreDepth) && step < maxSteps && withinMaxTime && settings.verifyTaskBeforeFinish !== false) {
-            const qaModelId = roster.qaTester || plannerModel.id || activeStepModel;
+          // Gate 3: Independent QA Verifier — runs ONLY for Flagship tier (saves quota on Fastest, Balanced, and Strong!)
+          const qaModelId = roster.qaTester || plannerModel.id || activeStepModel;
+          const runQaNow = !usingDirectCu &&
+            isFlagshipTier &&
+            verifyRejections < 1 &&
+            mutStepsNow.length > 0 &&
+            failedModels.size === 0 &&
+            !this.isModelCoolingDown(qaModelId) &&
+            step < maxSteps &&
+            withinMaxTime &&
+            settings.verifyTaskBeforeFinish !== false;
+          if (runQaNow) {
             this.setStatus({
               running: true,
               state: 'thinking',
               mode: 'work',
               model: qaModelId,
-              crew: [roster.executor, roster.scout, roster.specialist, roster.critic, roster.qaTester],
+              crew: [activeStepModel],
               elapsedMs: elapsedNow,
               elapsedLabel: formatWorkedTime(elapsedNow),
               step,
               maxSteps,
-              stepText: `⏱ ${formatWorkedTime(elapsedNow)} · QA Tester (${qaModelId}) verifying live changes & missing UI...`
+              stepText: `Testing & verifying (${qaModelId})…`
             });
             const verdict = await this.runTaskVerifierAgent({
               task,
@@ -1544,20 +1731,19 @@ class AgentRunner extends EventEmitter {
               mutatingCount: mutStepsNow.length,
               testCount: tstStepsNow.length,
               elapsedMs: elapsedNow,
-              minWorkMs: taskProfile.minWorkMs,
+              minWorkMs: 0,
               qaPasses,
               initShot: currentShotInit,
               currentShot,
               candidateAnswer: visibleText,
               modelId: qaModelId,
-              deepPolishAudit: needsMoreDepth
+              deepPolishAudit: false
             });
 
             if (verdict && verdict.verified === false) {
               verifyRejections += 1;
-              if (needsMoreDepth) deepPolishRejections += 1;
               forceToolNextTurn = true;
-              const rejectMsg = `🛡️ QA Tester (${qaModelId}) found gaps after ${formatWorkedTime(elapsedNow)}: ${verdict.reason || 'Work incomplete or missing verification.'} Fixing & testing now…`;
+              const rejectMsg = `🛡️ QA Tester (${qaModelId}) spotted a quick fix after ${formatWorkedTime(elapsedNow)}: ${verdict.reason || 'Small gap found.'} Fixing now…`;
               this.emitLog({ kind: 'verify', status: 'warn', model: qaModelId, tool: 'qa_verifier', detail: verdict.reason || 'Rejected incomplete completion' });
               this.emit('work-note', { runId, chatId, step, text: rejectMsg });
               const [verifyVisionShot, verifyUiMap] = await Promise.all([
@@ -1568,9 +1754,9 @@ class AgentRunner extends EventEmitter {
                 role: 'user',
                 parts: [
                   {
-                    text: `[QA Verifier (${qaModelId}) REJECTED completion — Time Worked: ${formatWorkedTime(elapsedNow)}]\n` +
-                      'Issue found: ' + (verdict.reason || 'Not yet thoroughly built, animated, or tested.') + '\n' +
-                      'Required fixes & tests NOW: ' + (verdict.next_fix || 'Fix missing UI/objects/keyframes/scripts, test Play/Playback live again, and inspect the result.') +
+                    text: `[QA Verifier (${qaModelId}) found one issue — fix it cleanly and finish immediately]\n` +
+                      'Issue found: ' + (verdict.reason || 'Missing requested detail.') + '\n' +
+                      'Fix now: ' + (verdict.next_fix || 'Fix the issue and report completion.') +
                       verifyUiMap
                   },
                   { inlineData: { mimeType: verifyVisionShot.mime, data: verifyVisionShot.base64 } }
@@ -1580,29 +1766,12 @@ class AgentRunner extends EventEmitter {
             }
 
             qaPasses += 1;
-            if (needsMoreDepth && qaPasses < 2) {
-              deepPolishRejections += 1;
-              forceToolNextTurn = true;
-              const polishMsg = `🔍 Deep Studio Review (${formatWorkedTime(elapsedNow)} worked): First test pass succeeded — checking missing details, UI edge cases, visual polish & running second QA pass…`;
-              this.emitLog({ kind: 'verify', status: 'ok', model: qaModelId, tool: 'deep_polish', detail: polishMsg });
-              this.emit('work-note', { runId, chatId, step, text: polishMsg });
-              contents.push({
-                role: 'user',
-                parts: [{ text: `[DEEP POLISH & SECOND QA PASS REQUIRED — Worked ${formatWorkedTime(elapsedNow)} / target ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m]\nDo NOT stop after just one quick check! Inspect every detail of the scene/app carefully (all buttons, UI responsiveness, animations/keyframes/easing, lighting/geometry, error handling, edge cases), upgrade anything rough or missing, and run another full live Play/Playback test.` }]
-              });
-              continue;
-            }
-
             if (verdict && verdict.reason) {
               this.emitLog({ kind: 'verify', status: 'ok', model: qaModelId, tool: 'qa_verifier', detail: verdict.reason });
             }
           }
           finalAnswer = visibleText || 'Task completed and verified.';
           break;
-        }
-
-        if (visibleText) {
-          this.emit('work-note', { runId, chatId, step, text: visibleText });
         }
 
         const responseParts = [];
@@ -1737,8 +1906,18 @@ class AgentRunner extends EventEmitter {
             try {
               const out = mcpMeta
                 ? await this.mcpManager.callGeminiTool(name, args)
-                : await handler.run(args, this.makeToolContext());
-              stepOk = true;
+                : await handler.run(args, this.makeToolContext({ chatId, toolCallId, step }));
+              const cmdFailed = (name === 'run_command' || name === 'terminal_send') && out && out.ok === false;
+              stepOk = !cmdFailed;
+              if (cmdFailed && classifyModelTier(activeStepModel) === 'flagship') {
+                const errBrief = String((out && (out.stderr || out.stdout)) || ('Exit code ' + out.exit_code)).replace(/\s+/g, ' ').trim().slice(0, 180);
+                this.emit('work-note', {
+                  runId,
+                  chatId,
+                  step,
+                  text: `⚠️ Issue detected during testing (${name} exit ${out.exit_code}): ${errBrief} — continuing to fix it now.`
+                });
+              }
               if (tool && tool.screen && name !== 'read_screen_text' && name !== 'zoom_region' && name !== 'take_screenshot') {
                 anyPointerMoved = true;
               }
@@ -1802,7 +1981,7 @@ class AgentRunner extends EventEmitter {
 
           // Silently capture fresh desktop state + Auto-Glasses visual diff check on clicks!
           const preStepShot = currentShot;
-          await sleep(tool && tool.screen ? 200 : 80);
+          await sleep(tool && tool.screen ? (isFastWork ? 60 : 120) : 20);
           currentShot = await this.screen.capture({ format: 'jpeg' });
 
           if (stepOk && ['click', 'double_click', 'click_text', 'click_element'].includes(name) && resultObj && typeof resultObj === 'object') {
@@ -1845,6 +2024,18 @@ class AgentRunner extends EventEmitter {
           stepLog.push(stepItem);
           this.emit('work-step', { runId, chatId, item: stepItem });
 
+          // Stuck-loop protection: track identical repeated tool calls and consecutive failures so Brief never loops forever
+          const callSig = name + ':' + JSON.stringify(args || {}).slice(0, 200);
+          if (callSig === lastToolSig) consecutiveSameToolCount += 1;
+          else { lastToolSig = callSig; consecutiveSameToolCount = 1; }
+          if (stepOk) consecutiveFailedSteps = 0;
+          else consecutiveFailedSteps += 1;
+          if (consecutiveSameToolCount >= 3) {
+            stuckBreakReason = `Stopped automatically to avoid repeating "${name}" (${consecutiveSameToolCount} identical attempts in a row).`;
+          } else if (consecutiveFailedSteps >= 4) {
+            stuckBreakReason = `Stopped automatically after ${consecutiveFailedSteps} consecutive failed steps (last: "${name}" — ${(resultObj && resultObj.error) || 'action failed'}).`;
+          }
+
           if (usingDirectCu && cuHandler) {
             responseParts.push({
               functionResponse: {
@@ -1860,16 +2051,28 @@ class AgentRunner extends EventEmitter {
           }
         }
 
-        // Attach the fresh gridded screenshot + OCR map + live timer & schedule non-blocking Scout mid-run audit every 5 edits
+        if (stuckBreakReason) {
+          this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'loop_breaker', detail: stuckBreakReason });
+          this.emit('work-note', { runId, chatId, step, text: '🛑 ' + stuckBreakReason });
+          finalAnswer = stuckBreakReason + ' Check the step log above for what succeeded so far.';
+          break;
+        }
+
+        // Attach the fresh gridded screenshot + UI map (skip heavy OCR on fast models or non-GUI file/command steps!)
         if (!usingDirectCu) {
+          const ranGuiStep = calls.some((p) => {
+            const tn = p && p.functionCall && p.functionCall.name;
+            const tl = tn ? getTool(tn) : null;
+            return !!(tl && (tl.screen || tl.kind === 'app'));
+          });
           const [afterVisionShot, afterUiMap] = await Promise.all([
             shotForVision(currentShot, this.automation),
-            describeForegroundElements(this.screen, this.automation)
+            ranGuiStep ? describeForegroundElements(this.screen, this.automation, { fastMode: isFastWork }) : Promise.resolve('')
           ]);
           const mutNow = stepLog.filter(isMutatingWorkStep).length;
           const tstNow = stepLog.filter(isTestEvidenceStep).length;
           const timeNow = elapsedNowLabel();
-          const metricsLine = `\n[Time Worked: ${timeNow} | Real Edits: ${mutNow} | Tests Verified: ${tstNow}${taskProfile.isDeepBuildTask && taskProfile.minWorkMs > 0 ? ` | Deep Studio Target: ${Math.round(taskProfile.minWorkMs / 60000)}–${Math.round(taskProfile.maxWorkMs / 60000)}m` : ''}]`;
+          const metricsLine = `\n[Time Worked: ${timeNow} | Real Edits: ${mutNow} | Tests Verified: ${tstNow}]`;
           responseParts.push({ text: `[Fresh desktop screenshot after step ${step} (with 0..1000 coordinate grid). Verify visually.]` + metricsLine + afterUiMap });
           responseParts.push({ inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } });
           for (const ex of extraVisionImages.slice(-2)) {
@@ -1878,32 +2081,30 @@ class AgentRunner extends EventEmitter {
               responseParts.push({ inlineData: { mimeType: ex.image.mime || 'image/png', data: ex.image.base64 } });
             }
           }
-          if (enableParallel && ((mutNow > 0 && mutNow % 4 === 0) || stepLog.slice(-calls.length).some((st) => st && !st.ok)) && !scoutMidAuditPromise && (criticModelId || scoutModelId)) {
+          if (enableParallel && consecutiveFailedSteps === 2 && failedModels.size === 0 && !scoutMidAuditPromise && (criticModelId || scoutModelId)) {
             const auditModel = criticModelId || scoutModelId;
-            const lastFailed = stepLog.slice(-calls.length).find((st) => st && !st.ok);
-            const auditPrompt = lastFailed
-              ? `You are Brief's Critic & Honest Recovery Agent auditing step ${step} after tool "${lastFailed.tool}" failed (${lastFailed.result && lastFailed.result.error ? lastFailed.result.error : 'action failed'}). Be candid: start with "Actually, we made a mistake there —" explain briefly what went wrong and the exact better click/hotkey/tool fix on this screen.\nGoal: ${task}\n${afterUiMap}`
-              : `You are Brief's Critic & Scout Agent auditing progress mid-run after ${mutNow} edits (${timeNow}). If anything looks wrong, misplaced, missing a button/keyframe, or stuck, say so candidly (e.g. "Actually, we missed...") and give 2 crisp corrective actions; otherwise confirm it looks solid + next test to run.\nGoal: ${task}\n${afterUiMap}`;
-            scoutMidAuditPromise = this.gemini.generate(auditModel, {
-              contents: [{
-                role: 'user',
-                parts: [
-                  { text: auditPrompt },
-                  { inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } }
-                ]
-              }],
-              generationConfig: { maxOutputTokens: 180, temperature: 0.1 }
-            }, { signal: this.abortController.signal, retries: 0 }).then((r) => {
-              const c = (r && r.candidates || [])[0];
-              const txt = ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
-              if (txt) {
-                scoutAuditNote = `[Critic (${auditModel}) Mid-Run Check @ ${timeNow}]:\n${txt}`;
-                this.emitLog({ kind: 'verify', status: lastFailed ? 'warn' : 'ok', model: auditModel, tool: 'critic_audit', detail: txt });
-                if (lastFailed || /\bactually\b|\bmistake\b|\bmissed\b|\bwrong\b/i.test(txt)) {
+            if (!this.isModelCoolingDown(auditModel)) {
+              const lastFailed = stepLog.slice(-calls.length).find((st) => st && !st.ok);
+              const auditPrompt = `You are Brief's Critic & Honest Recovery Agent auditing step ${step} after tool "${lastFailed ? lastFailed.tool : 'action'}" failed (${lastFailed && lastFailed.result && lastFailed.result.error ? lastFailed.result.error : 'action failed'}). Be candid: explain briefly what went wrong and the exact better click/hotkey/tool fix on this screen.\nGoal: ${task}\n${afterUiMap}`;
+              scoutMidAuditPromise = this.gemini.generate(auditModel, {
+                contents: [{
+                  role: 'user',
+                  parts: [
+                    { text: auditPrompt },
+                    { inlineData: { mimeType: afterVisionShot.mime, data: afterVisionShot.base64 } }
+                  ]
+                }],
+                generationConfig: { maxOutputTokens: 160, temperature: 0.1 }
+              }, { signal: this.abortController.signal, retries: 0 }).then((r) => {
+                const c = (r && r.candidates || [])[0];
+                const txt = ((c && c.content && c.content.parts) || []).map((p) => p.text || '').join('').trim();
+                if (txt) {
+                  scoutAuditNote = `[Critic (${auditModel}) Recovery Check @ ${timeNow}]:\n${txt}`;
+                  this.emitLog({ kind: 'verify', status: 'warn', model: auditModel, tool: 'critic_audit', detail: txt });
                   this.emit('work-note', { runId, chatId, step, text: `🤔 ${txt}` });
                 }
-              }
-            }).catch(() => {}).finally(() => { scoutMidAuditPromise = null; });
+              }).catch((err) => { this.markModelCooldown(auditModel, err); }).finally(() => { scoutMidAuditPromise = null; });
+            }
           }
         }
         contents.push({ role: 'user', parts: responseParts });

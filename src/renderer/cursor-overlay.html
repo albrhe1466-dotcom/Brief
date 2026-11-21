@@ -43,35 +43,10 @@
       inset 0 0 110px rgba(234, 88, 12, 0.16);
   }
   #blue-layout-layer[data-provider="openrouter"] {
-    border-color: transparent;
+    border-color: rgba(129, 140, 248, 0.92);
     box-shadow:
-      inset 0 0 46px rgba(59, 130, 246, 0.28),
-      inset 0 0 90px rgba(249, 115, 22, 0.22);
-    animation: openRouterShadow 3.6s linear infinite;
-  }
-  #blue-layout-layer[data-provider="openrouter"]::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    padding: 4px;
-    background: linear-gradient(90deg, #3b82f6, #ffffff, #f97316, #3b82f6, #ffffff, #f97316);
-    background-size: 300% 300%;
-    animation: openRouterBorderMove 2.8s linear infinite;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-  @keyframes openRouterBorderMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-  @keyframes openRouterShadow {
-    0% { box-shadow: inset 0 0 46px rgba(59, 130, 246, 0.34), inset 0 0 110px rgba(249, 115, 22, 0.14); }
-    33% { box-shadow: inset 0 0 46px rgba(255, 255, 255, 0.34), inset 0 0 110px rgba(59, 130, 246, 0.16); }
-    66% { box-shadow: inset 0 0 46px rgba(249, 115, 22, 0.36), inset 0 0 110px rgba(255, 255, 255, 0.14); }
-    100% { box-shadow: inset 0 0 46px rgba(59, 130, 246, 0.34), inset 0 0 110px rgba(249, 115, 22, 0.14); }
+      inset 0 0 44px rgba(99, 102, 241, 0.34),
+      inset 0 0 110px rgba(79, 70, 229, 0.16);
   }
   .corner {
     position: fixed;
@@ -83,10 +58,7 @@
   }
   #blue-layout-layer[data-provider="openai"] .corner { border-color: #ffffff; }
   #blue-layout-layer[data-provider="anthropic"] .corner { border-color: #fb923c; }
-  #blue-layout-layer[data-provider="openrouter"] .corner.tl { border-color: #3b82f6; }
-  #blue-layout-layer[data-provider="openrouter"] .corner.tr { border-color: #ffffff; }
-  #blue-layout-layer[data-provider="openrouter"] .corner.bl { border-color: #f97316; }
-  #blue-layout-layer[data-provider="openrouter"] .corner.br { border-color: #60a5fa; }
+  #blue-layout-layer[data-provider="openrouter"] .corner { border-color: #818cf8; }
   .corner.tl { top: 4px; left: 4px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
   .corner.tr { top: 4px; right: 4px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
   .corner.bl { bottom: 4px; left: 4px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
@@ -120,18 +92,17 @@
   }
   #blue-layout-layer[data-provider="openai"] .layer-banner { border-color: rgba(255, 255, 255, 0.88); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(255,255,255,0.28); }
   #blue-layout-layer[data-provider="anthropic"] .layer-banner { border-color: rgba(249, 115, 22, 0.88); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(249,115,22,0.32); }
-  #blue-layout-layer[data-provider="openrouter"] .layer-banner { border-color: rgba(255, 255, 255, 0.78); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(59,130,246,0.28); }
+  #blue-layout-layer[data-provider="openrouter"] .layer-banner { border-color: rgba(129, 140, 248, 0.88); box-shadow: 0 8px 26px rgba(0,0,0,0.65), 0 0 18px rgba(99,102,241,0.34); }
   .layer-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: #3b82f6;
-    box-shadow: 0 0 10px #60a5fa;
-    animation: pulseBlueDot 1.2s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.7);
   }
   #blue-layout-layer[data-provider="openai"] .layer-dot { background: #ffffff; box-shadow: 0 0 10px #ffffff; }
   #blue-layout-layer[data-provider="anthropic"] .layer-dot { background: #f97316; box-shadow: 0 0 10px #fb923c; }
-  #blue-layout-layer[data-provider="openrouter"] .layer-dot { background: linear-gradient(135deg, #3b82f6, #ffffff, #f97316); box-shadow: 0 0 10px #ffffff; }
+  #blue-layout-layer[data-provider="openrouter"] .layer-dot { background: #818cf8; box-shadow: 0 0 10px #a5b4fc; }
   @keyframes pulseBlueDot {
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.4); opacity: 0.55; }
@@ -205,8 +176,8 @@
   body[data-provider="openai"] .cursor-dot { background: #ffffff; box-shadow: 0 0 8px #ffffff; }
   body[data-provider="anthropic"] .cursor-pill { border-color: rgba(249, 115, 22, 0.92); }
   body[data-provider="anthropic"] .cursor-dot { background: #f97316; box-shadow: 0 0 8px #fb923c; }
-  body[data-provider="openrouter"] .cursor-pill { border-color: rgba(255, 255, 255, 0.85); }
-  body[data-provider="openrouter"] .cursor-dot { background: #f97316; box-shadow: 0 0 8px #3b82f6; }
+  body[data-provider="openrouter"] .cursor-pill { border-color: rgba(129, 140, 248, 0.92); }
+  body[data-provider="openrouter"] .cursor-dot { background: #818cf8; box-shadow: 0 0 8px #a5b4fc; }
   .ripple {
     position: fixed;
     width: 18px;
@@ -215,84 +186,47 @@
     margin-top: -9px;
     border-radius: 50%;
     border: 2.5px solid #60a5fa;
-    background: radial-gradient(circle, rgba(96, 165, 250, 0.35), rgba(59, 130, 246, 0.08));
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.28), rgba(59, 130, 246, 0.05));
     pointer-events: none;
-    animation: ringOut 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: ringOut 0.44s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     will-change: transform, opacity;
+  }
+  body[data-provider="anthropic"] .ripple {
+    border-color: #f97316;
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.28), rgba(234, 88, 12, 0.05));
+  }
+  body[data-provider="openai"] .ripple {
+    border-color: #ffffff;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.04));
+  }
+  body[data-provider="openrouter"] .ripple {
+    border-color: #818cf8;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.28), rgba(99, 102, 241, 0.06));
   }
   .ripple.right {
     border-color: #f59e0b;
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.35), rgba(245, 158, 11, 0.08));
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.30), rgba(245, 158, 11, 0.06));
   }
   .ripple.double {
-    animation-duration: 0.54s;
+    animation-duration: 0.52s;
     border-width: 3px;
   }
-  .click-core {
-    position: fixed;
-    width: 10px;
-    height: 10px;
-    margin-left: -5px;
-    margin-top: -5px;
-    border-radius: 50%;
-    background: #ffffff;
-    box-shadow: 0 0 12px #60a5fa, 0 0 22px #3b82f6;
-    pointer-events: none;
-    animation: corePop 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    will-change: transform, opacity;
+  .cursor-arrow .arrow-gemini,
+  .cursor-arrow .arrow-anthropic,
+  .cursor-arrow .arrow-openai,
+  .cursor-arrow .arrow-openrouter {
+    display: none;
   }
-  .click-core.right {
-    box-shadow: 0 0 12px #fbbf24, 0 0 22px #f59e0b;
-  }
-  .click-sparks {
-    position: fixed;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-  }
-  .click-spark {
-    position: fixed;
-    width: 12px;
-    height: 2.5px;
-    margin-left: -6px;
-    margin-top: -1.25px;
-    border-radius: 99px;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #93c5fd, #ffffff);
-    pointer-events: none;
-    animation: sparkOut 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: transform, opacity;
-  }
-  .click-spark.right {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fbbf24, #ffffff);
-  }
-  .move-trail {
-    position: fixed;
-    width: 6px;
-    height: 6px;
-    margin-left: -3px;
-    margin-top: -3px;
-    border-radius: 50%;
-    background: rgba(96, 165, 250, 0.72);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.65);
-    pointer-events: none;
-    animation: trailFade 0.22s ease-out forwards;
-    will-change: transform, opacity;
+  body:not([data-provider]) .cursor-arrow .arrow-gemini,
+  body[data-provider="gemini"] .cursor-arrow .arrow-gemini,
+  body[data-provider="anthropic"] .cursor-arrow .arrow-anthropic,
+  body[data-provider="openai"] .cursor-arrow .arrow-openai,
+  body[data-provider="openrouter"] .cursor-arrow .arrow-openrouter {
+    display: block;
   }
   @keyframes ringOut {
-    0% { transform: scale(0.35); opacity: 1; }
-    100% { transform: scale(4.1); opacity: 0; }
-  }
-  @keyframes corePop {
-    0% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(0.1); opacity: 0; }
-  }
-  @keyframes sparkOut {
-    0% { transform: rotate(var(--ang)) translateX(4px) scaleX(0.4); opacity: 1; }
-    100% { transform: rotate(var(--ang)) translateX(30px) scaleX(1.1); opacity: 0; }
-  }
-  @keyframes trailFade {
-    0% { transform: scale(1); opacity: 0.75; }
-    100% { transform: scale(0.2); opacity: 0; }
+    0% { transform: scale(0.35); opacity: 0.95; }
+    100% { transform: scale(3.6); opacity: 0; }
   }
 </style>
 </head>
@@ -310,12 +244,47 @@
 
 <div id="stage">
   <div id="cursor-wrap">
-    <!-- Visible Black Cursor like Codex's with crisp white/blue edge for dark & bright windows -->
-    <svg class="cursor-arrow" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 2.5L23.5 16.5L13.8 18.4L18.2 27.6L14.5 29.4L10.1 20.1L3.5 25.8V2.5Z"
-            fill="#050507" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-      <path d="M5.5 6.2L19.6 15.8L12.1 17.3L16.1 25.6L14.3 26.5L10.3 18.1L5.5 22.3V6.2Z"
-            fill="#050507"/>
+    <!-- Provider fallback cursors (zero particles, shown only if native OS cursor is inactive) -->
+    <svg class="cursor-arrow" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gemCurGrad" x1="9" y1="8" x2="39" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#2dd4e8"/>
+          <stop offset="50%" stop-color="#3882f8"/>
+          <stop offset="100%" stop-color="#a855f7"/>
+        </linearGradient>
+        <linearGradient id="antCurGrad" x1="6" y1="7.5" x2="42" y2="12" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#ee341a"/>
+          <stop offset="48%" stop-color="#f67016"/>
+          <stop offset="100%" stop-color="#f4ae18"/>
+        </linearGradient>
+      </defs>
+      <g class="arrow-gemini">
+        <path d="M9.5 8L38.5 20.5L24.5 24.5L20 39.5Z" fill="url(#gemCurGrad)" stroke="#ffffff" stroke-width="6.5" stroke-linejoin="round"/>
+        <path d="M9.5 8L38.5 20.5L24.5 24.5L20 39.5Z" fill="url(#gemCurGrad)"/>
+        <path d="M22.8 16.2C23.4 20.2 24.2 21 28.0 21.8C24.2 22.4 23.4 23.2 22.8 27.4C22.2 23.2 21.4 22.4 17.6 21.8C21.4 21 22.2 20.2 22.8 16.2Z" fill="#ffffff"/>
+      </g>
+      <g class="arrow-anthropic">
+        <path d="M6 7.5L42.5 7.5L23.5 42.5L22 22Z" fill="url(#antCurGrad)" stroke="#ee3a1a" stroke-width="2.6" stroke-linejoin="round"/>
+        <circle cx="28.2" cy="16.5" r="2.0" fill="#ffffff"/>
+        <path d="M28.2 10.6V22.4M22.3 16.5H34.1M24.0 12.3L32.4 20.7M32.4 12.3L24.0 20.7M25.6 10.9L30.8 22.1M22.7 13.9L33.7 19.1" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round"/>
+      </g>
+      <g class="arrow-openai">
+        <path d="M6 6L42 17L17 42Z" fill="#6c9e95" stroke="#ffffff" stroke-width="4.2" stroke-linejoin="round"/>
+        <path d="M6 6L42 17L17 42Z" fill="#6c9e95"/>
+        <g transform="translate(21 21)" stroke="#ffffff" stroke-width="1.4" fill="none">
+          <circle cx="0" cy="-3.4" r="3.1"/>
+          <circle cx="2.95" cy="-1.7" r="3.1"/>
+          <circle cx="2.95" cy="1.7" r="3.1"/>
+          <circle cx="0" cy="3.4" r="3.1"/>
+          <circle cx="-2.95" cy="1.7" r="3.1"/>
+          <circle cx="-2.95" cy="-1.7" r="3.1"/>
+        </g>
+      </g>
+      <g class="arrow-openrouter">
+        <path d="M9.5 5.5L40.5 31L21.5 35.5L10 42.5Z" fill="#040406" stroke="rgba(220,228,240,0.68)" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="16.4" cy="24.2" r="3.3" stroke="#ffffff" stroke-width="2.1"/>
+        <path d="M21.0 27.6V20.8H23.4C24.9 20.8 25.5 21.6 25.5 22.6C25.5 23.7 24.7 24.4 23.2 24.4H21.4L25.4 27.6" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
     </svg>
     <div class="cursor-pill" id="cursor-pill">
       <span class="cursor-dot"></span>
@@ -345,7 +314,6 @@
     wrap.style.transform = 'translate3d(' + Math.round(x) + 'px,' + Math.round(y) + 'px,0)';
   }
 
-  let lastTrailAt = 0;
   function animateTo(tx, ty, duration) {
     if (animRaf) cancelAnimationFrame(animRaf);
     isAnimating = true;
@@ -359,15 +327,6 @@
       const nx = sx + (tx - sx) * ease;
       const ny = sy + (ty - sy) * ease;
       renderPos(nx, ny);
-      if (t > 0.05 && t < 0.95 && now - lastTrailAt >= 26) {
-        lastTrailAt = now;
-        const dot = document.createElement('div');
-        dot.className = 'move-trail';
-        dot.style.left = Math.round(nx) + 'px';
-        dot.style.top = Math.round(ny) + 'px';
-        stage.appendChild(dot);
-        setTimeout(() => dot.remove(), 240);
-      }
       if (t < 1) {
         animRaf = requestAnimationFrame(step);
       } else {
@@ -378,45 +337,21 @@
     animRaf = requestAnimationFrame(step);
   }
 
-  function spawnClickBurst(x, y, button) {
-    const px = Math.round(x);
-    const py = Math.round(y);
-    const core = document.createElement('div');
-    core.className = 'click-core' + (button === 'right' ? ' right' : '');
-    core.style.left = px + 'px';
-    core.style.top = py + 'px';
-    stage.appendChild(core);
-    setTimeout(() => core.remove(), 360);
-
-    const angles = [45, 135, 225, 315];
-    for (const ang of angles) {
-      const sp = document.createElement('div');
-      sp.className = 'click-spark' + (button === 'right' ? ' right' : '');
-      sp.style.left = px + 'px';
-      sp.style.top = py + 'px';
-      sp.style.setProperty('--ang', ang + 'deg');
-      stage.appendChild(sp);
-      setTimeout(() => sp.remove(), 450);
-    }
-  }
-
   function spawnRipple(x, y, button, count) {
-    spawnClickBurst(x, y, button);
     const el = document.createElement('div');
     el.className = 'ripple' + (button === 'right' ? ' right' : '') + (count >= 2 ? ' double' : '');
     el.style.left = Math.round(x) + 'px';
     el.style.top = Math.round(y) + 'px';
     stage.appendChild(el);
-    setTimeout(() => el.remove(), 620);
+    setTimeout(() => el.remove(), 580);
     if (count >= 2) {
       setTimeout(() => {
-        spawnClickBurst(x, y, button);
         const el2 = document.createElement('div');
         el2.className = 'ripple double';
         el2.style.left = Math.round(x) + 'px';
         el2.style.top = Math.round(y) + 'px';
         stage.appendChild(el2);
-        setTimeout(() => el2.remove(), 620);
+        setTimeout(() => el2.remove(), 580);
       }, 95);
     }
   }
@@ -437,13 +372,16 @@
       if (s.provider) applyOverlayProvider(s.provider);
       isWorkActive = !!s.running && s.mode === 'work';
       layer.classList.toggle('active', isWorkActive);
-      layer.classList.toggle('controlling', isWorkActive && s.state === 'acting');
+      // Keep the banner steady once while working (never blink in/out between thinking and acting steps).
+      layer.classList.toggle('controlling', isWorkActive);
       if (typeof s.nativeCursor === 'boolean') {
         wrap.classList.toggle('native-cursor', s.nativeCursor);
       }
       if (isWorkActive && s.stepText) {
-        layerText.textContent = 'Please do NOT move mouse or keyboard · ' + s.stepText.slice(0, 52) + ' · Ctrl+Alt+Q to Stop';
-        label.textContent = s.stepText.slice(0, 44);
+        const nextBanner = 'Brief Working · ' + s.stepText.slice(0, 52) + ' · Ctrl+Alt+Q to Stop';
+        if (layerText.textContent !== nextBanner) layerText.textContent = nextBanner;
+        const nextLbl = s.stepText.slice(0, 44);
+        if (label.textContent !== nextLbl) label.textContent = nextLbl;
       }
       if (!s.running) {
         layer.classList.remove('controlling');

@@ -3,9 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
   <title>Brief</title>
   <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Text:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap">
   <style>
     /* =====================================================================
        Brief — BLUE DESKTOP THEME & GEORGIA TYPOGRAPHY DESIGN SYSTEM
@@ -509,10 +517,210 @@
     }
 
     #sidebar.collapsed {
-      width: 0;
+      width: 0 !important;
+      min-width: 0;
       opacity: 0;
       border-right-color: transparent;
       pointer-events: none;
+    }
+
+    #sidebar.resizing {
+      transition: none !important;
+    }
+
+    /* Draggable left/right sidebar divider with quick ← / → shrink & restore arrow */
+    #sidebar-resize-handle {
+      width: 10px;
+      margin-left: -4px;
+      margin-right: -4px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 30;
+      cursor: col-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      user-select: none;
+    }
+
+    #sidebar-resize-handle::before {
+      content: '';
+      width: 2px;
+      height: 100%;
+      background: transparent;
+      transition: background 0.15s ease;
+    }
+
+    #sidebar-resize-handle:hover::before,
+    #sidebar-resize-handle.dragging::before {
+      background: rgba(96, 165, 250, 0.72);
+    }
+
+    #sidebar-arrow-toggle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 44px;
+      border-radius: 999px;
+      background: #1c1d22;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #dbeafe;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+      transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+      padding: 0;
+    }
+
+    #sidebar-arrow-toggle:hover {
+      background: #2563eb;
+      border-color: #93c5fd;
+      color: #ffffff;
+    }
+
+    #sidebar-arrow-toggle svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    #sidebar.collapsed + #sidebar-resize-handle {
+      width: 18px;
+      margin-left: 0;
+      margin-right: -4px;
+      cursor: pointer;
+    }
+
+    #sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.52);
+      z-index: 90;
+    }
+
+    #sidebar-backdrop.visible {
+      display: block;
+    }
+
+    /* Usage limit ring (top-right, next to Settings) */
+    .usage-ring-btn {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .usage-ring-btn svg { position: absolute; inset: 0; }
+    .usage-ring-track { stroke: rgba(255, 255, 255, 0.14); }
+    #usage-ring-fill { transition: stroke-dashoffset 0.4s ease, stroke 0.3s ease; }
+    #usage-ring-text {
+      position: relative;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #f1f5f9;
+      font-family: var(--font-mono);
+    }
+
+    /* Steady Task Running header pill (zero blinking) */
+    .task-running-pill {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(96, 165, 250, 0.55);
+      color: #dbeafe;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-running-pill.active {
+      display: inline-flex;
+    }
+
+    .task-running-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    /* Live Command Prompt / PowerShell Terminal output block inside Work card */
+    .step-terminal-box {
+      margin-top: 6px;
+      border-radius: 9px;
+      background: #0b0d12;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      overflow: hidden;
+      font-family: var(--font-mono);
+    }
+
+    .step-terminal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .step-terminal-cmd {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-terminal-badge {
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: rgba(59, 130, 246, 0.22);
+      color: #93c5fd;
+    }
+
+    .step-terminal-badge.ok {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
+
+    .step-terminal-badge.err {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fca5a5;
+    }
+
+    .step-terminal-body {
+      margin: 0;
+      padding: 8px 10px;
+      max-height: 200px;
+      overflow: auto;
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .sidebar-top {
@@ -844,8 +1052,10 @@
     ===================================================================== */
 
     #main-area {
-      flex: 1;
+      flex: 1 1 0;
       min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -1642,12 +1852,10 @@
     .msg-row {
       display: flex;
       gap: 13px;
-      animation: slideMsgLeft 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     .msg-row.user {
       justify-content: flex-end;
-      animation: slideMsgRight 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     .msg-avatar {
@@ -1704,12 +1912,10 @@
       box-shadow: var(--shadow-sm);
       white-space: pre-wrap;
       word-break: break-word;
-      animation: msgBubbleSlideIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
-      transform-origin: bottom right;
     }
 
     .msg-row.assistant {
-      animation: msgBubbleSlideIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+      opacity: 1;
     }
 
     .msg-user-attachments {
@@ -2048,23 +2254,17 @@
     }
 
     .trace-live-orb {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
       background: #60a5fa;
-      box-shadow: 0 0 10px #3b82f6;
-      animation: pulseBlue 1.25s infinite;
+      box-shadow: 0 0 6px rgba(59, 130, 246, 0.55);
     }
 
     .trace-head-shimmer {
       display: inline-block;
-      background: linear-gradient(90deg, #9ca3af 0%, #ffffff 45%, #60a5fa 60%, #9ca3af 100%);
-      background-size: 240% 100%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: shimmerLine 1.4s linear infinite;
+      color: #e5edff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2074,7 +2274,6 @@
       padding: 12px 14px 14px;
       max-height: 520px;
       overflow-y: auto;
-      animation: slideInFromLeft 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     .work-trace.collapsed .work-trace-body {
@@ -2106,13 +2305,12 @@
       border-radius: 50%;
       background: #60a5fa;
       border: 2px solid #161618;
-      box-shadow: 0 0 8px rgba(96, 165, 250, 0.7);
+      box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
     }
 
     .trace-node.running::before {
-      background: #ffffff;
-      box-shadow: 0 0 12px #60a5fa, 0 0 22px #3b82f6;
-      animation: pulseBlue 1s infinite;
+      background: #93c5fd;
+      box-shadow: 0 0 8px rgba(96, 165, 250, 0.7);
     }
 
     .trace-node.ok::before {
@@ -2583,15 +2781,18 @@
     ===================================================================== */
 
     #composer-dock {
-      padding: 8px 24px 16px;
+      padding: 8px 20px 14px;
       flex-shrink: 0;
       position: relative;
       z-index: 65;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .composer-wrap {
       width: 100%;
       max-width: 840px;
+      min-width: 0;
       margin: 0 auto;
       position: relative;
     }
@@ -2599,10 +2800,12 @@
     .composer-capsule {
       background: #2f2f2f;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 26px;
+      border-radius: 24px;
       padding: 10px 14px 10px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.32);
       transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .composer-capsule:focus-within {
@@ -4072,13 +4275,23 @@
       }
     }
 
-    @media (max-width: 980px) {
-      #sidebar {
-        position: absolute;
-        left: var(--rail-width);
-        top: 0;
-        bottom: 0;
-        box-shadow: var(--shadow-lg);
+    @media (max-width: 1040px) {
+      #top-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 0 10px;
+      }
+      .header-title {
+        max-width: 130px;
+      }
+      #usage-pill-btn {
+        display: none;
+      }
+      .mode-seg-btn {
+        padding: 5px 13px;
+        font-size: 12.5px;
       }
       .gate-privacy-grid,
       .starter-grid,
@@ -4086,6 +4299,588 @@
       .tools-catalog-grid {
         grid-template-columns: 1fr;
       }
+    }
+
+    @media (max-width: 860px) {
+      /* On narrow Windows half-screen snap, open sidebar cleanly OVER everything (above composer z-index 65) — never letting text bar cut inside it! */
+      #sidebar:not(.collapsed) {
+        position: fixed;
+        left: var(--rail-width);
+        top: 0;
+        bottom: 0;
+        z-index: 95;
+        max-width: calc(100vw - var(--rail-width) - 24px);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.78);
+      }
+      #composer-dock {
+        padding: 6px 10px 10px;
+      }
+      .composer-capsule {
+        padding: 8px 10px;
+        border-radius: 20px;
+      }
+      .composer-controls-left,
+      .composer-controls-right {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .selector-pill {
+        max-width: 185px;
+        padding: 4px 9px;
+        font-size: 12px;
+      }
+      .selector-pill span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .composer-footnote {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .header-pill-btn {
+        padding: 5px 8px;
+        font-size: 11.5px;
+      }
+      .header-title {
+        display: none;
+      }
+    }
+
+    @media (max-width: 680px) {
+      #widget-toggle-btn {
+        display: none;
+      }
+      .header-pill-btn span:not(.key-status-dot):not(.selector-subbadge) {
+        display: none;
+      }
+      .task-running-pill {
+        max-width: 130px;
+        font-size: 11px;
+        padding: 3px 8px;
+      }
+    }
+
+    /* =====================================================================
+       PROVIDER VISUAL THEMES (EXACT CLAUDE, OPENAI, GEMINI & OPENROUTER)
+    ===================================================================== */
+    .welcome-title-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .welcome-title-row .welcome-heading {
+      margin-bottom: 0;
+    }
+
+    /* ---------------------------------------------------------------------
+       1. GEMINI THEME — Exact Google Sans + Deep Blue Radial Welcome Glow
+          & Clean Obsidian Chat (matching Gemini screenshots)
+    --------------------------------------------------------------------- */
+    body[data-provider="gemini"] {
+      --bg-void: #090a0d;
+      --bg-rail: #0d0e11;
+      --bg-sidebar: #131314;
+      --bg-canvas: #0e0e0f;
+      --bg-surface: #1e1f20;
+      --bg-surface-2: #282a2c;
+      --bg-surface-3: #333537;
+      --font-serif: "Google Sans", "Google Sans Text", "Google Sans Flex", "Plus Jakarta Sans", "Segoe UI", Georgia, sans-serif;
+      font-family: "Google Sans", "Google Sans Text", "Google Sans Flex", "Plus Jakarta Sans", "Segoe UI", Georgia, sans-serif !important;
+      background-color: #0e0e0f !important;
+    }
+    body[data-provider="gemini"] button,
+    body[data-provider="gemini"] input,
+    body[data-provider="gemini"] select,
+    body[data-provider="gemini"] textarea {
+      font-family: "Google Sans", "Google Sans Text", "Google Sans Flex", "Plus Jakarta Sans", "Segoe UI", sans-serif !important;
+    }
+    body[data-provider="gemini"] #icon-rail {
+      background: #0d0e11 !important;
+      border-right-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body[data-provider="gemini"] #sidebar {
+      background: #131314 !important;
+      border-right-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body[data-provider="gemini"] #main-area {
+      background: #0e0e0f !important;
+    }
+    body[data-provider="gemini"].is-welcome #main-area {
+      background:
+        radial-gradient(ellipse 68% 60% at 50% 48%, rgba(30, 58, 138, 0.62) 0%, rgba(20, 38, 92, 0.38) 36%, rgba(11, 16, 34, 0.14) 64%, transparent 82%),
+        #090a0d !important;
+    }
+    body[data-provider="gemini"] #top-header {
+      background: transparent !important;
+      border-bottom-color: rgba(255, 255, 255, 0.04) !important;
+    }
+    body[data-provider="gemini"] .mode-segmented {
+      background: rgba(20, 22, 28, 0.78) !important;
+      border-color: rgba(255, 255, 255, 0.09) !important;
+    }
+    body[data-provider="gemini"] .mode-seg-btn.active {
+      background: #282a2e !important;
+      color: #ffffff !important;
+    }
+    body[data-provider="gemini"] .welcome-heading {
+      font-family: "Google Sans", "Google Sans Flex", "Plus Jakarta Sans", sans-serif !important;
+      font-size: 32px !important;
+      font-weight: 400 !important;
+      letter-spacing: -0.02em !important;
+      color: #e8eaed !important;
+    }
+    body[data-provider="gemini"] .composer-capsule {
+      background: #1e1f20 !important;
+      border: 1px solid rgba(255, 255, 255, 0.09) !important;
+      border-radius: 28px !important;
+      padding: 10px 16px !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+    }
+    body[data-provider="gemini"] .composer-capsule:focus-within {
+      border-color: rgba(138, 180, 248, 0.36) !important;
+      box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 22px rgba(26, 115, 232, 0.14) !important;
+    }
+    body[data-provider="gemini"] .composer-tool-btn,
+    body[data-provider="gemini"] .selector-pill {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(255, 255, 255, 0.09) !important;
+      color: #e3e3e3 !important;
+    }
+    body[data-provider="gemini"] .send-btn,
+    body[data-provider="gemini"] #send-btn {
+      background: #1a73e8 !important;
+      border-color: #4285f4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(26, 115, 232, 0.42) !important;
+    }
+    body[data-provider="gemini"] .send-btn:hover,
+    body[data-provider="gemini"] #send-btn:hover {
+      background: #2b7de9 !important;
+    }
+    body[data-provider="gemini"] .msg-bubble-user {
+      background: #1e1f20 !important;
+      border: 1px solid rgba(255, 255, 255, 0.07) !important;
+      border-radius: 24px 24px 6px 24px !important;
+      color: #e3e3e3 !important;
+      padding: 11px 18px !important;
+      box-shadow: none !important;
+      font-family: "Google Sans", "Google Sans Text", "Plus Jakarta Sans", sans-serif !important;
+    }
+    body[data-provider="gemini"] .msg-prose {
+      color: #e3e3e3 !important;
+      font-family: "Google Sans", "Google Sans Text", "Plus Jakarta Sans", sans-serif !important;
+      font-size: 15px !important;
+      line-height: 1.7 !important;
+    }
+
+    /* ---------------------------------------------------------------------
+       2. OPENAI THEME — Pure Pitch Black + OpenAI Sans + Royal Blue Chat Pill
+          & Blue Orb Send Button (matching OpenAI screenshots)
+    --------------------------------------------------------------------- */
+    body[data-provider="openai"] {
+      --bg-void: #000000;
+      --bg-rail: #000000;
+      --bg-sidebar: #060606;
+      --bg-canvas: #080808;
+      --bg-surface: #141414;
+      --bg-surface-2: #1c1c1c;
+      --bg-surface-3: #262626;
+      --font-serif: "OpenAI Sans", "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Georgia, sans-serif;
+      font-family: "OpenAI Sans", "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Georgia, sans-serif !important;
+      background-color: #080808 !important;
+    }
+    body[data-provider="openai"] button,
+    body[data-provider="openai"] input,
+    body[data-provider="openai"] select,
+    body[data-provider="openai"] textarea {
+      font-family: "OpenAI Sans", "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    }
+    body[data-provider="openai"] #icon-rail {
+      background: #000000 !important;
+      border-right-color: #161616 !important;
+    }
+    body[data-provider="openai"] #sidebar {
+      background: #060606 !important;
+      border-right-color: #161616 !important;
+    }
+    body[data-provider="openai"] #main-area {
+      background: #080808 !important;
+    }
+    body[data-provider="openai"] #top-header {
+      background: transparent !important;
+      border-bottom-color: #141414 !important;
+    }
+    body[data-provider="openai"] .mode-segmented {
+      background: #141414 !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    body[data-provider="openai"] .mode-seg-btn.active {
+      background: #262626 !important;
+      color: #ffffff !important;
+    }
+    body[data-provider="openai"] .welcome-heading {
+      font-family: "OpenAI Sans", "Inter", "Plus Jakarta Sans", sans-serif !important;
+      font-size: 30px !important;
+      font-weight: 500 !important;
+      letter-spacing: -0.02em !important;
+      color: #ffffff !important;
+    }
+    body[data-provider="openai"] .composer-capsule {
+      background: #1b1b1b !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 28px !important;
+      padding: 10px 15px !important;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8) !important;
+    }
+    body[data-provider="openai"] .composer-capsule:focus-within {
+      border-color: rgba(255, 255, 255, 0.22) !important;
+    }
+    body[data-provider="openai"] .composer-tool-btn,
+    body[data-provider="openai"] .selector-pill {
+      background: #242424 !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      color: #f3f3f3 !important;
+    }
+    body[data-provider="openai"] .send-btn,
+    body[data-provider="openai"] #send-btn {
+      background: #1d6ce0 !important;
+      border-color: #3b82f6 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 16px rgba(29, 108, 224, 0.45) !important;
+    }
+    body[data-provider="openai"] .send-btn:hover,
+    body[data-provider="openai"] #send-btn:hover {
+      background: #2563eb !important;
+    }
+    body[data-provider="openai"] .msg-bubble-user {
+      background: #1a4d8f !important;
+      border: 1px solid rgba(96, 165, 250, 0.22) !important;
+      border-radius: 22px !important;
+      color: #ffffff !important;
+      padding: 10px 18px !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+      font-family: "OpenAI Sans", "Inter", "Plus Jakarta Sans", sans-serif !important;
+    }
+    body[data-provider="openai"] .msg-prose {
+      color: #f5f5f5 !important;
+      font-family: "OpenAI Sans", "Inter", "Plus Jakarta Sans", sans-serif !important;
+      font-size: 15px !important;
+      line-height: 1.66 !important;
+    }
+
+    /* ---------------------------------------------------------------------
+       3. CLAUDE (ANTHROPIC) THEME — Warm Dark Charcoal + Claude Sans UI +
+          Newsreader/Georgia Serif Heading & Prose + Orange Send Key +
+          Orange Starburst beside Greeting + ZERO buttons below chat bar
+    --------------------------------------------------------------------- */
+    body[data-provider="anthropic"] {
+      --bg-void: #141413;
+      --bg-rail: #141413;
+      --bg-sidebar: #191918;
+      --bg-canvas: #212120;
+      --bg-surface: #2b2b29;
+      --bg-surface-2: #343431;
+      --bg-surface-3: #3f3f3c;
+      --font-serif: "Claude Sans", "Plus Jakarta Sans", "Inter", -apple-system, "Segoe UI", Georgia, sans-serif;
+      font-family: "Claude Sans", "Plus Jakarta Sans", "Inter", -apple-system, "Segoe UI", Georgia, sans-serif !important;
+      background-color: #212120 !important;
+    }
+    body[data-provider="anthropic"] button,
+    body[data-provider="anthropic"] input,
+    body[data-provider="anthropic"] select,
+    body[data-provider="anthropic"] textarea {
+      font-family: "Claude Sans", "Plus Jakarta Sans", "Inter", -apple-system, "Segoe UI", sans-serif !important;
+    }
+    body[data-provider="anthropic"] #icon-rail {
+      background: #141413 !important;
+      border-right-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body[data-provider="anthropic"] #sidebar {
+      background: #191918 !important;
+      border-right-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body[data-provider="anthropic"] #main-area {
+      background: #212120 !important;
+    }
+    body[data-provider="anthropic"] #top-header {
+      background: transparent !important;
+      border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    body[data-provider="anthropic"] .mode-segmented {
+      background: #181817 !important;
+      border-color: rgba(255, 255, 255, 0.09) !important;
+    }
+    body[data-provider="anthropic"] .mode-seg-btn.active {
+      background: #30302e !important;
+      color: #f5f4ef !important;
+    }
+    /* Show Claude orange starburst right beside "Back at it, [Name]" */
+    body[data-provider="anthropic"] .welcome-starburst {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 38px !important;
+      height: 38px !important;
+      margin: 0 !important;
+      flex-shrink: 0;
+    }
+    body[data-provider="anthropic"] .welcome-starburst img {
+      width: 34px !important;
+      height: 34px !important;
+      object-fit: contain;
+    }
+    body[data-provider="anthropic"] .welcome-heading {
+      font-family: "Newsreader", Georgia, "Times New Roman", serif !important;
+      font-size: 36px !important;
+      font-weight: 400 !important;
+      letter-spacing: -0.02em !important;
+      color: #ecebe6 !important;
+    }
+    body[data-provider="anthropic"] .composer-capsule {
+      background: #2b2b29 !important;
+      border: 1px solid rgba(255, 255, 255, 0.11) !important;
+      border-radius: 18px !important;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38) !important;
+      padding: 12px 14px 10px !important;
+    }
+    body[data-provider="anthropic"] .composer-capsule:focus-within {
+      border-color: rgba(217, 119, 87, 0.5) !important;
+    }
+    body[data-provider="anthropic"] .composer-tool-btn,
+    body[data-provider="anthropic"] .selector-pill {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(255, 255, 255, 0.09) !important;
+      color: #d6d5cf !important;
+    }
+    body[data-provider="anthropic"] .send-btn,
+    body[data-provider="anthropic"] #send-btn {
+      background: #d97757 !important;
+      border-color: #e28566 !important;
+      border-radius: 10px !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(217, 119, 87, 0.42) !important;
+    }
+    body[data-provider="anthropic"] .send-btn:hover,
+    body[data-provider="anthropic"] #send-btn:hover {
+      background: #e38363 !important;
+    }
+    body[data-provider="anthropic"] .msg-bubble-user {
+      background: #2f2f2d !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 14px !important;
+      color: #f0efe9 !important;
+      padding: 10px 16px !important;
+      box-shadow: none !important;
+      font-family: "Claude Sans", "Plus Jakarta Sans", "Inter", sans-serif !important;
+    }
+    body[data-provider="anthropic"] .msg-prose {
+      color: #ecebe6 !important;
+      font-family: "Newsreader", Georgia, "Times New Roman", serif !important;
+      font-size: 16px !important;
+      line-height: 1.72 !important;
+    }
+    /* Claude mode: ZERO buttons below the chat bar */
+    body[data-provider="anthropic"] #claude-topic-pills,
+    body[data-provider="anthropic"] .claude-topic-pills,
+    body[data-provider="anthropic"] .composer-footnote {
+      display: none !important;
+    }
+    body[data-provider="anthropic"].is-welcome .composer-disclaimer {
+      display: none !important;
+    }
+
+    /* ---------------------------------------------------------------------
+       4. OPENROUTER THEME — Sleek Obsidian-Indigo Canvas + Crisp Sans +
+          Bold White OR Emblem + High-Contrast Composer & Violet-Indigo Accent
+    --------------------------------------------------------------------- */
+    body[data-provider="openrouter"] {
+      --bg-void: #07080d;
+      --bg-rail: #090b12;
+      --bg-sidebar: #0d1019;
+      --bg-canvas: #0b0d15;
+      --bg-surface: #141824;
+      --bg-surface-2: #1c2233;
+      --bg-surface-3: #262e45;
+      --font-serif: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Georgia, sans-serif;
+      font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Georgia, sans-serif !important;
+      background-color: #0b0d15 !important;
+    }
+    body[data-provider="openrouter"] button,
+    body[data-provider="openrouter"] input,
+    body[data-provider="openrouter"] select,
+    body[data-provider="openrouter"] textarea {
+      font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    }
+    body[data-provider="openrouter"] #icon-rail {
+      background: #090b12 !important;
+      border-right-color: rgba(129, 140, 248, 0.14) !important;
+    }
+    body[data-provider="openrouter"] .rail-brand {
+      background: linear-gradient(145deg, #171c2b, #0c0f18) !important;
+      border-color: rgba(129, 140, 248, 0.36) !important;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.22);
+    }
+    body[data-provider="openrouter"] .rail-brand:hover {
+      border-color: #818cf8 !important;
+      box-shadow: 0 0 18px rgba(129, 140, 248, 0.42) !important;
+    }
+    body[data-provider="openrouter"] #sidebar {
+      background: #0d1019 !important;
+      border-right-color: rgba(129, 140, 248, 0.12) !important;
+    }
+    body[data-provider="openrouter"] #main-area {
+      background: #0b0d15 !important;
+    }
+    body[data-provider="openrouter"].is-welcome #main-area {
+      background:
+        radial-gradient(ellipse 64% 54% at 50% 45%, rgba(99, 102, 241, 0.24) 0%, rgba(79, 70, 229, 0.09) 42%, transparent 74%),
+        #080a10 !important;
+    }
+    body[data-provider="openrouter"] #top-header {
+      background: transparent !important;
+      border-bottom-color: rgba(129, 140, 248, 0.1) !important;
+    }
+    body[data-provider="openrouter"] .mode-segmented {
+      background: #131724 !important;
+      border-color: rgba(129, 140, 248, 0.2) !important;
+    }
+    body[data-provider="openrouter"] .mode-seg-btn.active {
+      background: #4f46e5 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.42);
+    }
+    body[data-provider="openrouter"] .welcome-starburst {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 44px !important;
+      height: 36px !important;
+      margin: 0 !important;
+      flex-shrink: 0;
+    }
+    body[data-provider="openrouter"] .welcome-starburst img {
+      width: 40px !important;
+      height: 30px !important;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.35));
+    }
+    body[data-provider="openrouter"] .welcome-heading {
+      font-family: "Plus Jakarta Sans", "Inter", "Segoe UI", sans-serif !important;
+      font-size: 31px !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.025em !important;
+      color: #f8fafc !important;
+    }
+    body[data-provider="openrouter"] .composer-capsule {
+      background: #141824 !important;
+      border: 1px solid rgba(129, 140, 248, 0.22) !important;
+      border-radius: 22px !important;
+      padding: 11px 15px !important;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.62) !important;
+    }
+    body[data-provider="openrouter"] .composer-capsule:focus-within {
+      border-color: rgba(129, 140, 248, 0.65) !important;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 24px rgba(99, 102, 241, 0.22) !important;
+    }
+    body[data-provider="openrouter"] .composer-tool-btn,
+    body[data-provider="openrouter"] .selector-pill {
+      background: #1b2032 !important;
+      border-color: rgba(129, 140, 248, 0.2) !important;
+      color: #e2e8f0 !important;
+    }
+    body[data-provider="openrouter"] .send-btn,
+    body[data-provider="openrouter"] #send-btn {
+      background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+      border-color: #818cf8 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45) !important;
+    }
+    body[data-provider="openrouter"] .send-btn:hover,
+    body[data-provider="openrouter"] #send-btn:hover {
+      background: linear-gradient(135deg, #818cf8, #6366f1) !important;
+    }
+    body[data-provider="openrouter"] .msg-bubble-user {
+      background: #1e243d !important;
+      border: 1px solid rgba(129, 140, 248, 0.28) !important;
+      border-radius: 18px !important;
+      color: #f8fafc !important;
+      padding: 10px 17px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+      font-family: "Plus Jakarta Sans", "Inter", "Segoe UI", sans-serif !important;
+    }
+    body[data-provider="openrouter"] .msg-prose {
+      color: #e2e8f0 !important;
+      font-family: "Plus Jakarta Sans", "Inter", "Segoe UI", sans-serif !important;
+      font-size: 15px !important;
+      line-height: 1.68 !important;
+    }
+
+    /* Topic pills container kept empty/hidden (user requested no buttons below Claude chat bar) */
+    .claude-topic-pills {
+      display: none !important;
+    }
+
+    /* Sleek Provider Tabs in Settings (Fix for Image 3 crossed out) */
+    .settings-provider-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0 14px;
+    }
+    .settings-prov-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      color: #e5e5e5;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .settings-prov-tab:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    .settings-prov-tab.active[data-prov="gemini"] {
+      background: rgba(37, 99, 235, 0.24);
+      border-color: #3b82f6;
+      color: #93c5fd;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+    }
+    .settings-prov-tab.active[data-prov="openai"] {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: #ffffff;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    }
+    .settings-prov-tab.active[data-prov="anthropic"] {
+      background: rgba(234, 88, 12, 0.24);
+      border-color: #ea580c;
+      color: #fdba74;
+      box-shadow: 0 0 12px rgba(234, 88, 12, 0.35);
+    }
+    .settings-prov-tab.active[data-prov="openrouter"] {
+      background: rgba(99, 102, 241, 0.24);
+      border-color: #818cf8;
+      color: #e0e7ff;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.38);
+    }
+    .prov-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .prov-status-dot.saved {
+      background: #86efac;
+      box-shadow: 0 0 6px #86efac;
     }
   </style>
 </head>
@@ -4097,7 +4892,7 @@
     <aside id="icon-rail" aria-label="Primary Navigation">
       <div class="rail-group">
         <button class="rail-brand" id="rail-brand-btn" title="Brief Home">
-          <img src="assets/logo.png" alt="Brief Logo">
+          <img src="assets/logo.png" id="rail-brand-logo" alt="Brief Logo">
         </button>
 
         <button class="rail-btn active" id="rail-btn-home" data-rail="home" title="Chats &amp; Home">
@@ -4239,6 +5034,16 @@
       </div>
     </aside>
 
+    <!-- Draggable Left/Right Sidebar Resizer + One-Click ← / → Toggle -->
+    <div id="sidebar-resize-handle" title="Drag left/right to resize history sidebar, or click arrow to hide/show">
+      <button id="sidebar-arrow-toggle" type="button" title="Hide or show history sidebar" aria-label="Toggle history sidebar">
+        <svg id="sidebar-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div id="sidebar-backdrop" aria-hidden="true"></div>
+
     <!-- =================================================================
          MAIN WORKSPACE AREA
     ================================================================== -->
@@ -4246,14 +5051,17 @@
       <!-- Top Header -->
       <header id="top-header">
         <div class="header-left">
-          <button class="icon-btn" id="sidebar-expand-btn" title="Show Sidebar" style="display: none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="3"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
+          <button class="icon-btn" id="sidebar-expand-btn" title="Show History Sidebar (→)" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </button>
           <span class="header-title" id="header-chat-title">Brief</span>
           <span class="header-project-pill hidden" id="header-project-pill"></span>
+          <span class="task-running-pill" id="task-running-pill" title="Task is actively running">
+            <span class="task-running-dot"></span>
+            <span id="task-running-text">Task Running</span>
+          </span>
         </div>
 
         <!-- Center Chat | Search | Work Segmented Toggle -->
@@ -4288,7 +5096,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.5">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.7">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -4296,6 +5104,14 @@
           <button class="header-pill-btn" id="settings-open-btn" type="button" title="Settings &amp; API Key">
             <span class="key-status-dot" id="header-key-dot"></span>
             <span>Settings</span>
+          </button>
+
+          <button class="usage-ring-btn" id="usage-ring-btn" type="button" title="Usage limit: 0%" aria-label="Usage limit">
+            <svg viewBox="0 0 36 36" width="34" height="34" aria-hidden="true">
+              <circle class="usage-ring-track" cx="18" cy="18" r="15" fill="none" stroke-width="3.5"></circle>
+              <circle id="usage-ring-fill" cx="18" cy="18" r="15" fill="none" stroke-width="3.5" stroke-linecap="round" transform="rotate(-90 18 18)" stroke-dasharray="94.25" stroke-dashoffset="94.25" stroke="#22c55e"></circle>
+            </svg>
+            <span id="usage-ring-text">0%</span>
           </button>
         </div>
       </header>
@@ -4413,11 +5229,13 @@
         <!-- 2. WELCOME SCREEN (ANIMATED PROVIDER LOGO + NAME + ROTATING MENU GREETING) -->
         <section class="workspace-view active" id="view-welcome" aria-label="Welcome">
           <div class="welcome-inner">
-            <div class="welcome-starburst anim-logo-reveal" id="welcome-starburst">
-              <img src="assets/gemini-logo.png" id="welcome-provider-logo" alt="Provider Logo">
+            <div class="welcome-title-row">
+              <div class="welcome-starburst anim-logo-reveal" id="welcome-starburst">
+                <img src="assets/gemini-logo.png" id="welcome-provider-logo" alt="Provider Logo">
+              </div>
+              <h1 class="welcome-heading" id="welcome-heading">Where should we begin?</h1>
             </div>
             <div class="welcome-provider-pill" id="welcome-provider-pill" style="display:none !important">Brief · Private Desktop AI</div>
-            <h1 class="welcome-heading" id="welcome-heading">What's on the agenda today?</h1>
 
             <div class="welcome-name-box" id="welcome-name-box">
               <input class="text-input" id="welcome-name-input" type="text" placeholder="Please enter your name…" maxlength="36" style="padding:8px 11px;">
@@ -4506,6 +5324,7 @@
                 <button class="thinking-tier-btn" type="button" data-thinking="low">Low</button>
                 <button class="thinking-tier-btn active" type="button" data-thinking="medium">Medium</button>
                 <button class="thinking-tier-btn" type="button" data-thinking="high">High</button>
+                <button class="thinking-tier-btn" type="button" data-thinking="extra">Extra</button>
               </div>
               <div class="field-hint" id="thinking-level-note" style="margin-top: 5px; display: block;">
                 Balanced real thinking depth · streams thought summaries when supported by model
@@ -4598,6 +5417,8 @@
               </div>
             </div>
           </div>
+
+          <div class="claude-topic-pills" id="claude-topic-pills"></div>
 
           <div class="composer-disclaimer">Brief can make mistakes. Check important info.</div>
           <div class="composer-footnote">
@@ -5166,50 +5987,50 @@
       </div>
     </div>
 
-    <!-- 11. WHAT'S NEW / NEWS RELEASE MODAL (CENTERED, SHOWN ONCE PER VERSION) -->
+    <!-- 11. WHAT'S NEW / NEWS RELEASE MODAL (CENTERED, SHOWN ONCE PER VERSION, RED TOP-RIGHT X ONLY) -->
     <div class="modal-box news-modal" id="modal-whats-new" role="dialog" aria-modal="true" aria-labelledby="whats-new-title">
       <div class="modal-head">
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v1.0.5</span>
+          <span class="news-version-pill">News · v1.0.7</span>
         </div>
-        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close (don't show again for v1.0.5)" aria-label="Close What's New">✕</button>
+        <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
       <div class="modal-body">
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v1.0.5 — Auto-Glasses Eyesight, GPT-6 Sol &amp; Astra, Startup to Main Menu &amp; Clean API Key UI
+              Brief v1.0.7 — Native Provider Themes &amp; Fonts, Usage Limit Ring, Extra Thinking Level &amp; Instant Flash Speed
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
-              Click any screenshot below to zoom in. Closing this dialog with <strong>✕</strong> marks v1.0.5 as read so it will not pop up again automatically.
+              Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
             </div>
           </div>
         </div>
 
         <div class="news-gallery-grid" id="whats-new-gallery">
-          <button class="news-photo-card" type="button" data-news-src="assets/news-gemini-fix.png" data-news-caption="Clean Model Selector (No Custom Model ID) — Gemini 4 Carbon Challenger, GPT-6 Sol/Astra, Claude 5.5/5.2 &amp; Real 3-Tier Thinking">
-            <img class="news-photo-thumb" src="assets/news-gemini-fix.png" alt="Brief Model Selector without Custom Model ID showing Gemini 4 Carbon Challenger and 3 Thinking tiers">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-themes.png" data-news-caption="Brief v1.0.7 Native Provider Themes &amp; Real Fonts — Google Sans Gemini, Pitch-Black OpenAI Sans, Warm Charcoal Claude with Orange Send Key &amp; Classic OpenRouter">
+            <img class="news-photo-thumb" src="assets/news-v107-themes.png" alt="Brief v1.0.7 Native Provider Themes and Real Fonts">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Cleaner Model Menu &amp; GPT-6 Sol / Astra</div>
-              <div class="news-photo-sub">Removed Custom Model ID box, kept Challenger Carbon &amp; updated OpenAI models to GPT-6 Sol &amp; GPT-6 Astra across all 4 providers.</div>
+              <div class="news-photo-title">Native Themes &amp; Real Fonts</div>
+              <div class="news-photo-sub">Google Sans Gemini with blue radial glow, pitch-black OpenAI Sans, warm charcoal Claude with orange Send key &amp; starburst, and classic OpenRouter.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-studio-crew.png" data-news-caption="Auto-Glasses Magnified Check, UIA Center Snap &amp; Persistent 5-Role Crew">
-            <img class="news-photo-thumb" src="assets/news-studio-crew.png" alt="Brief Auto-Glasses vision improvement and Studio Multi-Agent Crew">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-extra.png" data-news-caption="Brief v1.0.7 New Extra Thinking Level (Extra Web Research + Extra Touches) &amp; Ultra-Fast Flash-Lite / Flash Chat &amp; Work Mode">
+            <img class="news-photo-thumb" src="assets/news-v107-extra.png" alt="Brief v1.0.7 Extra Thinking Level and Fast Flash Work Mode">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Better Glasses &amp; Mouse Aim</div>
-              <div class="news-photo-sub">Detects 0% pixel-change clicks, auto-snaps zoomed Glasses crop, snaps onto small UIA controls, and continues persistently.</div>
+              <div class="news-photo-title">Extra Thinking &amp; Fast Flash</div>
+              <div class="news-photo-sub">New Extra level runs deep parallel web research + extra polish, while Flash-Lite &amp; Flash answer fast with zero mid-reply cutoffs.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v102-setup.png" data-news-caption="Brief v1.0.5 Public Website &amp; Compiled Windows Setup Wizard">
-            <img class="news-photo-thumb" src="assets/news-v102-setup.png" alt="Brief v1.0.5 Download Page and Windows Setup Wizard">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-usage.png" data-news-caption="Brief v1.0.7 Per-Company Usage Limit Ring, Silent 2h/3h Cooldown &amp; Native Windows Setup v1.0.7">
+            <img class="news-photo-thumb" src="assets/news-v107-usage.png" alt="Brief v1.0.7 Usage Limit Ring and 2-3 Hour Cooldown Notice">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Brief v1.0.5 Website &amp; Setup</div>
-              <div class="news-photo-sub">Always opens cleanly on Main Menu (New Chat), short compact API key pills &amp; updated Brief-Setup.exe v1.0.5.</div>
+              <div class="news-photo-title">Usage Ring &amp; Setup v1.0.7</div>
+              <div class="news-photo-sub">Per-company usage ring (0–100%), silent 2h/3h cooldown notice, instant API-key refresh, and verified Windows Setup v1.0.7.</div>
             </div>
           </button>
         </div>
@@ -5218,13 +6039,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v1.0.5</span>
+              <span>What’s New in v1.0.7</span>
             </div>
             <ul class="news-list">
-              <li><strong>Better Eyesight (“Glasses”) &amp; Smarter Mouse Aim:</strong> Auto-snaps to exact small UIA buttons/tabs/menus, expands MenuBar &amp; UI tree inspection, and automatically captures a magnified Glasses crop whenever a click triggers 0% screen change.</li>
-              <li><strong>Opens Straight to Main Menu (New Chat):</strong> Starting Brief now always lands on a fresh New Chat screen (with Recents one click away in the sidebar) alongside <em>“Coffee time and Brief”</em> greetings.</li>
-              <li><strong>Fixed OpenAI Lineup:</strong> Updated to <strong>GPT-6 Luna</strong>, <strong>GPT-6.1 Terra</strong>, <strong>GPT-6 Sol</strong>, and <strong>GPT-6 Astra</strong> across OpenAI &amp; OpenRouter.</li>
-              <li><strong>Cleaner Model &amp; Key UI:</strong> Removed the Custom Model ID box from the model selector and replaced wide logo key cards with compact fit-to-width pills.</li>
+              <li><strong>Native Provider Themes &amp; Real Fonts:</strong> Automatically matches your active API provider — <strong>Gemini</strong> (Google Sans + deep blue radial welcome glow + obsidian chat), <strong>OpenAI</strong> (pitch black + OpenAI Sans + blue pill), <strong>Claude</strong> (warm charcoal + Claude Sans / Georgia serif + orange starburst &amp; orange Send key), and <strong>OpenRouter</strong> (classic Brief look).</li>
+              <li><strong>New Extra Thinking Level:</strong> Choose <strong>Low</strong>, <strong>Medium</strong>, <strong>High</strong>, or <strong>Extra</strong> — <strong>Extra</strong> runs deeper parallel live web research and adds thoughtful extra touches and polish to every answer and build.</li>
+              <li><strong>Usage Limit Ring &amp; 2h/3h Cooldown Popup:</strong> Color-coded top-right usage ring tracked separately per provider, with a clean News-style Usage Limit popup offering instant <strong>Change API Key →</strong> refresh (resets to 0%) or a quiet background 2–3 hour cooldown.</li>
+              <li><strong>Roblox Creator Store MCP Support:</strong> Enabled <code class="mono">insert_asset</code>, <code class="mono">search_asset</code>, and <code class="mono">manage_assets</code> for Roblox Studio tasks alongside instant target-window auto-focus and cursor movement.</li>
             </ul>
           </div>
 
@@ -5234,17 +6055,63 @@
               <span>What Has Been Fixed</span>
             </div>
             <ul class="news-list">
-              <li><strong>Eliminated Stale <code class="mono">gemini-2.5-pro</code> Errors:</strong> Auto-migrates old saved settings on load, blocks retired 1.x/2.x Gemini, GPT-3/4, and Claude-3 IDs at every layer, and fails over cleanly if an endpoint retires a model.</li>
-              <li><strong>Fixed Long Masked API Key Overflow:</strong> Shortened masked keys to compact format (<code class="mono">AQ.A••••••AQkA</code>) so provider buttons never clip off-screen.</li>
-              <li><strong>Fixed Claude &amp; OpenRouter Tool Choice Conflicts:</strong> Prevented invalid forced <code class="mono">tool_choice</code> + extended thinking HTTP 400 errors so all 4 providers keep working reliably without quitting mid-task.</li>
-              <li><strong>Full Persistence &amp; Verification:</strong> Kept v1.0.4’s unthrottled High thinking, honest Critic self-correction, and crisp orange <code class="mono">&lt;/&gt;</code> HTML arrows.</li>
+              <li><strong>All 2026 Models Verified &amp; Working:</strong> Same-tier runtime endpoint resolution ensures Gemini 4 (Hydrogen, Neon, Argon), Gemini 3.8 Flash, Gemini 3.5 Flash-Lite, GPT-6 (Luna, 6.1 Terra, Sol, 6.2 Astra), and Claude 5.5 / Fable 5.2 work reliably without 404s or false "model does not exist" replies.</li>
+              <li><strong>Fixed Slow Chat &amp; Mid-Reply Cutoffs:</strong> Fixed the streaming timer bug that cut off replies mid-sentence, enabled IPv4-first networking, removed forced 2.6s web-search waits on simple chats, and sent explicit <code class="mono">MINIMAL</code> thinking on Flash-Lite &amp; Flash Low for instant replies.</li>
+              <li><strong>Fixed Slow Work Mode on Flash-Lite &amp; Flash:</strong> Fast models now use direct non-streaming tool calls, skip heavy 2.4s OCR scans on non-GUI and fast steps, and trim pre/post-step dead waits.</li>
+              <li><strong>Fixed Quota Burn &amp; OpenRouter Validation:</strong> Eliminated 16× nested retry burn and duplicate parallel calls on the same model, fixed OpenRouter rejecting pasted keys as model IDs, and recognized Anthropic zero-credit keys so Claude UI still activates cleanly.</li>
             </ul>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 12. USAGE LIMIT REACHED MODAL (NEWS-STYLE POPUP · CHANGE API KEY OR WAIT 2-3 HOURS) -->
+    <div class="modal-box news-modal" id="modal-usage-limit" role="dialog" aria-modal="true" aria-labelledby="usage-limit-modal-title" style="max-width: 560px;">
+      <div class="modal-head">
+        <div class="modal-title" id="usage-limit-modal-title">
+          <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
+          <span>Usage Limit Reached</span>
+          <span class="news-version-pill" id="usage-limit-badge" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">100% · Limit Reached</span>
+        </div>
+        <button class="icon-btn" id="usage-limit-close-x" type="button" title="Close" aria-label="Close Usage Limit Notice">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="news-hero-strip" style="border-color: rgba(239, 68, 68, 0.32); background: linear-gradient(135deg, rgba(127, 29, 29, 0.28), rgba(24, 24, 27, 0.92));">
+          <div>
+            <div id="usage-limit-headline" style="font-weight: 700; color: #ffffff; font-size: 15px; margin-bottom: 5px;">
+              You’ve reached your usage limit
+            </div>
+            <div id="usage-limit-sub" style="font-size: 13px; color: var(--text-secondary); line-height: 1.55;">
+              You can either change your API key to refresh your usage right away, or wait about 2 hours for your usage limit to reset.
+            </div>
+          </div>
+        </div>
+
+        <div class="news-columns" style="margin-top: 12px;">
+          <div class="news-col-card">
+            <div class="news-col-heading">
+              <span>🔑</span>
+              <span>Change API Key</span>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin: 0;">
+              Paste a different API key in <strong>Settings → API Key</strong> to refresh your usage immediately back to <strong>0%</strong> and keep going right away.
+            </p>
+          </div>
+
+          <div class="news-col-card">
+            <div class="news-col-heading">
+              <span>⏳</span>
+              <span id="usage-limit-wait-heading">Wait ~2 hours</span>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin: 0;">
+              Come back in about <strong id="usage-limit-wait-inline">2 hours</strong> and your usage limit will refresh automatically.
+            </p>
+          </div>
+        </div>
+      </div>
       <div class="modal-foot" style="justify-content: space-between;">
-        <span style="font-size: 12px; color: var(--text-muted);">Shown once per update · Reopen anytime from <strong>✨ News</strong> in the top bar</span>
-        <button class="btn-primary" id="whats-new-done-btn" type="button">Got it, Don’t Show Again</button>
+        <button class="btn-secondary" id="usage-limit-wait-btn" type="button">I’ll Wait</button>
+        <button class="btn-primary" id="usage-limit-change-key-btn" type="button">Change API Key →</button>
       </div>
     </div>
   </div>
@@ -5297,23 +6164,24 @@
           minimizeDuringAgent: true,
           showOverlay: true,
           showWidget: false,
-          maxSteps: 140,
-          deepWorkMinMinutes: 10,
+          maxSteps: 45,
+          deepWorkMinMinutes: 0,
           deepWorkMaxMinutes: 25,
           multiAgentParallel: true,
           verifyTaskBeforeFinish: true,
           screenshotMaxWidth: 3840,
           displayTarget: 'primary',
-          typingDelayMs: 6,
+          typingDelayMs: 42,
           cursorSpeedMs: 200,
           cursorSpeedProfile: 'adaptive',
           alignCursorBack: true,
           commandTimeoutSec: 120,
-          pasteLongText: true,
+          pasteLongText: false,
           sidebarCollapsed: false,
+          sidebarWidth: 260,
           logPanelOpen: false,
           sendWithEnter: true,
-          soundChime: true,
+          soundChime: false,
           userName: '',
           seenNewsVersion: '',
           provider: 'gemini',
@@ -5326,7 +6194,8 @@
           { key: 'flashlite35', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest' },
           { key: 'flash38', label: 'Gemini 3.8 Flash', hint: 'Balanced' },
           { key: 'hydrogen', label: 'Gemini 4 Hydrogen', hint: 'Balanced' },
-          { key: 'argon', label: 'Gemini 4 Argon', hint: 'Strong' }
+          { key: 'neon', label: 'Gemini 4 Neon', hint: 'Strong' },
+          { key: 'argon', label: 'Gemini 4 Argon', hint: 'Flagship' }
         ],
         usage: {
           startedAt: Date.now(),
@@ -6008,19 +6877,22 @@
         return chat;
       }
 
-      function startNewChat() {
+      function startNewChat(opts) {
+        const silent = !!(opts && opts.silent);
         if (State.running) {
           showToast('Stop the active task before starting a new chat.', 'warn');
           return;
         }
         State.activeChatId = null;
         State.attachments = [];
-        State.greetingIdx = ((State.greetingIdx || 0) + 1) % 5;
+        if (!silent) {
+          State.greetingIdx = ((State.greetingIdx || 0) + 1) % 5;
+        }
         renderAttachments();
         renderThread();
         renderSidebar();
         updateHeaderTitle();
-        setView(State.hasKey ? 'welcome' : 'key-gate', 'left');
+        setView(State.hasKey ? 'welcome' : 'key-gate', silent ? '' : 'left', { noAnim: silent });
         if (DOM.composerInput) DOM.composerInput.focus();
       }
 
@@ -6270,7 +7142,8 @@
       }
 
       const VIEW_ORDER = { 'key-gate': 0, welcome: 1, chat: 2 };
-      function setView(name, forcedDir) {
+      function setView(name, forcedDir, opts) {
+        const noAnim = !!(opts && opts.noAnim);
         const prev = State.ui.activeView || 'welcome';
         const dir = forcedDir || ((VIEW_ORDER[name] ?? 1) >= (VIEW_ORDER[prev] ?? 1) ? 'right' : 'left');
         State.ui.activeView = name;
@@ -6280,20 +7153,128 @@
         document.body.classList.toggle('is-welcome', name === 'welcome');
         document.body.classList.toggle('is-key-gate', name === 'key-gate');
         if (name === 'welcome') {
-          renderWelcomeView({ triggerLogoAnim: prev !== 'welcome' || !!forcedDir });
+          renderWelcomeView({ triggerLogoAnim: !noAnim && (prev !== 'welcome' || !!forcedDir) });
+        } else {
+          updateProviderPlaceholder(State.provider);
+          renderClaudeTopicPills();
         }
-        if (prev !== name || forcedDir) {
+        if (!noAnim && (prev !== name || forcedDir)) {
           const activeEl = name === 'key-gate' ? DOM.viewKeyGate : name === 'welcome' ? DOM.viewWelcome : DOM.viewChat;
           triggerSlide(activeEl, dir);
         }
       }
 
-      function toggleSidebar(force) {
+      function applySidebarWidth(widthPx, persist) {
+        const clamped = Math.max(170, Math.min(380, Math.round(Number(widthPx) || 260)));
+        document.documentElement.style.setProperty('--sidebar-width', clamped + 'px');
+        State.settings.sidebarWidth = clamped;
+        if (persist && api && api.updateSettings) {
+          api.updateSettings({ sidebarWidth: clamped }).catch(() => {});
+        }
+      }
+
+      function syncSidebarChrome(collapsed) {
+        DOM.sidebarExpandBtn.style.display = collapsed ? 'inline-flex' : 'none';
+        const arrowIcon = $('sidebar-arrow-icon');
+        if (arrowIcon) {
+          arrowIcon.innerHTML = collapsed
+            ? '<polyline points="9 18 15 12 9 6"></polyline>'
+            : '<polyline points="15 18 9 12 15 6"></polyline>';
+        }
+        const arrowBtn = $('sidebar-arrow-toggle');
+        if (arrowBtn) {
+          arrowBtn.title = collapsed ? 'Show history sidebar (→)' : 'Shrink history sidebar (←)';
+        }
+        const backdrop = $('sidebar-backdrop');
+        if (backdrop) {
+          const isNarrowDrawer = !collapsed && window.innerWidth <= 860;
+          backdrop.classList.toggle('visible', isNarrowDrawer);
+        }
+      }
+
+      function toggleSidebar(force, opts) {
+        const silent = !!(opts && opts.silent);
         const collapsed = force !== undefined ? !!force : !DOM.sidebar.classList.contains('collapsed');
         DOM.sidebar.classList.toggle('collapsed', collapsed);
-        DOM.sidebarExpandBtn.style.display = collapsed ? 'inline-flex' : 'none';
-        State.settings.sidebarCollapsed = collapsed;
-        if (api && api.updateSettings) api.updateSettings({ sidebarCollapsed: collapsed }).catch(() => {});
+        syncSidebarChrome(collapsed);
+        if (!silent) {
+          State.settings.sidebarCollapsed = collapsed;
+          if (api && api.updateSettings) api.updateSettings({ sidebarCollapsed: collapsed }).catch(() => {});
+        }
+      }
+
+      function bindSidebarResizer() {
+        const handle = $('sidebar-resize-handle');
+        const arrowBtn = $('sidebar-arrow-toggle');
+        const backdrop = $('sidebar-backdrop');
+        if (arrowBtn) {
+          arrowBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSidebar();
+          });
+        }
+        if (backdrop) {
+          backdrop.addEventListener('click', () => toggleSidebar(true, { silent: true }));
+        }
+        if (handle) {
+          let dragging = false;
+          let startX = 0;
+          let startWidth = 260;
+          let moved = false;
+          handle.addEventListener('mousedown', (e) => {
+            if (e.target && e.target.closest && e.target.closest('#sidebar-arrow-toggle')) return;
+            if (DOM.sidebar.classList.contains('collapsed')) {
+              toggleSidebar(false);
+              return;
+            }
+            dragging = true;
+            moved = false;
+            startX = e.clientX;
+            startWidth = DOM.sidebar.getBoundingClientRect().width || State.settings.sidebarWidth || 260;
+            DOM.sidebar.classList.add('resizing');
+            handle.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+          });
+          window.addEventListener('mousemove', (e) => {
+            if (!dragging) return;
+            const dx = e.clientX - startX;
+            if (Math.abs(dx) > 3) moved = true;
+            const nextW = startWidth + dx;
+            if (nextW < 125) {
+              toggleSidebar(true, { silent: true });
+            } else {
+              if (DOM.sidebar.classList.contains('collapsed')) {
+                DOM.sidebar.classList.remove('collapsed');
+                syncSidebarChrome(false);
+              }
+              applySidebarWidth(nextW, false);
+            }
+          });
+          window.addEventListener('mouseup', () => {
+            if (!dragging) return;
+            dragging = false;
+            DOM.sidebar.classList.remove('resizing');
+            handle.classList.remove('dragging');
+            document.body.style.cursor = '';
+            if (moved && !DOM.sidebar.classList.contains('collapsed')) {
+              applySidebarWidth(State.settings.sidebarWidth, true);
+            }
+          });
+        }
+        // Auto-collapse history sidebar cleanly when window is snapped to half-screen on Windows (<= 1040px)
+        let lastNarrow = window.innerWidth <= 1040;
+        window.addEventListener('resize', () => {
+          const isNarrow = window.innerWidth <= 1040;
+          if (isNarrow && !lastNarrow && !DOM.sidebar.classList.contains('collapsed')) {
+            toggleSidebar(true, { silent: true });
+          } else if (!isNarrow && lastNarrow && !State.settings.sidebarCollapsed && DOM.sidebar.classList.contains('collapsed')) {
+            toggleSidebar(false, { silent: true });
+          } else {
+            syncSidebarChrome(DOM.sidebar.classList.contains('collapsed'));
+          }
+          lastNarrow = isNarrow;
+        });
       }
 
       function toggleLogDrawer(force) {
@@ -6394,17 +7375,17 @@
 
       const PROVIDER_DEFAULT_PRESETS = {
         gemini: [
-          { key: 'flashlite35', id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest',    desc: 'Super fast helper — jumps in to answer and help right away' },
-          { key: 'flash38',     id: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced',   desc: 'Balanced for everyday use — steady help on daily tasks' },
-          { key: 'hydrogen',    id: 'gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced',   desc: 'Balanced for everyday use — smooth on daily work & tasks' },
-          { key: 'argon',       id: 'gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Strong',     desc: 'Strongest for complex work — built for deep analyzing & research' },
-          { key: 'carbon',      id: 'gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Challenger', desc: 'Challenger tier — built to tackle the hardest problems & checks' }
+          { key: 'flashlite35', id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest',  desc: 'Lightest & fastest — quick, helpful answers & fast fixes right away' },
+          { key: 'flash38',     id: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced', desc: 'Balanced — thinks carefully before starting, then helps cleanly' },
+          { key: 'hydrogen',    id: 'gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced', desc: 'Balanced — thinks before starting & solves daily tasks reliably' },
+          { key: 'neon',        id: 'gemini-4-neon',         label: 'Gemini 4 Neon',         hint: 'Strong',   desc: 'Strong — analyzes, thinks, makes a clear plan, then executes deeply' },
+          { key: 'argon',       id: 'gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Flagship', desc: 'Flagship — analyzes, critically thinks, works, tests & keeps fixing issues' }
         ],
         openai: [
-          { key: 'gpt6luna',    id: 'gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',    desc: 'Super fast helper — quick replies for everyday questions' },
-          { key: 'gpt61terra',  id: 'gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced',   desc: 'Balanced for everyday use — steady help across daily work' },
-          { key: 'gpt6sol',     id: 'gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',     desc: 'Strong for complex work — great for deep analyzing & research' },
-          { key: 'gpt6astra',   id: 'gpt-6-astra',           label: 'GPT-6 Astra',           hint: 'Challenger', desc: 'Challenger agent tier — built for demanding multi-step workflows' }
+          { key: 'gpt6luna',    id: 'gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',  desc: 'Lightest & fastest — quick, helpful replies as fast as possible' },
+          { key: 'gpt61terra',  id: 'gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced', desc: 'Balanced — thinks before starting & handles daily work cleanly' },
+          { key: 'gpt6sol',     id: 'gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',   desc: 'Strong — analyzes, thinks, builds a plan, then executes cleanly' },
+          { key: 'gpt62astra',  id: 'gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Flagship', desc: 'Flagship — critically thinks, executes, tests & fixes until passing' }
         ],
         anthropic: [
           { key: 'claudehaiku55',  id: 'claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest',    desc: 'Super fast helper — crisp speed for everyday tasks' },
@@ -6413,15 +7394,15 @@
           { key: 'claudefable52',  id: 'claude-fable-5-2',   label: 'Claude Fable 5.2',      hint: 'Challenger', desc: 'Challenger reasoning tier — tackles the hardest problems deeply' }
         ],
         openrouter: [
-          { key: 'or_flashlite35', id: 'google/gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest',    desc: 'Google Gemini · Super fast everyday helper' },
-          { key: 'or_flash38',     id: 'google/gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced',   desc: 'Google Gemini · Balanced for everyday use' },
-          { key: 'or_hydrogen',    id: 'google/gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced',   desc: 'Google Gemini · Balanced everyday powerhouse' },
-          { key: 'or_argon',       id: 'google/gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Strong',     desc: 'Google Gemini · Perfect for analyzing and research' },
-          { key: 'or_carbon',      id: 'google/gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Challenger', desc: 'Google Gemini · Challenger tier for hardest reasoning' },
-          { key: 'or_gpt6luna',    id: 'openai/gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',    desc: 'OpenAI · Super fast helper for everyday questions' },
-          { key: 'or_gpt61terra',  id: 'openai/gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced',   desc: 'OpenAI · Balanced for everyday work' },
-          { key: 'or_gpt6sol',     id: 'openai/gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',     desc: 'OpenAI · Built for complex analyzing & research' },
-          { key: 'or_gpt6astra',   id: 'openai/gpt-6-astra',           label: 'GPT-6 Astra',           hint: 'Challenger', desc: 'OpenAI · Heavy multi-step desktop agent' },
+          { key: 'or_flashlite35', id: 'google/gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest',    desc: 'Google Gemini · Lightest & fastest helper' },
+          { key: 'or_flash38',     id: 'google/gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced',   desc: 'Google Gemini · Balanced — thinks before starting' },
+          { key: 'or_hydrogen',    id: 'google/gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced',   desc: 'Google Gemini · Balanced — thinks before starting' },
+          { key: 'or_neon',        id: 'google/gemini-4-neon',         label: 'Gemini 4 Neon',         hint: 'Strong',     desc: 'Google Gemini · Strong — analyzes, thinks & plans' },
+          { key: 'or_argon',       id: 'google/gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Flagship',   desc: 'Google Gemini · Flagship — critically thinks, works & tests' },
+          { key: 'or_gpt6luna',    id: 'openai/gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',    desc: 'OpenAI · Lightest & fastest helper' },
+          { key: 'or_gpt61terra',  id: 'openai/gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced',   desc: 'OpenAI · Balanced — thinks before starting' },
+          { key: 'or_gpt6sol',     id: 'openai/gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',     desc: 'OpenAI · Strong — analyzes, thinks & plans' },
+          { key: 'or_gpt62astra',  id: 'openai/gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Flagship',   desc: 'OpenAI · Flagship — critically thinks, works & tests' },
           { key: 'or_haiku55',     id: 'anthropic/claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest',    desc: 'Anthropic · Super fast everyday assistant' },
           { key: 'or_sonnet55',    id: 'anthropic/claude-sonnet-5-5',  label: 'Claude Sonnet 5.5',     hint: 'Balanced',   desc: 'Anthropic · Balanced writing & daily work' },
           { key: 'or_opus55',      id: 'anthropic/claude-opus-5-5',    label: 'Claude Opus 5.5',       hint: 'Strong',     desc: 'Anthropic · Deep coding & complex research' },
@@ -6483,6 +7464,13 @@
 
       function buildWelcomeGreeting(rawName) {
         const name = String(rawName || '').trim();
+        const p = String(State.provider || 'gemini').toLowerCase();
+        if (p === 'anthropic' || p === 'claude') {
+          return 'Back at it' + (name ? (', ' + name) : '');
+        }
+        if (p === 'openai' || p === 'gemini' || p === 'openrouter') {
+          return 'Where should we begin?';
+        }
         const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
         const who = name ? (', ' + name) : '';
         const phrases = [
@@ -6497,6 +7485,51 @@
         if (State.greetingSeed === undefined) State.greetingSeed = Math.floor(Math.random() * 1000);
         const idx = Math.abs(Number(State.greetingIdx || 0) + State.greetingSeed) % phrases.length;
         return phrases[idx];
+      }
+
+      function renderClaudeTopicPills() {
+        // User requested NO buttons below the Claude chat bar — keep hidden & empty.
+        const el = $('claude-topic-pills');
+        if (!el) return;
+        el.style.display = 'none';
+        el.innerHTML = '';
+      }
+
+      function updateProviderPlaceholder(norm) {
+        const input = $('composer-input');
+        if (!input) return;
+        const isChat = State.ui && State.ui.activeView === 'chat';
+        if (norm === 'anthropic') {
+          input.placeholder = isChat ? 'Write a message…' : 'How can I help you today?';
+        } else if (norm === 'openai') {
+          input.placeholder = 'Ask Brief';
+        } else if (norm === 'gemini') {
+          input.placeholder = isChat ? 'Ask Gemini' : 'Ask Brief or type @ for apps, tools, and skills';
+        } else {
+          input.placeholder = 'Ask Brief…';
+        }
+      }
+
+      function applyProviderTheme(rawProv) {
+        const p = String(rawProv || State.provider || 'gemini').toLowerCase();
+        const norm = (p === 'claude' || p === 'anthropic') ? 'anthropic'
+          : (p === 'openai' || p === 'gpt' || p === 'codex') ? 'openai'
+          : (p === 'openrouter' ? 'openrouter' : 'gemini');
+        State.provider = norm;
+        document.body.dataset.provider = norm;
+        updateProviderPlaceholder(norm);
+        const vis = providerVisual(norm);
+        const logo = $('welcome-provider-logo');
+        if (logo && vis.logo) logo.src = vis.logo;
+        const railLogo = $('rail-brand-logo');
+        if (railLogo) railLogo.src = (norm === 'openrouter') ? 'assets/openrouter-logo.png' : 'assets/logo.png';
+        const railBtn = $('rail-brand-btn');
+        if (railBtn) railBtn.title = (norm === 'openrouter') ? 'OpenRouter · Brief Home' : 'Brief Home';
+        const heading = $('welcome-heading');
+        const userName = String((State.settings && State.settings.userName) || '').trim();
+        if (heading) heading.textContent = buildWelcomeGreeting(userName);
+        renderClaudeTopicPills();
+        if (typeof renderUsageRing === 'function') { try { renderUsageRing(); } catch (_) { /* not ready yet */ } }
       }
 
       let activeOnboardingStep = 0;
@@ -6580,6 +7613,7 @@
       }
 
       function renderWelcomeView(opts) {
+        applyProviderTheme(State.provider);
         const triggerLogoAnim = !!(opts && opts.triggerLogoAnim);
         const vis = providerVisual(State.provider);
         const sb = $('welcome-starburst');
@@ -6605,6 +7639,7 @@
         if (State.hasKey && !userName && nameInput && document.activeElement !== nameInput) {
           nameInput.placeholder = 'Please enter your name…';
         }
+        renderClaudeTopicPills();
       }
 
       async function saveEnteredUserName(rawName, source) {
@@ -6642,10 +7677,11 @@
       }
 
       function renderModelSelector() {
+        if (typeof renderUsageRing === 'function') { try { renderUsageRing(); } catch (_) { /* ring not ready yet */ } }
         const genModels = (State.models || []).filter((m) => Array.isArray(m.methods) && m.methods.includes('generateContent'));
         let active = State.settings.activeModel || '';
         const tLevel = (State.settings.thinkingLevel || 'medium').toLowerCase();
-        const tLabel = tLevel === 'high' ? 'High' : (tLevel === 'low' ? 'Low' : 'Medium');
+        const tLabel = tLevel === 'extra' ? 'Extra' : (tLevel === 'high' ? 'High' : (tLevel === 'low' ? 'Low' : 'Medium'));
         const vis = providerVisual(State.provider);
 
         State.presets = (PROVIDER_DEFAULT_PRESETS[vis.id] || PROVIDER_DEFAULT_PRESETS.gemini).slice();
@@ -6681,12 +7717,14 @@
         });
         const tNote = $('thinking-level-note');
         if (tNote) {
-          if (tLevel === 'high') {
-            tNote.textContent = 'High Thinking — maximum intelligence, deep verification, and honest mistake self-correction.';
+          if (tLevel === 'extra') {
+            tNote.textContent = 'Extra Thinking — extra web research to understand deeply + extra touches & polish for standout results.';
+          } else if (tLevel === 'high') {
+            tNote.textContent = 'High Thinking — serious maximum-depth analysis, root-cause tracing, and full verification.';
           } else if (tLevel === 'low') {
-            tNote.textContent = 'Low Thinking — super fast, lightweight answers with minimal delay.';
+            tNote.textContent = 'Low Thinking — fastest replies with instant minimal-delay streaming (snappiest on Flash & Flash-Lite).';
           } else {
-            tNote.textContent = 'Medium Thinking (Balanced Default) — steady reasoning for everyday tasks.';
+            tNote.textContent = 'Medium Thinking (Balanced) — fast on Flash & Flash-Lite, deliberate step-by-step analysis on larger models.';
           }
         }
 
@@ -6752,7 +7790,7 @@
       }
 
       async function setThinkingLevel(tier) {
-        const norm = ['low', 'medium', 'high'].includes(tier) ? tier : 'medium';
+        const norm = ['low', 'medium', 'high', 'extra'].includes(tier) ? tier : 'medium';
         State.settings.thinkingLevel = norm;
         renderModelSelector();
         if (api && api.updateSettings) {
@@ -6867,6 +7905,39 @@
          6. CONVERSATION THREAD, STEP TRACE CARDS & PERMISSION PROMPTS
       ==================================================================== */
 
+      function syncWorkMessageInPlace(msg) {
+        if (!msg || !msg.id) {
+          renderThread();
+          return;
+        }
+        const row = document.querySelector('[data-msg-id="' + msg.id + '"]');
+        if (!row) {
+          renderThread();
+          return;
+        }
+        const col = row.querySelector('.msg-assistant-col');
+        if (!col) {
+          renderThread();
+          return;
+        }
+        const oldTrace = col.querySelector('.work-trace');
+        const oldBody = oldTrace ? oldTrace.querySelector('.work-trace-body') : null;
+        const prevScrollTop = oldBody ? oldBody.scrollTop : 0;
+        const wasAtBottom = oldBody ? (oldBody.scrollHeight - oldBody.scrollTop - oldBody.clientHeight < 32) : true;
+        const nextTrace = buildWorkTraceEl(msg);
+        if (oldTrace) {
+          col.replaceChild(nextTrace, oldTrace);
+        } else {
+          const head = col.querySelector('.msg-assistant-head');
+          if (head && head.nextSibling) col.insertBefore(nextTrace, head.nextSibling);
+          else col.appendChild(nextTrace);
+        }
+        const newBody = nextTrace.querySelector('.work-trace-body');
+        if (newBody) {
+          newBody.scrollTop = wasAtBottom ? newBody.scrollHeight : prevScrollTop;
+        }
+      }
+
       function renderThread() {
         DOM.messagesList.innerHTML = '';
         const chat = getActiveChat();
@@ -6980,7 +8051,35 @@
             prose.innerHTML = '<div class="thinking-shimmer">Thinking</div>';
           }
         } else if (msg.error) {
-          prose.innerHTML = '<div class="validation-card visible error" style="margin-top:0;"><div class="validation-head"><span>❌</span><span>Task / Request Error</span></div><div class="validation-msg">' + escapeHtml(msg.error) + '</div></div>';
+          const isQuotaErr = /quota|rate limit|limit:\s*\d|too many requests|429|credit balance|insufficient_quota|RESOURCE_EXHAUSTED|requests\/day|usage limit/i.test(String(msg.error));
+          if (isQuotaErr) {
+            const card = createElement('div', { className: 'validation-card visible warn', style: 'margin-top:0;' });
+            card.appendChild(createElement('div', { className: 'validation-head', html: '<span>⏳</span><span>Usage Limit Reached</span>' }));
+            card.appendChild(createElement('div', {
+              className: 'validation-msg',
+              text: usageLimitMessage()
+            }));
+            const btnRow = createElement('div', { style: 'margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;' });
+            btnRow.appendChild(createElement('button', {
+              className: 'btn-primary',
+              type: 'button',
+              text: 'Change API Key →',
+              onClick: () => {
+                openSettingsModal('key');
+                setTimeout(() => { const inp = $('settings-key-input'); if (inp) inp.focus(); }, 120);
+              }
+            }));
+            btnRow.appendChild(createElement('button', {
+              className: 'btn-secondary',
+              type: 'button',
+              text: 'View Limit Notice',
+              onClick: () => openUsageLimitModal()
+            }));
+            card.appendChild(btnRow);
+            prose.appendChild(card);
+          } else {
+            prose.innerHTML = '<div class="validation-card visible error" style="margin-top:0;"><div class="validation-head"><span>❌</span><span>Task / Request Error</span></div><div class="validation-msg">' + escapeHtml(msg.error) + '</div></div>';
+          }
         } else {
           renderMarkdownInto(prose, msg.text || '');
           if (msg.streaming) {
@@ -7271,9 +8370,7 @@
         const body = createElement('div', { className: 'work-trace-body' });
         const timeline = createElement('div', { className: 'trace-timeline' });
 
-        timeline.appendChild(buildWorkStageBar(msg));
-
-
+        // Unified single-card timeline: no constantly jumping 4-pill bar or blinking between-step cards.
         if (msg.plan) {
           const pNode = createElement('div', { className: 'trace-node ok' });
           const pBox = createElement('div', { className: 'trace-inner-box' });
@@ -7340,9 +8437,33 @@
           }));
           box.appendChild(top);
 
+          // Live Command Prompt / PowerShell Terminal output block
+          const isTerminalTool = ['run_command', 'terminal_open', 'terminal_send', 'terminal_read'].includes(String(st.tool || ''));
+          if (isTerminalTool) {
+            const termBox = createElement('div', { className: 'step-terminal-box', dataset: { termCallId: st.toolCallId || '' } });
+            const termHead = createElement('div', { className: 'step-terminal-head' });
+            const shellTag = (st.result && st.result.shell) || (st.args && st.args.shell === 'cmd' ? 'CMD' : (st.tool === 'terminal_open' ? 'CMD' : 'PowerShell'));
+            const cmdLine = (st.args && (st.args.command || st.args.input || st.args.initial_command)) || st.tool;
+            termHead.appendChild(createElement('span', { className: 'step-terminal-cmd', text: '>_ [' + shellTag + '] ' + String(cmdLine || '') }));
+            const exitCode = (st.result && st.result.exit_code !== undefined && st.result.exit_code !== null) ? st.result.exit_code : null;
+            const badgeCls = 'step-terminal-badge' + (st.running ? '' : (exitCode === 0 || (st.ok && exitCode === null) ? ' ok' : ' err'));
+            const badgeTxt = st.running ? 'Task Running' : (exitCode !== null ? ('Exit ' + exitCode) : (st.ok ? 'OK' : 'Error'));
+            termHead.appendChild(createElement('span', { className: badgeCls, text: badgeTxt }));
+            termBox.appendChild(termHead);
+            const rawTermText = st.termOutput
+              || [st.result && (st.result.stdout || st.result.new_output || st.result.output), st.result && st.result.stderr].filter(Boolean).join('\n').trim()
+              || (st.running ? 'Running command…' : '(no output)');
+            termBox.appendChild(createElement('pre', {
+              className: 'step-terminal-body',
+              dataset: { termBody: st.toolCallId || '' },
+              text: String(rawTermText).slice(-8000)
+            }));
+            box.appendChild(termBox);
+          }
+
           // Photo of what Brief sees / did (with loading ring while it is looking)
           const shotSrc = st.screenshot || st.seenShot;
-          if (shotSrc || st.running) {
+          if (!isTerminalTool && (shotSrc || st.running)) {
             const ph = createElement('div', { className: 'step-photo' + (st.running ? ' is-looking' : '') });
             if (shotSrc) {
               ph.appendChild(createElement('img', {
@@ -7375,24 +8496,12 @@
           timeline.appendChild(node);
         }
 
-        // Between steps the model is looking at the latest photo and deciding
-        if (isLive && steps.length && !steps.some((x) => x.running)) {
-          const aNode = createElement('div', { className: 'trace-node running' });
-          const aBox = createElement('div', { className: 'trace-inner-box' });
-          const aRow = createElement('div', { className: 'step-looking-row' });
-          aRow.appendChild(createElement('span', { className: 'spinner-ring' }));
-          aRow.appendChild(createElement('span', { className: 'trace-head-shimmer', text: 'Looking at the screen & deciding next step…' }));
-          aBox.appendChild(aRow);
-          aNode.appendChild(aBox);
-          timeline.appendChild(aNode);
-        }
-
         if (!thoughts.length && !steps.length && isLive) {
           const wNode = createElement('div', { className: 'trace-node running' });
           const wBox = createElement('div', { className: 'trace-inner-box' });
           wBox.appendChild(createElement('div', {
             className: 'trace-head-shimmer',
-            text: msg.liveStatus || ('Preparing ' + target + '…')
+            text: msg.liveStatus || ('Working in ' + target + '…')
           }));
           wNode.appendChild(wBox);
           timeline.appendChild(wNode);
@@ -7783,6 +8892,7 @@
               applyKeyValidationBundle(res);
               const v = res.validation || {};
               const usable = v.status !== 'invalid' && v.status !== 'nokey';
+              if (usable) resetUsageMeterForProvider(res.provider || State.provider);
               const replyText = (v.icon || '') + ' **' + (v.title || 'Checked') + '**\n\n' + (v.message || '') +
                 (usable ? '\n\nYou\'re all set! Ask me anything or switch to **Work** to control your desktop.' : '');
               replyMsg.needsKey = !usable;
@@ -7825,6 +8935,15 @@
           renderThread();
           return;
         }
+
+        if (isUsageLimitReached()) {
+          const limitMsg = usageLimitMessage();
+          if (DOM.composerStatusHint) DOM.composerStatusHint.textContent = limitMsg;
+          openUsageLimitModal();
+          return;
+        }
+        // Silently record local start timestamp in the background before this turn begins (never shown in UI)
+        touchUsageSessionStart();
 
         if (forcedMode === 'work' && State.settings.permissionMode === 'chat') {
           await setWorkspaceTab('work');
@@ -7890,6 +9009,11 @@
       async function regenerateFromIndex(index) {
         const chat = getActiveChat();
         if (!chat || State.running) return;
+        if (isUsageLimitReached()) {
+          openUsageLimitModal();
+          return;
+        }
+        touchUsageSessionStart();
         const truncated = chat.messages.slice(0, index);
         const lastUser = truncated[truncated.length - 1];
         if (!lastUser || lastUser.role !== 'user') return;
@@ -7944,8 +9068,29 @@
               webSearch,
               screenShare: activeShare
             });
-            assistantMsg.text = res.text || '';
-            assistantMsg.model = res.model || assistantMsg.model;
+            const finalChatTxt = (res && res.text) ? String(res.text) : (assistantMsg.text || '');
+            assistantMsg.thought = (res && res.thought) ? res.thought : (assistantMsg.thought || '');
+            assistantMsg.model = (res && res.model) || assistantMsg.model;
+            if (typeof State._cancelStreamTyping === 'function') State._cancelStreamTyping();
+            // Smoothly finish typing any remaining characters so it never dumps all at once or cuts off!
+            let curLen = assistantMsg.text ? assistantMsg.text.length : 0;
+            if (finalChatTxt && curLen < finalChatTxt.length) {
+              renderThread();
+              while (curLen < finalChatTxt.length && !State.stopped) {
+                const rem = finalChatTxt.length - curLen;
+                const stepChars = Math.max(2, Math.min(9, Math.ceil(rem / 10)));
+                curLen = Math.min(finalChatTxt.length, curLen + stepChars);
+                assistantMsg.text = finalChatTxt.slice(0, curLen);
+                const prose = document.querySelector('[data-msg-id="' + assistantMsg.id + '"] .msg-prose');
+                if (prose) {
+                  renderMarkdownInto(prose, assistantMsg.text);
+                  prose.appendChild(createElement('span', { className: 'typing-caret' }));
+                  scrollThreadToBottom();
+                }
+                await new Promise((r) => setTimeout(r, 22));
+              }
+            }
+            assistantMsg.text = finalChatTxt;
           } else {
             const res = await api.runWork({
               chatId: chat.id,
@@ -7964,7 +9109,7 @@
               let curLen = assistantMsg.text ? assistantMsg.text.length : 0;
               renderThread();
               while (curLen < finalTxt.length) {
-                const stepChars = Math.max(4, Math.min(28, Math.ceil((finalTxt.length - curLen) / 8)));
+                const stepChars = Math.max(2, Math.min(9, Math.ceil((finalTxt.length - curLen) / 10)));
                 curLen = Math.min(finalTxt.length, curLen + stepChars);
                 assistantMsg.text = finalTxt.slice(0, curLen);
                 const prose = document.querySelector('[data-msg-id="' + assistantMsg.id + '"] .msg-prose');
@@ -7973,17 +9118,23 @@
                   prose.appendChild(createElement('span', { className: 'typing-caret' }));
                   scrollThreadToBottom();
                 }
-                await new Promise((r) => setTimeout(r, 18));
+                await new Promise((r) => setTimeout(r, 22));
               }
             } else {
               assistantMsg.text = finalTxt;
             }
           }
         } catch (err) {
-          assistantMsg.error = err.message || String(err);
-          showToast(assistantMsg.error, 'error');
+          const cleanErr = String((err && err.message) || err || 'Unknown error')
+            .replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/i, '')
+            .trim();
+          assistantMsg.error = cleanErr;
+          const firstLine = cleanErr.split('\n')[0].slice(0, 120);
+          showToast(firstLine, 'error');
         } finally {
+          if (typeof State._cancelStreamTyping === 'function') State._cancelStreamTyping();
           assistantMsg.streaming = false;
+          registerUsageAfterTask(assistantMsg);
           if (Array.isArray(assistantMsg.steps)) {
             assistantMsg.steps = assistantMsg.steps.filter((s) => s.toolCallId !== 'observe-init');
           }
@@ -7995,11 +9146,292 @@
         }
       }
 
-      function setRunningState(isRunning) {
+      /* ===================================================================
+         USAGE LIMIT METER (ring next to Settings)
+         Tracks local time silently in the background (NEVER shown in UI).
+         Gives 2 hours (fast/balanced) or 3 hours (strong/flagship) cooldown,
+         pops up a News-style notice, and refreshes instantly on API key change.
+      ==================================================================== */
+      const USAGE_WAIT_2H_MS = 2 * 60 * 60 * 1000;
+      const USAGE_WAIT_3H_MS = 3 * 60 * 60 * 1000;
+      const USAGE_COST = {
+        fastest:  { low: 1,  medium: 1,  high: 2,  extra: 3 },
+        balanced: { low: 3,  medium: 4,  high: 5,  extra: 6 },
+        strong:   { low: 10, medium: 11, high: 12, extra: 13 },
+        flagship: { low: 14, medium: 15, high: 16, extra: 18 }
+      };
+
+      function usageTierOf(modelId) {
+        const id = String(modelId || '').toLowerCase().replace(/^(?:models|google|openai|anthropic)\//, '');
+        if (/argon|astra|fable/.test(id)) return 'flagship';
+        if (/neon|\bsol\b|\bopus\b/.test(id)) return 'strong';
+        if (/flash-?lite|luna|haiku/.test(id)) return 'fastest';
+        return 'balanced';
+      }
+
+      function usageWaitWindowFor(modelId) {
+        const tier = usageTierOf(modelId || (State.settings && State.settings.activeModel));
+        return (tier === 'strong' || tier === 'flagship') ? USAGE_WAIT_3H_MS : USAGE_WAIT_2H_MS;
+      }
+
+      function usageCostFor(modelId, thinkingLevel) {
+        const lvl = ['low', 'medium', 'high', 'extra'].includes(String(thinkingLevel)) ? String(thinkingLevel) : 'medium';
+        return USAGE_COST[usageTierOf(modelId)][lvl];
+      }
+
+      function usageColor(p) {
+        if (p < 30) return '#22c55e';
+        if (p < 50) return '#15803d';
+        if (p < 70) return '#eab308';
+        return '#ef4444';
+      }
+
+      function formatUsageWait(ms) {
+        const totalMin = Math.max(1, Math.ceil(ms / 60000));
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        if (h && m) return h + 'h ' + m + 'm';
+        if (h) return h === 1 ? '1 hour' : (h + ' hours');
+        return m + 'm';
+      }
+
+      const USAGE_PROVIDER_LABEL = {
+        gemini: 'Google Gemini',
+        openai: 'OpenAI',
+        anthropic: 'Anthropic Claude',
+        openrouter: 'OpenRouter'
+      };
+
+      function usageProviderKey(overrideProv) {
+        const p = String(overrideProv || State.provider || (State.settings && State.settings.provider) || 'gemini').toLowerCase();
+        return USAGE_PROVIDER_LABEL[p] ? p : 'gemini';
+      }
+
+      // Usage is tracked separately per company (the API key's provider).
+      // Below 100%, percent stays right where it is; at 100%, silent background local-time check unlocks when cooldown ends.
+      function getUsageMeter(overrideProv) {
+        const key = usageProviderKey(overrideProv);
+        const all = (State.settings && State.settings.usageMeters) || {};
+        return all[key] || { percent: 0, startedAt: 0, resetAt: 0 };
+      }
+
+      function saveUsageMeter(next, overrideProv) {
+        const key = usageProviderKey(overrideProv);
+        const all = Object.assign({}, (State.settings && State.settings.usageMeters) || {});
+        all[key] = next;
+        State.settings.usageMeters = all;
+        if (api && api.updateSettings) api.updateSettings({ usageMeters: all }).catch(() => {});
+      }
+
+      // Quietly records the user's local start timestamp strictly in the background (never displayed anywhere).
+      function touchUsageSessionStart(overrideProv) {
+        const um = getUsageMeter(overrideProv);
+        if (!um.startedAt || (um.percent || 0) === 0) {
+          saveUsageMeter({
+            percent: um.percent || 0,
+            startedAt: Date.now(),
+            resetAt: um.resetAt || 0
+          }, overrideProv);
+        }
+      }
+
+      // Quiet background local-time check:
+      // - If 100% cooldown has finished, refresh back to 0% automatically.
+      // - Never allow any leftover/provider timer longer than 3 hours (strictly 2h or 3h max).
+      function syncBackgroundUsageTimer(overrideProv) {
+        const um = getUsageMeter(overrideProv);
+        const now = Date.now();
+        if ((um.percent || 0) >= 100 && um.resetAt > 0) {
+          if (now >= um.resetAt) {
+            saveUsageMeter({ percent: 0, startedAt: 0, resetAt: 0 }, overrideProv);
+            return true;
+          }
+          if (um.resetAt - now > USAGE_WAIT_3H_MS) {
+            const clampedWin = usageWaitWindowFor(State.settings && State.settings.activeModel);
+            saveUsageMeter({ percent: 100, startedAt: um.startedAt || now, resetAt: now + clampedWin }, overrideProv);
+          }
+        }
+        return false;
+      }
+
+      // Immediately refreshes usage to 0% when user switches/changes to a new API key.
+      function resetUsageMeterForProvider(overrideProv) {
+        saveUsageMeter({ percent: 0, startedAt: 0, resetAt: 0 }, overrideProv);
+        renderUsageRing();
+        if (State.ui && State.ui.activeModal === 'modal-usage-limit') closeAllModals();
+      }
+
+      function renderUsageRing() {
+        syncBackgroundUsageTimer();
+        const um = getUsageMeter();
+        const p = Math.max(0, Math.min(100, Math.round(um.percent || 0)));
+        const fill = $('usage-ring-fill');
+        const txt = $('usage-ring-text');
+        const btn = $('usage-ring-btn');
+        if (!fill || !txt || !btn) return;
+        const circ = 94.25;
+        fill.setAttribute('stroke-dashoffset', String(circ * (1 - p / 100)));
+        fill.setAttribute('stroke', usageColor(p));
+        txt.textContent = p + '%';
+        const waitLeft = um.resetAt ? Math.max(0, um.resetAt - Date.now()) : 0;
+        const wait = (p >= 100 && waitLeft > 0) ? ' · wait about ' + formatUsageWait(waitLeft) : '';
+        btn.title = USAGE_PROVIDER_LABEL[usageProviderKey()] + ' usage: ' + p + '%' + wait + ' (right-click to reset)';
+      }
+
+      function usageLimitWaitLabel() {
+        syncBackgroundUsageTimer();
+        const um = getUsageMeter();
+        const fallbackMs = usageWaitWindowFor(State.settings && State.settings.activeModel);
+        const rawLeft = um.resetAt ? (um.resetAt - Date.now()) : 0;
+        const clamped = rawLeft > 0 ? Math.min(rawLeft, USAGE_WAIT_3H_MS) : fallbackMs;
+        return formatUsageWait(clamped);
+      }
+
+      function usageLimitMessage() {
+        const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+        const wait = usageLimitWaitLabel();
+        return "You've reached your " + name + ' usage limit. Change your API key to refresh immediately, or wait about ' + wait + '.';
+      }
+
+      function openUsageLimitModal() {
+        syncBackgroundUsageTimer();
+        const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+        const wait = usageLimitWaitLabel();
+        const badge = $('usage-limit-badge');
+        const head = $('usage-limit-headline');
+        const sub = $('usage-limit-sub');
+        const waitHead = $('usage-limit-wait-heading');
+        const waitInline = $('usage-limit-wait-inline');
+        if (badge) badge.textContent = '100% · ' + name;
+        if (head) head.textContent = "You've reached your " + name + ' usage limit';
+        if (sub) sub.textContent = 'To continue right away, you can either change your API key to refresh your usage, or wait about ' + wait + ' for your limit to reset.';
+        if (waitHead) waitHead.textContent = 'Wait ~' + wait;
+        if (waitInline) waitInline.textContent = wait;
+        openModal('modal-usage-limit');
+      }
+
+      // Blocked while at 100% and background local-time cooldown is still running.
+      function isUsageLimitReached() {
+        syncBackgroundUsageTimer();
+        const um = getUsageMeter();
+        return (um.percent || 0) >= 100 && um.resetAt && Date.now() < um.resetAt;
+      }
+
+      function setUsageMeter(percent, resetAtOverride, modelIdForWindow) {
+        const p = Math.max(0, Math.min(100, Math.round(percent)));
+        const prev = getUsageMeter();
+        const now = Date.now();
+        const startedAt = prev.startedAt || now;
+        const winMs = usageWaitWindowFor(modelIdForWindow || (State.settings && State.settings.activeModel));
+        let resetAt = resetAtOverride || 0;
+        if (!resetAt && p >= 100) {
+          if (prev.resetAt && prev.resetAt > now) {
+            resetAt = prev.resetAt;
+          } else {
+            // Check silent background local start time; ensure a clear 2h/3h cooldown window
+            const fromStart = startedAt + winMs;
+            resetAt = (fromStart > now + 10 * 60 * 1000) ? fromStart : (now + winMs);
+          }
+        }
+        saveUsageMeter({ percent: p, startedAt, resetAt: p >= 100 ? resetAt : 0 });
+        renderUsageRing();
+      }
+
+      function parseQuotaResetMs(msg) {
+        const m = /(?:resets? in|retry in)\s+((?:\d+h)?(?:\d+m)?(?:\d+(?:\.\d+)?s)?)/i.exec(String(msg || ''));
+        if (!m || !m[1]) return 0;
+        const h = /(\d+)h/.exec(m[1]);
+        const mi = /(\d+)m/.exec(m[1]);
+        const s = /(\d+(?:\.\d+)?)s/.exec(m[1]);
+        return ((h ? +h[1] : 0) * 3600 + (mi ? +mi[1] : 0) * 60 + (s ? +s[1] : 0)) * 1000;
+      }
+
+      function registerUsageAfterTask(assistantMsg) {
+        if (!assistantMsg) return;
+        const modelId = assistantMsg.model || (State.settings && State.settings.activeModel);
+        const err = String(assistantMsg.error || '');
+        if (err) {
+          if (/stopped/i.test(err)) return;
+          if (/quota|rate limit|limit:\s*\d|too many requests|429|credit balance|insufficient_quota|RESOURCE_EXHAUSTED|requests\/day|usage limit/i.test(err)) {
+            // Strictly 2 hours (Fastest/Balanced) or 3 hours (Strong/Flagship) — NEVER 17h/22h/23h!
+            const waitMs = usageWaitWindowFor(modelId);
+            setUsageMeter(100, Date.now() + waitMs, modelId);
+            openUsageLimitModal();
+          }
+          return;
+        }
+        const cost = usageCostFor(modelId, assistantMsg.thinkingLevel || (State.settings && State.settings.thinkingLevel));
+        const cur = getUsageMeter().percent || 0;
+        const nextPct = Math.min(100, cur + cost);
+        setUsageMeter(nextPct, 0, modelId);
+        if (nextPct >= 100) {
+          openUsageLimitModal();
+        }
+      }
+
+      function bindUsageRing() {
+        const btn = $('usage-ring-btn');
+        if (btn && !btn.dataset.bound) {
+          btn.dataset.bound = '1';
+          btn.addEventListener('click', () => {
+            syncBackgroundUsageTimer();
+            const um = getUsageMeter();
+            const p = Math.round(um.percent || 0);
+            const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+            if (p >= 100) {
+              openUsageLimitModal();
+            } else {
+              showToast(name + ' usage: ' + p + '%', 'ok');
+            }
+          });
+          btn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+            if (window.confirm('Reset the ' + name + ' usage meter to 0%?')) {
+              resetUsageMeterForProvider();
+              showToast(name + ' usage meter reset to 0%.', 'ok');
+            }
+          });
+        }
+        const ulClose = $('usage-limit-close-x');
+        const ulWait = $('usage-limit-wait-btn');
+        const ulChange = $('usage-limit-change-key-btn');
+        if (ulClose && !ulClose.dataset.bound) {
+          ulClose.dataset.bound = '1';
+          ulClose.addEventListener('click', () => closeAllModals());
+        }
+        if (ulWait && !ulWait.dataset.bound) {
+          ulWait.dataset.bound = '1';
+          ulWait.addEventListener('click', () => closeAllModals());
+        }
+        if (ulChange && !ulChange.dataset.bound) {
+          ulChange.dataset.bound = '1';
+          ulChange.addEventListener('click', () => {
+            closeAllModals();
+            openSettingsModal('key');
+            setTimeout(() => {
+              const inp = $('settings-key-input');
+              if (inp) inp.focus();
+            }, 140);
+          });
+        }
+        // Silently initialize background local-time check without displaying any time in UI
+        syncBackgroundUsageTimer();
+        renderUsageRing();
+        setInterval(renderUsageRing, 30000);
+      }
+
+      function setRunningState(isRunning, labelText) {
         State.running = !!isRunning;
         DOM.sendBtn.disabled = !!isRunning;
         DOM.sendBtn.style.display = isRunning ? 'none' : 'inline-flex';
         DOM.emergencyStopBtn.classList.toggle('armed', !!isRunning);
+        const taskPill = $('task-running-pill');
+        const taskTxt = $('task-running-text');
+        if (taskPill) taskPill.classList.toggle('active', !!isRunning);
+        if (taskTxt && isRunning) {
+          taskTxt.textContent = labelText || 'Task Running';
+        }
       }
 
       async function triggerEmergencyStop() {
@@ -8089,6 +9521,7 @@
           applyKeyValidationBundle(res);
           renderValidationCard('gate', res.validation);
           if (res.validation && res.validation.status !== 'invalid' && res.validation.status !== 'nokey') {
+            resetUsageMeterForProvider(res.provider || State.provider);
             const vis = providerVisual(res.provider || State.provider);
             const who = String((State.settings && State.settings.userName) || '').trim();
             State.settings.onboardingCompleted = true;
@@ -8125,22 +9558,28 @@
 
       async function handleSettingsSaveKey() {
         const key = $('settings-key-input').value.trim();
-        const testModel = $('settings-test-model-input').value.trim();
+        const rawTestModel = $('settings-test-model-input').value.trim();
+        const testModel = /^(?:sk-|AIza|AQ\.)/i.test(rawTestModel) ? '' : rawTestModel;
+        if (rawTestModel && !testModel) $('settings-test-model-input').value = '';
         const btn = $('settings-save-key-btn');
         if (!key) {
           showToast('Paste your API key into the box first.', 'warn');
           $('settings-key-input').focus();
           return;
         }
+        const detectedProv = detectKeyProviderClient(key);
+        if (detectedProv) applyProviderTheme(detectedProv);
         btn.disabled = true;
         btn.textContent = 'Saving…';
         try {
           const res = await api.saveKeyOnly(key, testModel);
           applyKeyValidationBundle(res);
+          if (detectedProv) applyProviderTheme(res.provider || detectedProv);
           renderValidationCard('settings', res.validation);
           if (res.validation && res.validation.status !== 'invalid' && res.validation.status !== 'nokey') {
+            resetUsageMeterForProvider(res.provider || detectedProv || State.provider);
             const vis = providerVisual(res.provider || State.provider);
-            showToast('✅ ' + vis.name + ' API key saved and active!', 'ok');
+            showToast('✅ ' + vis.name + ' API key saved — usage refreshed to 0%!', 'ok');
           } else {
             showToast((res.validation.icon || '') + ' ' + res.validation.title, 'warn');
           }
@@ -8154,7 +9593,9 @@
 
       async function handleSettingsRetestKey() {
         const key = $('settings-key-input').value.trim();
-        const testModel = $('settings-test-model-input').value.trim();
+        const rawTestModel = $('settings-test-model-input').value.trim();
+        const testModel = /^(?:sk-|AIza|AQ\.)/i.test(rawTestModel) ? '' : rawTestModel;
+        if (rawTestModel && !testModel) $('settings-test-model-input').value = '';
         const btn = $('settings-retest-key-btn');
         btn.disabled = true;
         btn.textContent = 'Testing…';
@@ -8163,6 +9604,10 @@
             ? await api.testKeyOnly(key, testModel)
             : await api.validateCurrentKey(testModel);
           if (!key) applyKeyValidationBundle(res);
+          else {
+            const det = res.provider || detectKeyProviderClient(key);
+            if (det) applyProviderTheme(det);
+          }
           renderValidationCard('settings', res.validation);
           if (res.validation && res.validation.status === 'valid') {
             showToast('✅ Real & Ready! Click Save Key to store and use it.', 'ok');
@@ -8202,57 +9647,70 @@
           const s = String(m || '').trim();
           if (!s) return '';
           if (s.length <= 16) return s;
-          return s.slice(0, 4) + '••••••' + s.slice(-4);
+          return s.slice(0, 4) + '••••' + s.slice(-4);
         };
         const slotDefs = [
-          { id: 'gemini',     name: 'Gemini',     prefix: 'AIza… / AQ.…' },
-          { id: 'openai',     name: 'OpenAI',     prefix: 'sk-…' },
-          { id: 'anthropic',  name: 'Claude',     prefix: 'sk-ant-…' },
-          { id: 'openrouter', name: 'OpenRouter', prefix: 'sk-or-…' }
+          { id: 'gemini',     name: 'Gemini',     logo: 'assets/gemini-logo.png',     prefix: 'AIza… / AQ.…' },
+          { id: 'openai',     name: 'OpenAI',     logo: 'assets/openai-logo.png',     prefix: 'sk-…' },
+          { id: 'anthropic',  name: 'Claude',     logo: 'assets/claude-logo.png',     prefix: 'sk-ant-…' },
+          { id: 'openrouter', name: 'OpenRouter', logo: 'assets/openrouter-logo.png', prefix: 'sk-or-…' }
         ];
         const slots = State.keySlots || {};
         for (const containerId of ['gate-key-slots', 'settings-key-slots']) {
           const el = $(containerId);
           if (!el) continue;
           el.innerHTML = '';
+          el.className = 'settings-provider-tabs';
           for (const d of slotDefs) {
             const info = slots[d.id] || { has: State.hasKey && State.provider === d.id, masked: State.provider === d.id ? State.keyMasked : '' };
             const isActive = State.provider === d.id;
-            const maskText = info.has ? (shortMask(info.masked) || 'Saved') : d.prefix;
             const btn = createElement('button', {
               type: 'button',
-              style: 'display:inline-flex;align-items:center;gap:6px;padding:6px 11px;max-width:100%;border-radius:999px;border:1px solid ' +
-                (isActive ? 'rgba(96,165,250,0.85)' : 'rgba(255,255,255,0.14)') +
-                ';background:' + (isActive ? 'rgba(37,99,235,0.22)' : 'rgba(255,255,255,0.04)') +
-                ';color:#fff;cursor:pointer;font-size:12px;',
+              className: 'settings-prov-tab' + (isActive ? ' active' : ''),
+              dataset: { prov: d.id },
+              title: info.has ? ('Key saved for ' + d.name + ' (' + shortMask(info.masked) + ')') : ('No key saved for ' + d.name),
               onClick: async () => {
+                if ($('settings-test-model-input')) $('settings-test-model-input').value = '';
                 if (info.has && api && api.switchKeySlot) {
                   try {
                     const bundle = await api.switchKeySlot(d.id);
                     applyKeyValidationBundle(bundle);
-                    showToast('Switched active API key to ' + d.name + '.', 'ok');
+                    showToast('Switched active provider to ' + d.name + '.', 'ok');
                     return;
-                  } catch (_) { /* fall through to input focus */ }
+                  } catch (_) { /* fall through */ }
                 }
                 State.provider = d.id;
+                applyProviderTheme(d.id);
                 State.presets = (PROVIDER_DEFAULT_PRESETS[d.id] || PROVIDER_DEFAULT_PRESETS.gemini).slice();
                 renderModelSelector();
                 renderKeySlots();
+                renderWelcomeView({ triggerLogoAnim: true });
                 const inp = containerId === 'gate-key-slots' ? $('gate-key-input') : $('settings-key-input');
                 if (inp) {
-                  inp.placeholder = 'Paste ' + d.name + ' API key (' + d.prefix + ')';
+                  inp.placeholder = 'Paste ' + d.name + ' API key (' + d.prefix + ')…';
                   inp.focus();
                 }
               }
             });
-            btn.appendChild(createElement('span', { style: 'font-weight:700;white-space:nowrap;', text: (isActive ? '✓ ' : '') + d.name }));
-            btn.appendChild(createElement('span', {
-              className: 'mono',
-              style: 'font-size:11px;color:' + (info.has ? '#86efac' : 'var(--text-muted)') + ';max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;',
-              text: maskText
-            }));
+            const tabLabel = createElement('span', { style: 'display:inline-flex;align-items:center;gap:6px;font-weight:700;' });
+            if (d.logo) {
+              tabLabel.appendChild(createElement('img', { src: d.logo, alt: '', style: 'width:15px;height:15px;object-fit:contain;display:block;' }));
+            }
+            tabLabel.appendChild(document.createTextNode(d.name));
+            btn.appendChild(tabLabel);
+            const dot = createElement('span', {
+              className: 'prov-status-dot' + (info.has ? ' saved' : ''),
+              title: info.has ? ('Key saved: ' + (shortMask(info.masked) || '')) : 'No key saved'
+            });
+            btn.appendChild(dot);
             el.appendChild(btn);
           }
+        }
+        const maskedEl = $('settings-key-masked');
+        if (maskedEl) {
+          maskedEl.textContent = State.hasKey
+            ? (providerVisual(State.provider).name + ' · ' + shortMask(State.keyMasked))
+            : 'None saved';
         }
       }
 
@@ -8274,6 +9732,7 @@
         if (!res.provider && State.settings && State.settings.provider) {
           State.provider = State.settings.provider;
         }
+        applyProviderTheme(State.provider);
         renderKeyHeaderIndicator();
         renderKeySlots();
         renderModelSelector();
@@ -8625,10 +10084,10 @@
         $('opt-use-planner').checked = !!State.settings.usePlanner;
         $('opt-multi-agent').checked = State.settings.multiAgentParallel !== false;
         $('opt-send-enter').checked = State.settings.sendWithEnter !== false;
-        $('opt-sound-chime').checked = State.settings.soundChime !== false;
+        $('opt-sound-chime').checked = !!State.settings.soundChime;
         $('opt-align-cursor').checked = State.settings.alignCursorBack !== false;
-        $('opt-max-steps').value = State.settings.maxSteps || 140;
-        $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 10;
+        $('opt-max-steps').value = State.settings.maxSteps || 45;
+        $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 0;
         $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 25;
         $('opt-cursor-speed-profile').value = State.settings.cursorSpeedProfile || 'adaptive';
         $('opt-cursor-speed').value = State.settings.cursorSpeedMs !== undefined ? State.settings.cursorSpeedMs : 200;
@@ -8852,7 +10311,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '1.0.5';
+      const BRIEF_NEWS_VERSION = '1.0.7';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');
@@ -9318,7 +10777,7 @@
       }
 
       function playLocallyChime(kind) {
-        if (State.settings.soundChime === false) return;
+        if (kind === 'ready' || !State.settings.soundChime) return;
         try {
           const ctx = getAudioContextUnlocked();
           if (!ctx) return;
@@ -9473,6 +10932,7 @@
         $('sidebar-search-btn').addEventListener('click', () => openSearchModal());
         $('sidebar-collapse-btn').addEventListener('click', () => toggleSidebar(true));
         DOM.sidebarExpandBtn.addEventListener('click', () => toggleSidebar(false));
+        bindSidebarResizer();
         $('new-chat-btn').addEventListener('click', () => startNewChat());
         $('new-project-btn').addEventListener('click', () => openProjectModal());
         $('sidebar-settings-btn').addEventListener('click', () => openSettingsModal('key'));
@@ -9641,10 +11101,6 @@
         $('lightbox-close-btn').addEventListener('click', () => closeAllModals());
         $('whats-new-open-btn').addEventListener('click', () => openWhatsNewModal());
         $('whats-new-close-x').addEventListener('click', () => {
-          dismissWhatsNewPermanently();
-          closeAllModals();
-        });
-        $('whats-new-done-btn').addEventListener('click', () => {
           dismissWhatsNewPermanently();
           closeAllModals();
         });
@@ -9912,7 +11368,8 @@
         api.onStatus((st) => {
           const prevRunning = State.running;
           State.status = st || State.status;
-          setRunningState(!!(st && st.running));
+          const runBadgeLabel = (st && st.step) ? ('Task Running · Step ' + st.step) : 'Task Running';
+          setRunningState(!!(st && st.running), runBadgeLabel);
           if (prevRunning && st && !st.running && (st.mode === 'work' || st.mode === 'chat')) {
             playLocallyChime(st.state === 'error' ? 'error' : 'done');
           }
@@ -9928,22 +11385,21 @@
             const row = document.querySelector('[data-msg-id="' + activeAssistant.id + '"]');
             if (row) {
               const shimmerHead = row.querySelector('.work-trace-head .trace-head-shimmer');
-              if (shimmerHead && st.stepText) shimmerHead.textContent = st.stepText;
+              if (shimmerHead && st.stepText && shimmerHead.textContent !== st.stepText) {
+                shimmerHead.textContent = st.stepText;
+              }
               const rightPill = row.querySelector('.work-trace-head > .selector-subbadge');
-              if (rightPill && activeAssistant.elapsedLabel) {
+              if (rightPill) {
                 const stepsCount = Array.isArray(activeAssistant.steps) ? activeAssistant.steps.length : 0;
-                const crewCount = Array.isArray(activeAssistant.crew) ? new Set(activeAssistant.crew.filter(Boolean)).size : 0;
-                rightPill.textContent = [
-                  '⏱ ' + activeAssistant.elapsedLabel,
-                  crewCount > 1 ? (crewCount + ' agents') : '',
-                  stepsCount ? (stepsCount + (stepsCount === 1 ? ' action' : ' actions')) : 'Live'
-                ].filter(Boolean).join(' · ');
+                const nextPillText = stepsCount
+                  ? (stepsCount + (stepsCount === 1 ? ' action' : ' actions'))
+                  : 'Live';
+                if (rightPill.textContent !== nextPillText) rightPill.textContent = nextPillText;
               }
               const waitShimmer = row.querySelector('.trace-timeline > .trace-node.running .trace-head-shimmer');
-              if (waitShimmer && st.stepText && !(activeAssistant.steps && activeAssistant.steps.length)) {
+              if (waitShimmer && st.stepText && !(activeAssistant.steps && activeAssistant.steps.length) && waitShimmer.textContent !== st.stepText) {
                 waitShimmer.textContent = st.stepText;
               }
-              refreshWorkStageBar(row, activeAssistant);
               const prose = row.querySelector('.msg-prose');
               if (prose && !activeAssistant.text && activeAssistant.mode !== 'work' && st.stepText) {
                 prose.innerHTML = '<div class="thinking-shimmer">' + escapeHtml(st.stepText) + '</div>';
@@ -9954,22 +11410,43 @@
 
         api.onLog((entry) => appendLogEntry(entry));
 
-        // Smooth character-paced typewriter buffer for streaming chat replies
+        // Fast, cancellation-safe streaming renderer (never overwrites or cuts off completed replies)
         let streamTarget = '';
         let streamShown = '';
         let streamChatId = null;
         let streamMsgId = null;
         let streamTimer = null;
 
+        function cancelStreamTyping() {
+          if (streamTimer) {
+            clearTimeout(streamTimer);
+            streamTimer = null;
+          }
+          streamMsgId = null;
+          streamChatId = null;
+          streamTarget = '';
+          streamShown = '';
+        }
+        State._cancelStreamTyping = cancelStreamTyping;
+
         function pumpStreamTyping() {
           streamTimer = null;
           const chat = State.chats.find((c) => c.id === streamChatId);
           if (!chat) return;
           const msg = chat.messages.find((m) => m.id === streamMsgId);
-          if (!msg) return;
+          // Never overwrite a message after streaming has finished!
+          if (!msg || !msg.streaming) {
+            cancelStreamTyping();
+            return;
+          }
           if (streamShown.length < streamTarget.length) {
             const diff = streamTarget.length - streamShown.length;
-            const take = Math.max(2, Math.min(28, Math.ceil(diff / 5)));
+            const mId = String(msg.model || (State.settings && State.settings.activeModel) || '').toLowerCase();
+            const tLvl = String(msg.thinkingLevel || (State.settings && State.settings.thinkingLevel) || 'medium').toLowerCase();
+            const isFast = /flash-?lite|\bflash\b|luna|haiku/.test(mId);
+            const take = (isFast && (tLvl === 'low' || tLvl === 'medium'))
+              ? Math.max(2, Math.min(9, Math.ceil(diff / 9)))
+              : Math.max(2, Math.min(7, Math.ceil(diff / 11)));
             streamShown = streamTarget.slice(0, streamShown.length + take);
             msg.text = streamShown;
             if (chat.id === State.activeChatId) {
@@ -9981,7 +11458,7 @@
               }
             }
             if (streamShown.length < streamTarget.length) {
-              streamTimer = setTimeout(pumpStreamTyping, 16);
+              streamTimer = setTimeout(pumpStreamTyping, 22);
             }
           }
         }
@@ -10005,6 +11482,8 @@
             }
           }
           if (typeof p.full === 'string') {
+            // In Work mode, keep everything inside the single work card until completion — never flip-flop with "Sure..." mid-task!
+            if (msg.mode === 'work' && msg.streaming) return;
             if (streamMsgId !== msg.id) {
               streamChatId = chat.id;
               streamMsgId = msg.id;
@@ -10021,7 +11500,7 @@
           const msg = chat.messages[chat.messages.length - 1];
           if (!msg) return;
           msg.plan = p.plan;
-          if (chat.id === State.activeChatId) renderThread();
+          if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
         });
 
         let thoughtTimer = null;
@@ -10036,7 +11515,7 @@
               const target = String(th.thought || '');
               const shown = typeof th.shownThought === 'string' ? th.shownThought : '';
               if (shown.length < target.length) {
-                const take = Math.max(2, Math.min(18, Math.ceil((target.length - shown.length) / 6)));
+                const take = Math.max(1, Math.min(6, Math.ceil((target.length - shown.length) / 14)));
                 th.shownThought = target.slice(0, shown.length + take);
                 if (th.shownThought.length < target.length) anyMore = true;
                 const row = document.querySelector('[data-msg-id="' + msg.id + '"]');
@@ -10049,7 +11528,7 @@
             }
           }
           if (anyMore) {
-            thoughtTimer = setTimeout(pumpThoughtTyping, 18);
+            thoughtTimer = setTimeout(pumpThoughtTyping, 30);
           }
         }
 
@@ -10070,10 +11549,7 @@
           }
           if (chat.id === State.activeChatId) {
             if (isNew || !document.querySelector('[data-msg-id="' + msg.id + '"] [data-thought-step="' + p.step + '"]')) {
-              renderThread();
-            } else {
-              const row = document.querySelector('[data-msg-id="' + msg.id + '"]');
-              if (row) refreshWorkStageBar(row, msg);
+              syncWorkMessageInPlace(msg);
             }
             if (!thoughtTimer) pumpThoughtTyping();
           } else {
@@ -10088,7 +11564,7 @@
           if (!msg) return;
           msg.notes = msg.notes || [];
           msg.notes.push({ step: p.step, text: p.text });
-          if (chat.id === State.activeChatId) renderThread();
+          if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
         });
 
         api.onWorkStep((p) => {
@@ -10103,10 +11579,38 @@
           const idx = p.item.toolCallId
             ? msg.steps.findIndex((s) => s.toolCallId === p.item.toolCallId)
             : -1;
-          if (idx >= 0) msg.steps[idx] = p.item;
-          else msg.steps.push(p.item);
-          if (chat.id === State.activeChatId) renderThread();
+          if (idx >= 0) {
+            const prevTermOut = msg.steps[idx] && msg.steps[idx].termOutput;
+            msg.steps[idx] = prevTermOut ? Object.assign({ termOutput: prevTermOut }, p.item) : p.item;
+          } else {
+            msg.steps.push(p.item);
+          }
+          if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
         });
+
+        if (api.onCommandOutput) {
+          api.onCommandOutput((ev) => {
+            if (!ev || typeof ev !== 'object') return;
+            const chat = ev.chatId ? State.chats.find((c) => c.id === ev.chatId) : getActiveChat();
+            if (!chat) return;
+            const msg = chat.messages[chat.messages.length - 1];
+            if (!msg || !Array.isArray(msg.steps)) return;
+            const stepItem = ev.toolCallId
+              ? msg.steps.find((s) => s.toolCallId === ev.toolCallId)
+              : [...msg.steps].reverse().find((s) => ['run_command', 'terminal_open', 'terminal_send', 'terminal_read'].includes(String(s.tool || '')));
+            if (!stepItem) return;
+            if (ev.chunk) {
+              stepItem.termOutput = ((stepItem.termOutput || '') + String(ev.chunk)).slice(-16000);
+            }
+            if (chat.id === State.activeChatId) {
+              const pre = document.querySelector('[data-term-body="' + (stepItem.toolCallId || '') + '"]');
+              if (pre) {
+                pre.textContent = (stepItem.termOutput || 'Running command…').slice(-8000);
+                pre.scrollTop = pre.scrollHeight;
+              }
+            }
+          });
+        }
 
         api.onApprovalRequired((req) => {
           playLocallyChime('approval');
@@ -10211,35 +11715,41 @@
           DOM.hotkeyChip.textContent = formatHotkeyLabel(data.hotkey || State.settings.hotkey);
           DOM.widgetToggleBtn.classList.toggle('active', !!State.settings.showWidget);
 
-          if (State.settings.sidebarCollapsed) toggleSidebar(true);
+          applySidebarWidth(State.settings.sidebarWidth || 260, false);
+          if (State.settings.sidebarCollapsed || window.innerWidth <= 1040) {
+            toggleSidebar(true, { silent: true });
+          } else {
+            syncSidebarChrome(false);
+          }
           if (State.settings.logPanelOpen) toggleLogDrawer(true);
 
+          applyProviderTheme(State.provider);
           renderKeyHeaderIndicator();
           renderKeySlots();
           renderHeaderMcpBadges();
           renderModelSelector();
-          renderWelcomeView({ triggerLogoAnim: true });
+          renderWelcomeView({ triggerLogoAnim: false });
           renderPermissionAndModeUI();
           renderSidebar();
           renderUsageIndicators();
+          bindUsageRing();
           renderActionLog();
 
           const hasSavedName = !!String((State.settings && State.settings.userName) || '').trim();
           const showOnboarding = !!data.firstRunRequested || !State.hasKey;
           if (showOnboarding) {
             setOnboardingStep(data.firstRunRequested || !hasSavedName ? 0 : 2);
-            setView('key-gate');
+            setView('key-gate', '', { noAnim: true });
           } else {
-            // Always open cleanly on the Main Menu (New Chat) instead of auto-opening a recent thread
-            startNewChat();
+            // Open completely still and silent on Main Menu (New Chat) — zero startup sound or motion
+            startNewChat({ silent: true });
             if (!hasSavedName) {
               setTimeout(() => { try { $('welcome-name-input').focus(); } catch (_) {} }, 120);
             }
           }
-          if (!showOnboarding && shouldShowWhatsNew()) {
-            setTimeout(() => openWhatsNewModal(), 340);
+          if (!data.firstRunRequested && shouldShowWhatsNew()) {
+            setTimeout(() => openWhatsNewModal(), 320);
           }
-          setTimeout(() => playLocallyChime('ready'), 260);
         } catch (err) {
           showToast('Startup error: ' + err.message, 'error');
         }
@@ -10260,7 +11770,7 @@
           'model-trigger-btn', 'perm-trigger-btn', 'emergency-stop-btn',
           'send-btn', 'log-drawer', 'modal-settings', 'modal-full-access',
           'modal-perm-delete', 'modal-whats-new', 'whats-new-open-btn',
-          'whats-new-close-x', 'whats-new-done-btn'
+          'whats-new-close-x'
         ];
         const missing = ids.filter((id) => !document.getElementById(id));
         const fontFamily = window.getComputedStyle(document.body).fontFamily || '';

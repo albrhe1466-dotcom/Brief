@@ -42,12 +42,15 @@ async function main() {
     try {
       await rcedit(launchExe, {
         icon: installedIco,
+        'file-version': '1.0.7.0',
+        'product-version': '1.0.7.0',
         'version-string': {
           ProductName: 'Brief',
-          FileDescription: 'Brief — Private Desktop AI Agent',
+          FileDescription: 'Brief — Private Windows Desktop AI Assistant',
           InternalName: 'Brief',
           OriginalFilename: 'Brief.exe',
-          CompanyName: 'Local Machine'
+          CompanyName: 'Brief Desktop',
+          LegalCopyright: 'Copyright (c) 2026 Brief Desktop'
         }
       });
     } catch (_) { /* running exe locked — icon/metadata updated on next closed rebuild */ }

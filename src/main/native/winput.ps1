@@ -153,7 +153,7 @@ public static class LocallyInput
         int H = bmp.Height;
         try
         {
-            string curPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "locally_cursor_v2_" + tag + "_" + W + ".cur");
+            string curPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "locally_cursor_v3_" + tag + "_" + W + ".cur");
             int xorBytes = W * H * 4;
             int andRowBytes = ((W + 31) / 32) * 4;
             int andBytes = andRowBytes * H;
@@ -217,6 +217,48 @@ public static class LocallyInput
         return fallback;
     }
 
+    static void AddSparklePath(GraphicsPath sp, float cx, float cy, float rx, float ry)
+    {
+        float k = 0.23f;
+        PointF pTop = new PointF(cx, cy - ry);
+        PointF cTR1 = new PointF(cx + rx * k * 0.45f, cy - ry * k);
+        PointF cTR2 = new PointF(cx + rx * k, cy - ry * k * 0.45f);
+        PointF pRight = new PointF(cx + rx, cy);
+        PointF cBR1 = new PointF(cx + rx * k, cy + ry * k * 0.45f);
+        PointF cBR2 = new PointF(cx + rx * k * 0.45f, cy + ry * k);
+        PointF pBot = new PointF(cx, cy + ry);
+        PointF cBL1 = new PointF(cx - rx * k * 0.45f, cy + ry * k);
+        PointF cBL2 = new PointF(cx - rx * k, cy + ry * k * 0.45f);
+        PointF pLeft = new PointF(cx - rx, cy);
+        PointF cTL1 = new PointF(cx - rx * k, cy - ry * k * 0.45f);
+        PointF cTL2 = new PointF(cx - rx * k * 0.45f, cy - ry * k);
+        sp.AddBezier(pTop, cTR1, cTR2, pRight);
+        sp.AddBezier(pRight, cBR1, cBR2, pBot);
+        sp.AddBezier(pBot, cBL1, cBL2, pLeft);
+        sp.AddBezier(pLeft, cTL1, cTL2, pTop);
+        sp.CloseFigure();
+    }
+
+    static void DrawClaudeStarburst(Graphics g, float cx, float cy, float R, float S)
+    {
+        double[] angles = new double[] { -95, -66, -38, -12, 12, 36, 62, 88, 120, 152, 184, 218, 248 };
+        double[] lens   = new double[] { 0.88, 1.00, 0.78, 0.96, 0.76, 0.94, 0.78, 1.00, 0.76, 0.94, 0.78, 0.92, 0.74 };
+        using (SolidBrush wb = new SolidBrush(Color.White))
+        using (Pen wp = new Pen(Color.White, 1.15f * S))
+        {
+            wp.StartCap = LineCap.Round;
+            wp.EndCap = LineCap.Round;
+            for (int i = 0; i < angles.Length; i++)
+            {
+                double a = angles[i] * Math.PI / 180.0;
+                float r2 = (float)(R * lens[i]);
+                g.DrawLine(wp, cx, cy, cx + (float)(Math.Cos(a) * r2), cy + (float)(Math.Sin(a) * r2));
+            }
+            float cr = R * 0.31f;
+            g.FillEllipse(wb, cx - cr, cy - cr, cr * 2f, cr * 2f);
+        }
+    }
+
     static IntPtr EnsureProviderCursor(string style, string openAiLogoPath)
     {
         string key = (style ?? "gemini").Trim().ToLowerInvariant();
@@ -227,64 +269,113 @@ public static class LocallyInput
 
         const int W = 48;
         const int H = 48;
+        const int SS = 4;
+        float S = (float)SS;
         using (Bitmap bmp = new Bitmap(W, H, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
-        using (Graphics g = Graphics.FromImage(bmp))
+        using (Graphics gOut = Graphics.FromImage(bmp))
         {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.Clear(Color.Transparent);
+            gOut.SmoothingMode = SmoothingMode.AntiAlias;
+            gOut.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            gOut.PixelOffsetMode = PixelOffsetMode.Half;
+            gOut.Clear(Color.Transparent);
 
             if (key == "gemini")
             {
-                // Cyan -> Blue -> Purple arrow with thick rounded white outline (Gemini look)
-                PointF[] pts = new PointF[] {
-                    new PointF(7f, 6f),
-                    new PointF(38f, 20f),
-                    new PointF(23f, 25f),
-                    new PointF(18f, 40f)
-                };
-                using (GraphicsPath path = new GraphicsPath())
+                using (Bitmap hi = new Bitmap(W * SS, H * SS, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                using (Graphics g = Graphics.FromImage(hi))
                 {
-                    path.AddPolygon(pts);
-                    using (Pen halo = new Pen(Color.FromArgb(110, 147, 197, 253), 10f)) { halo.LineJoin = LineJoin.Round; g.DrawPath(halo, path); }
-                    using (Pen whiteRim = new Pen(Color.White, 6.2f)) { whiteRim.LineJoin = LineJoin.Round; g.DrawPath(whiteRim, path); }
-                    using (LinearGradientBrush br = new LinearGradientBrush(new PointF(7f, 6f), new PointF(38f, 36f), Color.FromArgb(255, 56, 210, 255), Color.FromArgb(255, 168, 85, 247)))
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    g.Clear(Color.Transparent);
+
+                    PointF[] pts = new PointF[] {
+                        new PointF(9.5f * S, 8.0f * S),
+                        new PointF(38.5f * S, 20.5f * S),
+                        new PointF(24.5f * S, 24.5f * S),
+                        new PointF(20.0f * S, 39.5f * S)
+                    };
+                    using (GraphicsPath path = new GraphicsPath())
                     {
-                        ColorBlend cb = new ColorBlend(3);
-                        cb.Positions = new float[] { 0f, 0.5f, 1f };
-                        cb.Colors = new Color[] { Color.FromArgb(255, 45, 212, 245), Color.FromArgb(255, 59, 130, 246), Color.FromArgb(255, 168, 85, 247) };
-                        br.InterpolationColors = cb;
-                        g.FillPath(br, path);
+                        path.AddPolygon(pts);
+                        using (Pen subtleEdge = new Pen(Color.FromArgb(145, 178, 198, 242), 8.6f * S)) { subtleEdge.LineJoin = LineJoin.Round; g.DrawPath(subtleEdge, path); }
+                        using (Pen whiteRim = new Pen(Color.White, 7.4f * S)) { whiteRim.LineJoin = LineJoin.Round; g.DrawPath(whiteRim, path); }
+                        using (LinearGradientBrush br = new LinearGradientBrush(new PointF(9.5f * S, 8.0f * S), new PointF(38.5f * S, 24.0f * S), Color.FromArgb(255, 45, 212, 232), Color.FromArgb(255, 168, 85, 247)))
+                        {
+                            ColorBlend cb = new ColorBlend(3);
+                            cb.Positions = new float[] { 0f, 0.50f, 1f };
+                            cb.Colors = new Color[] {
+                                Color.FromArgb(255, 45, 212, 232),
+                                Color.FromArgb(255, 56, 130, 248),
+                                Color.FromArgb(255, 168, 85, 247)
+                            };
+                            br.InterpolationColors = cb;
+                            using (Pen roundInner = new Pen(br, 1.4f * S)) { roundInner.LineJoin = LineJoin.Round; g.DrawPath(roundInner, path); }
+                            g.FillPath(br, path);
+                        }
                     }
+                    using (GraphicsPath sh = new GraphicsPath())
+                    {
+                        AddSparklePath(sh, 23.3f * S, 22.3f * S, 5.2f * S, 5.6f * S);
+                        using (SolidBrush sb = new SolidBrush(Color.FromArgb(48, 28, 52, 128))) { g.FillPath(sb, sh); }
+                    }
+                    using (GraphicsPath sp = new GraphicsPath())
+                    {
+                        AddSparklePath(sp, 22.8f * S, 21.8f * S, 5.2f * S, 5.6f * S);
+                        using (SolidBrush wb = new SolidBrush(Color.White)) { g.FillPath(wb, sp); }
+                    }
+                    gOut.DrawImage(hi, new Rectangle(0, 0, W, H));
                 }
             }
             else if (key == "anthropic")
             {
-                // Orange-to-red sleek notched chevron cursor (Claude look)
-                PointF[] pts = new PointF[] {
-                    new PointF(5f, 6f),
-                    new PointF(41f, 11f),
-                    new PointF(24f, 23f),
-                    new PointF(21f, 43f)
-                };
-                using (GraphicsPath path = new GraphicsPath())
+                using (Bitmap hi = new Bitmap(W * SS, H * SS, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                using (Graphics g = Graphics.FromImage(hi))
                 {
-                    path.AddPolygon(pts);
-                    using (Pen edge = new Pen(Color.FromArgb(220, 255, 255, 255), 3.4f)) { edge.LineJoin = LineJoin.Round; g.DrawPath(edge, path); }
-                    using (Pen roundBody = new Pen(Color.FromArgb(255, 249, 115, 22), 3.0f)) { roundBody.LineJoin = LineJoin.Round; g.DrawPath(roundBody, path); }
-                    using (LinearGradientBrush br = new LinearGradientBrush(new PointF(5f, 6f), new PointF(39f, 40f), Color.FromArgb(255, 255, 72, 20), Color.FromArgb(255, 251, 170, 28)))
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    g.Clear(Color.Transparent);
+
+                    PointF[] pts = new PointF[] {
+                        new PointF(6.0f * S, 7.5f * S),
+                        new PointF(42.5f * S, 7.5f * S),
+                        new PointF(23.5f * S, 42.5f * S),
+                        new PointF(22.0f * S, 22.0f * S)
+                    };
+                    using (GraphicsPath path = new GraphicsPath())
                     {
-                        ColorBlend cb = new ColorBlend(3);
-                        cb.Positions = new float[] { 0f, 0.55f, 1f };
-                        cb.Colors = new Color[] { Color.FromArgb(255, 255, 68, 22), Color.FromArgb(255, 249, 115, 22), Color.FromArgb(255, 251, 176, 30) };
-                        br.InterpolationColors = cb;
-                        g.FillPath(br, path);
+                        path.AddPolygon(pts);
+                        using (Pen subtleOutline = new Pen(Color.FromArgb(140, 220, 42, 18), 3.4f * S)) { subtleOutline.LineJoin = LineJoin.Round; g.DrawPath(subtleOutline, path); }
+                        using (Pen outerBevel = new Pen(Color.FromArgb(255, 240, 62, 24), 2.4f * S)) { outerBevel.LineJoin = LineJoin.Round; g.DrawPath(outerBevel, path); }
+                        using (LinearGradientBrush br = new LinearGradientBrush(new PointF(6.0f * S, 7.5f * S), new PointF(40.0f * S, 12.0f * S), Color.FromArgb(255, 238, 52, 26), Color.FromArgb(255, 244, 174, 24)))
+                        {
+                            ColorBlend cb = new ColorBlend(3);
+                            cb.Positions = new float[] { 0f, 0.46f, 1f };
+                            cb.Colors = new Color[] {
+                                Color.FromArgb(255, 238, 52, 26),
+                                Color.FromArgb(255, 246, 112, 22),
+                                Color.FromArgb(255, 244, 174, 24)
+                            };
+                            br.InterpolationColors = cb;
+                            g.FillPath(br, path);
+                        }
+                        using (Pen innerRecess = new Pen(Color.FromArgb(75, 165, 38, 8), 1.0f * S))
+                        {
+                            innerRecess.LineJoin = LineJoin.Round;
+                            g.DrawPath(innerRecess, path);
+                        }
                     }
+                    DrawClaudeStarburst(g, 28.2f * S, 16.5f * S, 6.2f * S, S);
+                    gOut.DrawImage(hi, new Rectangle(0, 0, W, H));
                 }
             }
             else if (key == "openai")
             {
-                // Sage-teal rounded triangle with crisp white OpenAI logo inside (ChatGPT/Codex look)
+                // Sage-teal rounded triangle with crisp white OpenAI logo inside (ChatGPT/Codex look - untouched)
+                gOut.SmoothingMode = SmoothingMode.AntiAlias;
+                gOut.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                Graphics g = gOut;
                 PointF[] pts = new PointF[] {
                     new PointF(6f, 6f),
                     new PointF(42f, 17f),
@@ -336,25 +427,83 @@ public static class LocallyInput
             }
             else
             {
-                // Black cursor for OpenRouter
-                PointF[] pts = new PointF[] {
-                    new PointF(5f, 4f),
-                    new PointF(34f, 22f),
-                    new PointF(21f, 25f),
-                    new PointF(27f, 40f),
-                    new PointF(22f, 42f),
-                    new PointF(16f, 27f),
-                    new PointF(6f, 34f)
-                };
-                using (GraphicsPath path = new GraphicsPath())
+                // Sleek pitch-black rounded pointer triangle with crisp white OR monogram (OpenRouter look)
+                using (Bitmap hi = new Bitmap(W * SS, H * SS, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                using (Graphics g = Graphics.FromImage(hi))
                 {
-                    path.AddPolygon(pts);
-                    using (Pen outline = new Pen(Color.White, 3.0f)) { outline.LineJoin = LineJoin.Round; g.DrawPath(outline, path); }
-                    using (SolidBrush fill = new SolidBrush(Color.FromArgb(255, 6, 7, 10))) { g.FillPath(fill, path); }
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    g.Clear(Color.Transparent);
+
+                    PointF[] pts = new PointF[] {
+                        new PointF(9.5f * S, 5.5f * S),
+                        new PointF(40.5f * S, 31.0f * S),
+                        new PointF(21.5f * S, 35.5f * S),
+                        new PointF(10.0f * S, 42.5f * S)
+                    };
+                    using (GraphicsPath path = new GraphicsPath())
+                    {
+                        path.AddPolygon(pts);
+                        using (Pen hairline = new Pen(Color.FromArgb(155, 220, 228, 240), 4.3f * S)) { hairline.LineJoin = LineJoin.Round; g.DrawPath(hairline, path); }
+                        using (Pen roundBlack = new Pen(Color.FromArgb(255, 4, 4, 6), 3.4f * S)) { roundBlack.LineJoin = LineJoin.Round; g.DrawPath(roundBlack, path); }
+                        using (SolidBrush fill = new SolidBrush(Color.FromArgb(255, 4, 4, 6))) { g.FillPath(fill, path); }
+                    }
+                    bool drewOrLogo = false;
+                    try
+                    {
+                        string assetsDir = string.IsNullOrEmpty(openAiLogoPath) ? "" : System.IO.Path.GetDirectoryName(openAiLogoPath);
+                        string orLogoPath = string.IsNullOrEmpty(assetsDir) ? "" : System.IO.Path.Combine(assetsDir, "openrouter-logo.png");
+                        if (!string.IsNullOrEmpty(orLogoPath) && System.IO.File.Exists(orLogoPath))
+                        {
+                            using (Bitmap rawOr = new Bitmap(orLogoPath))
+                            using (Bitmap whiteOr = new Bitmap(rawOr.Width, rawOr.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                            {
+                                for (int ly = 0; ly < rawOr.Height; ly++)
+                                {
+                                    for (int lx = 0; lx < rawOr.Width; lx++)
+                                    {
+                                        Color px = rawOr.GetPixel(lx, ly);
+                                        if (px.A > 15) whiteOr.SetPixel(lx, ly, Color.FromArgb(px.A, 255, 255, 255));
+                                    }
+                                }
+                                g.DrawImage(whiteOr, new RectangleF(11.6f * S, 16.0f * S, 16.6f * S, 16.6f * S));
+                                drewOrLogo = true;
+                            }
+                        }
+                    }
+                    catch { }
+                    if (!drewOrLogo)
+                    {
+                        using (Pen wp = new Pen(Color.White, 2.2f * S))
+                        using (SolidBrush wb = new SolidBrush(Color.White))
+                        {
+                            g.DrawEllipse(wp, 14.0f * S, 20.5f * S, 6.2f * S, 6.2f * S);
+                            g.DrawLine(wp, 21.8f * S, 20.6f * S, 21.8f * S, 26.8f * S);
+                            g.DrawArc(wp, 19.6f * S, 20.6f * S, 5.2f * S, 3.8f * S, -90, 180);
+                            g.DrawLine(wp, 22.0f * S, 24.4f * S, 25.4f * S, 27.0f * S);
+                            g.FillEllipse(wb, 15.8f * S, 22.4f * S, 1.0f * S, 1.0f * S);
+                        }
+                    }
+                    gOut.DrawImage(hi, new Rectangle(0, 0, W, H));
                 }
             }
 
-            IntPtr h = BuildCursorFromBitmap(bmp, 5, 5, key);
+            if (key != "openai")
+            {
+                for (int y = 0; y < H; y++)
+                {
+                    for (int x = 0; x < W; x++)
+                    {
+                        Color p = bmp.GetPixel(x, y);
+                        if (p.A < 10) bmp.SetPixel(x, y, Color.Transparent);
+                    }
+                }
+            }
+
+            int hotX = (key == "openrouter") ? 42 : 5;
+            int hotY = (key == "openrouter") ? 31 : 5;
+            IntPtr h = BuildCursorFromBitmap(bmp, hotX, hotY, key);
             if (h != IntPtr.Zero) cursorCache[key] = h;
             return h;
         }
@@ -498,21 +647,26 @@ public static class LocallyInput
 
     static void MovePointerAbs(int x, int y)
     {
-        int vl = GetSystemMetrics(76);
-        int vt = GetSystemMetrics(77);
-        int vw = Math.Max(1, GetSystemMetrics(78));
-        int vh = Math.Max(1, GetSystemMetrics(79));
-        int absX = (int)Math.Max(0, Math.Min(65535, Math.Round(((x - vl) + 0.5) * 65535.0 / vw)));
-        int absY = (int)Math.Max(0, Math.Min(65535, Math.Round(((y - vt) + 0.5) * 65535.0 / vh)));
-        INPUT mi = new INPUT();
-        mi.type = INPUT_MOUSE;
-        mi.U.mi.dx = absX;
-        mi.U.mi.dy = absY;
-        mi.U.mi.mouseData = 0;
-        mi.U.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
-        mi.U.mi.time = 0;
-        mi.U.mi.dwExtraInfo = IntPtr.Zero;
-        Send(new INPUT[] { mi });
+        SetCursorPos(x, y);
+        try
+        {
+            int vl = GetSystemMetrics(76);
+            int vt = GetSystemMetrics(77);
+            int vw = Math.Max(1, GetSystemMetrics(78));
+            int vh = Math.Max(1, GetSystemMetrics(79));
+            int absX = (int)Math.Max(0, Math.Min(65535, Math.Round(((x - vl) + 0.5) * 65535.0 / vw)));
+            int absY = (int)Math.Max(0, Math.Min(65535, Math.Round(((y - vt) + 0.5) * 65535.0 / vh)));
+            INPUT mi = new INPUT();
+            mi.type = INPUT_MOUSE;
+            mi.U.mi.dx = absX;
+            mi.U.mi.dy = absY;
+            mi.U.mi.mouseData = 0;
+            mi.U.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
+            mi.U.mi.time = 0;
+            mi.U.mi.dwExtraInfo = IntPtr.Zero;
+            SendInput(1, new INPUT[] { mi }, Marshal.SizeOf(typeof(INPUT)));
+        }
+        catch { }
         SetCursorPos(x, y);
     }
 
@@ -542,14 +696,15 @@ public static class LocallyInput
                 }
             }
         }
-        if (!SetCursorPos(x, y))
+        MovePointerAbs(x, y);
+        POINT chk;
+        bool atTarget = GetCursorPos(out chk) && Math.Abs(chk.X - x) <= 6 && Math.Abs(chk.Y - y) <= 6;
+        if (!atTarget && !SetCursorPos(x, y))
         {
             int err = Marshal.GetLastWin32Error();
             throw new Exception("SetCursorPos failed (error " + err + ")." + (err == 5 ? " Access denied: the PC is locked, a UAC / secure-desktop prompt is open, or Locally was started outside your interactive desktop session (for example from a service or remote shell)." : ""));
         }
-        MovePointerAbs(x, y);
         // Verify physical alignment; if external user mouse movement shifted the pointer mid-glide, smoothly re-align to exact target
-        POINT chk;
         if (GetCursorPos(out chk) && (Math.Abs(chk.X - x) > 3 || Math.Abs(chk.Y - y) > 3))
         {
             for (int r = 1; r <= 6; r++)
@@ -948,9 +1103,9 @@ public static class LocallyInput
         return affected;
     }
 
-    static void CollectTabsShallow(AutomationElement el, int depth, ref int budget, List<AutomationElement> outTabs)
+    static void CollectTabsShallow(AutomationElement el, int depth, ref int budget, Stopwatch sw, List<AutomationElement> outTabs)
     {
-        if (el == null || depth > 14 || budget <= 0 || outTabs.Count >= 50) return;
+        if (el == null || depth > 14 || budget <= 0 || outTabs.Count >= 50 || (sw != null && sw.ElapsedMilliseconds > 350)) return;
         budget--;
         try
         {
@@ -964,10 +1119,10 @@ public static class LocallyInput
             AutomationElement child = TreeWalker.ControlViewWalker.GetFirstChild(el);
             int guard = 0;
             int maxChildren = (ct == ControlType.Tab) ? 60 : 25;
-            while (child != null && guard < maxChildren && budget > 0 && outTabs.Count < 50)
+            while (child != null && guard < maxChildren && budget > 0 && outTabs.Count < 50 && (sw == null || sw.ElapsedMilliseconds <= 350))
             {
                 guard++;
-                CollectTabsShallow(child, depth + 1, ref budget, outTabs);
+                CollectTabsShallow(child, depth + 1, ref budget, sw, outTabs);
                 child = TreeWalker.ControlViewWalker.GetNextSibling(child);
             }
         }
@@ -997,8 +1152,9 @@ public static class LocallyInput
                 AutomationElement winEl = AutomationElement.FromHandle(h);
                 if (winEl == null) return true;
                 List<AutomationElement> foundTabs = new List<AutomationElement>();
-                int budget = 900;
-                CollectTabsShallow(winEl, 0, ref budget, foundTabs);
+                int budget = 450;
+                Stopwatch sw = Stopwatch.StartNew();
+                CollectTabsShallow(winEl, 0, ref budget, sw, foundTabs);
                 foreach (AutomationElement tab in foundTabs)
                 {
                     try

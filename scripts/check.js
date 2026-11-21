@@ -41,6 +41,7 @@ const jsFiles = [
   'src/preload/overlay-preload.js',
   'scripts/launch.js',
   'scripts/build-win.js',
+  'scripts/build-linux.js',
   'scripts/test-functional.js'
 ];
 

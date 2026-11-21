@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const fsp = require('fs/promises');
 const os = require('os');
+const dns = require('dns');
+try { dns.setDefaultResultOrder('ipv4first'); } catch (_) { /* ignore */ }
 const {
   app,
   BrowserWindow,
@@ -36,6 +38,9 @@ const IS_FUNCTEST = process.argv.includes('--test-functional');
 let firstRunPending = process.argv.includes('--first-run');
 
 app.setName('LOCALLY');
+if (process.platform === 'linux') {
+  try { app.commandLine.appendSwitch('enable-transparent-visuals'); } catch (_) { /* ignore */ }
+}
 if (process.platform === 'win32') {
   try { app.setAppUserModelId('com.locally.desktop'); } catch (_) { /* ignore */ }
 }
@@ -133,13 +138,30 @@ async function setNativeBlackCursor(enabled) {
   const want = !!enabled && process.platform === 'win32';
   const style = getConfirmedProvider();
   const logoPath = path.join(ROOT, 'assets', 'openai-logo.png');
-  blackCursorDesired = want;
+  blackCursorDesired = !!enabled;
+  if (!enabled) {
+    nativeBlackCursorActive = false;
+    activeCursorStyle = '';
+    stopCursorFollow();
+    currentStatus.nativeCursor = false;
+    if (process.platform === 'win32') {
+      await automation.setBlackCursor(false).catch(() => false);
+    }
+    return false;
+  }
+  if (process.platform === 'linux') {
+    nativeBlackCursorActive = false;
+    activeCursorStyle = style;
+    currentStatus.nativeCursor = false;
+    currentStatus.provider = style;
+    startCursorFollow();
+    return false;
+  }
   if (!want) {
     nativeBlackCursorActive = false;
     activeCursorStyle = '';
     stopCursorFollow();
     currentStatus.nativeCursor = false;
-    await automation.setBlackCursor(false).catch(() => false);
     return false;
   }
   if (nativeBlackCursorActive && activeCursorStyle === style) return true;
@@ -386,8 +408,8 @@ function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1380,
     height: 880,
-    minWidth: 960,
-    minHeight: 640,
+    minWidth: 520,
+    minHeight: 500,
     title: 'Brief',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#212121',
@@ -562,7 +584,7 @@ function chooseDefaultModelIfNeeded(match, models, provider) {
     pick = (p.gpt61terra && p.gpt61terra.id) ||
       (p.gpt6luna && p.gpt6luna.id) ||
       (p.gpt6sol && p.gpt6sol.id) ||
-      (p.gpt6astra && p.gpt6astra.id) ||
+      (p.gpt62astra && p.gpt62astra.id) ||
       (match && match.bestFlash) ||
       (match && match.fast) ||
       ((models[0] || {}).id || '');
@@ -584,6 +606,7 @@ function chooseDefaultModelIfNeeded(match, models, provider) {
     pick = (p.flash38 && p.flash38.id) ||
       (p.flashlite35 && p.flashlite35.id) ||
       (p.hydrogen && p.hydrogen.id) ||
+      (p.neon && p.neon.id) ||
       (p.argon && p.argon.id) ||
       (match && match.bestFlash) ||
       (match && match.fast) ||
@@ -833,6 +856,7 @@ function setupIpc() {
     const k = await keyStore.getAsync(p);
     if (!k) throw new Error('No key is saved in slot: ' + p);
     await keyStore.set(k, p);
+    agent.clearModelCooldowns();
     const provInfo = providerMeta(p);
     const res = await gemini.validate(k, settingsStore.get().activeModel);
     cachedModels = res.models || [];
@@ -916,6 +940,7 @@ function setupIpc() {
       cachedMatch = match;
     }
     await keyStore.set(trimmed);
+    agent.clearModelCooldowns();
     settingsStore.set({ provider: prov });
     if (cachedMatch) chooseDefaultModelIfNeeded(cachedMatch, cachedModels, prov);
     settingsStore.set({
@@ -948,6 +973,7 @@ function setupIpc() {
     // Save encrypted locally whenever key itself isn't invalid (e.g. valid, rate-limited, or model noaccess)
     if (res.status !== 'invalid' && res.status !== 'nokey') {
       await keyStore.set(trimmed);
+      agent.clearModelCooldowns();
       settingsStore.set({ provider: prov });
       if (cachedMatch) chooseDefaultModelIfNeeded(cachedMatch, cachedModels, prov);
     }
@@ -989,6 +1015,7 @@ function setupIpc() {
 
   ipcMain.handle('key:remove', (_e, opts) => {
     lastValidatedCandidate = null;
+    agent.clearModelCooldowns();
     const targetProv = opts && opts.provider ? String(opts.provider) : undefined;
     keyStore.remove(targetProv);
     if (!targetProv) {
@@ -1131,8 +1158,8 @@ function setupIpc() {
   });
 
   ipcMain.handle('agent:chat', async (_e, payload) => {
-    if (cachedModels.length === 0 && startupModelsPromise) {
-      await Promise.race([startupModelsPromise.catch(() => {}), new Promise((r) => setTimeout(r, 2500))]);
+    if (!settingsStore.get().activeModel && cachedModels.length === 0 && startupModelsPromise) {
+      await Promise.race([startupModelsPromise.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
     }
     try {
       const res = await agent.runChat(payload);
@@ -1158,8 +1185,8 @@ function setupIpc() {
     if (s.permissionMode === 'chat') {
       throw new Error('Permission mode is set to "Chat only". Switch to "Ask for permission" or "Full access" (or the Work tab) to let Brief work on your computer.');
     }
-    if (cachedModels.length === 0 && startupModelsPromise) {
-      await Promise.race([startupModelsPromise.catch(() => {}), new Promise((r) => setTimeout(r, 2500))]);
+    if (!settingsStore.get().activeModel && cachedModels.length === 0 && startupModelsPromise) {
+      await Promise.race([startupModelsPromise.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
     }
     const shouldMin = s.showOverlay !== false && s.minimizeDuringAgent !== false && mainWindow && !mainWindow.isDestroyed();
     if (shouldMin && s.permissionMode === 'full') mainWindow.minimize();
@@ -1269,14 +1296,14 @@ app.whenReady().then(async () => {
   // Enable full desktop access by default (upgrade previous 'ask'-reset installs once, preserve explicit user choices thereafter).
   const initialSettings = settingsStore.get();
   if (!initialSettings.uiCleanV5) {
-    settingsStore.set({ showWidget: false, cursorSpeedMs: 220, screenshotMaxWidth: 3840, soundChime: true, uiCleanV4: true, uiCleanV5: true });
+    settingsStore.set({ showWidget: false, cursorSpeedMs: 220, screenshotMaxWidth: 3840, soundChime: false, uiCleanV4: true, uiCleanV5: true });
   }
   if (!initialSettings.uiCleanV6) {
     settingsStore.set({ permissionMode: initialSettings.permissionMode === 'chat' ? 'chat' : 'full', uiCleanV6: true });
   }
   if (!initialSettings.uiCleanV7) {
     settingsStore.set({
-      maxSteps: Math.max(60, Number(initialSettings.maxSteps) || 60),
+      maxSteps: Math.max(45, Number(initialSettings.maxSteps) || 45),
       cursorSpeedProfile: initialSettings.cursorSpeedProfile || 'adaptive',
       alignCursorBack: initialSettings.alignCursorBack !== false,
       usePlanner: true,
@@ -1286,20 +1313,30 @@ app.whenReady().then(async () => {
   }
   if (!initialSettings.uiCleanV8) {
     settingsStore.set({
-      maxSteps: Math.max(140, Number(initialSettings.maxSteps) || 140),
-      deepWorkMinMinutes: Number(initialSettings.deepWorkMinMinutes) > 0 ? Number(initialSettings.deepWorkMinMinutes) : 10,
+      maxSteps: Math.min(45, Math.max(12, Number(initialSettings.maxSteps) || 45)),
+      deepWorkMinMinutes: 0,
       deepWorkMaxMinutes: Number(initialSettings.deepWorkMaxMinutes) > 0 ? Number(initialSettings.deepWorkMaxMinutes) : 25,
       multiAgentParallel: true,
       verifyTaskBeforeFinish: true,
       uiCleanV8: true
     });
   }
+  if (!initialSettings.uiCleanV9) {
+    settingsStore.set({
+      soundChime: false,
+      pasteLongText: false,
+      typingDelayMs: 42,
+      deepWorkMinMinutes: 0,
+      maxSteps: Math.min(45, Math.max(12, Number(initialSettings.maxSteps) || 45)),
+      uiCleanV9: true
+    });
+  }
   {
-    const legacyRe = /3\.7|2\.[05]|1\.[05]|gpt-?(?:3|4)|claude-(?:2|3)|pro-?3\.1|3\.1-?flash-?lite/i;
+    const legacyRe = /3\.7|2\.[05]|1\.[05]|gpt-?(?:3|4)|claude-(?:2|3)|pro-?3\.1|3\.1-?flash-?lite|gemini-?4-?carbon/i;
     const fix = {};
     if (legacyRe.test(initialSettings.activeModel || '')) fix.activeModel = '';
     if (initialSettings.customModel) fix.customModel = '';
-    if (/flash37|flashlite31|pro31|gpt62/i.test(initialSettings.activePreset || '')) fix.activePreset = '';
+    if (/flash37|flashlite31|pro31|carbon|gpt62sol/i.test(initialSettings.activePreset || '')) fix.activePreset = '';
     if (initialSettings.roles && typeof initialSettings.roles === 'object') {
       const nextR = Object.assign({}, initialSettings.roles);
       let rMod = false;

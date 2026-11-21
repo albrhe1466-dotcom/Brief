@@ -6,14 +6,15 @@
  */
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
+const VERTEX_EXPRESS_BASE = 'https://aiplatform.googleapis.com/v1/publishers/google';
 
-// Hardcoded allowlist: exactly 4 Gemini models shown to users.
+// Hardcoded allowlist: 5 active Gemini models shown to users (Carbon removed, Neon added).
 const PRESETS = [
   {
     key: 'flashlite35',
     label: 'Gemini 3.5 Flash-Lite',
     hint: 'Fastest',
-    desc: 'Super fast everyday helper — jumps in and assists right away',
+    desc: 'Fastest & lightest — quick, helpful answers and rapid fixes as fast as possible',
     match: (m) => /gemini-?3\.5-?flash-?lite/i.test(m.id) && isGeneral(m),
     base: 'gemini-3.5-flash-lite'
   },
@@ -21,7 +22,7 @@ const PRESETS = [
     key: 'flash38',
     label: 'Gemini 3.8 Flash',
     hint: 'Balanced',
-    desc: 'Balanced for everyday use — steady, reliable help on daily tasks',
+    desc: 'Balanced — thinks carefully before starting, then helps cleanly',
     match: (m) => /gemini-?3\.8-?flash(?!-?lite)/i.test(m.id) && !/lite/i.test(m.id) && isGeneral(m),
     base: 'gemini-3.8-flash'
   },
@@ -29,25 +30,25 @@ const PRESETS = [
     key: 'hydrogen',
     label: 'Gemini 4 Hydrogen',
     hint: 'Balanced',
-    desc: 'Balanced for everyday use — smooth for daily work and multi-step tasks',
-    match: (m) => /(hydrogen|gemini-?4(?:\.0)?(?!(?:.*argon|.*carbon|.*pro|.*flash-lite)))/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && !/(?:argon|carbon)/i.test(m.id + ' ' + m.displayName) && isGeneral(m),
+    desc: 'Balanced — thinks before starting and solves daily & multi-step tasks cleanly',
+    match: (m) => /(hydrogen|gemini-?4(?:\.0)?(?!(?:.*argon|.*neon|.*carbon|.*pro|.*flash-lite)))/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && !/(?:argon|neon|carbon)/i.test(m.id + ' ' + m.displayName) && isGeneral(m),
     base: 'gemini-4-hydrogen'
+  },
+  {
+    key: 'neon',
+    label: 'Gemini 4 Neon',
+    hint: 'Strong',
+    desc: 'Strong — analyzes, thinks, makes a clear plan, then executes & inspects deeply',
+    match: (m) => /neon|gemini-?4(?:\.0)?-?neon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
+    base: 'gemini-4-neon'
   },
   {
     key: 'argon',
     label: 'Gemini 4 Argon',
-    hint: 'Strong',
-    desc: 'Strongest for complex work — ideal for deep analyzing and research',
+    hint: 'Flagship',
+    desc: 'Flagship — analyzes, critically thinks, executes, tests, reports issues & keeps fixing',
     match: (m) => /argon|gemini-?4(?:\.0)?-?argon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
     base: 'gemini-4-argon'
-  },
-  {
-    key: 'carbon',
-    label: 'Gemini 4 Carbon',
-    hint: 'Challenger',
-    desc: 'Challenger tier — built for the hardest reasoning and problem solving',
-    match: (m) => /carbon|gemini-?4(?:\.0)?-?carbon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
-    base: 'gemini-4-carbon'
   }
 ];
 
@@ -75,20 +76,49 @@ function modelPath(id) {
 function buildThinkingConfig(modelId, level, modelsList) {
   const id = stripModelPrefix(modelId).toLowerCase();
   const norm = String(level || 'medium').toLowerCase();
-  const tier = norm === 'low' ? 'LOW' : (norm === 'high' ? 'HIGH' : 'MEDIUM');
+  const isExtra = norm === 'extra';
+  const isFlashLite = /flash-?lite/.test(id);
+  const isFlash = !isFlashLite && /\bflash\b/.test(id);
+  const tier = norm === 'low' ? 'LOW' : ((norm === 'high' || isExtra) ? 'HIGH' : 'MEDIUM');
   if (!id || /computer-use|image|tts|embedding/.test(id)) return null;
 
   const meta = Array.isArray(modelsList) ? modelsList.find((m) => m.id.toLowerCase() === id) : null;
-  if (meta && meta.thinking === false && !/pro|thinking|hydrogen|argon|carbon|gemini-3|gemini-4|gemini-2\.5/.test(id)) {
+  if (meta && meta.thinking === false && !/pro|thinking|hydrogen|neon|argon|gemini-3|gemini-4|gemini-2\.5/.test(id)) {
     return null;
   }
 
+  // Flash-Lite & Flash respond faster based on thinking level:
+  // - low: instant/minimal thinking overhead
+  // - medium: fast LOW thinking
+  // - high: deeper MEDIUM/HIGH thinking
+  // - extra: maximum HIGH thinking + extra web research
   if (/gemini-2\.5/.test(id)) {
-    const budget = tier === 'LOW' ? 1024 : (tier === 'HIGH' ? 24576 : 8192);
-    return { thinkingBudget: budget, includeThoughts: true };
+    let budget;
+    if (isFlashLite) {
+      if (norm === 'low') return null;
+      budget = isExtra ? 12288 : (norm === 'high' ? 4096 : 1024);
+    } else if (isFlash) {
+      budget = norm === 'low' ? 512 : (isExtra ? 24576 : (norm === 'high' ? 10240 : 2048));
+    } else {
+      budget = norm === 'low' ? 1024 : (isExtra ? 24576 : (norm === 'high' ? 16384 : 8192));
+    }
+    return { thinkingBudget: budget, includeThoughts: norm !== 'low' };
   }
-  if (/gemini-(3|4)|hydrogen|argon|carbon|thinking/.test(id) || (meta && meta.thinking)) {
-    return { thinkingLevel: tier, includeThoughts: true };
+  if (/gemini-(3|4)|hydrogen|neon|argon|thinking/.test(id) || (meta && meta.thinking)) {
+    if (isFlashLite) {
+      // Explicitly pass MINIMAL on low so Google doesn't fall back to slow default server-side thinking!
+      if (norm === 'low') return { thinkingLevel: 'MINIMAL', includeThoughts: false };
+      if (norm === 'medium') return { thinkingLevel: 'LOW', includeThoughts: false };
+      if (norm === 'high') return { thinkingLevel: 'MEDIUM', includeThoughts: true };
+      return { thinkingLevel: 'HIGH', includeThoughts: true };
+    }
+    if (isFlash) {
+      if (norm === 'low') return { thinkingLevel: 'MINIMAL', includeThoughts: false };
+      if (norm === 'medium') return { thinkingLevel: 'LOW', includeThoughts: true };
+      if (norm === 'high') return { thinkingLevel: 'HIGH', includeThoughts: true };
+      return { thinkingLevel: 'HIGH', includeThoughts: true };
+    }
+    return { thinkingLevel: tier, includeThoughts: norm !== 'low' };
   }
   return null;
 }
@@ -169,6 +199,16 @@ function classify(status, body, context) {
       if (!isNaN(s)) retryAfterMs = Math.round(s * 1000);
     }
   }
+  // Parse human-readable retry durations directly from Google error text (e.g. "Please retry in 14.5s" or "14h53m47s")
+  if (!retryAfterMs && msg) {
+    const hms = /retry in\s+(?:(\d+)h)?(?:(\d+)m)?(\d+(?:\.\d+)?)s/i.exec(msg);
+    if (hms) {
+      const hrs = parseInt(hms[1] || '0', 10) || 0;
+      const mins = parseInt(hms[2] || '0', 10) || 0;
+      const secs = parseFloat(hms[3] || '0') || 0;
+      retryAfterMs = Math.round(((hrs * 3600) + (mins * 60) + secs) * 1000);
+    }
+  }
   let kind = 'error';
   if (status === 400 && (/API key not valid|API_KEY_INVALID/i.test(msg + reasons))) kind = 'invalid';
   else if (status === 400 && /API key expired|API_KEY_EXPIRED/i.test(msg + reasons)) kind = 'invalid';
@@ -177,7 +217,12 @@ function classify(status, body, context) {
   else if (status === 403 && context === 'list') kind = 'invalid';
   else if (status === 403) kind = 'noaccess';
   else if (status === 404) kind = 'noaccess';
-  else if (status === 429) kind = /quota|exhausted|billing|limit: 0/i.test(msg) ? 'quota' : 'rate';
+  else if (status === 429) {
+    // Distinguish permanent daily/zero-quota caps from temporary per-minute RPM/TPM limits (which recover after retryAfterMs).
+    const isHardQuota = /limit:\s*0\b|per[\s_-]*day|PerDay|GenerateRequestsPerDay|generate_content_free_tier_requests|billing/i.test(msg)
+      || retryAfterMs > 120000;
+    kind = isHardQuota ? 'quota' : 'rate';
+  }
   else if (status >= 500) kind = 'server';
   else if (status === 400) kind = 'bad_request';
   return new ApiError({ kind, status, apiStatus, message: msg, retryAfterMs });
@@ -203,8 +248,9 @@ function isModernGeminiModelId(id) {
   const clean = stripModelPrefix(id).toLowerCase();
   if (!clean) return false;
   if (/^gemini-(1|2)(?:\.|$|-)/.test(clean)) return false;
+  if (/carbon/.test(clean)) return false;
   if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|bison|gecko|learnlm)/i.test(clean)) return false;
-  return /^(gemini-(?:3|4|5)|.*hydrogen|.*argon|.*carbon)/.test(clean);
+  return /^(gemini-(?:3|4|5)|.*hydrogen|.*neon|.*argon)/.test(clean);
 }
 
 function resolveGeminiRuntimeCandidates(model) {
@@ -215,61 +261,53 @@ function resolveGeminiRuntimeCandidates(model) {
     const clean = stripModelPrefix(cand);
     if (clean && !out.includes(clean)) out.push(clean);
   };
-  // Never run retired 1.x / 2.x Gemini models even if left over in old config
+  // Strict model lock: NEVER silently downgrade/demote a user-selected model to a weaker or different Gemini family!
+  // Never run retired 1.x / 2.x Gemini models or removed Carbon even if left over in old config.
   if (isModernGeminiModelId(exact) && !/^gemini-(?:1|2)(?:\.|$|-)/i.test(id)) {
     push(exact);
   }
 
   const live = Array.isArray(LIVE_GEMINI_34_MODELS) ? LIVE_GEMINI_34_MODELS : [];
   if (/3\.5.*flash.*lite|flash.*lite/.test(id)) {
-    for (const m of live) if (/flash.*lite/i.test(m)) push(m);
+    for (const m of live) if (/3\.5.*flash.*lite|3\.1.*flash.*lite/i.test(m)) push(m);
     push('gemini-3.5-flash-lite');
     push('gemini-3.1-flash-lite-preview');
-    push('gemini-3-flash-preview');
+    push('gemini-2.5-flash-lite');
     return out;
   }
-  if (/3\.8.*flash|flash/.test(id)) {
-    for (const m of live) if (/3\.8|flash/i.test(m) && !/lite/i.test(m)) push(m);
+  if (/3\.8.*flash|\bflash\b/.test(id)) {
+    for (const m of live) if (/(?:3\.8|3(?:\.0)?).*flash/i.test(m) && !/lite/i.test(m)) push(m);
     push('gemini-3.8-flash');
     push('gemini-3-flash-preview');
-    push('gemini-3.5-flash');
-    push('gemini-3.1-flash-lite-preview');
+    push('gemini-2.5-flash');
     return out;
   }
-  if (/carbon/.test(id)) {
-    for (const m of live) if (/carbon|argon|gemini-4|3\.1-pro/i.test(m)) push(m);
-    push('gemini-4-carbon');
-    push('gemini-4-argon');
+  if (/neon/.test(id)) {
+    for (const m of live) if (/neon|3\.1-pro/i.test(m)) push(m);
+    push('gemini-4-neon');
     push('gemini-3.1-pro-preview');
-    push('gemini-4-hydrogen');
-    push('gemini-3.8-flash');
+    push('gemini-2.5-pro');
+    push('gemini-3-flash-preview');
     return out;
   }
   if (/hydrogen/.test(id)) {
-    for (const m of live) if (/hydrogen|gemini-4/i.test(m) && !/argon/i.test(m)) push(m);
+    for (const m of live) if (/hydrogen|3-flash/i.test(m) && !/lite/i.test(m)) push(m);
     push('gemini-4-hydrogen');
-    for (const m of live) if (/3\.8|3\.1-pro|3-flash/i.test(m)) push(m);
-    push('gemini-3.8-flash');
-    push('gemini-3.1-pro-preview');
     push('gemini-3-flash-preview');
+    push('gemini-2.5-flash');
     return out;
   }
-  if (/argon|pro/.test(id)) {
-    for (const m of live) if (/argon|carbon|3\.1-pro|gemini-4/i.test(m)) push(m);
+  if (/argon|carbon|\bpro\b/.test(id)) {
+    for (const m of live) if (/argon|3\.1-pro/i.test(m)) push(m);
     push('gemini-4-argon');
-    push('gemini-4-carbon');
     push('gemini-3.1-pro-preview');
-    for (const m of live) if (/hydrogen|3\.8|3-flash/i.test(m)) push(m);
-    push('gemini-4-hydrogen');
-    push('gemini-3.8-flash');
-    push('gemini-3-flash-preview');
+    push('gemini-2.5-pro');
     return out;
   }
-  for (const m of live) push(m);
-  push('gemini-3.8-flash');
-  push('gemini-3.1-pro-preview');
+  if (out.length) return out;
+  push('gemini-4-hydrogen');
   push('gemini-3-flash-preview');
-  push('gemini-3.1-flash-lite-preview');
+  push('gemini-2.5-flash');
   return out;
 }
 
@@ -317,11 +355,11 @@ function adaptGeminiPayloadForTarget(payload, targetId) {
 }
 
 const GEMINI_ALLOWLIST = [
-  { id: 'gemini-3.5-flash-lite', name: 'models/gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash-Lite', description: 'Super fast everyday helper — jumps in and assists right away', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-3.8-flash', name: 'models/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced for everyday use — steady, reliable help on daily tasks', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-hydrogen', name: 'models/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced for everyday use — smooth for daily work and multi-step tasks', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strongest for complex work — ideal for deep analyzing and research', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-carbon', name: 'models/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Challenger', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
+  { id: 'gemini-3.5-flash-lite', name: 'models/gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash-Lite', description: 'Fastest — jumps right in and fixes issues as fast as possible', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-3.8-flash', name: 'models/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced — analyzes the issue first, then fixes it cleanly', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-hydrogen', name: 'models/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced — analyzes carefully first, then fixes daily & multi-step tasks', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-neon', name: 'models/gemini-4-neon', displayName: 'Gemini 4 Neon', description: 'Strong (Newest) — goes deeper to inspect, scroll & solve root causes', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strongest — goes the deepest of all for complex analysis & full fixes', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
 ];
 
 class GeminiClient {
@@ -356,7 +394,7 @@ class GeminiClient {
     for (const fn of this.listeners) { try { fn(this.usage); } catch (_) { /* ignore */ } }
   }
 
-  async raw(pathPart, { method = 'GET', body, signal, key, context, timeoutMs = 55000 } = {}) {
+  async raw(pathPart, { method = 'GET', body, signal, key, context, timeoutMs = 55000, baseUrl } = {}) {
     const apiKey = key || this.getKey();
     if (!apiKey) throw new ApiError({ kind: 'nokey', status: 0, message: 'No API key is saved. Open Settings → API key.' });
     const reqAc = new AbortController();
@@ -372,9 +410,14 @@ class GeminiClient {
     }, timeoutMs) : null;
     let res;
     try {
-      res = await fetch(BASE + '/' + pathPart, {
+      const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey };
+      if (String(pathPart || '').includes('alt=sse')) {
+        headers.Accept = 'text/event-stream';
+        headers['Cache-Control'] = 'no-cache';
+      }
+      res = await fetch((baseUrl || BASE) + '/' + pathPart, {
         method,
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        headers,
         body: body ? JSON.stringify(body) : undefined,
         signal: reqAc.signal
       });
@@ -402,27 +445,36 @@ class GeminiClient {
     const out = GEMINI_ALLOWLIST.map((m) => Object.assign({}, m));
     const seen = new Set(out.map((m) => m.id));
     try {
-      const json = await this.raw('models?pageSize=200', { key, context: 'list' });
-      const rawModels = (json && Array.isArray(json.models)) ? json.models : [];
       const discoveredIds = [];
-      for (const rm of rawModels) {
-        const id = stripModelPrefix(rm && rm.name);
-        const methods = Array.isArray(rm && rm.supportedGenerationMethods) ? rm.supportedGenerationMethods : [];
-        if (!id || !methods.includes('generateContent') || !isModernGeminiModelId(id)) continue;
-        discoveredIds.push(id);
-        if (!seen.has(id)) {
-          seen.add(id);
-          out.push({
-            id,
-            name: 'models/' + id,
-            displayName: (rm && rm.displayName) || id,
-            description: (rm && rm.description) || 'Active Gemini 3/4 model',
-            methods: methods.slice(),
-            inputTokenLimit: (rm && rm.inputTokenLimit) || 1048576,
-            outputTokenLimit: (rm && rm.outputTokenLimit) || 65536,
-            thinking: true
-          });
+      let pageToken = '';
+      for (let page = 0; page < 4; page++) {
+        const pathPart = pageToken
+          ? ('models?pageSize=200&pageToken=' + encodeURIComponent(pageToken))
+          : 'models?pageSize=200';
+        const res = await this.raw(pathPart, { key, context: 'list' });
+        const json = await res.json();
+        const rawModels = (json && Array.isArray(json.models)) ? json.models : [];
+        for (const rm of rawModels) {
+          const id = stripModelPrefix(rm && rm.name);
+          const methods = Array.isArray(rm && rm.supportedGenerationMethods) ? rm.supportedGenerationMethods : [];
+          if (!id || !methods.includes('generateContent') || !isModernGeminiModelId(id)) continue;
+          discoveredIds.push(id);
+          if (!seen.has(id)) {
+            seen.add(id);
+            out.push({
+              id,
+              name: 'models/' + id,
+              displayName: (rm && rm.displayName) || id,
+              description: (rm && rm.description) || 'Active Gemini 3/4 model',
+              methods: methods.slice(),
+              inputTokenLimit: (rm && rm.inputTokenLimit) || 1048576,
+              outputTokenLimit: (rm && rm.outputTokenLimit) || 65536,
+              thinking: true
+            });
+          }
         }
+        pageToken = (json && json.nextPageToken) || '';
+        if (!pageToken) break;
       }
       if (discoveredIds.length) {
         LIVE_GEMINI_34_MODELS = discoveredIds;
@@ -436,18 +488,31 @@ class GeminiClient {
   async generate(model, body, { signal, key, retries = 3, onRetry, timeoutMs = 60000 } = {}) {
     let attempt = 0;
     if (!this._good) this._good = new Map();
+    if (!this._useVertexExpress) this._useVertexExpress = new Set();
+    const apiKey = key || this.getKey();
+    const isAqKey = /^AQ\./i.test(String(apiKey || '').trim());
     const _base = resolveGeminiRuntimeCandidates(model);
     const _g = this._good.get(model);
-    const runtimeCands = _g ? [_g].concat(_base.filter((c) => c !== _g)) : _base;
+    const runtimeCands = _g && _base.includes(_g) ? [_g].concat(_base.filter((c) => c !== _g)) : _base;
     let candIdx = 0;
     let targetModel = runtimeCands[0];
     let payload = adaptGeminiPayloadForTarget(body, targetModel);
     let retriedThoughtSig = false;
+    let triedVertexExpress = this._useVertexExpress.has(targetModel);
     for (;;) {
+      const useVertex = isAqKey && this._useVertexExpress.has(targetModel);
       try {
-        const res = await this.raw(modelPath(targetModel) + ':generateContent', { method: 'POST', body: payload, signal, key, context: 'generate', timeoutMs });
+        const res = await this.raw(modelPath(targetModel) + ':generateContent', {
+          method: 'POST',
+          body: payload,
+          signal,
+          key,
+          context: 'generate',
+          timeoutMs,
+          baseUrl: useVertex ? VERTEX_EXPRESS_BASE : BASE
+        });
         const json = await res.json();
-        this.recordUsage(model, json.usageMetadata);
+        this.recordUsage(targetModel, json.usageMetadata);
         this._good.set(model, targetModel);
         return json;
       } catch (e) {
@@ -457,24 +522,48 @@ class GeminiClient {
           payload = ensureThoughtSignatures(payload, true);
           continue;
         }
+        // For AQ. Vertex Express keys, try the exact same model on Google's official Vertex Express endpoint if AI Studio returned 404/403/quota.
+        if (isAqKey && !triedVertexExpress && ['noaccess', 'quota'].includes(e.kind)) {
+          triedVertexExpress = true;
+          try {
+            const vRes = await this.raw(modelPath(targetModel) + ':generateContent', {
+              method: 'POST',
+              body: payload,
+              signal,
+              key,
+              context: 'generate',
+              timeoutMs,
+              baseUrl: VERTEX_EXPRESS_BASE
+            });
+            const vJson = await vRes.json();
+            this._useVertexExpress.add(targetModel);
+            this.recordUsage(targetModel, vJson.usageMetadata);
+            this._good.set(model, targetModel);
+            return vJson;
+          } catch (_) { /* keep original Google error */ }
+        }
         const modelRetiredOrMissing = /no longer available|deprecated|retired|unknown model|not found|not supported for generateContent/i.test(e.message || '');
-        if ((e.kind === 'noaccess' || e.status === 404 || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server' || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
+        if ((e.kind === 'noaccess' || e.status === 404 || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
           candIdx += 1;
           targetModel = runtimeCands[candIdx];
           payload = adaptGeminiPayloadForTarget(body, targetModel);
           continue;
         }
-        // If a model rejects thinkingConfig, strip it cleanly and retry once instead of failing.
-        if (e.kind === 'bad_request' && payload && payload.generationConfig && payload.generationConfig.thinkingConfig && /thinking|includeThoughts|not supported|budget|level/i.test(e.message)) {
+        // If a model rejects MINIMAL thinkingLevel, fall back to LOW first; otherwise strip thinkingConfig cleanly.
+        if (e.kind === 'bad_request' && payload && payload.generationConfig && payload.generationConfig.thinkingConfig && /thinking|includeThoughts|not supported|budget|level|minimal/i.test(e.message)) {
           payload = JSON.parse(JSON.stringify(payload));
-          delete payload.generationConfig.thinkingConfig;
-          if (!Object.keys(payload.generationConfig).length) delete payload.generationConfig;
+          if (payload.generationConfig.thinkingConfig.thinkingLevel === 'MINIMAL') {
+            payload.generationConfig.thinkingConfig.thinkingLevel = 'LOW';
+          } else {
+            delete payload.generationConfig.thinkingConfig;
+            if (!Object.keys(payload.generationConfig).length) delete payload.generationConfig;
+          }
           continue;
         }
-        const retriable = ['rate', 'server', 'network', 'timeout'].includes(e.kind) || (e.kind === 'quota' && e.retryAfterMs > 0 && e.retryAfterMs < 65000);
+        const retriable = ['rate', 'server', 'network', 'timeout'].includes(e.kind) || (e.kind === 'quota' && e.retryAfterMs > 0 && e.retryAfterMs <= 65000);
         if (!retriable || attempt >= retries) throw e;
         attempt += 1;
-        const wait = Math.min(60000, e.retryAfterMs || (1500 * Math.pow(2, attempt - 1)));
+        const wait = Math.min(62000, e.retryAfterMs || (2000 * Math.pow(2, attempt - 1)));
         if (onRetry) onRetry({ attempt, wait, error: e.message, kind: e.kind });
         await sleep(wait, signal);
       }
@@ -482,20 +571,32 @@ class GeminiClient {
   }
 
   /** Streams a response with Server-Sent Events. Calls onText(delta, fullText) as text arrives. */
-  async stream(model, body, { signal, onText, onThought, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000, retries = 2, onRetry } = {}) {
+  async stream(model, body, { signal, onText, onThought, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000, retries = 4, onRetry } = {}) {
     let attempt = 0;
     if (!this._good) this._good = new Map();
+    if (!this._useVertexExpress) this._useVertexExpress = new Set();
+    const apiKey = this.getKey();
+    const isAqKey = /^AQ\./i.test(String(apiKey || '').trim());
     const _base = resolveGeminiRuntimeCandidates(model);
     const _g = this._good.get(model);
-    const runtimeCands = _g ? [_g].concat(_base.filter((c) => c !== _g)) : _base;
+    const runtimeCands = _g && _base.includes(_g) ? [_g].concat(_base.filter((c) => c !== _g)) : _base;
     let candIdx = 0;
     let targetModel = runtimeCands[0];
     let payload = adaptGeminiPayloadForTarget(body, targetModel);
     let retriedThoughtSig = false;
+    let triedVertexExpress = this._useVertexExpress.has(targetModel);
     let res;
     for (;;) {
+      const useVertex = isAqKey && this._useVertexExpress.has(targetModel);
       try {
-        res = await this.raw(modelPath(targetModel) + ':streamGenerateContent?alt=sse', { method: 'POST', body: payload, signal, context: 'generate', timeoutMs });
+        res = await this.raw(modelPath(targetModel) + ':streamGenerateContent?alt=sse', {
+          method: 'POST',
+          body: payload,
+          signal,
+          context: 'generate',
+          timeoutMs,
+          baseUrl: useVertex ? VERTEX_EXPRESS_BASE : BASE
+        });
         this._good.set(model, targetModel);
         break;
       } catch (e) {
@@ -505,23 +606,43 @@ class GeminiClient {
           payload = ensureThoughtSignatures(payload, true);
           continue;
         }
+        if (isAqKey && !triedVertexExpress && ['noaccess', 'quota'].includes(e.kind)) {
+          triedVertexExpress = true;
+          try {
+            res = await this.raw(modelPath(targetModel) + ':streamGenerateContent?alt=sse', {
+              method: 'POST',
+              body: payload,
+              signal,
+              context: 'generate',
+              timeoutMs,
+              baseUrl: VERTEX_EXPRESS_BASE
+            });
+            this._useVertexExpress.add(targetModel);
+            this._good.set(model, targetModel);
+            break;
+          } catch (_) { /* keep original Google error */ }
+        }
         const modelRetiredOrMissing = /no longer available|deprecated|retired|unknown model|not found|not supported for generateContent/i.test(e.message || '');
-        if ((e.kind === 'noaccess' || e.status === 404 || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server' || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
+        if ((e.kind === 'noaccess' || e.status === 404 || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
           candIdx += 1;
           targetModel = runtimeCands[candIdx];
           payload = adaptGeminiPayloadForTarget(body, targetModel);
           continue;
         }
-        if (e.kind === 'bad_request' && payload && payload.generationConfig && payload.generationConfig.thinkingConfig && /thinking|includeThoughts|not supported|budget|level/i.test(e.message)) {
+        if (e.kind === 'bad_request' && payload && payload.generationConfig && payload.generationConfig.thinkingConfig && /thinking|includeThoughts|not supported|budget|level|minimal/i.test(e.message)) {
           payload = JSON.parse(JSON.stringify(payload));
-          delete payload.generationConfig.thinkingConfig;
-          if (!Object.keys(payload.generationConfig).length) delete payload.generationConfig;
+          if (payload.generationConfig.thinkingConfig.thinkingLevel === 'MINIMAL') {
+            payload.generationConfig.thinkingConfig.thinkingLevel = 'LOW';
+          } else {
+            delete payload.generationConfig.thinkingConfig;
+            if (!Object.keys(payload.generationConfig).length) delete payload.generationConfig;
+          }
           continue;
         }
-        const retriable = ['rate', 'server', 'network', 'timeout'].includes(e.kind) || (e.kind === 'quota' && e.retryAfterMs > 0 && e.retryAfterMs < 15000);
+        const retriable = ['rate', 'server', 'network', 'timeout'].includes(e.kind) || (e.kind === 'quota' && e.retryAfterMs > 0 && e.retryAfterMs <= 65000);
         if (!retriable || attempt >= retries) throw e;
         attempt += 1;
-        const wait = Math.min(8000, e.retryAfterMs || (1000 * attempt));
+        const wait = Math.min(62000, e.retryAfterMs || (2000 * attempt));
         if (onRetry) onRetry({ attempt, wait, error: e.message, kind: e.kind });
         await sleep(wait, signal);
       }

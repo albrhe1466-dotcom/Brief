@@ -13,8 +13,9 @@ function sanitizeModelIdValue(val) {
   const s = String(val || '').trim();
   if (!s) return '';
   if (LEGACY_MODEL_RE.test(s)) return '';
+  if (/gemini-?4-?carbon/i.test(s)) return s.replace(/gemini-?4-?carbon/i, 'gemini-4-argon');
   if (/gpt-?6\.2-?sol/i.test(s)) return s.replace(/gpt-?6\.2-?sol/i, 'gpt-6-sol');
-  if (/gpt-?6\.2-?astra/i.test(s)) return s.replace(/gpt-?6\.2-?astra/i, 'gpt-6-astra');
+  if (/(?:^|\/)gpt-?6-?astra$/i.test(s)) return s.replace(/gpt-?6-?astra$/i, 'gpt-6.2-astra');
   return s;
 }
 
@@ -30,8 +31,21 @@ function sanitizeSettingsData(data) {
     data.activeModel = nextActive;
     dirty = true;
   }
-  if (/gpt62/i.test(data.activePreset || '')) {
-    data.activePreset = String(data.activePreset).replace(/gpt62/i, 'gpt6');
+  const ap = String(data.activePreset || '');
+  if (ap === 'carbon') {
+    data.activePreset = 'argon';
+    dirty = true;
+  } else if (ap === 'or_carbon') {
+    data.activePreset = 'or_argon';
+    dirty = true;
+  } else if (/gpt62sol/i.test(ap)) {
+    data.activePreset = ap.replace(/gpt62sol/i, 'gpt6sol');
+    dirty = true;
+  } else if (/^gpt6astra$/i.test(ap)) {
+    data.activePreset = 'gpt62astra';
+    dirty = true;
+  } else if (/^or_gpt6astra$/i.test(ap)) {
+    data.activePreset = 'or_gpt62astra';
     dirty = true;
   }
   if (data.roles && typeof data.roles === 'object') {
@@ -44,6 +58,18 @@ function sanitizeSettingsData(data) {
         }
       }
     }
+  }
+  if (data.deepWorkMinMinutes === 10) {
+    data.deepWorkMinMinutes = 0;
+    dirty = true;
+  }
+  if (data.maxSteps === 140) {
+    data.maxSteps = 45;
+    dirty = true;
+  }
+  if (data.typingDelayMs === 6) {
+    data.typingDelayMs = 42;
+    dirty = true;
   }
   data._sanitizedDirty = dirty;
   return data;
@@ -143,23 +169,25 @@ const DEFAULT_SETTINGS = {
   minimizeDuringAgent: true,
   showOverlay: true,
   showWidget: false,
-  maxSteps: 140,
-  deepWorkMinMinutes: 10,
+  maxSteps: 45,
+  deepWorkMinMinutes: 0,
   deepWorkMaxMinutes: 25,
   multiAgentParallel: true,
   verifyTaskBeforeFinish: true,
   screenshotMaxWidth: 3840,
   displayTarget: 'primary',       // 'primary' | 'cursor' | display id
-  typingDelayMs: 6,
+  typingDelayMs: 42,
   cursorSpeedMs: 200,
   cursorSpeedProfile: 'adaptive', // 'adaptive' | 'slow' | 'medium' | 'fast'
   alignCursorBack: true,          // Re-align mouse smoothly to target on drift and back to user origin after finishing
   commandTimeoutSec: 120,
-  pasteLongText: true,
+  pasteLongText: false,
   sidebarCollapsed: false,
+  sidebarWidth: 260,
+  usageMeters: {},
   logPanelOpen: false,
   sendWithEnter: true,
-  soundChime: true,
+  soundChime: false,
   provider: 'gemini',
   userName: '',
   onboardingCompleted: false,
@@ -170,4 +198,4 @@ const DEFAULT_SETTINGS = {
 
 const DEFAULT_CHATS = { chats: [], projects: [] };
 
-module.exports = { JsonStore, DEFAULT_SETTINGS, DEFAULT_CHATS, deepMerge, sanitizeModelIdValue };
+module.exports = { JsonStore, DEFAULT_SETTINGS, DEFAULT_CHATS, deepMerge, sanitizeModelIdValue, sanitizeSettingsData };

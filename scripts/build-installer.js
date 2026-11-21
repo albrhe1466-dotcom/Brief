@@ -48,9 +48,12 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Brief Setup")]
-[assembly: AssemblyDescription("Brief Windows Installer Setup Wizard")]
+[assembly: AssemblyDescription("Brief Windows Desktop AI Assistant Setup Wizard")]
+[assembly: AssemblyCompany("Brief Desktop")]
 [assembly: AssemblyProduct("Brief Setup")]
-[assembly: AssemblyVersion("1.0.5.0")]
+[assembly: AssemblyCopyright("Copyright (c) 2026 Brief Desktop")]
+[assembly: AssemblyVersion("1.0.7.0")]
+[assembly: AssemblyFileVersion("1.0.7.0")]
 
 namespace BriefSetupWizard
 {
@@ -785,13 +788,14 @@ namespace BriefSetupWizard
                 {
                     if (key == null) return;
                     key.SetValue("DisplayName", "Brief");
-                    key.SetValue("DisplayVersion", "1.0.5");
+                    key.SetValue("DisplayVersion", "1.0.7");
                     key.SetValue("Publisher", "Brief Desktop");
+                    key.SetValue("URLInfoAbout", "https://github.com/albrhe1466-dotcom/Brief");
                     key.SetValue("InstallLocation", installDir);
                     key.SetValue("DisplayIcon", File.Exists(iconPath) ? iconPath : exePath);
                     key.SetValue("NoModify", 1, RegistryValueKind.DWord);
                     key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
-                    key.SetValue("UninstallString", "cmd.exe /c rmdir /s /q \\\"" + installDir + "\\\"");
+                    key.SetValue("UninstallString", "powershell.exe -NoProfile -WindowStyle Hidden -Command \\\"Remove-Item -LiteralPath '" + installDir.Replace("'", "''") + "' -Recurse -Force -ErrorAction SilentlyContinue\\\"");
                 }
             }
             catch { }
@@ -819,6 +823,76 @@ namespace BriefSetupWizard
     }
 }
 `;
+}
+
+function getSetupManifestXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity version="1.0.7.0" processorArchitecture="*" name="BriefDesktop.BriefSetup" type="win32"/>
+  <description>Brief — Private Windows Desktop AI Assistant Setup Wizard</description>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+    </application>
+  </compatibility>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+    </windowsSettings>
+  </application>
+</assembly>`;
+}
+
+function findSignToolExe() {
+  const roots = [
+    path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Windows Kits', '10', 'bin'),
+    path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Windows Kits', '10', 'bin')
+  ];
+  for (const r of roots) {
+    if (!fs.existsSync(r)) continue;
+    const entries = fs.readdirSync(r).sort().reverse();
+    for (const e of entries) {
+      const p = path.join(r, e, 'x64', 'signtool.exe');
+      if (fs.existsSync(p)) return p;
+    }
+  }
+  return null;
+}
+
+function tryAuthenticodeSign(filePath, workDir) {
+  const b64 = process.env.BRIEF_CERT_PFX_BASE64 || '';
+  const pfxPathEnv = process.env.BRIEF_CERT_PFX_PATH || '';
+  const certPass = process.env.BRIEF_CERT_PASSWORD || '';
+  if (!b64 && !pfxPathEnv) return false;
+  const signtool = findSignToolExe();
+  if (!signtool) {
+    console.warn('WARN: Signing certificate provided, but Windows SDK signtool.exe was not found.');
+    return false;
+  }
+  const pfxFile = pfxPathEnv || path.join(workDir, 'brief-signing.pfx');
+  if (b64 && !pfxPathEnv) {
+    fs.writeFileSync(pfxFile, Buffer.from(b64, 'base64'));
+  }
+  try {
+    const signArgs = ['sign', '/fd', 'SHA256', '/tr', 'http://timestamp.digicert.com', '/td', 'SHA256', '/f', pfxFile];
+    if (certPass) signArgs.push('/p', certPass);
+    signArgs.push('/d', 'Brief Desktop AI Assistant', '/du', 'https://github.com/albrhe1466-dotcom/Brief', filePath);
+    execFileSync(signtool, signArgs, { windowsHide: true, stdio: 'inherit' });
+    console.log('SIGNED (Authenticode SHA-256):', filePath);
+    return true;
+  } finally {
+    if (b64 && !pfxPathEnv && fs.existsSync(pfxFile)) {
+      try { fs.rmSync(pfxFile, { force: true }); } catch (_) { /* ignore */ }
+    }
+  }
 }
 
 async function main() {
@@ -849,14 +923,18 @@ async function main() {
   const icoPath = path.join(ROOT, 'assets', 'icon.ico');
   await rcedit(briefExe, {
     icon: icoPath,
+    'file-version': '1.0.7.0',
+    'product-version': '1.0.7.0',
     'version-string': {
       ProductName: 'Brief',
-      FileDescription: 'Brief — Private Desktop AI Agent',
+      FileDescription: 'Brief — Private Windows Desktop AI Assistant',
       InternalName: 'Brief',
       OriginalFilename: 'Brief.exe',
-      CompanyName: 'Brief Desktop'
+      CompanyName: 'Brief Desktop',
+      LegalCopyright: 'Copyright (c) 2026 Brief Desktop'
     }
   });
+  tryAuthenticodeSign(briefExe, WORK_DIR);
 
   console.log('2/4 Compressing brief-package.zip...');
   if (fs.existsSync(ZIP_OUT)) fs.rmSync(ZIP_OUT, { force: true });
@@ -865,15 +943,17 @@ async function main() {
     `Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory('${STAGE_APP.replace(/'/g, "''")}', '${ZIP_OUT.replace(/'/g, "''")}', [System.IO.Compression.CompressionLevel]::Fastest, $false)`
   ], { windowsHide: true, stdio: 'inherit' });
 
-  console.log('3/4 Compiling native Windows Setup Wizard (Brief-Setup.exe)...');
+  console.log('3/4 Compiling native Windows Setup Wizard (Brief-Setup.exe) with Win32 asInvoker manifest...');
   const csc = findCscExe();
   const csPath = path.join(WORK_DIR, 'BriefSetup.cs');
+  const manifestPath = path.join(WORK_DIR, 'BriefSetup.manifest');
   const primaryUrl = process.env.BRIEF_DOWNLOAD_URL || 'http://127.0.0.1:4173/download/brief-package.zip';
   const fallbackUrl = process.env.BRIEF_FALLBACK_DOWNLOAD_URL ||
     (primaryUrl.indexOf('127.0.0.1') !== -1 ? 'http://localhost:4173/download/brief-package.zip' : '');
   const cloudFallbackUrl = process.env.BRIEF_CLOUD_FALLBACK_URL ||
     'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip';
   fs.writeFileSync(csPath, getSetupWizardCSharpSource(primaryUrl, fallbackUrl, cloudFallbackUrl), 'utf8');
+  fs.writeFileSync(manifestPath, getSetupManifestXml(), 'utf8');
 
   if (fs.existsSync(SETUP_EXE_OUT)) fs.rmSync(SETUP_EXE_OUT, { force: true });
   execFileSync(csc, [
@@ -882,6 +962,7 @@ async function main() {
     '/platform:anycpu',
     '/optimize+',
     '/win32icon:' + icoPath,
+    '/win32manifest:' + manifestPath,
     '/out:' + SETUP_EXE_OUT,
     '/reference:System.dll',
     '/reference:System.Drawing.dll',
@@ -891,27 +972,35 @@ async function main() {
     csPath
   ], { windowsHide: true, stdio: 'inherit' });
 
-  console.log('4/4 Embedding Brief Setup metadata & icon...');
+  console.log('4/4 Embedding Brief Setup v1.0.7 metadata, SHA-256 checksums & optional Authenticode signature...');
   await rcedit(SETUP_EXE_OUT, {
     icon: icoPath,
+    'file-version': '1.0.7.0',
+    'product-version': '1.0.7.0',
     'version-string': {
       ProductName: 'Brief Setup',
-      FileDescription: 'Brief Windows Installer Setup Wizard',
+      FileDescription: 'Brief — Private Windows Desktop AI Assistant Setup Wizard',
       InternalName: 'BriefSetup',
       OriginalFilename: 'Brief-Setup.exe',
-      CompanyName: 'Brief Desktop'
+      CompanyName: 'Brief Desktop',
+      LegalCopyright: 'Copyright (c) 2026 Brief Desktop'
     }
   });
+  tryAuthenticodeSign(SETUP_EXE_OUT, WORK_DIR);
 
   const shaExe = crypto.createHash('sha256').update(fs.readFileSync(SETUP_EXE_OUT)).digest('hex');
+  const shaZip = crypto.createHash('sha256').update(fs.readFileSync(ZIP_OUT)).digest('hex');
+  const sumsOut = path.join(DOWNLOADS_DIR, 'SHA256SUMS.txt');
+  fs.writeFileSync(sumsOut, `${shaExe}  Brief-Setup.exe\n${shaZip}  brief-package.zip\n`, 'utf8');
   const exeBytes = fs.statSync(SETUP_EXE_OUT).size;
   const zipBytes = fs.statSync(ZIP_OUT).size;
 
   fs.rmSync(WORK_DIR, { recursive: true, force: true });
 
-  console.log('SUCCESS: Built native Windows installer and app archive:');
-  console.log('  Setup Wizard EXE :', SETUP_EXE_OUT, `(${(exeBytes / 1024).toFixed(1)} KB, sha256=${shaExe.slice(0, 12)}...)`);
-  console.log('  Payload Archive  :', ZIP_OUT, `(${(zipBytes / (1024 * 1024)).toFixed(1)} MB)`);
+  console.log('SUCCESS: Built native Windows installer and app archive (v1.0.7):');
+  console.log('  Setup Wizard EXE :', SETUP_EXE_OUT, `(${(exeBytes / 1024).toFixed(1)} KB, sha256=${shaExe.slice(0, 16)}...)`);
+  console.log('  Payload Archive  :', ZIP_OUT, `(${(zipBytes / (1024 * 1024)).toFixed(1)} MB, sha256=${shaZip.slice(0, 16)}...)`);
+  console.log('  SHA-256 Manifest :', sumsOut);
 }
 
 main().catch((e) => {

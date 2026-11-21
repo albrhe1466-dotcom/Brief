@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Download Brief for Windows 10 & 11 — Private multi-agent desktop AI with WinRT native OCR vision, DPI-aware SendInput automation, 45 real tools, and a genuine Windows Setup Wizard installer.">
+  <meta name="description" content="Download Brief for Windows, Linux (X11), and Android Phones — Private multi-agent AI with live custom provider cursors, OCR/screen vision, web research, and local zero-root control.">
   <meta name="theme-color" content="#090c12">
-  <title>Download Brief — Private Desktop AI Agent for Windows</title>
+  <title>Download Brief — Private AI Agent for Windows, Linux &amp; Android</title>
   <link rel="icon" type="image/png" href="assets/icon.png">
   <style>
     /* =========================================================================
@@ -69,6 +69,8 @@
       scroll-behavior: smooth;
       background-color: var(--bg-deep);
       color-scheme: dark;
+      overflow-x: hidden;
+      max-width: 100%;
     }
 
     body {
@@ -1468,10 +1470,8 @@
     }
 
     .provider-preview-stage[data-theme="openrouter"] {
-      border-color: #38bdf8;
-      box-shadow:
-        -10px 0 32px rgba(59, 130, 246, 0.22),
-        10px 0 32px rgba(249, 115, 22, 0.22);
+      border-color: #818cf8;
+      box-shadow: 0 0 42px rgba(99, 102, 241, 0.28);
     }
 
     .provider-models-grid {
@@ -1850,7 +1850,6 @@
       font-size: 14px;
       color: var(--text-secondary);
       line-height: 1.65;
-      padding: 28px;
     }
 
     .faq-item.is-open .faq-answer {
@@ -1914,7 +1913,176 @@
     }
 
     /* =========================================================================
-       RESPONSIVE BREAKPOINTS & REDUCED MOTION
+       3-PLATFORM SWITCHER, ANDROID PHONE MOCKUP & NEW MOBILE UI LOOK
+    ========================================================================= */
+    .os-platform-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 5px;
+      border-radius: 16px;
+      background: rgba(17, 22, 35, 0.9);
+      border: 1px solid var(--border-default);
+      margin-bottom: 16px;
+      max-width: 100%;
+    }
+
+    .os-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .os-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .os-tab-btn.is-active {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.38);
+    }
+
+    .os-tab-btn.is-active[data-os-tab="android"] {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.36);
+    }
+
+    .os-tab-btn.is-active[data-os-tab="linux"] {
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      box-shadow: 0 6px 18px rgba(249, 115, 22, 0.36);
+    }
+
+    .os-cta-panel {
+      display: none;
+    }
+
+    .os-cta-panel.is-active {
+      display: block;
+    }
+
+    .stage-mode-switch {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stage-mode-btn {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+
+    .stage-mode-btn.is-active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .phone-stage-frame {
+      display: none;
+      margin: 0 auto;
+      width: 248px;
+      max-width: 100%;
+      border-radius: 30px;
+      padding: 12px;
+      background: linear-gradient(180deg, #161b29, #0b0e16);
+      border: 2px solid rgba(52, 211, 153, 0.45);
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.65);
+    }
+
+    .phone-stage-frame.is-active {
+      display: block;
+    }
+
+    .phone-stage-notch {
+      width: 54px;
+      height: 5px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.18);
+      margin: 0 auto 10px;
+    }
+
+    .phone-stage-screen {
+      position: relative;
+      height: 215px;
+      border-radius: 18px;
+      background: radial-gradient(circle at 50% 25%, rgba(16, 185, 129, 0.14), #080a10 72%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .phone-stage-bubble {
+      align-self: flex-end;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      font-size: 11px;
+      padding: 7px 10px;
+      border-radius: 14px 14px 4px 14px;
+      max-width: 85%;
+    }
+
+    .phone-stage-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      border-radius: 14px;
+      padding: 9px 10px;
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .phone-stage-bar {
+      background: #141926;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: #94a3b8;
+    }
+
+    .comparison-table-card {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
+
+    .hero-copy-col,
+    .hero-stage-col,
+    .spec-table-card,
+    .wizard-step-btn,
+    .site-news-note-box {
+      min-width: 0;
+    }
+
+    .mobile-sticky-cta {
+      display: none;
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS, ZERO-CUTOFF PHONE UI & REDUCED MOTION
     ========================================================================= */
     @media (max-width: 1060px) {
       .hero-grid,
@@ -1938,13 +2106,121 @@
     }
 
     @media (max-width: 780px) {
+      body {
+        padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .container {
+        padding: 0 16px;
+      }
+
+      [data-reveal] {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
       .nav-links,
       .nav-github-link {
         display: none;
       }
 
+      .nav-brand {
+        font-size: 16px;
+        gap: 8px;
+      }
+
+      .nav-version-chip {
+        padding: 3px 7px;
+        font-size: 10.5px;
+      }
+
+      .nav-download-cta {
+        padding: 7px 12px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
       .mobile-menu-toggle {
         display: inline-flex;
+        flex-shrink: 0;
+      }
+
+      .hero-section {
+        padding: 24px 0 34px;
+      }
+
+      .hero-pill-badge {
+        font-size: 11px;
+        padding: 6px 12px;
+        max-width: 100%;
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      .hero-pill-badge .live-pulse-dot {
+        flex-shrink: 0;
+      }
+
+      pre,
+      code,
+      .stage-console-strip,
+      .deepdive-codebox,
+      .shortcut-item-card {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+
+      .stage-console-strip,
+      .motion-controls-row {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .hero-stage-card,
+      .wizard-step-btn,
+      .spec-table-card,
+      .site-news-note-box,
+      .final-cta-card {
+        padding: 16px;
+        max-width: 100%;
+      }
+
+      .hero-heading {
+        font-size: 32px;
+        line-height: 1.12;
+      }
+
+      .hero-lead {
+        font-size: 15px;
+        margin-bottom: 18px;
+      }
+
+      .os-platform-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: 100%;
+      }
+
+      .os-tab-btn {
+        justify-content: center;
+        padding: 9px 6px;
+        font-size: 12px;
+      }
+
+      .hero-cta-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .btn-dl-hero,
+      .btn-dl-zip {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 13px 16px;
+      }
+
+      .hero-meta-bar {
+        gap: 8px;
       }
 
       .facts-grid,
@@ -1956,6 +2232,26 @@
         grid-template-columns: 1fr;
       }
 
+      .facts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .spec-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .spec-val {
+        text-align: left;
+        word-break: break-word;
+      }
+
+      .verify-cmd-pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
       .win-dialog-body {
         grid-template-columns: 1fr;
       }
@@ -1965,7 +2261,76 @@
       }
 
       .section {
-        padding: 58px 0;
+        padding: 46px 0;
+      }
+
+      .mobile-sticky-cta {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        z-index: 98;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 18px;
+        background: rgba(11, 15, 26, 0.94);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(96, 165, 250, 0.38);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.72);
+      }
+
+      .mobile-sticky-info {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .mobile-sticky-info img {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        flex-shrink: 0;
+      }
+
+      .mobile-sticky-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #f8fafc;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mobile-sticky-sub {
+        font-size: 11px;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mobile-sticky-btn {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
+        font-size: 12.5px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .mobile-sticky-btn[data-os="android"] {
+        background: linear-gradient(135deg, #059669, #047857);
+      }
+
+      .mobile-sticky-btn[data-os="linux"] {
+        background: linear-gradient(135deg, #ea580c, #c2410c);
       }
     }
 
@@ -2344,7 +2709,7 @@
           <img src="assets/icon.png" alt="Brief Icon">
         </span>
         <span>Brief</span>
-        <span class="nav-version-chip" id="nav-version-chip">v1.0.5</span>
+        <span class="nav-version-chip" id="nav-version-chip">v1.0.7</span>
       </a>
 
       <nav class="nav-links" aria-label="Main navigation">
@@ -2353,7 +2718,7 @@
         <a href="#architecture">4-Agent Engine</a>
         <a href="#providers">Providers</a>
         <a href="#whats-new">What's New</a>
-        <a href="#tools-explorer">45 Tools</a>
+        <a href="#tools-explorer">50 Tools</a>
         <a href="#deep-dive">Engineering</a>
         <a href="#faq">FAQ</a>
       </nav>
@@ -2372,8 +2737,8 @@
       <a href="#onboarding-preview">First-Run Slide Tour</a>
       <a href="#architecture">4-Agent Architecture</a>
       <a href="#providers">Supported AI Providers</a>
-      <a href="#whats-new">What's New in v1.0.5</a>
-      <a href="#tools-explorer">45 Real Desktop Tools</a>
+      <a href="#whats-new">What's New in v1.0.7</a>
+      <a href="#tools-explorer">50 Real Desktop Tools</a>
       <a href="#deep-dive">Engineering Facts</a>
       <a href="#faq">FAQ</a>
       <a href="https://github.com/albrhe1466-dotcom/Brief" target="_blank" rel="noopener">GitHub Repository</a>
@@ -2389,40 +2754,99 @@
         <div class="hero-copy-col" data-reveal>
           <div class="hero-pill-badge">
             <span class="live-pulse-dot" aria-hidden="true"></span>
-            <span>Windows 10 &amp; 11 (64-bit) · Native Windows Setup Wizard</span>
+            <span id="hero-platform-pill">Windows · Linux (X11) · Android (No Root)</span>
           </div>
 
           <h1 class="hero-heading">
-            The desktop AI agent that
+            The private AI agent that
             <span class="hero-heading-highlight">sees, acts, and verifies</span>
             for real.
           </h1>
 
           <p class="hero-lead">
-            Download <strong>Brief</strong> as a genuine compiled Windows Setup Wizard (<code>Brief-Setup.exe</code>). When opened on Windows, the native Setup Wizard downloads Brief onto your PC, installs shortcuts, and opens straight into an animated 3-slide welcome experience with instant API key auto-detection.
+            Download <strong>Brief</strong> natively on <strong>Windows</strong> (<code>Brief-Setup.exe</code>), <strong>Linux X11</strong> (<code>.deb</code> / <code>.AppImage</code> / <code>.tar.gz</code>), or <strong>Android Phones</strong> (<code>Brief-Android.apk</code> — Samsung &amp; Android 8+, zero root, floating provider cursors &amp; live web research).
           </p>
 
-          <div class="hero-cta-row">
-            <a class="btn-dl-hero" id="hero-download-exe" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
-              <span class="btn-dl-icon" aria-hidden="true">⬇</span>
-              <span class="btn-dl-copy">
-                <span class="btn-dl-title">Download Brief Setup (.exe)</span>
-                <span class="btn-dl-sub" id="hero-exe-meta">Real Windows Setup Wizard · ~84 KB</span>
-              </span>
-            </a>
+          <div class="os-platform-bar" role="tablist" aria-label="Choose your platform">
+            <button class="os-tab-btn is-active" id="os-tab-windows" type="button" data-os-tab="windows">🪟 Windows</button>
+            <button class="os-tab-btn" id="os-tab-linux" type="button" data-os-tab="linux">🐧 Linux</button>
+            <button class="os-tab-btn" id="os-tab-android" type="button" data-os-tab="android">📱 Android</button>
+          </div>
 
-            <a class="btn-dl-zip" id="hero-download-zip" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip" download="Brief-Portable-Windows.zip">
-              <span style="font-size: 20px;" aria-hidden="true">📦</span>
-              <span class="btn-dl-copy">
-                <span class="btn-dl-title" style="font-size: 14.5px;">Portable Bundle (.zip)</span>
-                <span class="btn-dl-sub" id="hero-zip-meta" style="color: var(--text-muted);">Complete Windows App · ~166.7 MB</span>
-              </span>
-            </a>
+          <!-- Windows Downloads -->
+          <div class="os-cta-panel is-active" id="os-panel-windows">
+            <div class="hero-cta-row">
+              <a class="btn-dl-hero" id="hero-download-exe" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
+                <span class="btn-dl-icon" aria-hidden="true">⬇</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title">Download Brief Setup (.exe)</span>
+                  <span class="btn-dl-sub" id="hero-exe-meta">Real Windows Setup Wizard · ~85 KB</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-zip" id="hero-download-zip" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip" download="Brief-Portable-Windows.zip">
+                <span style="font-size: 20px;" aria-hidden="true">📦</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Portable Bundle (.zip)</span>
+                  <span class="btn-dl-sub" id="hero-zip-meta" style="color: var(--text-muted);">Complete Windows App · ~167 MB</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Linux Downloads -->
+          <div class="os-cta-panel" id="os-panel-linux">
+            <div class="hero-cta-row">
+              <a class="btn-dl-hero" id="hero-download-linux-deb" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb" download="Brief-Linux-x64.deb" style="background: linear-gradient(135deg, #ea580c, #c2410c); border-color: rgba(253, 186, 116, 0.55);">
+                <span class="btn-dl-icon" aria-hidden="true">🐧</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title">Download Linux (.deb)</span>
+                  <span class="btn-dl-sub" id="hero-linux-deb-meta">Ubuntu / Debian / Mint (X11 + xdotool)</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-zip" id="hero-download-linux-appimage" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.AppImage" download="Brief-Linux-x64.AppImage">
+                <span style="font-size: 20px;" aria-hidden="true">📦</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Universal .AppImage</span>
+                  <span class="btn-dl-sub" id="hero-linux-appimage-meta" style="color: var(--text-muted);">Arch / Fedora / Any Linux X11</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-zip" id="hero-download-linux-tar" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.tar.gz" download="Brief-Linux-x64.tar.gz">
+                <span style="font-size: 20px;" aria-hidden="true">🗜️</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Portable .tar.gz</span>
+                  <span class="btn-dl-sub" id="hero-linux-tar-meta" style="color: var(--text-muted);">Extract &amp; Run install.sh</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Android Phone Downloads -->
+          <div class="os-cta-panel" id="os-panel-android">
+            <div class="hero-cta-row">
+              <a class="btn-dl-hero" id="hero-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55);">
+                <span class="btn-dl-icon" aria-hidden="true">📱</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title">Download Android APK</span>
+                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung &amp; Android 8+ · Zero Root · Live Cursors</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-zip" href="#requirements">
+                <span style="font-size: 20px;" aria-hidden="true">🛡️</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Zero-Root Phone Setup</span>
+                  <span class="btn-dl-sub" style="color: var(--text-muted);">Overlay Cursor + Accessibility + Vision</span>
+                </span>
+              </a>
+            </div>
           </div>
 
           <div class="hero-meta-bar">
-            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.5</strong></span>
-            <span class="meta-badge-item">Architecture <strong>x64 Windows</strong></span>
+            <span class="meta-badge-item">Release <strong id="hero-release-tag">v1.0.7</strong></span>
+            <span class="meta-badge-item">Platforms <strong id="hero-arch-label">Win · Linux · Android</strong></span>
             <span class="meta-badge-item">Source <strong id="hero-source-mode">GitHub Releases</strong></span>
             <button class="hash-copy-btn" id="hero-copy-sha-btn" type="button" title="Copy SHA-256 Digest">
               <span>SHA-256:</span>
@@ -2431,12 +2855,12 @@
           </div>
 
           <div class="download-banner-toast" id="download-started-toast" role="status">
-            <strong>Download triggered for Brief-Setup.exe!</strong>
-            Open <strong>Brief-Setup.exe</strong> from your browser's Downloads bar or your <code>Downloads</code> folder to launch the native Windows Setup Wizard and install Brief cleanly.
+            <strong>Download triggered for Brief!</strong>
+            Open the downloaded installer (<code>Brief-Setup.exe</code> on Windows, <code>.deb</code>/<code>.AppImage</code> on Linux X11, or <code>Brief-Android.apk</code> on Android).
           </div>
         </div>
 
-        <!-- Live Interactive Brief Vision & Pipeline Stage -->
+        <!-- Live Interactive Brief Vision & Phone Showcase -->
         <div class="hero-stage-col" data-reveal data-reveal-delay="1">
           <div class="hero-stage-card glow-surface" id="hero-stage-card">
             <div class="hero-stage-topbar">
@@ -2444,33 +2868,64 @@
                 <span class="stage-dot stage-dot-red"></span>
                 <span class="stage-dot stage-dot-amber"></span>
                 <span class="stage-dot stage-dot-green"></span>
-                <span style="font-size: 12px; color: var(--text-secondary); margin-left: 8px; font-weight: 600;">Brief Desktop Runtime Preview</span>
+                <span style="font-size: 12px; color: var(--text-secondary); margin-left: 8px; font-weight: 600;">Brief Runtime</span>
               </div>
-              <span class="stage-label-pill" id="stage-live-badge">Step 2 · Scout WinRT OCR</span>
+              <div class="stage-mode-switch" role="tablist" aria-label="Preview desktop or Android phone">
+                <button class="stage-mode-btn is-active" id="stage-btn-desktop" type="button">Desktop</button>
+                <button class="stage-mode-btn" id="stage-btn-phone" type="button">Phone UI</button>
+              </div>
             </div>
 
-            <div class="stage-viewport" id="stage-viewport">
-              <div class="stage-mock-grid" aria-hidden="true"></div>
-              <div class="stage-scan-line" aria-hidden="true"></div>
-
-              <div class="stage-ocr-box" id="stage-ocr-target-a" style="left: 10%; top: 18%; width: 44%;">
-                <span class="stage-ocr-tag">OCR · Explorer Tree</span>
-                <div>App.tsx · 98.4% confidence</div>
+            <div id="hero-desktop-stage-wrap">
+              <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+                <span class="stage-label-pill" id="stage-live-badge">Step 2 · Scout WinRT OCR</span>
               </div>
+              <div class="stage-viewport" id="stage-viewport">
+                <div class="stage-mock-grid" aria-hidden="true"></div>
+                <div class="stage-scan-line" aria-hidden="true"></div>
 
-              <div class="stage-ocr-box" id="stage-ocr-target-b" style="left: 48%; top: 52%; width: 42%; border-color: rgba(52, 211, 153, 0.72); background: rgba(16, 185, 129, 0.08); color: #a7f3d0;">
-                <span class="stage-ocr-tag" style="background: rgba(5, 150, 105, 0.9);">Verified Button Target</span>
-                <div>Publish Release (642, 318)</div>
+                <div class="stage-ocr-box" id="stage-ocr-target-a" style="left: 10%; top: 18%; width: 44%;">
+                  <span class="stage-ocr-tag">OCR · Explorer Tree</span>
+                  <div>App.tsx · 98.4% confidence</div>
+                </div>
+
+                <div class="stage-ocr-box" id="stage-ocr-target-b" style="left: 48%; top: 52%; width: 42%; border-color: rgba(52, 211, 153, 0.72); background: rgba(16, 185, 129, 0.08); color: #a7f3d0;">
+                  <span class="stage-ocr-tag" style="background: rgba(5, 150, 105, 0.9);">Verified Button Target</span>
+                  <div>Publish Release (642, 318)</div>
+                </div>
+
+                <div class="stage-ocr-box" id="stage-ocr-target-c" style="left: 12%; top: 72%; width: 34%; border-color: rgba(167, 139, 250, 0.7); background: rgba(139, 92, 246, 0.1); color: #ddd6fe;">
+                  <span class="stage-ocr-tag" style="background: rgba(109, 40, 217, 0.92);">DPI Normalized</span>
+                  <div>norm(620, 560) → align back</div>
+                </div>
+
+                <svg class="stage-agent-cursor" id="stage-agent-cursor" viewBox="0 0 28 28" aria-hidden="true">
+                  <path d="M4 3 L24 12 L14 15 L11 25 Z" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
+                </svg>
               </div>
+            </div>
 
-              <div class="stage-ocr-box" id="stage-ocr-target-c" style="left: 12%; top: 72%; width: 34%; border-color: rgba(167, 139, 250, 0.7); background: rgba(139, 92, 246, 0.1); color: #ddd6fe;">
-                <span class="stage-ocr-tag" style="background: rgba(109, 40, 217, 0.92);">DPI Normalized</span>
-                <div>norm(620, 560) → align back</div>
+            <div class="phone-stage-frame" id="hero-phone-stage-wrap">
+              <div class="phone-stage-notch"></div>
+              <div class="phone-stage-screen">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:10.5px; font-weight:700; color:#6ee7b7;">Brief · Android Work</span>
+                  <span style="font-size:10px; color:#fca5a5; background:rgba(220,38,38,0.2); padding:2px 7px; border-radius:999px;">■ Stop</span>
+                </div>
+                <div class="phone-stage-bubble">Research latest news &amp; open notes</div>
+                <div class="phone-stage-card">
+                  ✓ Floating cursor gliding over apps<br>
+                  ✓ Zero-root Accessibility tap &amp; swipe<br>
+                  ✓ MediaProjection screen vision
+                </div>
+                <div class="phone-stage-bar">
+                  <span>Flash 3.8 · Extra</span>
+                  <span style="color:#ffffff; background:#059669; padding:2px 8px; border-radius:999px; font-weight:700;">↑</span>
+                </div>
+                <svg viewBox="0 0 48 48" style="position:absolute; right:26px; bottom:46px; width:26px; height:26px; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.75));" aria-hidden="true">
+                  <path d="M9.5 8L38.5 20.5L24.5 24.5L20 39.5Z" fill="#3882f8" stroke="#ffffff" stroke-width="5.5" stroke-linejoin="round"/>
+                </svg>
               </div>
-
-              <svg class="stage-agent-cursor" id="stage-agent-cursor" viewBox="0 0 28 28" aria-hidden="true">
-                <path d="M4 3 L24 12 L14 15 L11 25 Z" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
-              </svg>
             </div>
 
             <div class="stage-pipeline-pills" role="tablist" aria-label="Brief 4-stage pipeline preview">
@@ -2851,8 +3306,8 @@
                 <div class="provider-model-chip"><span>Gemini 3.5 Flash-Lite</span><span class="provider-model-hint">Fastest</span></div>
                 <div class="provider-model-chip"><span>Gemini 3.8 Flash</span><span class="provider-model-hint">Balanced</span></div>
                 <div class="provider-model-chip"><span>Gemini 4 Hydrogen</span><span class="provider-model-hint">Balanced</span></div>
-                <div class="provider-model-chip"><span>Gemini 4 Argon</span><span class="provider-model-hint">Strong</span></div>
-                <div class="provider-model-chip"><span>Gemini 4 Carbon</span><span class="provider-model-hint">Challenger</span></div>
+                <div class="provider-model-chip"><span>Gemini 4 Neon</span><span class="provider-model-hint">Strong</span></div>
+                <div class="provider-model-chip"><span>Gemini 4 Argon</span><span class="provider-model-hint">Flagship</span></div>
               </div>
             </div>
 
@@ -3143,6 +3598,38 @@ Local MCP Bridge:
               <span class="spec-val"><code id="spec-exe-sha" style="font-size: 11.5px; word-break: break-all;">Fetching from release…</code></span>
             </div>
           </div>
+
+          <div class="spec-table-card" data-reveal>
+            <h3>🐧 Linux (X11) Downloads &amp; Setup</h3>
+            <div class="spec-row">
+              <span class="spec-key">Packages Included</span>
+              <span class="spec-val"><code>.deb</code> · <code>.AppImage</code> · <code>.tar.gz</code> (x64)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Desktop Session</span>
+              <span class="spec-val">X11 / Xorg (Ubuntu, Mint, Debian, Arch) with <code>xdotool</code></span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Provider Cursors</span>
+              <span class="spec-val">Click-through transparent SVG cursor overlay across windows</span>
+            </div>
+          </div>
+
+          <div class="spec-table-card" data-reveal data-reveal-delay="1">
+            <h3>📱 Android Phone APK (Samsung &amp; All Android 8+)</h3>
+            <div class="spec-row">
+              <span class="spec-key">Package</span>
+              <span class="spec-val"><code id="spec-apk-name">Brief-Android.apk</code> (<span id="spec-apk-size">Zero Root · No Hack</span>)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Cursor &amp; Control</span>
+              <span class="spec-val">Overlay Cursors + Accessibility Taps/Swipes + MediaProjection Vision</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Samsung 1-Time Tip</span>
+              <span class="spec-val">Apps → Brief → ⋮ → Allow restricted settings (Android 13–15)</span>
+            </div>
+          </div>
         </div>
 
         <div class="verify-command-card" data-reveal>
@@ -3271,7 +3758,6 @@ Local MCP Bridge:
         </div>
       </div>
     </section>
-            </button>
 
     <!-- =====================================================================
          CURSOR MOTION PROFILES & CONTROL SHORTCUTS LAB
@@ -3285,7 +3771,6 @@ Local MCP Bridge:
             Test Brief's real cursor speed profiles below. After clicking or dragging a UI control, <code>alignCursorBack</code> smoothly returns your pointer or keeps handoffs predictable.
           </p>
         </div>
-            </button>
 
         <div class="motion-lab-grid" data-reveal>
           <div class="spec-table-card">
@@ -3299,7 +3784,6 @@ Local MCP Bridge:
                 <path d="M4 3 L24 12 L14 15 L11 25 Z" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
               </svg>
             </div>
-            </button>
 
             <div class="motion-controls-row">
               <div class="motion-speed-pills" role="group" aria-label="Select cursor speed profile">
@@ -3314,8 +3798,6 @@ Local MCP Bridge:
               Profile: adaptive · smooth curved trajectory + alignCursorBack enabled
             </div>
           </div>
-            </button>
-          </div>
 
           <div class="shortcut-cards-col">
             <div class="shortcut-item-card">
@@ -3324,6 +3806,7 @@ Local MCP Bridge:
                 <div style="font-size: 13px; color: var(--text-secondary);">Immediately aborts all running desktop automation anywhere in Windows.</div>
               </div>
               <span class="kbd-pill">Ctrl + Alt + Q</span>
+            </div>
 
             <div class="shortcut-item-card">
               <div>
@@ -3354,62 +3837,62 @@ Local MCP Bridge:
     </section>
 
     <!-- =====================================================================
-         WHAT'S NEW IN BRIEF v1.0.5 (SCREENSHOTS + RELEASE HIGHLIGHTS)
+         WHAT'S NEW IN BRIEF v1.0.7 (SCREENSHOTS + RELEASE HIGHLIGHTS)
     ===================================================================== -->
     <section class="section" id="whats-new">
       <div class="container">
         <div class="section-header" data-reveal>
-          <span class="section-eyebrow">Latest Release · v1.0.5</span>
-          <h2 class="section-title">What’s New in Brief v1.0.5 — Real Screenshots &amp; Fixes</h2>
+          <span class="section-eyebrow">Latest Release · v1.0.7</span>
+          <h2 class="section-title">What’s New in Brief v1.0.7 — News, Screenshots &amp; Fixes</h2>
           <p class="section-subtitle">
-            See real screenshots from inside Brief v1.0.5 below (click any card to zoom full size). v1.0.5 sharpens Brief’s eyesight (“Auto-Glasses”), locks all 4 providers to modern models with GPT-6 Sol &amp; Astra, removes Custom Model ID clutter, fixes API key UI clipping, and always starts cleanly on New Chat.
+            See what’s new in Brief v1.0.7 below (click any card to zoom full size). v1.0.7 brings exact per-provider native themes &amp; real fonts (Google Sans Gemini, pitch-black OpenAI Sans, warm charcoal Claude with orange Send key &amp; starburst, and classic OpenRouter), a per-company Usage Limit ring with silent 2h/3h cooldown &amp; News-style Limit popup, the new <strong>Extra</strong> thinking level with deeper web research &amp; extra polish, and dramatically faster Flash-Lite &amp; Flash replies in both Chat and Work mode.
           </p>
         </div>
 
         <div class="site-news-grid" data-reveal>
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-gemini-fix.png" data-zoom-caption="Brief v1.0.5 Model Selector — Zero Custom Model ID, Gemini 4 Carbon Challenger, GPT-6 Sol / Astra, Claude 5.5/5.2 &amp; Real 3-Tier Thinking">
-            <img class="site-news-shot" src="assets/news-gemini-fix.png" alt="Screenshot of Brief v1.0.5 Model Selector without Custom Model ID showing Challenger Carbon and 3 Thinking tiers">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-themes.png" data-zoom-caption="Brief v1.0.7 Native Provider Themes &amp; Real Fonts — Google Sans Gemini, Pitch-Black OpenAI Sans, Warm Charcoal Claude &amp; Classic OpenRouter">
+            <img class="site-news-shot" src="assets/news-v107-themes.png" alt="Screenshot of Brief v1.0.7 Native Provider Themes and Model Selector">
             <div class="site-news-body">
-              <span class="site-news-tag">Models &amp; UI Polish</span>
-              <div class="site-news-title">Cleaner Models · GPT-6 Sol &amp; Astra</div>
-              <div class="site-news-desc">Removed the Custom Model ID box completely. Clean everyday descriptions, Gemini 4 Carbon titled Challenger, and GPT-6 Sol / GPT-6 Astra across OpenAI &amp; OpenRouter.</div>
+              <span class="site-news-tag">Native Themes &amp; Fonts</span>
+              <div class="site-news-title">Gemini, OpenAI, Claude &amp; OpenRouter UI</div>
+              <div class="site-news-desc">Google Sans Gemini with blue radial welcome glow, pitch-black OpenAI Sans with blue pills, warm charcoal Claude with orange Send key &amp; starburst, and classic OpenRouter.</div>
             </div>
           </button>
 
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-studio-crew.png" data-zoom-caption="Brief v1.0.5 Auto-Glasses Vision, UIA Button Center-Snap &amp; Persistent 5-Role Crew">
-            <img class="site-news-shot" src="assets/news-studio-crew.png" alt="Screenshot of Brief v1.0.5 Multi-Agent Studio Crew and Auto-Glasses precision check">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-extra.png" data-zoom-caption="Brief v1.0.7 New Extra Thinking Level (Extra Web Research + Extra Touches) &amp; Ultra-Fast Flash-Lite / Flash Chat &amp; Work Mode">
+            <img class="site-news-shot" src="assets/news-v107-extra.png" alt="Screenshot of Brief v1.0.7 Extra Thinking Level and Fast Flash Work Mode">
             <div class="site-news-body">
-              <span class="site-news-tag">Better Glasses &amp; Aim</span>
-              <div class="site-news-title">Auto-Glasses Zoom &amp; Smart Aim</div>
-              <div class="site-news-desc">Expands MenuBar &amp; UIA eyesight, snaps onto small buttons cleanly, zooms automatically if a click changes 0% pixels, and keeps going persistently across all 4 providers.</div>
+              <span class="site-news-tag">Extra Thinking &amp; Speed</span>
+              <div class="site-news-title">Extra Thinking Level &amp; Instant Flash</div>
+              <div class="site-news-desc">New Extra level runs deep parallel web research + extra polish touches, while Flash-Lite &amp; Flash respond fast in Chat &amp; Work with zero mid-reply cutoffs.</div>
             </div>
           </button>
 
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v102-setup.png" data-zoom-caption="Brief v1.0.5 Download Site &amp; Native Windows Setup Wizard (Brief-Setup.exe)">
-            <img class="site-news-shot" src="assets/news-v102-setup.png" alt="Screenshot of Brief v1.0.5 Download Website and Windows Setup Wizard">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-usage.png" data-zoom-caption="Brief v1.0.7 Per-Company Usage Limit Ring, Silent 2h/3h Cooldown &amp; Native Windows Setup Wizard (Brief-Setup.exe)">
+            <img class="site-news-shot" src="assets/news-v107-usage.png" alt="Screenshot of Brief v1.0.7 Usage Limit Ring and 2-3 Hour Cooldown Notice">
             <div class="site-news-body">
-              <span class="site-news-tag">Windows Release v1.0.5</span>
-              <div class="site-news-title">Main Menu Launch &amp; Short Key Pills</div>
-              <div class="site-news-desc">Starts directly on Main Menu (New Chat) with “Coffee time and Brief” greetings, compact fit-to-width API key pills, and Brief-Setup.exe v1.0.5.</div>
+              <span class="site-news-tag">Windows Release v1.0.7</span>
+              <div class="site-news-title">Usage Limit Ring &amp; Verified Setup v1.0.7</div>
+              <div class="site-news-desc">Per-company usage ring (0–100%), silent background 2h/3h cooldown, News-style limit popup with instant API-key refresh, Win32 asInvoker manifest &amp; SHA256SUMS.txt.</div>
             </div>
           </button>
         </div>
 
         <div class="site-news-notes" data-reveal>
           <div class="site-news-note-box">
-            <h3>✨ What’s New in v1.0.5</h3>
+            <h3>✨ What’s New in v1.0.7</h3>
             <ul>
-              <li><strong>Better Eyesight (“Glasses”) &amp; UIA Button Snap:</strong> Expanded Win32 MenuBar/UIA depth, added pixel-diff verification after every click, and auto-captures a magnified zoom crop whenever a click misses or shows 0% screen change.</li>
-              <li><strong>Opens Straight to Main Menu (New Chat):</strong> Launches directly into New Chat (with Recents in the sidebar) alongside updated <em>“Coffee time and Brief”</em> greetings.</li>
-              <li><strong>Clean Model Selector &amp; GPT-6 Sol / Astra:</strong> Removed the Custom Model ID box and updated OpenAI / OpenRouter models to <code>GPT-6 Luna</code>, <code>GPT-6.1 Terra</code>, <code>GPT-6 Sol</code>, and <code>GPT-6 Astra</code>.</li>
+              <li><strong>Native Provider Themes &amp; Real Fonts:</strong> Automatically adapts the full desktop look to your active API provider — <strong>Gemini</strong> (Google Sans + deep blue radial welcome glow + obsidian chat), <strong>OpenAI</strong> (pitch black + OpenAI Sans + blue user pills), <strong>Claude</strong> (warm charcoal + Claude Sans / Georgia serif + orange starburst &amp; orange Send key), and <strong>OpenRouter</strong> (classic Brief look).</li>
+              <li><strong>New Extra Thinking Level:</strong> Choose <strong>Low</strong>, <strong>Medium</strong>, <strong>High</strong>, or <strong>Extra</strong> — <strong>Extra</strong> runs deeper parallel live web research and adds thoughtful extra touches and polish for standout results.</li>
+              <li><strong>Usage Limit Ring &amp; News-Style Cooldown Popup:</strong> Color-coded top-right usage ring tracked separately per provider with a quiet background 2–3 hour cooldown and a clean Usage Limit popup offering instant <strong>Change API Key →</strong> refresh back to 0%.</li>
             </ul>
           </div>
           <div class="site-news-note-box">
             <h3>🔧 What Has Been Fixed</h3>
             <ul>
-              <li><strong>Stopped Old <code>gemini-2.5-pro</code> Errors:</strong> Automatically sanitizes saved settings on load, skips retired 1.x/2.x model IDs at runtime, and cleanly fails over across all 4 providers if an endpoint rejects a model.</li>
-              <li><strong>Fixed Long Masked API Key Overflow:</strong> Shortened masked keys to compact pills (<code>AQ.A••••••AQkA</code>) and removed oversized logo key cards so nothing clips horizontally.</li>
-              <li><strong>Fixed Claude &amp; OpenRouter Tool Choice Conflicts:</strong> Resolved forced <code>tool_choice</code> + extended thinking HTTP 400 errors so multi-step tasks never abort mid-work.</li>
+              <li><strong>Fixed Slow Chat &amp; Mid-Reply Cutoffs:</strong> Fixed the streaming timer bug that cut replies mid-sentence, enabled IPv4-first networking, removed forced 2.6s web-search waits on simple chats, and enabled explicit <code>MINIMAL</code> thinking on Flash-Lite &amp; Flash Low.</li>
+              <li><strong>Faster Work Mode on Flash-Lite &amp; Flash:</strong> Fast models now run direct non-streaming tool calls, skip heavy 2.4s OCR scans on non-GUI and fast steps, auto-focus target apps with immediate cursor movement, and unlock Roblox Creator Store MCP tools.</li>
+              <li><strong>Fixed Quota Burn &amp; OpenRouter Validation:</strong> Eliminated 16× nested retry burn and duplicate parallel calls on the same model, fixed OpenRouter rejecting pasted keys as model IDs, and updated Windows Setup &amp; <code>SHA256SUMS.txt</code> for v1.0.7.</li>
             </ul>
           </div>
         </div>
@@ -3422,24 +3905,38 @@ Local MCP Bridge:
     <section class="section">
       <div class="container">
         <div class="final-cta-card" data-reveal>
-          <span class="section-eyebrow">Ready For Windows 10 &amp; 11</span>
-          <h2>Download Brief and watch it work end-to-end.</h2>
+          <span class="section-eyebrow">Windows · Linux (X11) · Android (No Root)</span>
+          <h2>Download Brief for your PC or Android phone.</h2>
           <p>
-            Start with the real native Windows Setup Wizard (<code>Brief-Setup.exe</code>) or inspect the full source repository directly on GitHub.
+            Grab <code>Brief-Setup.exe</code> on Windows, <code>Brief-Linux-x64.deb</code> / <code>.AppImage</code> on Linux, or <code>Brief-Android.apk</code> on Android straight from GitHub Releases.
           </p>
           <div class="hero-cta-row" style="justify-content: center; margin-bottom: 0;">
             <a class="btn-dl-hero" id="bottom-download-exe" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
-              <span class="btn-dl-icon" aria-hidden="true">⬇</span>
+              <span class="btn-dl-icon" aria-hidden="true">🪟</span>
               <span class="btn-dl-copy">
-                <span class="btn-dl-title">Download Brief-Setup.exe</span>
+                <span class="btn-dl-title">Windows Setup (.exe)</span>
                 <span class="btn-dl-sub">Windows 10 / 11 (64-bit) Installer</span>
+              </span>
+            </a>
+            <a class="btn-dl-zip" id="bottom-download-linux" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb" download="Brief-Linux-x64.deb">
+              <span style="font-size: 20px;" aria-hidden="true">🐧</span>
+              <span class="btn-dl-copy">
+                <span class="btn-dl-title" style="font-size: 14.5px;">Linux (.deb)</span>
+                <span class="btn-dl-sub" style="color: var(--text-muted);">X11 Desktop · x64</span>
+              </span>
+            </a>
+            <a class="btn-dl-zip" id="bottom-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="border-color: rgba(52, 211, 153, 0.45);">
+              <span style="font-size: 20px;" aria-hidden="true">📱</span>
+              <span class="btn-dl-copy">
+                <span class="btn-dl-title" style="font-size: 14.5px;">Android APK</span>
+                <span class="btn-dl-sub" style="color: #6ee7b7;">Samsung &amp; Android · No Root</span>
               </span>
             </a>
             <a class="btn-dl-zip" href="https://github.com/albrhe1466-dotcom/Brief/releases" target="_blank" rel="noopener">
               <span style="font-size: 18px;" aria-hidden="true">🗂</span>
               <span class="btn-dl-copy">
-                <span class="btn-dl-title" style="font-size: 14.5px;">Browse All GitHub Releases</span>
-                <span class="btn-dl-sub" style="color: var(--text-muted);">Checksums, source zip &amp; build logs</span>
+                <span class="btn-dl-title" style="font-size: 14.5px;">All Releases</span>
+                <span class="btn-dl-sub" style="color: var(--text-muted);">Checksums &amp; .AppImage</span>
               </span>
             </a>
           </div>
@@ -3473,6 +3970,17 @@ Local MCP Bridge:
     </div>
   </footer>
 
+  <div class="mobile-sticky-cta" id="mobile-sticky-cta">
+    <div class="mobile-sticky-info">
+      <img src="assets/icon.png" alt="Brief">
+      <div style="min-width:0;">
+        <div class="mobile-sticky-title" id="mobile-sticky-title">Brief for Android</div>
+        <div class="mobile-sticky-sub" id="mobile-sticky-sub">Zero Root · Live Cursors · APK</div>
+      </div>
+    </div>
+    <a class="mobile-sticky-btn" id="mobile-sticky-btn" data-os="android" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk">Download APK</a>
+  </div>
+
   <div class="site-lightbox" id="site-lightbox" role="dialog" aria-modal="true" aria-label="Zoomed Screenshot">
     <button class="site-lightbox-close" id="site-lightbox-close" type="button" aria-label="Close zoomed screenshot">✕</button>
     <img id="site-lightbox-img" src="" alt="Zoomed Brief Screenshot">
@@ -3489,6 +3997,10 @@ Local MCP Bridge:
       const GITHUB_RELEASE_API = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
       const GITHUB_LATEST_EXE = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Setup.exe';
       const GITHUB_LATEST_ZIP = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/brief-package.zip';
+      const GITHUB_LATEST_LINUX_DEB = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-x64.deb';
+      const GITHUB_LATEST_LINUX_APPIMAGE = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-x64.AppImage';
+      const GITHUB_LATEST_LINUX_TAR = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-x64.tar.gz';
+      const GITHUB_LATEST_APK = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Android.apk';
 
       const TOOLS_CATALOG = [
         {
@@ -3821,8 +4333,8 @@ Local MCP Bridge:
             { name: 'Gemini 3.5 Flash-Lite', hint: 'Fastest' },
             { name: 'Gemini 3.8 Flash', hint: 'Balanced' },
             { name: 'Gemini 4 Hydrogen', hint: 'Balanced' },
-            { name: 'Gemini 4 Argon', hint: 'Strong' },
-            { name: 'Gemini 4 Carbon', hint: 'Challenger' }
+            { name: 'Gemini 4 Neon', hint: 'Strong' },
+            { name: 'Gemini 4 Argon', hint: 'Flagship' }
           ]
         },
         openai: {
@@ -3837,7 +4349,7 @@ Local MCP Bridge:
             { name: 'GPT-6 Luna', hint: 'Fastest' },
             { name: 'GPT-6.1 Terra', hint: 'Balanced' },
             { name: 'GPT-6 Sol', hint: 'Strong' },
-            { name: 'GPT-6 Astra', hint: 'Challenger' }
+            { name: 'GPT-6.2 Astra', hint: 'Flagship' }
           ]
         },
         claude: {
@@ -3864,7 +4376,7 @@ Local MCP Bridge:
           badgeClass: 'pipeline-badge badge-violet',
           summary: 'Unlocks all active flagship models across Google Gemini, OpenAI, and Anthropic Claude behind one OpenRouter key with tri-color border styling.',
           models: [
-            { name: 'Gemini (5 Models + Challenger Carbon)', hint: 'Google' },
+            { name: 'Gemini (5 Models: Neon & Argon)', hint: 'Google' },
             { name: 'ChatGPT (GPT-6 Luna, Terra, Sol, Astra)', hint: 'OpenAI' },
             { name: 'Claude (Haiku/Sonnet/Opus 5.5, Fable 5.2)', hint: 'Anthropic' },
             { name: 'All 13 Live Models Combined', hint: 'OpenRouter' }
@@ -4238,7 +4750,7 @@ Local MCP Bridge:
           window.requestAnimationFrame(tick);
         }
 
-        if (typeof window.IntersectionObserver !== 'function' || prefersReducedMotion()) {
+        if (typeof window.IntersectionObserver !== 'function' || prefersReducedMotion() || window.innerWidth <= 780) {
           revealNodes.forEach(function (n) {
             n.classList.add('is-visible');
             n.querySelectorAll('[data-count-target]').forEach(animateNumericCounter);
@@ -4256,11 +4768,20 @@ Local MCP Bridge:
             }
             io.unobserve(entry.target);
           });
-        }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+        }, { threshold: 0.01, rootMargin: '100px 0px 100px 0px' });
 
         revealNodes.forEach(function (node) {
           io.observe(node);
         });
+
+        window.setTimeout(function () {
+          revealNodes.forEach(function (n) {
+            const rect = n.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 1.4) {
+              n.classList.add('is-visible');
+            }
+          });
+        }, 350);
       }
 
       /* =======================================================================
@@ -4819,21 +5340,122 @@ Local MCP Bridge:
       /* =======================================================================
          MODULE 12: DUAL-MODE DOWNLOAD & RELEASE INTEGRITY RESOLVER
       ======================================================================= */
+      function initPlatformTabsAndPhoneStage() {
+        const osTabs = Array.prototype.slice.call(document.querySelectorAll('[data-os-tab]'));
+        const panels = {
+          windows: byId('os-panel-windows'),
+          linux: byId('os-panel-linux'),
+          android: byId('os-panel-android')
+        };
+        const pillEl = byId('hero-platform-pill');
+        const desktopWrap = byId('hero-desktop-stage-wrap');
+        const phoneWrap = byId('hero-phone-stage-wrap');
+        const stageBtnDesktop = byId('stage-btn-desktop');
+        const stageBtnPhone = byId('stage-btn-phone');
+        const navCta = byId('nav-download-cta');
+        const mobileBtn = byId('mobile-sticky-btn');
+        const mobileTitle = byId('mobile-sticky-title');
+        const mobileSub = byId('mobile-sticky-sub');
+
+        function setStageView(mode) {
+          const isPhone = mode === 'phone';
+          if (desktopWrap) desktopWrap.style.display = isPhone ? 'none' : 'block';
+          if (phoneWrap) phoneWrap.classList.toggle('is-active', isPhone);
+          if (stageBtnDesktop) stageBtnDesktop.classList.toggle('is-active', !isPhone);
+          if (stageBtnPhone) stageBtnPhone.classList.toggle('is-active', isPhone);
+        }
+
+        if (stageBtnDesktop) stageBtnDesktop.addEventListener('click', function () { setStageView('desktop'); });
+        if (stageBtnPhone) stageBtnPhone.addEventListener('click', function () { setStageView('phone'); });
+
+        function selectOs(osName) {
+          const activeOs = panels[osName] ? osName : 'windows';
+          osTabs.forEach(function (btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-os-tab') === activeOs);
+          });
+          Object.keys(panels).forEach(function (k) {
+            if (panels[k]) panels[k].classList.toggle('is-active', k === activeOs);
+          });
+          if (activeOs === 'android') {
+            if (pillEl) pillEl.textContent = 'Android 8+ & Samsung · No Root · Live Floating Cursors';
+            setStageView('phone');
+            if (navCta) {
+              navCta.setAttribute('href', byId('hero-download-apk') ? byId('hero-download-apk').getAttribute('href') : GITHUB_LATEST_APK);
+              navCta.setAttribute('download', 'Brief-Android.apk');
+            }
+            if (mobileBtn) {
+              mobileBtn.setAttribute('data-os', 'android');
+              mobileBtn.textContent = 'Download APK';
+              mobileBtn.setAttribute('href', byId('hero-download-apk') ? byId('hero-download-apk').getAttribute('href') : GITHUB_LATEST_APK);
+              mobileBtn.setAttribute('download', 'Brief-Android.apk');
+            }
+            if (mobileTitle) mobileTitle.textContent = 'Brief for Android';
+            if (mobileSub) mobileSub.textContent = 'Zero Root · Research & Cursors';
+          } else if (activeOs === 'linux') {
+            if (pillEl) pillEl.textContent = 'Linux (x64 X11 / Xorg) · .deb, .AppImage & .tar.gz';
+            setStageView('desktop');
+            if (navCta) {
+              navCta.setAttribute('href', byId('hero-download-linux-deb') ? byId('hero-download-linux-deb').getAttribute('href') : GITHUB_LATEST_LINUX_DEB);
+              navCta.setAttribute('download', 'Brief-Linux-x64.deb');
+            }
+            if (mobileBtn) {
+              mobileBtn.setAttribute('data-os', 'linux');
+              mobileBtn.textContent = 'Linux (.deb)';
+              mobileBtn.setAttribute('href', byId('hero-download-linux-deb') ? byId('hero-download-linux-deb').getAttribute('href') : GITHUB_LATEST_LINUX_DEB);
+              mobileBtn.setAttribute('download', 'Brief-Linux-x64.deb');
+            }
+            if (mobileTitle) mobileTitle.textContent = 'Brief for Linux';
+            if (mobileSub) mobileSub.textContent = 'X11 Desktop · xdotool + Cursors';
+          } else {
+            if (pillEl) pillEl.textContent = 'Windows 10 & 11 (64-bit) · Native Setup Wizard';
+            setStageView('desktop');
+            if (navCta) {
+              navCta.setAttribute('href', byId('hero-download-exe') ? byId('hero-download-exe').getAttribute('href') : GITHUB_LATEST_EXE);
+              navCta.setAttribute('download', 'Brief-Setup.exe');
+            }
+            if (mobileBtn) {
+              mobileBtn.setAttribute('data-os', 'windows');
+              mobileBtn.textContent = 'Windows (.exe)';
+              mobileBtn.setAttribute('href', byId('hero-download-exe') ? byId('hero-download-exe').getAttribute('href') : GITHUB_LATEST_EXE);
+              mobileBtn.setAttribute('download', 'Brief-Setup.exe');
+            }
+            if (mobileTitle) mobileTitle.textContent = 'Brief for Windows';
+            if (mobileSub) mobileSub.textContent = 'Setup Wizard · v1.0.7';
+          }
+        }
+
+        osTabs.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            selectOs(btn.getAttribute('data-os-tab'));
+          });
+        });
+
+        const ua = (navigator.userAgent || '').toLowerCase();
+        if (ua.indexOf('android') !== -1) selectOs('android');
+        else if (ua.indexOf('linux') !== -1) selectOs('linux');
+        else selectOs('windows');
+      }
+
       function initReleaseResolver() {
         const exeLinks = [
-          byId('nav-download-cta'),
           byId('hero-download-exe'),
           byId('bottom-download-exe')
         ].filter(Boolean);
         const zipLink = byId('hero-download-zip');
+        const apkLinks = [byId('hero-download-apk'), byId('bottom-download-apk')].filter(Boolean);
+        const debLinks = [byId('hero-download-linux-deb'), byId('bottom-download-linux')].filter(Boolean);
+        const appImgLink = byId('hero-download-linux-appimage');
+        const tarLink = byId('hero-download-linux-tar');
         const navVerEl = byId('nav-version-chip');
         const heroVerEl = byId('hero-release-tag');
         const heroSourceEl = byId('hero-source-mode');
         const heroExeMetaEl = byId('hero-exe-meta');
         const heroZipMetaEl = byId('hero-zip-meta');
+        const heroApkMetaEl = byId('hero-apk-meta');
         const heroShaShortEl = byId('hero-sha-short');
         const specExeSizeEl = byId('spec-exe-size');
         const specZipSizeEl = byId('spec-zip-size');
+        const specApkSizeEl = byId('spec-apk-size');
         const specShaEl = byId('spec-exe-sha');
         const copyShaBtn = byId('hero-copy-sha-btn');
         const copyVerifyBtn = byId('copy-verify-cmd-btn');
@@ -4842,15 +5464,31 @@ Local MCP Bridge:
 
         let latestExeSha256 = '';
 
-        function applyDownloadTargets(exeUrl, zipUrl, sourceLabel) {
+        function applyDownloadTargets(urls, sourceLabel) {
           exeLinks.forEach(function (el) {
-            el.setAttribute('href', exeUrl);
+            el.setAttribute('href', urls.exe || GITHUB_LATEST_EXE);
             el.setAttribute('download', 'Brief-Setup.exe');
           });
           if (zipLink) {
-            zipLink.setAttribute('href', zipUrl);
+            zipLink.setAttribute('href', urls.zip || GITHUB_LATEST_ZIP);
             zipLink.setAttribute('download', 'Brief-Portable-Windows.zip');
           }
+          debLinks.forEach(function (el) {
+            el.setAttribute('href', urls.deb || GITHUB_LATEST_LINUX_DEB);
+            el.setAttribute('download', 'Brief-Linux-x64.deb');
+          });
+          if (appImgLink) {
+            appImgLink.setAttribute('href', urls.appimage || GITHUB_LATEST_LINUX_APPIMAGE);
+            appImgLink.setAttribute('download', 'Brief-Linux-x64.AppImage');
+          }
+          if (tarLink) {
+            tarLink.setAttribute('href', urls.tar || GITHUB_LATEST_LINUX_TAR);
+            tarLink.setAttribute('download', 'Brief-Linux-x64.tar.gz');
+          }
+          apkLinks.forEach(function (el) {
+            el.setAttribute('href', urls.apk || GITHUB_LATEST_APK);
+            el.setAttribute('download', 'Brief-Android.apk');
+          });
           if (heroSourceEl && sourceLabel) {
             heroSourceEl.textContent = sourceLabel;
           }
@@ -4872,6 +5510,11 @@ Local MCP Bridge:
             if (heroZipMetaEl) heroZipMetaEl.textContent = 'Complete Windows App · ' + zipHuman;
             if (specZipSizeEl) specZipSizeEl.textContent = zipHuman;
           }
+          if (opts.apkBytes) {
+            const apkHuman = formatBytesHuman(opts.apkBytes);
+            if (heroApkMetaEl) heroApkMetaEl.textContent = 'Samsung & Android 8+ · ' + apkHuman;
+            if (specApkSizeEl) specApkSizeEl.textContent = apkHuman + ' · Zero Root';
+          }
           if (opts.exeSha) {
             latestExeSha256 = String(opts.exeSha);
             if (heroShaShortEl) heroShaShortEl.textContent = latestExeSha256.slice(0, 14) + '…';
@@ -4882,7 +5525,7 @@ Local MCP Bridge:
         }
 
         function loadFromGitHubReleases() {
-          applyDownloadTargets(GITHUB_LATEST_EXE, GITHUB_LATEST_ZIP, 'GitHub Releases');
+          applyDownloadTargets({}, 'GitHub Releases');
           fetch(GITHUB_RELEASE_API)
             .then(function (resp) {
               if (!resp.ok) throw new Error('GitHub API status ' + resp.status);
@@ -4890,29 +5533,34 @@ Local MCP Bridge:
             })
             .then(function (release) {
               const assets = Array.isArray(release.assets) ? release.assets : [];
-              let exeAsset = null;
-              let zipAsset = null;
-              assets.forEach(function (asset) {
-                if (asset.name === 'Brief-Setup.exe') exeAsset = asset;
-                else if (asset.name === 'brief-package.zip') zipAsset = asset;
-              });
+              const find = function (name) { return assets.find(function (a) { return a.name === name; }) || null; };
+              const exeAsset = find('Brief-Setup.exe');
+              const zipAsset = find('brief-package.zip');
+              const apkAsset = find('Brief-Android.apk');
+              const debAsset = find('Brief-Linux-x64.deb');
+              const appImgAsset = find('Brief-Linux-x64.AppImage');
+              const tarAsset = find('Brief-Linux-x64.tar.gz');
 
-              applyDownloadTargets(
-                (exeAsset && exeAsset.browser_download_url) || GITHUB_LATEST_EXE,
-                (zipAsset && zipAsset.browser_download_url) || GITHUB_LATEST_ZIP,
-                'GitHub Releases'
-              );
+              applyDownloadTargets({
+                exe: exeAsset && exeAsset.browser_download_url,
+                zip: zipAsset && zipAsset.browser_download_url,
+                apk: apkAsset && apkAsset.browser_download_url,
+                deb: debAsset && debAsset.browser_download_url,
+                appimage: appImgAsset && appImgAsset.browser_download_url,
+                tar: tarAsset && tarAsset.browser_download_url
+              }, 'GitHub Releases');
 
               const rawDigest = exeAsset && exeAsset.digest ? String(exeAsset.digest).replace(/^sha256:/i, '') : '';
               applyReleaseMetrics({
-                version: release.tag_name || '1.0.5',
+                version: release.tag_name || '1.0.7',
                 exeBytes: exeAsset ? exeAsset.size : 0,
                 zipBytes: zipAsset ? zipAsset.size : 0,
+                apkBytes: apkAsset ? apkAsset.size : 0,
                 exeSha: rawDigest
               });
             })
             .catch(function () {
-              applyReleaseMetrics({ version: '1.0.5' });
+              applyReleaseMetrics({ version: '1.0.7' });
             });
         }
 
@@ -4932,18 +5580,26 @@ Local MCP Bridge:
               if (!info || !info.installer || !info.installer.exists) {
                 throw new Error('Local installer binary not active');
               }
-              applyDownloadTargets('/download/Brief-Setup.exe', '/download/brief-package.zip', 'Local Download Server');
+              applyDownloadTargets({
+                exe: '/download/Brief-Setup.exe',
+                zip: '/download/brief-package.zip',
+                apk: info.android && info.android.exists ? '/download/Brief-Android.apk' : GITHUB_LATEST_APK,
+                deb: info.linuxDeb && info.linuxDeb.exists ? '/download/Brief-Linux-x64.deb' : GITHUB_LATEST_LINUX_DEB,
+                appimage: info.linuxAppImage && info.linuxAppImage.exists ? '/download/Brief-Linux-x64.AppImage' : GITHUB_LATEST_LINUX_APPIMAGE,
+                tar: info.linuxTar && info.linuxTar.exists ? '/download/Brief-Linux-x64.tar.gz' : GITHUB_LATEST_LINUX_TAR
+              }, 'Local Download Server');
               applyReleaseMetrics({
-                version: info.version || '1.0.5',
+                version: info.version || '1.0.7',
                 exeBytes: info.installer.size,
                 zipBytes: info.archive && info.archive.exists ? info.archive.size : 0,
+                apkBytes: info.android && info.android.exists ? info.android.size : 0,
                 exeSha: info.installer.sha256 || ''
               });
             })
             .catch(loadFromGitHubReleases);
         }
 
-        exeLinks.forEach(function (linkEl) {
+        exeLinks.concat(apkLinks).concat(debLinks).forEach(function (linkEl) {
           linkEl.addEventListener('click', function () {
             if (toastEl) toastEl.classList.add('is-visible');
           });
@@ -5011,6 +5667,7 @@ Local MCP Bridge:
         initEngineeringTabs();
         initCursorMotionLab();
         initFaqAndDrawer();
+        initPlatformTabsAndPhoneStage();
         initReleaseResolver();
         initNewsSiteGallery();
       }

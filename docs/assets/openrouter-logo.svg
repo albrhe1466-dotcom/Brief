@@ -1,17 +1,7 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <defs>
-    <style>
-      .or-bg { fill: none; }
-      .or-path { fill: currentColor; }
-    </style>
-  </defs>
-  <!-- OpenRouter stylized icon: two connected nodes with arrow -->
-  <circle cx="20" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="8"/>
-  <circle cx="80" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="8"/>
-  <circle cx="80" cy="80" r="12" fill="none" stroke="currentColor" stroke-width="8"/>
-  <line x1="30" y1="45" x2="68" y2="25" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-  <line x1="30" y1="55" x2="68" y2="75" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-  <!-- arrowheads -->
-  <polygon points="68,19 80,20 68,27" fill="currentColor"/>
-  <polygon points="68,69 80,80 68,77" fill="currentColor"/>
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+  <!-- Bold geometric OpenRouter "OR" monogram -->
+  <path fill="currentColor" fill-rule="evenodd" d="
+    M 42 8 H 76 C 95 8 106 20 106 37 C 106 50 97 60 85 62 L 106 79 C 108 81 107 84 103 84 H 78 L 42 84 C 19 84 6 69 6 46 C 6 23 20 8 42 8 Z
+    M 42 23 A 23 23 0 1 0 42 69 A 23 23 0 1 0 42 23 Z
+  "/>
 </svg>

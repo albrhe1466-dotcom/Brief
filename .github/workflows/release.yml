@@ -1,4 +1,4 @@
-name: Build & Publish Brief Windows Release
+name: Build & Publish Brief Multi-Platform Release (Windows, Linux, Android)
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
       - 'src/**'
       - 'assets/**'
       - 'scripts/**'
+      - 'android/**'
       - '.github/workflows/release.yml'
   workflow_dispatch:
 
@@ -18,7 +19,7 @@ permissions:
   contents: write
 
 jobs:
-  build-windows-installer:
+  build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -38,25 +39,147 @@ jobs:
       - name: Build Brief Windows Setup & Archive
         env:
           BRIEF_DOWNLOAD_URL: https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip
+          BRIEF_CERT_PFX_BASE64: ${{ secrets.BRIEF_CERT_PFX_BASE64 }}
+          BRIEF_CERT_PASSWORD: ${{ secrets.BRIEF_CERT_PASSWORD }}
         run: node scripts/build-installer.js
 
-      - name: Publish to GitHub Release v1.0.5
+      - name: Optional Microsoft Trusted Signing
+        if: ${{ secrets.TRUSTED_SIGNING_ENDPOINT != '' && secrets.AZURE_CLIENT_ID != '' }}
+        uses: azure/trusted-signing-action@v0.5.9
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.TRUSTED_SIGNING_CERT_PROFILE }}
+          files-folder: download-site/public/downloads
+          files-folder-filter: Brief-Setup.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            download-site/public/downloads/Brief-Setup.exe
+            download-site/public/downloads/brief-package.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Linux packaging tools & dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev libfuse2
+          npm install --no-fund --no-audit
+          curl -fsSL -o /tmp/appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage || true
+          if [ -s /tmp/appimagetool ]; then chmod +x /tmp/appimagetool; fi
+
+      - name: Build Brief Linux packages (.tar.gz, .deb, .AppImage)
+        env:
+          APPIMAGETOOL: /tmp/appimagetool
+        run: node scripts/build-linux.js
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: |
+            download-site/public/downloads/Brief-Linux-x64.tar.gz
+            download-site/public/downloads/Brief-Linux-x64.deb
+            download-site/public/downloads/Brief-Linux-x64.AppImage
+          if-no-files-found: warn
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK Licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Prepare APK Signing Keystore
+        env:
+          BRIEF_KEYSTORE_BASE64: ${{ secrets.BRIEF_ANDROID_KEYSTORE_BASE64 }}
+          BRIEF_KEYSTORE_PASS: ${{ secrets.BRIEF_ANDROID_KEYSTORE_PASS }}
+          BRIEF_KEY_ALIAS: ${{ secrets.BRIEF_ANDROID_KEY_ALIAS }}
+        run: |
+          KS_PATH="/tmp/brief-release.jks"
+          KS_PASS="${BRIEF_KEYSTORE_PASS:-BriefAndroidRelease2026}"
+          KS_ALIAS="${BRIEF_KEY_ALIAS:-brief}"
+          if [ -n "$BRIEF_KEYSTORE_BASE64" ]; then
+            echo "$BRIEF_KEYSTORE_BASE64" | base64 -d > "$KS_PATH"
+          else
+            keytool -genkeypair -v -keystore "$KS_PATH" -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias "$KS_ALIAS" -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Brief Desktop,O=Brief,L=Local,ST=Local,C=US"
+          fi
+          echo "BRIEF_KEYSTORE_PATH=$KS_PATH" >> "$GITHUB_ENV"
+          echo "BRIEF_KEYSTORE_PASS=$KS_PASS" >> "$GITHUB_ENV"
+          echo "BRIEF_KEY_ALIAS=$KS_ALIAS" >> "$GITHUB_ENV"
+          echo "BRIEF_KEY_PASS=$KS_PASS" >> "$GITHUB_ENV"
+
+      - name: Build Signed Brief-Android.apk
+        run: |
+          gradle -p android assembleRelease --no-daemon
+          mkdir -p download-site/public/downloads
+          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
+
+      - name: Upload Android APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: download-site/public/downloads/Brief-Android.apk
+
+  publish-release:
+    needs: [build-windows, build-linux, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-dist
+          merge-multiple: true
+
+      - name: Generate unified SHA256SUMS.txt
+        run: |
+          cd release-dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publish to GitHub Release v1.0.7
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
         run: |
-          $tag = "v1.0.5"
-          gh release view $tag *> $null
-          if ($LASTEXITCODE -ne 0) {
-            gh release create $tag `
-              download-site/public/downloads/Brief-Setup.exe `
-              download-site/public/downloads/brief-package.zip `
-              --title "Brief $tag" `
-              --notes "Brief v1.0.5: Auto-Glasses click zoom & smart UIA center-snap across all 4 providers, eliminated stale gemini-2.5-pro config crashes, GPT-6 Sol & GPT-6 Astra OpenAI naming, always opens on Main Menu (New Chat), removed Custom Model ID box, and fixed API Key UI overflow." `
-              --latest
-          } else {
-            gh release upload $tag `
-              download-site/public/downloads/Brief-Setup.exe `
-              download-site/public/downloads/brief-package.zip `
-              --clobber
-          }
+          TAG="v1.0.7"
+          NOTES="Brief v1.0.7 Multi-Platform Release (Windows, Linux X11, and Android Zero-Root): includes Windows Setup Wizard (Brief-Setup.exe + brief-package.zip), Linux X11 packages (Brief-Linux-x64.AppImage, .deb, .tar.gz with custom SVG provider cursors), and Native Android APK (Brief-Android.apk — Samsung & Android 8+ with zero-root Accessibility phone control, MediaProjection screen vision, live research, and all 4 floating provider cursors)."
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-dist/* --repo "${{ github.repository }}" --clobber
+            gh release edit "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android)" --notes "$NOTES" --latest
+          else
+            gh release create "$TAG" release-dist/* --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android)" --notes "$NOTES" --latest
+          fi

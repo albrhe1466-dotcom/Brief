@@ -560,7 +560,19 @@ class LinuxBackend {
     if (dy) await this.x(['click', '--repeat', String(Math.abs(Math.round(dy))), '--delay', '20', dy > 0 ? '5' : '4']);
     if (dx) await this.x(['click', '--repeat', String(Math.abs(Math.round(dx))), '--delay', '20', dx > 0 ? '7' : '6']);
   }
-  type(text) { return this.x(['type', '--delay', '8', '--', String(text)], 120000); }
+  async type(text) {
+    const raw = String(text || '');
+    if (!raw) return;
+    const lines = raw.replace(/\r\n/g, '\n').split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i]) {
+        await this.x(['type', '--clearmodifiers', '--delay', '8', '--', lines[i]], 120000);
+      }
+      if (i < lines.length - 1) {
+        await this.x(['key', '--clearmodifiers', 'Return']);
+      }
+    }
+  }
   keys(combo) {
     const names = parseCombo(combo).map((n) => XDO_KEYS[n] || (/^f\d+$/.test(n) ? n.toUpperCase() : n));
     return this.x(['key', '--clearmodifiers', names.join('+')]);

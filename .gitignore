@@ -7,10 +7,14 @@ node_modules/
 .env
 .env.*
 
-# Large binaries (>100 MB GitHub git limit) — published via GitHub Releases
-download-site/public/downloads/*.zip
+# Large binaries & local built downloads (published via GitHub Releases)
+download-site/public/downloads/
 *.zip
 *.exe
+*.apk
+*.deb
+*.AppImage
+*.tar.gz
 
 # Legacy / unrelated workspace files (never push API keys or unused templates)
 /server.js
