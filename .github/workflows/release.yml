@@ -43,8 +43,21 @@ jobs:
           BRIEF_CERT_PASSWORD: ${{ secrets.BRIEF_CERT_PASSWORD }}
         run: node scripts/build-installer.js
 
+      - name: Check Microsoft Trusted Signing config
+        id: check-signing
+        env:
+          TS_ENDPOINT: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+          TS_CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+        shell: pwsh
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:TS_ENDPOINT) -and -not [string]::IsNullOrWhiteSpace($env:TS_CLIENT)) {
+            "enabled=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          } else {
+            "enabled=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
+
       - name: Optional Microsoft Trusted Signing
-        if: ${{ secrets.TRUSTED_SIGNING_ENDPOINT != '' && secrets.AZURE_CLIENT_ID != '' }}
+        if: steps.check-signing.outputs.enabled == 'true'
         uses: azure/trusted-signing-action@v0.5.9
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
