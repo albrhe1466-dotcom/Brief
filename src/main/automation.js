@@ -510,13 +510,28 @@ const XDO_KEYS = {
 };
 
 class LinuxBackend {
-  constructor(log) { this.name = 'Linux · xdotool (X11)'; this.log = log || (() => {}); this.dpi = 'pixels'; }
+  constructor(log) { this.name = 'Linux · xdotool (X11 / XWayland · All Distros & ARM64/x64)'; this.log = log || (() => {}); this.dpi = 'pixels'; }
   x(args, t) { return runFile('xdotool', args, t); }
+  detectDistroInstallCmd() {
+    try {
+      const osRel = fs.existsSync('/etc/os-release') ? fs.readFileSync('/etc/os-release', 'utf8').toLowerCase() : '';
+      if (/kali|raspbian|debian|ubuntu|mint|parrot|pop/.test(osRel)) return 'sudo apt update && sudo apt install -y xdotool';
+      if (/arch|manjaro|endeavouros/.test(osRel)) return 'sudo pacman -S --noconfirm xdotool';
+      if (/fedora|rhel|centos|rocky|alma/.test(osRel)) return 'sudo dnf install -y xdotool';
+      if (/suse/.test(osRel)) return 'sudo zypper install -y xdotool';
+      if (/alpine/.test(osRel)) return 'sudo apk add xdotool';
+    } catch (_) { /* ignore */ }
+    return 'sudo apt install -y xdotool';
+  }
   async init() {
-    if ((process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'wayland') {
-      throw new Error('Wayland session detected. Wayland does not allow apps to synthesize global mouse/keyboard input. Log in with an "X11 / Xorg" session to enable computer control.');
+    const installCmd = this.detectDistroInstallCmd();
+    await this.x(['version']).catch(() => {
+      throw new Error('xdotool is not installed. Install it on your Linux distro (Kali, Raspberry Pi OS, Ubuntu, Debian, Arch, Fedora) with: ' + installCmd);
+    });
+    const isWayland = (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'wayland';
+    if (isWayland && !process.env.DISPLAY) {
+      throw new Error('Pure Wayland session without XWayland DISPLAY detected. Switch to an "X11 / Xorg" session (or enable XWayland) on your login screen to allow global mouse/keyboard control.');
     }
-    await this.x(['version']).catch(() => { throw new Error('xdotool is not installed. Install it with: sudo apt install xdotool'); });
     return { ok: true, dpi: 'pixels' };
   }
   async position() {

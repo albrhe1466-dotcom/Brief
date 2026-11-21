@@ -124,8 +124,8 @@ class ScreenCaptureService : Service() {
                 img = reader.acquireLatestImage()
             }
             if (img == null) return null
-            img.use { frame ->
-                val plane = frame.planes[0]
+            try {
+                val plane = img.planes[0]
                 val buffer = plane.buffer
                 val pixelStride = plane.pixelStride
                 val rowStride = plane.rowStride
@@ -145,6 +145,8 @@ class ScreenCaptureService : Service() {
                 cropped.compress(Bitmap.CompressFormat.JPEG, 82, baos)
                 cropped.recycle()
                 Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+            } finally {
+                try { img.close() } catch (_: Exception) {}
             }
         } catch (_: Exception) {
             null

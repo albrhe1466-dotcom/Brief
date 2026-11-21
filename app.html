@@ -6010,27 +6010,27 @@
         </div>
 
         <div class="news-gallery-grid" id="whats-new-gallery">
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-themes.png" data-news-caption="Brief v1.0.7 Native Provider Themes &amp; Real Fonts — Google Sans Gemini, Pitch-Black OpenAI Sans, Warm Charcoal Claude with Orange Send Key &amp; Classic OpenRouter">
-            <img class="news-photo-thumb" src="assets/news-v107-themes.png" alt="Brief v1.0.7 Native Provider Themes and Real Fonts">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v200-android.png" data-news-caption="Brief v2.0.0 for All Android Phones (Samsung Galaxy One UI, Google Pixel, LG, Infinix, Oppo, Vivo, Xiaomi) — Zero Root, Live Floating Cursors &amp; Phone Control">
+            <img class="news-photo-thumb" src="assets/news-v200-android.png" alt="Brief v2.0.0 on Android Phones (Samsung, Pixel, LG, Infinix, Oppo, Vivo)">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Native Themes &amp; Real Fonts</div>
-              <div class="news-photo-sub">Google Sans Gemini with blue radial glow, pitch-black OpenAI Sans, warm charcoal Claude with orange Send key &amp; starburst, and classic OpenRouter.</div>
+              <div class="news-photo-title">All Android Phones (Zero Root)</div>
+              <div class="news-photo-sub">Works on Samsung One UI, Pixel, LG, Infinix, Oppo, Vivo &amp; Xiaomi with floating provider cursors and Accessibility touch control.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-extra.png" data-news-caption="Brief v1.0.7 New Extra Thinking Level (Extra Web Research + Extra Touches) &amp; Ultra-Fast Flash-Lite / Flash Chat &amp; Work Mode">
-            <img class="news-photo-thumb" src="assets/news-v107-extra.png" alt="Brief v1.0.7 Extra Thinking Level and Fast Flash Work Mode">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v200-linux.png" data-news-caption="Brief v2.0.0 for All Linux Computers — Kali Linux, Raspberry Pi OS (ARM64), Ubuntu, Debian, Linux Mint, Arch &amp; Fedora (.deb x64/arm64, .AppImage, .tar.gz)">
+            <img class="news-photo-thumb" src="assets/news-v200-linux.png" alt="Brief v2.0.0 on All Linux Distros (Kali, Raspberry Pi, Ubuntu, Arch)">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Extra Thinking &amp; Fast Flash</div>
-              <div class="news-photo-sub">New Extra level runs deep parallel web research + extra polish, while Flash-Lite &amp; Flash answer fast with zero mid-reply cutoffs.</div>
+              <div class="news-photo-title">All Linux (Kali · Raspberry Pi · Ubuntu)</div>
+              <div class="news-photo-sub">Native x64 &amp; ARM64 packages (.deb, .AppImage, .tar.gz) for Kali Linux, Raspberry Pi 4/5, Ubuntu, Debian &amp; Arch with custom cursors.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-usage.png" data-news-caption="Brief v1.0.7 Per-Company Usage Limit Ring, Silent 2h/3h Cooldown &amp; Native Windows Setup v1.0.7">
-            <img class="news-photo-thumb" src="assets/news-v107-usage.png" alt="Brief v1.0.7 Usage Limit Ring and 2-3 Hour Cooldown Notice">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-themes.png" data-news-caption="Brief v2.0.0 Native Provider Themes, New Cursors (Zero Particles) &amp; Real Fonts — Gemini, OpenAI, Claude &amp; OpenRouter">
+            <img class="news-photo-thumb" src="assets/news-v107-themes.png" alt="Brief v2.0.0 Native Provider Themes and Cursors">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Usage Ring &amp; Setup v2.0.0</div>
-              <div class="news-photo-sub">Per-company usage ring (0–100%), silent 2h/3h cooldown notice, instant API-key refresh, and verified Windows/Linux/Android releases for v2.0.0.</div>
+              <div class="news-photo-title">New Cursors &amp; Provider Themes</div>
+              <div class="news-photo-sub">Particle-free Gemini, Claude &amp; OpenRouter cursors, white OR emblem, Google Sans, OpenAI Sans &amp; Claude serif themes.</div>
             </div>
           </button>
         </div>
@@ -10333,6 +10333,21 @@
       function openWhatsNewModal() {
         openModal('modal-whats-new');
       }
+
+      async function checkGlobalNewsFeed() {
+        try {
+          const resp = await fetch('https://albrhe1466-dotcom.github.io/Brief/news.json', { cache: 'no-store' });
+          if (!resp.ok) return;
+          const feed = await resp.json();
+          if (feed && feed.version && String(feed.version) !== String((State.settings && State.settings.seenNewsVersion) || '')) {
+            const seenLocal = localStorage.getItem('brief_seen_news_version');
+            if (seenLocal !== String(feed.version)) {
+              openWhatsNewModal();
+            }
+          }
+        } catch (_) { /* offline or sandboxed */ }
+      }
+      setTimeout(checkGlobalNewsFeed, 2400);
 
       function openModal(id) {
         State.ui.activeModal = id;

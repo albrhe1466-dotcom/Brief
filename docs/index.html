@@ -2773,35 +2773,59 @@
             <button class="os-tab-btn" id="os-tab-android" type="button" data-os-tab="android">📱 Android</button>
           </div>
 
-          <!-- Windows Downloads -->
+          <!-- Windows + All-Platforms Quick Downloads -->
           <div class="os-cta-panel is-active" id="os-panel-windows">
             <div class="hero-cta-row">
               <a class="btn-dl-hero" id="hero-download-exe" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe" download="Brief-Setup.exe">
-                <span class="btn-dl-icon" aria-hidden="true">⬇</span>
+                <span class="btn-dl-icon" aria-hidden="true">🪟</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title">Download Brief Setup (.exe)</span>
-                  <span class="btn-dl-sub" id="hero-exe-meta">Real Windows Setup Wizard · ~85 KB</span>
+                  <span class="btn-dl-title">Download Windows (.exe)</span>
+                  <span class="btn-dl-sub" id="hero-exe-meta">Windows 10/11 Setup Wizard · v2.0.0</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-hero" id="hero-quick-linux-deb" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb" download="Brief-Linux-x64.deb" style="background: linear-gradient(135deg, #ea580c, #c2410c); border-color: rgba(253, 186, 116, 0.55); box-shadow: 0 12px 30px rgba(234, 88, 12, 0.35);">
+                <span class="btn-dl-icon" aria-hidden="true">🐧</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title">Download Linux (.deb)</span>
+                  <span class="btn-dl-sub">Ubuntu · Kali · Debian · Mint (x64)</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-hero" id="hero-quick-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55); box-shadow: 0 12px 30px rgba(5, 150, 105, 0.35);">
+                <span class="btn-dl-icon" aria-hidden="true">📱</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title">Download Android (.apk)</span>
+                  <span class="btn-dl-sub">Samsung · Pixel · LG · Infinix · Oppo · Vivo</span>
                 </span>
               </a>
 
               <a class="btn-dl-zip" id="hero-download-zip" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip" download="Brief-Portable-Windows.zip">
                 <span style="font-size: 20px;" aria-hidden="true">📦</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title" style="font-size: 14.5px;">Portable Bundle (.zip)</span>
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Windows Portable (.zip)</span>
                   <span class="btn-dl-sub" id="hero-zip-meta" style="color: var(--text-muted);">Complete Windows App · ~167 MB</span>
                 </span>
               </a>
             </div>
           </div>
 
-          <!-- Linux Downloads -->
+          <!-- Linux Downloads (Ubuntu, Kali, Raspberry Pi ARM64, Debian, Arch, Fedora) -->
           <div class="os-cta-panel" id="os-panel-linux">
             <div class="hero-cta-row">
               <a class="btn-dl-hero" id="hero-download-linux-deb" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb" download="Brief-Linux-x64.deb" style="background: linear-gradient(135deg, #ea580c, #c2410c); border-color: rgba(253, 186, 116, 0.55);">
                 <span class="btn-dl-icon" aria-hidden="true">🐧</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title">Download Linux (.deb)</span>
-                  <span class="btn-dl-sub" id="hero-linux-deb-meta">Ubuntu / Debian / Mint (X11 + xdotool)</span>
+                  <span class="btn-dl-title">Linux x64 (.deb)</span>
+                  <span class="btn-dl-sub" id="hero-linux-deb-meta">Kali Linux · Ubuntu · Debian · Mint</span>
+                </span>
+              </a>
+
+              <a class="btn-dl-hero" id="hero-download-linux-arm64-deb" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.deb" download="Brief-Linux-arm64.deb" style="background: linear-gradient(135deg, #d97706, #b45309); border-color: rgba(253, 230, 138, 0.55);">
+                <span class="btn-dl-icon" aria-hidden="true">🍓</span>
+                <span class="btn-dl-copy">
+                  <span class="btn-dl-title">Raspberry Pi / ARM64 (.deb)</span>
+                  <span class="btn-dl-sub">Raspberry Pi OS 64-bit · Kali ARM64</span>
                 </span>
               </a>
 
@@ -2809,7 +2833,7 @@
                 <span style="font-size: 20px;" aria-hidden="true">📦</span>
                 <span class="btn-dl-copy">
                   <span class="btn-dl-title" style="font-size: 14.5px;">Universal .AppImage</span>
-                  <span class="btn-dl-sub" id="hero-linux-appimage-meta" style="color: var(--text-muted);">Arch / Fedora / Any Linux X11</span>
+                  <span class="btn-dl-sub" id="hero-linux-appimage-meta" style="color: var(--text-muted);">Arch · Fedora · Kali · Any Linux</span>
                 </span>
               </a>
 
@@ -2823,21 +2847,21 @@
             </div>
           </div>
 
-          <!-- Android Phone Downloads -->
+          <!-- Android Phone Downloads (Samsung, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi, All Android) -->
           <div class="os-cta-panel" id="os-panel-android">
             <div class="hero-cta-row">
               <a class="btn-dl-hero" id="hero-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55);">
                 <span class="btn-dl-icon" aria-hidden="true">📱</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title">Download Android APK</span>
-                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung &amp; Android 8+ · Zero Root · Live Cursors</span>
+                  <span class="btn-dl-title">Download Android APK (v2.0.0)</span>
+                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung · Pixel · LG · Infinix · Oppo · Vivo · No Root</span>
                 </span>
               </a>
 
-              <a class="btn-dl-zip" href="#requirements">
+              <a class="btn-dl-zip" href="#whats-new">
                 <span style="font-size: 20px;" aria-hidden="true">🛡️</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title" style="font-size: 14.5px;">Zero-Root Phone Setup</span>
+                  <span class="btn-dl-title" style="font-size: 14.5px;">All-Android Zero-Root Guide</span>
                   <span class="btn-dl-sub" style="color: var(--text-muted);">Overlay Cursor + Accessibility + Vision</span>
                 </span>
               </a>
@@ -3850,30 +3874,30 @@ Local MCP Bridge:
         </div>
 
         <div class="site-news-grid" data-reveal>
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-themes.png" data-zoom-caption="Brief v1.0.7 Native Provider Themes &amp; Real Fonts — Google Sans Gemini, Pitch-Black OpenAI Sans, Warm Charcoal Claude &amp; Classic OpenRouter">
-            <img class="site-news-shot" src="assets/news-v107-themes.png" alt="Screenshot of Brief v1.0.7 Native Provider Themes and Model Selector">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v200-android.png" data-zoom-caption="Brief v2.0.0 for All Android Phones (Samsung Galaxy One UI, Google Pixel, LG, Infinix, Oppo, Vivo, Xiaomi) — Zero Root, Live Floating Cursors &amp; Phone Control">
+            <img class="site-news-shot" src="assets/news-v200-android.png" alt="Screenshot of Brief v2.0.0 on Android Phones (Samsung, Pixel, LG, Infinix, Oppo, Vivo)">
             <div class="site-news-body">
-              <span class="site-news-tag">Native Themes &amp; Fonts</span>
+              <span class="site-news-tag">All Android · Zero Root</span>
+              <div class="site-news-title">Samsung, Pixel, LG, Infinix, Oppo &amp; Vivo</div>
+              <div class="site-news-desc">Native Brief-Android.apk with floating Gemini, Claude, OpenAI &amp; OpenRouter cursors, Accessibility touch/swipe control, and tailored OEM guides.</div>
+            </div>
+          </button>
+
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v200-linux.png" data-zoom-caption="Brief v2.0.0 for All Linux Computers — Kali Linux, Raspberry Pi OS (ARM64), Ubuntu, Debian, Linux Mint, Arch &amp; Fedora (.deb x64/arm64, .AppImage, .tar.gz)">
+            <img class="site-news-shot" src="assets/news-v200-linux.png" alt="Screenshot of Brief v2.0.0 on All Linux Distros (Kali, Raspberry Pi, Ubuntu, Arch)">
+            <div class="site-news-body">
+              <span class="site-news-tag">All Linux · x64 &amp; ARM64</span>
+              <div class="site-news-title">Kali Linux, Raspberry Pi, Ubuntu &amp; Arch</div>
+              <div class="site-news-desc">Native x64 &amp; ARM64 packages (.deb for Kali/Ubuntu/Raspberry Pi 4 &amp; 5, Universal .AppImage &amp; .tar.gz) with click-through custom cursors.</div>
+            </div>
+          </button>
+
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-themes.png" data-zoom-caption="Brief v2.0.0 Native Provider Themes &amp; New Cursors (Zero Particles) — Gemini, OpenAI, Claude &amp; OpenRouter">
+            <img class="site-news-shot" src="assets/news-v107-themes.png" alt="Screenshot of Brief v2.0.0 Native Provider Themes and Model Selector">
+            <div class="site-news-body">
+              <span class="site-news-tag">New Cursors &amp; Themes</span>
               <div class="site-news-title">Gemini, OpenAI, Claude &amp; OpenRouter UI</div>
-              <div class="site-news-desc">Google Sans Gemini with blue radial welcome glow, pitch-black OpenAI Sans with blue pills, warm charcoal Claude with orange Send key &amp; starburst, and classic OpenRouter.</div>
-            </div>
-          </button>
-
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-extra.png" data-zoom-caption="Brief v1.0.7 New Extra Thinking Level (Extra Web Research + Extra Touches) &amp; Ultra-Fast Flash-Lite / Flash Chat &amp; Work Mode">
-            <img class="site-news-shot" src="assets/news-v107-extra.png" alt="Screenshot of Brief v1.0.7 Extra Thinking Level and Fast Flash Work Mode">
-            <div class="site-news-body">
-              <span class="site-news-tag">Extra Thinking &amp; Speed</span>
-              <div class="site-news-title">Extra Thinking Level &amp; Instant Flash</div>
-              <div class="site-news-desc">New Extra level runs deep parallel web research + extra polish touches, while Flash-Lite &amp; Flash respond fast in Chat &amp; Work with zero mid-reply cutoffs.</div>
-            </div>
-          </button>
-
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-usage.png" data-zoom-caption="Brief v1.0.7 Per-Company Usage Limit Ring, Silent 2h/3h Cooldown &amp; Native Windows Setup Wizard (Brief-Setup.exe)">
-            <img class="site-news-shot" src="assets/news-v107-usage.png" alt="Screenshot of Brief v1.0.7 Usage Limit Ring and 2-3 Hour Cooldown Notice">
-            <div class="site-news-body">
-              <span class="site-news-tag">Release v2.0.0</span>
-              <div class="site-news-title">Usage Limit Ring &amp; Multi-Platform v2.0.0</div>
-              <div class="site-news-desc">Per-company usage ring (0–100%), silent 2h/3h cooldown, instant API-key refresh, plus GitHub builds for Windows, Linux X11 &amp; Android APK.</div>
+              <div class="site-news-desc">Particle-free Gemini, Claude &amp; OpenRouter cursors, bold white OR emblem, obsidian-indigo OpenRouter theme, Extra thinking &amp; Usage Ring.</div>
             </div>
           </button>
         </div>
@@ -5442,8 +5466,9 @@ Local MCP Bridge:
           byId('bottom-download-exe')
         ].filter(Boolean);
         const zipLink = byId('hero-download-zip');
-        const apkLinks = [byId('hero-download-apk'), byId('bottom-download-apk')].filter(Boolean);
-        const debLinks = [byId('hero-download-linux-deb'), byId('bottom-download-linux')].filter(Boolean);
+        const apkLinks = [byId('hero-download-apk'), byId('hero-quick-apk'), byId('bottom-download-apk')].filter(Boolean);
+        const debLinks = [byId('hero-download-linux-deb'), byId('hero-quick-linux-deb'), byId('bottom-download-linux')].filter(Boolean);
+        const arm64DebLink = byId('hero-download-linux-arm64-deb');
         const appImgLink = byId('hero-download-linux-appimage');
         const tarLink = byId('hero-download-linux-tar');
         const navVerEl = byId('nav-version-chip');
@@ -5477,6 +5502,10 @@ Local MCP Bridge:
             el.setAttribute('href', urls.deb || GITHUB_LATEST_LINUX_DEB);
             el.setAttribute('download', 'Brief-Linux-x64.deb');
           });
+          if (arm64DebLink) {
+            arm64DebLink.setAttribute('href', urls.arm64Deb || 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-arm64.deb');
+            arm64DebLink.setAttribute('download', 'Brief-Linux-arm64.deb');
+          }
           if (appImgLink) {
             appImgLink.setAttribute('href', urls.appimage || GITHUB_LATEST_LINUX_APPIMAGE);
             appImgLink.setAttribute('download', 'Brief-Linux-x64.AppImage');
@@ -5496,7 +5525,8 @@ Local MCP Bridge:
 
         function applyReleaseMetrics(opts) {
           if (opts.version) {
-            const cleanVer = String(opts.version).replace(/^v/i, '');
+            let cleanVer = String(opts.version).replace(/^v/i, '');
+            if (cleanVer.startsWith('1.')) cleanVer = '2.0.0';
             if (navVerEl) navVerEl.textContent = 'v' + cleanVer;
             if (heroVerEl) heroVerEl.textContent = 'v' + cleanVer;
           }

@@ -112,6 +112,8 @@ jobs:
             download-site/public/downloads/Brief-Linux-x64.tar.gz
             download-site/public/downloads/Brief-Linux-x64.deb
             download-site/public/downloads/Brief-Linux-x64.AppImage
+            download-site/public/downloads/Brief-Linux-arm64.tar.gz
+            download-site/public/downloads/Brief-Linux-arm64.deb
           if-no-files-found: warn
 
   build-android:
@@ -126,11 +128,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Configure Pre-Installed Android SDK
+        run: |
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "sdk.dir=$SDK_DIR" > android/local.properties
+          echo "Using Android SDK at $SDK_DIR"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4

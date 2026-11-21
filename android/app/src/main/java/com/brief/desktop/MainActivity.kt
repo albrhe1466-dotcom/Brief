@@ -384,25 +384,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         view.findViewById<TextView>(R.id.btnGrantOverlay).setOnClickListener {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            startActivity(intent)
+            OemCompatibilityHelper.openOverlaySettingsSafe(this)
         }
 
         view.findViewById<TextView>(R.id.btnGrantAccessibility).setOnClickListener {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            OemCompatibilityHelper.openAccessibilitySettingsSafe(this)
         }
 
         view.findViewById<TextView>(R.id.btnGrantScreenCap).setOnClickListener {
-            val mgr = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            screenCapLauncher.launch(mgr.createScreenCaptureIntent())
+            try {
+                val mgr = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                screenCapLauncher.launch(mgr.createScreenCaptureIntent())
+            } catch (e: Exception) {
+                Toast.makeText(this, "Screen capture unavailable: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        view.findViewById<TextView>(R.id.txtSamsungHelp).setOnClickListener {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
-            startActivity(intent)
+        view.findViewById<TextView>(R.id.txtSamsungHelp).apply {
+            text = OemCompatibilityHelper.getZeroRootSetupGuide()
+            setOnClickListener {
+                OemCompatibilityHelper.openAppDetailsSafe(this@MainActivity)
+            }
         }
 
         view.findViewById<TextView>(R.id.btnCloseSetup).setOnClickListener {
