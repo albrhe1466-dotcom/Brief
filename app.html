@@ -5096,7 +5096,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v1.0.7">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.0">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -5993,7 +5993,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v1.0.7</span>
+          <span class="news-version-pill">News · v2.0.0</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -6001,7 +6001,7 @@
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v1.0.7 — Native Provider Themes &amp; Fonts, Usage Limit Ring, Extra Thinking Level &amp; Instant Flash Speed
+              Brief v2.0.0 — Windows, Linux X11 &amp; Android (No Root), New Cursors, OpenRouter Look &amp; Extra Thinking
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
@@ -6029,8 +6029,8 @@
           <button class="news-photo-card" type="button" data-news-src="assets/news-v107-usage.png" data-news-caption="Brief v1.0.7 Per-Company Usage Limit Ring, Silent 2h/3h Cooldown &amp; Native Windows Setup v1.0.7">
             <img class="news-photo-thumb" src="assets/news-v107-usage.png" alt="Brief v1.0.7 Usage Limit Ring and 2-3 Hour Cooldown Notice">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Usage Ring &amp; Setup v1.0.7</div>
-              <div class="news-photo-sub">Per-company usage ring (0–100%), silent 2h/3h cooldown notice, instant API-key refresh, and verified Windows Setup v1.0.7.</div>
+              <div class="news-photo-title">Usage Ring &amp; Setup v2.0.0</div>
+              <div class="news-photo-sub">Per-company usage ring (0–100%), silent 2h/3h cooldown notice, instant API-key refresh, and verified Windows/Linux/Android releases for v2.0.0.</div>
             </div>
           </button>
         </div>
@@ -6039,13 +6039,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v1.0.7</span>
+              <span>What’s New in v2.0.0</span>
             </div>
             <ul class="news-list">
-              <li><strong>Native Provider Themes &amp; Real Fonts:</strong> Automatically matches your active API provider — <strong>Gemini</strong> (Google Sans + deep blue radial welcome glow + obsidian chat), <strong>OpenAI</strong> (pitch black + OpenAI Sans + blue pill), <strong>Claude</strong> (warm charcoal + Claude Sans / Georgia serif + orange starburst &amp; orange Send key), and <strong>OpenRouter</strong> (classic Brief look).</li>
-              <li><strong>New Extra Thinking Level:</strong> Choose <strong>Low</strong>, <strong>Medium</strong>, <strong>High</strong>, or <strong>Extra</strong> — <strong>Extra</strong> runs deeper parallel live web research and adds thoughtful extra touches and polish to every answer and build.</li>
-              <li><strong>Usage Limit Ring &amp; 2h/3h Cooldown Popup:</strong> Color-coded top-right usage ring tracked separately per provider, with a clean News-style Usage Limit popup offering instant <strong>Change API Key →</strong> refresh (resets to 0%) or a quiet background 2–3 hour cooldown.</li>
-              <li><strong>Roblox Creator Store MCP Support:</strong> Enabled <code class="mono">insert_asset</code>, <code class="mono">search_asset</code>, and <code class="mono">manage_assets</code> for Roblox Studio tasks alongside instant target-window auto-focus and cursor movement.</li>
+              <li><strong>New Cursors (Zero Particles) &amp; OpenRouter Look:</strong> Updated Gemini, Claude, and OpenRouter desktop cursors with crisp transparent edges (zero particles), plus OpenRouter's new bold white <code class="mono">OR</code> logo and obsidian-indigo theme.</li>
+              <li><strong>Multi-Platform Brief (Windows · Linux X11 · Android Zero Root):</strong> Now downloadable for Windows, Linux X11 (.deb / .AppImage / .tar.gz), and Android 8+ / Samsung phones (Brief-Android.apk with floating provider cursors &amp; Accessibility control).</li>
+              <li><strong>Native Provider Themes &amp; Fonts:</strong> Gemini (Google Sans + deep blue radial glow), OpenAI (pitch black + OpenAI Sans), Claude (warm charcoal + orange Send key &amp; starburst), and OpenRouter (obsidian-indigo).</li>
+              <li><strong>Extra Thinking &amp; Usage Limit Ring:</strong> Choose Low, Medium, High, or <strong>Extra</strong> (deep parallel research + polish) alongside per-company Usage Limit tracking.</li>
             </ul>
           </div>
 
@@ -10311,7 +10311,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '1.0.7';
+      const BRIEF_NEWS_VERSION = '2.0.0';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');
