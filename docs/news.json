@@ -1,19 +1,19 @@
 {
-  "version": "2.0.1",
-  "releasedAt": "2026-11-21",
-  "headline": "Brief v2.0.1 — Full Animated UI & Forced Fonts on All Android Phones (Samsung, Pixel, LG, Infinix, Oppo, Vivo), All Linux (Kali, Raspberry Pi, Ubuntu, Arch) & Windows",
+  "version": "2.0.2",
+  "releasedAt": "2026-11-24",
+  "headline": "Brief v2.0.2 — Smooth 1-Hand Touch Scrolling & Full Responsive UI on All Android Phones & Android Tablets (Samsung S26, Galaxy Tab, Pixel, Xiaomi, Lenovo, Vivo), All Linux & Windows",
   "photos": [
     {
       "src": "assets/news-v200-android.png",
-      "tag": "Android v2.0.1 · No Root",
-      "title": "All Android Phones (Samsung, Pixel, LG, Infinix, Oppo, Vivo)",
-      "caption": "Brief v2.0.1 Native Android APK — full animated Brief UI & forced provider fonts on Samsung One UI, Pixel, LG, Infinix, Oppo, Vivo & Xiaomi with zero root and floating provider cursors."
+      "tag": "Android Phones & Tablets · v2.0.2",
+      "title": "All Android Phones & Tablets (Samsung S26, Galaxy Tab, Pixel, Oppo, Vivo)",
+      "caption": "Brief v2.0.2 Native Android APK — effortless 1-hand touch scrolling, Samsung Safe Mode (no false virus warning & 2-tap un-gray), Android tablet multi-window/DeX layout, forced fonts & floating cursors."
     },
     {
       "src": "assets/news-v200-linux.png",
       "tag": "All Linux · x64 & ARM64",
       "title": "Kali Linux, Raspberry Pi ARM64, Ubuntu, Debian & Arch",
-      "caption": "Brief v2.0.1 Linux Packages — Brief-Linux-x64.deb, Brief-Linux-arm64.deb (Raspberry Pi / Kali ARM64), Universal .AppImage & .tar.gz."
+      "caption": "Brief v2.0.2 Linux Packages — Brief-Linux-x64.deb, Brief-Linux-arm64.deb (Raspberry Pi / Kali ARM64), Universal .AppImage & .tar.gz."
     },
     {
       "src": "assets/news-v107-themes.png",

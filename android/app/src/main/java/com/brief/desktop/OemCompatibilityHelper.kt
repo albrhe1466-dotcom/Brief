@@ -21,15 +21,20 @@ object OemCompatibilityHelper {
         return m.contains("samsung")
     }
 
-    fun detectedBrandLabel(): String {
+    fun isTablet(context: Context? = null): Boolean {
+        return (context?.resources?.configuration?.smallestScreenWidthDp ?: 0) >= 600
+    }
+
+    fun detectedBrandLabel(context: Context? = null): String {
         val m = (Build.MANUFACTURER ?: "").trim()
         val b = (Build.BRAND ?: "").trim()
         val model = (Build.MODEL ?: "").trim()
         val primary = if (m.isNotEmpty()) m.replaceFirstChar { it.uppercase() } else b.replaceFirstChar { it.uppercase() }
+        val form = if (isTablet(context)) "Tablet · " else ""
         return if (model.isNotEmpty() && !model.startsWith(primary, ignoreCase = true)) {
-            "$primary $model (Android ${Build.VERSION.RELEASE})"
+            "$primary $model (${form}Android ${Build.VERSION.RELEASE})"
         } else {
-            "$model (Android ${Build.VERSION.RELEASE})"
+            "$model (${form}Android ${Build.VERSION.RELEASE})"
         }
     }
 

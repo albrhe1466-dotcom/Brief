@@ -64,8 +64,9 @@ class MainActivity : AppCompatActivity() {
         webView = WebView(this).apply {
             setBackgroundColor(Color.parseColor("#090A0D"))
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
-            isVerticalScrollBarEnabled = false
+            isVerticalScrollBarEnabled = true
             isHorizontalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
             settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
@@ -187,8 +188,9 @@ class MainActivity : AppCompatActivity() {
         obj.put("provider", activeProv.wireId)
         obj.put("activeModel", vault.getActiveModel(activeProv))
         obj.put("thinkingLevel", vault.getThinkingLevel().wire)
+        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
         if (!obj.has("permissionMode")) obj.put("permissionMode", "full")
-        if (!obj.has("sidebarCollapsed")) obj.put("sidebarCollapsed", true)
+        if (!obj.has("sidebarCollapsed")) obj.put("sidebarCollapsed", !isTablet)
         return obj
     }
 
@@ -216,14 +218,14 @@ class MainActivity : AppCompatActivity() {
         val guides = JSONArray().apply {
             put(
                 JSONObject().apply {
-                    put("title", OemCompatibilityHelper.detectedBrandLabel())
+                    put("title", OemCompatibilityHelper.detectedBrandLabel(this@MainActivity))
                     put("steps", JSONArray().put(OemCompatibilityHelper.getZeroRootSetupGuide()))
                 }
             )
         }
         return JSONObject().apply {
             put("platform", "android")
-            put("osLabel", OemCompatibilityHelper.detectedBrandLabel())
+            put("osLabel", OemCompatibilityHelper.detectedBrandLabel(this@MainActivity))
             put("backendName", "Android Safe Mode · Trusted Accessibility Overlay")
             put("dpiMode", "${w}x${h}")
             put("checks", checks)
@@ -245,17 +247,18 @@ class MainActivity : AppCompatActivity() {
             if (chatsRaw != null) JSONObject(chatsRaw) else JSONObject().put("chats", JSONArray()).put("projects", JSONArray())
         }.getOrElse { JSONObject().put("chats", JSONArray()).put("projects", JSONArray()) }
 
+        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
         return JSONObject().apply {
-            put("version", "2.0.1")
+            put("version", "2.0.2")
             put("firstRunRequested", false)
             put(
                 "os",
                 JSONObject().apply {
                     put("platform", "android")
                     put("release", Build.VERSION.RELEASE ?: "15")
-                    put("type", OemCompatibilityHelper.detectedBrandLabel())
+                    put("type", OemCompatibilityHelper.detectedBrandLabel(this@MainActivity))
                     put("arch", Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64")
-                    put("backendName", "Android Zero-Root · Safe Accessibility Overlay")
+                    put("backendName", if (isTablet) "Android Tablet · Safe Accessibility Overlay" else "Android Phone · Safe Accessibility Overlay")
                 }
             )
             put(
@@ -264,7 +267,7 @@ class MainActivity : AppCompatActivity() {
                     JSONObject().apply {
                         put("index", 0)
                         put("id", 0)
-                        put("label", "Phone Screen (${w}x${h})")
+                        put("label", if (isTablet) "Tablet Screen (${w}x${h})" else "Phone Screen (${w}x${h})")
                         put("primary", true)
                         put("scaleFactor", resources.displayMetrics.density.toDouble())
                     }

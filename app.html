@@ -140,6 +140,7 @@
     body {
       width: 100%;
       height: 100%;
+      height: 100dvh;
       overflow: hidden;
       color-scheme: only dark;
       background-color: var(--bg-canvas);
@@ -1312,21 +1313,27 @@
 
     #view-key-gate {
       align-items: center;
-      justify-content: center;
-      padding: 28px;
+      justify-content: flex-start;
+      padding: 20px 18px calc(32px + env(safe-area-inset-bottom, 0px));
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
     }
 
     .gate-card {
       width: 100%;
       max-width: 540px;
+      flex-shrink: 0;
+      margin: auto 0;
       background: #272727;
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 22px;
       padding: 26px 28px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
       animation: fadeScaleIn 0.28s var(--ease-out);
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: visible;
     }
 
     .onb-steps-row {
@@ -1864,7 +1871,11 @@
 
     #messages-scroll {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
       padding: 22px 24px 28px;
       scroll-behavior: smooth;
     }
@@ -3659,6 +3670,10 @@
     .modal-body {
       padding: 18px 20px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
+      min-height: 0;
       flex: 1;
     }
 
@@ -3738,7 +3753,11 @@
 
     .settings-content {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
       padding: 20px 24px;
     }
 
@@ -4369,9 +4388,73 @@
       }
     }
 
+    /* Android Tablets & Split-Screen Layout (Galaxy Tab S10/S9/A9+, Pixel Tablet, Xiaomi Pad, Lenovo Tab) */
+    @media (min-width: 681px) and (max-width: 1140px) {
+      :root {
+        --rail-width: 50px;
+        --sidebar-width: 228px;
+      }
+      .news-gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .modal-box.wide {
+        width: calc(100vw - 36px);
+        max-width: 820px;
+        height: 86dvh;
+      }
+      .gate-card {
+        max-width: 560px;
+      }
+    }
+
+    @media (max-width: 860px) {
+      body.is-welcome #main-area {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+      body.is-welcome #workspace-body {
+        margin-top: auto;
+        flex-shrink: 0;
+      }
+      body.is-welcome #composer-dock {
+        flex-shrink: 0;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      }
+      #composer-dock {
+        padding: 6px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .settings-layout {
+        flex-direction: column;
+      }
+      .settings-nav {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 8px 10px;
+        gap: 6px;
+      }
+      .settings-tab-btn {
+        width: auto;
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 7px 12px;
+      }
+      .settings-content {
+        padding: 14px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
     @media (max-width: 680px) {
       :root {
-        --rail-width: 46px;
+        --rail-width: 44px;
       }
       #widget-toggle-btn {
         display: none;
@@ -4380,20 +4463,49 @@
         display: none;
       }
       .task-running-pill {
-        max-width: 130px;
+        max-width: 120px;
         font-size: 11px;
         padding: 3px 8px;
       }
+      .gate-card {
+        padding: 18px 16px;
+        border-radius: 18px;
+      }
+      .onb-steps-row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      #messages-scroll {
+        padding: 14px 12px 20px;
+      }
+      .msg-bubble-user {
+        max-width: 88%;
+      }
       .welcome-heading {
-        font-size: clamp(23px, 6.2vw, 32px) !important;
+        font-size: clamp(22px, 6vw, 30px) !important;
       }
       .welcome-inner {
-        padding: 18px 14px;
+        padding: 16px 12px;
+      }
+      #model-popover,
+      #perm-popover,
+      #attach-popover {
+        left: 0 !important;
+        right: auto !important;
+        width: min(360px, calc(100vw - 68px)) !important;
+        max-width: calc(100vw - 68px) !important;
+        max-height: 58dvh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
       }
       .modal-box {
-        width: calc(100vw - 20px) !important;
-        max-width: calc(100vw - 20px) !important;
-        max-height: 90vh !important;
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: 90dvh !important;
+      }
+      .modal-box.wide {
+        height: 88dvh !important;
       }
       .news-gallery-grid,
       .news-columns {
@@ -5136,7 +5248,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.1">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.2">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6033,7 +6145,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v2.0.1</span>
+          <span class="news-version-pill">News · v2.0.2</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -6041,7 +6153,7 @@
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.1 — Unified Animated UI &amp; Forced Fonts Across Windows, Linux &amp; All Android Phones
+              Brief v2.0.2 — Smooth 1-Hand Scrolling, Android Phones &amp; Tablets, Linux &amp; Windows
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
@@ -6079,12 +6191,12 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v2.0.1</span>
+              <span>What’s New in v2.0.2</span>
             </div>
             <ul class="news-list">
-              <li><strong>New Cursors (Zero Particles) &amp; OpenRouter Look:</strong> Updated Gemini, Claude, and OpenRouter desktop cursors with crisp transparent edges (zero particles), plus OpenRouter's new bold white <code class="mono">OR</code> logo and obsidian-indigo theme.</li>
-              <li><strong>Multi-Platform Brief (Windows · Linux X11 · Android Zero Root):</strong> Now downloadable for Windows, Linux X11 (.deb / .AppImage / .tar.gz), and Android 8+ / Samsung phones (Brief-Android.apk with floating provider cursors &amp; Accessibility control).</li>
-              <li><strong>Native Provider Themes &amp; Fonts:</strong> Gemini (Google Sans + deep blue radial glow), OpenAI (pitch black + OpenAI Sans), Claude (warm charcoal + orange Send key &amp; starburst), and OpenRouter (obsidian-indigo).</li>
+              <li><strong>Android Phones &amp; Android Tablets + 1-Hand Smooth Scrolling:</strong> Full responsive UI for Android phones &amp; tablets (Samsung Galaxy S26, Galaxy Tab S10/S9/A9+, Pixel &amp; Pixel Tablet, Xiaomi Pad, Lenovo Tab, Oppo, Vivo, Infinix, LG) with effortless vertical touch scrolling across every screen and modal.</li>
+              <li><strong>Samsung Safe Mode &amp; 2-Tap Un-Gray:</strong> Trusted Android Accessibility Overlay + RSA-4096 v1/v2/v3 signing eliminates false malware blocks and unlocks Samsung's gray switch in 2 taps.</li>
+              <li><strong>Native Provider Themes, Forced Fonts &amp; 120fps Animations:</strong> Gemini (Google Sans + deep blue radial glow), OpenAI (pitch black + OpenAI Sans), Claude (warm charcoal + Newsreader serif &amp; orange starburst), and OpenRouter (obsidian-indigo + OR emblem).</li>
               <li><strong>Extra Thinking &amp; Usage Limit Ring:</strong> Choose Low, Medium, High, or <strong>Extra</strong> (deep parallel research + polish) alongside per-company Usage Limit tracking.</li>
             </ul>
           </div>
@@ -10456,7 +10568,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.1';
+      const BRIEF_NEWS_VERSION = '2.0.2';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');

@@ -97,11 +97,12 @@
       scroll-behavior: smooth;
       background-color: var(--bg-deep);
       color-scheme: only dark;
-      overflow-x: hidden;
+      overflow-y: auto;
       max-width: 100%;
       font-family: var(--font-sans) !important;
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
+      -webkit-overflow-scrolling: touch;
     }
 
     body {
@@ -109,8 +110,11 @@
       background-color: var(--bg-deep);
       color: var(--text-primary);
       line-height: 1.62;
-      overflow-x: hidden;
+      overflow-x: clip;
+      overflow-y: visible;
+      touch-action: pan-y pinch-zoom;
       min-height: 100vh;
+      min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -2148,6 +2152,20 @@
       }
     }
 
+    /* Android Tablet & Medium Screen Optimization (Galaxy Tab, Pixel Tablet, Xiaomi Pad, Lenovo Tab) */
+    @media (min-width: 781px) and (max-width: 1120px) {
+      .container {
+        padding: 0 24px;
+      }
+      .site-news-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .hero-cta-row .btn-dl-hero,
+      .hero-cta-row .btn-dl-zip {
+        flex: 1 1 calc(50% - 10px);
+      }
+    }
+
     @media (max-width: 780px) {
       body {
         padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
@@ -2742,7 +2760,7 @@
           <img src="assets/icon.png" alt="Brief Icon">
         </span>
         <span>Brief</span>
-        <span class="nav-version-chip" id="nav-version-chip">v2.0.1</span>
+        <span class="nav-version-chip" id="nav-version-chip">v2.0.2</span>
       </a>
 
       <nav class="nav-links" aria-label="Main navigation">
@@ -2770,7 +2788,7 @@
       <a href="#onboarding-preview">First-Run Slide Tour</a>
       <a href="#architecture">4-Agent Architecture</a>
       <a href="#providers">Supported AI Providers</a>
-      <a href="#whats-new">What's New in v2.0.1</a>
+      <a href="#whats-new">What's New in v2.0.2</a>
       <a href="#tools-explorer">50 Real Desktop Tools</a>
       <a href="#deep-dive">Engineering Facts</a>
       <a href="#faq">FAQ</a>
@@ -2797,13 +2815,13 @@
           </h1>
 
           <p class="hero-lead">
-            Download <strong>Brief</strong> natively on <strong>Windows</strong> (<code>Brief-Setup.exe</code>), <strong>Linux X11</strong> (<code>.deb</code> / <code>.AppImage</code> / <code>.tar.gz</code>), or <strong>Android Phones</strong> (<code>Brief-Android.apk</code> — Samsung &amp; Android 8+, zero root, floating provider cursors &amp; live web research).
+            Download <strong>Brief</strong> natively on <strong>Windows</strong> (<code>Brief-Setup.exe</code>), <strong>Linux X11</strong> (<code>.deb</code> / <code>.AppImage</code> / <code>.tar.gz</code>), or <strong>Android Phones &amp; Tablets</strong> (<code>Brief-Android.apk</code> — Samsung Galaxy S26 to A-Series, Galaxy Tab, Pixel, Xiaomi, Lenovo, LG, Infinix, Oppo &amp; Vivo with zero root, smooth touch UI &amp; floating cursors).
           </p>
 
           <div class="os-platform-bar" role="tablist" aria-label="Choose your platform">
             <button class="os-tab-btn is-active" id="os-tab-windows" type="button" data-os-tab="windows">🪟 Windows</button>
             <button class="os-tab-btn" id="os-tab-linux" type="button" data-os-tab="linux">🐧 Linux</button>
-            <button class="os-tab-btn" id="os-tab-android" type="button" data-os-tab="android">📱 Android</button>
+            <button class="os-tab-btn" id="os-tab-android" type="button" data-os-tab="android">📱 Android &amp; Tablet</button>
           </div>
 
           <!-- Windows + All-Platforms Quick Downloads -->
@@ -2813,7 +2831,7 @@
                 <span class="btn-dl-icon" aria-hidden="true">🪟</span>
                 <span class="btn-dl-copy">
                   <span class="btn-dl-title">Download Windows (.exe)</span>
-                  <span class="btn-dl-sub" id="hero-exe-meta">Windows 10/11 Setup Wizard · v2.0.1</span>
+                  <span class="btn-dl-sub" id="hero-exe-meta">Windows 10/11 Setup Wizard · v2.0.2</span>
                 </span>
               </a>
 
@@ -2828,8 +2846,8 @@
               <a class="btn-dl-hero" id="hero-quick-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55); box-shadow: 0 12px 30px rgba(5, 150, 105, 0.35);">
                 <span class="btn-dl-icon" aria-hidden="true">📱</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title">Download Android (.apk)</span>
-                  <span class="btn-dl-sub">Samsung · Pixel · LG · Infinix · Oppo · Vivo</span>
+                  <span class="btn-dl-title">Android Phone &amp; Tablet (.apk)</span>
+                  <span class="btn-dl-sub">Samsung S26 &amp; Galaxy Tab · Pixel · Oppo · Vivo</span>
                 </span>
               </a>
 
@@ -2880,34 +2898,34 @@
             </div>
           </div>
 
-          <!-- Android Phone Downloads (Samsung S26 to A-Series, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi, All Android) -->
+          <!-- Android Phone & Tablet Downloads (Samsung S26 to A-Series, Galaxy Tab, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi, Lenovo) -->
           <div class="os-cta-panel" id="os-panel-android">
             <div class="hero-cta-row">
               <a class="btn-dl-hero" id="hero-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55);">
                 <span class="btn-dl-icon" aria-hidden="true">📱</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title">Download Safe Android APK (v2.0.1)</span>
-                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung S26 to A-Series · Pixel · LG · Infinix · Oppo · Vivo</span>
+                  <span class="btn-dl-title">Android Phone &amp; Tablet APK (v2.0.2)</span>
+                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung S26 &amp; Galaxy Tab · Pixel &amp; Tablet · Xiaomi · Lenovo · Vivo</span>
                 </span>
               </a>
 
               <a class="btn-dl-zip" href="#whats-new">
                 <span style="font-size: 20px;" aria-hidden="true">🛡️</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title" style="font-size: 14.5px;">Safe Mode · 1-Switch Setup</span>
-                  <span class="btn-dl-sub" style="color: var(--text-muted);">Zero Root · Trusted Accessibility Overlay</span>
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Safe Mode · Phones &amp; Tablets</span>
+                  <span class="btn-dl-sub" style="color: var(--text-muted);">Zero Root · Smooth 1-Hand Touch Scroll</span>
                 </span>
               </a>
             </div>
             <div style="margin-bottom: 16px; padding: 12px 15px; border-radius: 14px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(52, 211, 153, 0.35); font-size: 12.5px; color: #d1fae5; line-height: 1.55;">
-              <strong style="color: #6ee7b7;">Samsung Galaxy (S26 Ultra to A-Series) — Stop the Gray Switch in 2 Taps:</strong><br>
+              <strong style="color: #6ee7b7;">Samsung Phones &amp; Galaxy Tabs (S26 Ultra, A-Series, Tab S10/S9/A9+) — Stop the Gray Switch in 2 Taps:</strong><br>
               1. Open <strong>Settings → Security and privacy → Auto Blocker → Turn OFF</strong> (allows installing GitHub APKs &amp; stops Samsung graying out switches).<br>
               2. Open <strong>Settings → Apps → Brief → top-right <code>⋮</code> → Allow restricted settings</strong>, then turn ON <strong>Brief Assistant</strong> in Accessibility!
             </div>
           </div>
 
           <div class="hero-meta-bar">
-            <span class="meta-badge-item">Release <strong id="hero-release-tag">v2.0.1</strong></span>
+            <span class="meta-badge-item">Release <strong id="hero-release-tag">v2.0.2</strong></span>
             <span class="meta-badge-item">Platforms <strong id="hero-arch-label">Win · Linux · Android</strong></span>
             <span class="meta-badge-item">Source <strong id="hero-source-mode">GitHub Releases</strong></span>
             <button class="hash-copy-btn" id="hero-copy-sha-btn" type="button" title="Copy SHA-256 Digest">
@@ -3899,30 +3917,30 @@ Local MCP Bridge:
     </section>
 
     <!-- =====================================================================
-         WHAT'S NEW IN BRIEF v2.0.1 (SCREENSHOTS + RELEASE HIGHLIGHTS)
+         WHAT'S NEW IN BRIEF v2.0.2 (SCREENSHOTS + RELEASE HIGHLIGHTS)
     ===================================================================== -->
     <section class="section" id="whats-new">
       <div class="container">
         <div class="section-header" data-reveal>
-          <span class="section-eyebrow">Latest Release · v2.0.1</span>
-          <h2 class="section-title">What’s New in Brief v2.0.1 — Windows, Linux, Android &amp; New Cursors</h2>
+          <span class="section-eyebrow">Latest Release · v2.0.2</span>
+          <h2 class="section-title">What’s New in Brief v2.0.2 — Windows, Linux, Android Phones &amp; Tablets</h2>
           <p class="section-subtitle">
-            See what’s new in Brief v2.0.1 below (click any card to zoom full size). v2.0.1 brings the full animated desktop UI &amp; forced provider fonts to <strong>Android Phones</strong> alongside <strong>Windows</strong> and <strong>Linux X11</strong> (zero root, floating provider cursors), redesigned particle-free Gemini/Claude/OpenRouter cursors + OpenRouter theme, <strong>Extra</strong> thinking level, Usage Limit ring, and ultra-fast Flash-Lite &amp; Flash replies.
+            See what’s new in Brief v2.0.2 below (click any card to zoom full size). v2.0.2 delivers effortless 1-hand touch scrolling and full responsive layouts for <strong>Android Phones &amp; Android Tablets</strong> (Samsung Galaxy S26, A-Series, Galaxy Tab S10/S9/A9+, Pixel &amp; Pixel Tablet, Xiaomi Pad, Lenovo Tab, Oppo, Vivo, Infinix, LG), Samsung Safe Mode (no false virus warning &amp; 2-tap un-gray), plus <strong>Windows</strong> and <strong>Linux X11</strong>.
           </p>
         </div>
 
         <div class="site-news-grid" data-reveal>
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v200-android.png" data-zoom-caption="Brief v2.0.1 for All Android Phones (Samsung Galaxy One UI, Google Pixel, LG, Infinix, Oppo, Vivo, Xiaomi) — Full Animated UI, Forced Fonts, Zero Root &amp; Live Floating Cursors">
-            <img class="site-news-shot" src="assets/news-v200-android.png" alt="Screenshot of Brief v2.0.1 on Android Phones (Samsung, Pixel, LG, Infinix, Oppo, Vivo)">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v200-android.png" data-zoom-caption="Brief v2.0.2 for All Android Phones &amp; Android Tablets (Samsung S26, Galaxy Tab, Pixel &amp; Pixel Tablet, Xiaomi Pad, Lenovo, LG, Infinix, Oppo, Vivo) — Smooth Touch Scroll, Forced Fonts &amp; Safe Mode">
+            <img class="site-news-shot" src="assets/news-v200-android.png" alt="Screenshot of Brief v2.0.2 on Android Phones and Tablets">
             <div class="site-news-body">
-              <span class="site-news-tag">All Android · Zero Root</span>
-              <div class="site-news-title">Samsung, Pixel, LG, Infinix, Oppo &amp; Vivo</div>
-              <div class="site-news-desc">Native Brief-Android.apk with full animated Brief UI, forced provider fonts, floating Gemini/Claude/OpenAI/OpenRouter cursors, and zero-root control.</div>
+              <span class="site-news-tag">Android Phones &amp; Tablets</span>
+              <div class="site-news-title">Samsung S26, Galaxy Tab, Pixel &amp; All Android</div>
+              <div class="site-news-desc">Native Brief-Android.apk for phones &amp; tablets (split-screen &amp; DeX ready) with buttery 1-hand scrolling, forced fonts, and 1-switch safe cursor control.</div>
             </div>
           </button>
 
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v200-linux.png" data-zoom-caption="Brief v2.0.1 for All Linux Computers — Kali Linux, Raspberry Pi OS (ARM64), Ubuntu, Debian, Linux Mint, Arch &amp; Fedora (.deb x64/arm64, .AppImage, .tar.gz)">
-            <img class="site-news-shot" src="assets/news-v200-linux.png" alt="Screenshot of Brief v2.0.1 on All Linux Distros (Kali, Raspberry Pi, Ubuntu, Arch)">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v200-linux.png" data-zoom-caption="Brief v2.0.2 for All Linux Computers — Kali Linux, Raspberry Pi OS (ARM64), Ubuntu, Debian, Linux Mint, Arch &amp; Fedora (.deb x64/arm64, .AppImage, .tar.gz)">
+            <img class="site-news-shot" src="assets/news-v200-linux.png" alt="Screenshot of Brief v2.0.2 on All Linux Distros (Kali, Raspberry Pi, Ubuntu, Arch)">
             <div class="site-news-body">
               <span class="site-news-tag">All Linux · x64 &amp; ARM64</span>
               <div class="site-news-title">Kali Linux, Raspberry Pi, Ubuntu &amp; Arch</div>
@@ -3930,8 +3948,8 @@ Local MCP Bridge:
             </div>
           </button>
 
-          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-themes.png" data-zoom-caption="Brief v2.0.1 Native Provider Themes &amp; New Cursors (Zero Particles) — Gemini, OpenAI, Claude &amp; OpenRouter">
-            <img class="site-news-shot" src="assets/news-v107-themes.png" alt="Screenshot of Brief v2.0.1 Native Provider Themes and Model Selector">
+          <button class="site-news-card" type="button" data-zoom-src="assets/news-v107-themes.png" data-zoom-caption="Brief v2.0.2 Native Provider Themes &amp; New Cursors (Zero Particles) — Gemini, OpenAI, Claude &amp; OpenRouter">
+            <img class="site-news-shot" src="assets/news-v107-themes.png" alt="Screenshot of Brief v2.0.2 Native Provider Themes and Model Selector">
             <div class="site-news-body">
               <span class="site-news-tag">New Cursors &amp; Themes</span>
               <div class="site-news-title">Gemini, OpenAI, Claude &amp; OpenRouter UI</div>
@@ -3942,19 +3960,19 @@ Local MCP Bridge:
 
         <div class="site-news-notes" data-reveal>
           <div class="site-news-note-box">
-            <h3>✨ What’s New in v2.0.1</h3>
+            <h3>✨ What’s New in v2.0.2</h3>
             <ul>
-              <li><strong>Native Provider Themes &amp; Forced Fonts Across Windows, Linux &amp; Android:</strong> Automatically adapts the full animated Brief look and forced provider typography to your active API provider — <strong>Gemini</strong> (Google Sans + deep blue radial welcome glow + obsidian chat), <strong>OpenAI</strong> (pitch black + OpenAI Sans + blue user pills), <strong>Claude</strong> (warm charcoal + Claude Sans / Georgia serif + orange starburst &amp; orange Send key), and <strong>OpenRouter</strong> (obsidian-indigo + bold OR emblem).</li>
-              <li><strong>New Extra Thinking Level:</strong> Choose <strong>Low</strong>, <strong>Medium</strong>, <strong>High</strong>, or <strong>Extra</strong> — <strong>Extra</strong> runs deeper parallel live web research and adds thoughtful extra touches and polish for standout results.</li>
-              <li><strong>Usage Limit Ring &amp; News-Style Cooldown Popup:</strong> Color-coded top-right usage ring tracked separately per provider with a quiet background 2–3 hour cooldown and a clean Usage Limit popup offering instant <strong>Change API Key →</strong> refresh back to 0%.</li>
+              <li><strong>Android Phones &amp; Android Tablets + 1-Hand Smooth Scrolling:</strong> Added full responsive layouts for Android tablets (Galaxy Tab S10/S9/A9+, Pixel Tablet, Xiaomi Pad, Lenovo Tab, Samsung DeX &amp; split-screen) and unlocked effortless vertical touch scrolling across every screen, onboarding slide, chat, and settings modal.</li>
+              <li><strong>Samsung S26 &amp; One UI Safe Mode (Stops Gray Switch):</strong> Uses Android's official trusted Accessibility Overlay + <code>WebViewAssetLoader</code> + RSA-4096 v1/v2/v3 release signing with 2-tap Samsung Auto Blocker &amp; Restricted Settings helpers.</li>
+              <li><strong>Native Provider Themes, Forced Fonts &amp; 120fps Animations:</strong> Forces real Google Sans, OpenAI Sans, Claude Sans / Newsreader, and Plus Jakarta Sans with full 60–120fps animations even in Power Saving mode.</li>
             </ul>
           </div>
           <div class="site-news-note-box">
             <h3>🔧 What Has Been Fixed</h3>
             <ul>
-              <li><strong>Full Animated UI &amp; Forced Fonts on Phones:</strong> Android phones now run the exact same animated Brief UI, 3-slide onboarding tour, radial glows, typing animations, and forced provider webfonts as Windows and Linux.</li>
+              <li><strong>Fixed Touch Scroll Lock on Android Phones &amp; Browsers:</strong> Removed nested dual-overflow scroll traps on both the website and the Android app's onboarding, welcome, settings, and popover views so scrolling works effortlessly with one thumb.</li>
               <li><strong>Faster Work Mode on Flash-Lite &amp; Flash:</strong> Fast models now run direct non-streaming tool calls, skip heavy 2.4s OCR scans on non-GUI and fast steps, auto-focus target apps with immediate cursor movement, and unlock Roblox Creator Store MCP tools.</li>
-              <li><strong>Fixed Quota Burn &amp; OpenRouter Validation:</strong> Eliminated 16× nested retry burn and duplicate parallel calls on the same model, fixed OpenRouter rejecting pasted keys as model IDs, and updated Windows, Linux &amp; Android builds for v2.0.1.</li>
+              <li><strong>Fixed Quota Burn &amp; OpenRouter Validation:</strong> Eliminated 16× nested retry burn and duplicate parallel calls on the same model, fixed OpenRouter rejecting pasted keys as model IDs, and updated Windows, Linux &amp; Android Phone/Tablet builds for v2.0.2.</li>
             </ul>
           </div>
         </div>
@@ -5460,7 +5478,7 @@ Local MCP Bridge:
             if (panels[k]) panels[k].classList.toggle('is-active', k === activeOs);
           });
           if (activeOs === 'android') {
-            if (pillEl) pillEl.textContent = 'Android 8+ & Samsung · No Root · Live Floating Cursors';
+            if (pillEl) pillEl.textContent = 'Android Phones & Tablets (Samsung S26 & Galaxy Tab) · Safe Zero-Root';
             setStageView('desktop');
             if (navCta) {
               navCta.setAttribute('href', byId('hero-download-apk') ? byId('hero-download-apk').getAttribute('href') : GITHUB_LATEST_APK);
@@ -5473,9 +5491,9 @@ Local MCP Bridge:
               mobileBtn.setAttribute('download', 'Brief-Android.apk');
             }
             if (mobileTitle) mobileTitle.textContent = 'Brief for Android';
-            if (mobileSub) mobileSub.textContent = 'Zero Root · Research & Cursors';
+            if (mobileSub) mobileSub.textContent = 'Phones & Tablets · v2.0.2';
           } else if (activeOs === 'linux') {
-            if (pillEl) pillEl.textContent = 'Linux (x64 X11 / Xorg) · .deb, .AppImage & .tar.gz';
+            if (pillEl) pillEl.textContent = 'Linux (x64 & ARM64 X11) · .deb, .AppImage & .tar.gz';
             setStageView('desktop');
             if (navCta) {
               navCta.setAttribute('href', byId('hero-download-linux-deb') ? byId('hero-download-linux-deb').getAttribute('href') : GITHUB_LATEST_LINUX_DEB);
@@ -5488,7 +5506,7 @@ Local MCP Bridge:
               mobileBtn.setAttribute('download', 'Brief-Linux-x64.deb');
             }
             if (mobileTitle) mobileTitle.textContent = 'Brief for Linux';
-            if (mobileSub) mobileSub.textContent = 'X11 Desktop · xdotool + Cursors';
+            if (mobileSub) mobileSub.textContent = 'X11 Desktop · v2.0.2';
           } else {
             if (pillEl) pillEl.textContent = 'Windows 10 & 11 (64-bit) · Native Setup Wizard';
             setStageView('desktop');
@@ -5503,7 +5521,7 @@ Local MCP Bridge:
               mobileBtn.setAttribute('download', 'Brief-Setup.exe');
             }
             if (mobileTitle) mobileTitle.textContent = 'Brief for Windows';
-            if (mobileSub) mobileSub.textContent = 'Setup Wizard · v2.0.1';
+            if (mobileSub) mobileSub.textContent = 'Setup Wizard · v2.0.2';
           }
         }
 
@@ -5514,7 +5532,9 @@ Local MCP Bridge:
         });
 
         const ua = (navigator.userAgent || '').toLowerCase();
-        if (ua.indexOf('android') !== -1) selectOs('android');
+        const isAndroidOrAndroidTablet = ua.indexOf('android') !== -1 ||
+          (ua.indexOf('linux') !== -1 && navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && Math.min(window.screen.width || 9999, window.screen.height || 9999) <= 1280);
+        if (isAndroidOrAndroidTablet) selectOs('android');
         else if (ua.indexOf('linux') !== -1) selectOs('linux');
         else selectOs('windows');
       }
@@ -5585,7 +5605,7 @@ Local MCP Bridge:
         function applyReleaseMetrics(opts) {
           if (opts.version) {
             let cleanVer = String(opts.version).replace(/^v/i, '');
-            if (cleanVer.startsWith('1.') || cleanVer === '2.0.0') cleanVer = '2.0.1';
+            if (cleanVer.startsWith('1.') || cleanVer === '2.0.0' || cleanVer === '2.0.1') cleanVer = '2.0.2';
             if (navVerEl) navVerEl.textContent = 'v' + cleanVer;
             if (heroVerEl) heroVerEl.textContent = 'v' + cleanVer;
           }
@@ -5641,7 +5661,7 @@ Local MCP Bridge:
 
               const rawDigest = exeAsset && exeAsset.digest ? String(exeAsset.digest).replace(/^sha256:/i, '') : '';
               applyReleaseMetrics({
-                version: release.tag_name || '2.0.1',
+                version: release.tag_name || '2.0.2',
                 exeBytes: exeAsset ? exeAsset.size : 0,
                 zipBytes: zipAsset ? zipAsset.size : 0,
                 apkBytes: apkAsset ? apkAsset.size : 0,
@@ -5649,7 +5669,7 @@ Local MCP Bridge:
               });
             })
             .catch(function () {
-              applyReleaseMetrics({ version: '2.0.1' });
+              applyReleaseMetrics({ version: '2.0.2' });
             });
         }
 
@@ -5678,7 +5698,7 @@ Local MCP Bridge:
                 tar: info.linuxTar && info.linuxTar.exists ? '/download/Brief-Linux-x64.tar.gz' : GITHUB_LATEST_LINUX_TAR
               }, 'Local Download Server');
               applyReleaseMetrics({
-                version: info.version || '2.0.1',
+                version: info.version || '2.0.2',
                 exeBytes: info.installer.size,
                 zipBytes: info.archive && info.archive.exists ? info.archive.size : 0,
                 apkBytes: info.android && info.android.exists ? info.android.size : 0,

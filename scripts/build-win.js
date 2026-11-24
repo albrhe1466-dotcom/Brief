@@ -42,8 +42,8 @@ async function main() {
     try {
       await rcedit(launchExe, {
         icon: installedIco,
-        'file-version': '2.0.1.0',
-        'product-version': '2.0.1.0',
+        'file-version': '2.0.2.0',
+        'product-version': '2.0.2.0',
         'version-string': {
           ProductName: 'Brief',
           FileDescription: 'Brief — Private Windows Desktop AI Assistant',

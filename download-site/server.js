@@ -58,8 +58,8 @@ function getReleaseInfo() {
   if (!cachedReleaseInfo || now - cachedReleaseAt > 5000) {
     cachedReleaseInfo = {
       name: 'Brief',
-      version: '2.0.1',
-      platform: 'Windows, Linux (X11) & Android (No Root)',
+      version: '2.0.2',
+      platform: 'Windows, Linux (X11) & Android Phones/Tablets (Zero Root)',
       installer: Object.assign({ filename: 'Brief-Setup.exe', url: '/download/Brief-Setup.exe' }, fileMeta('Brief-Setup.exe')),
       archive: Object.assign({ filename: 'brief-package.zip', url: '/download/brief-package.zip' }, fileMeta('brief-package.zip')),
       android: Object.assign({ filename: 'Brief-Android.apk', url: '/download/Brief-Android.apk' }, fileMeta('Brief-Android.apk')),
