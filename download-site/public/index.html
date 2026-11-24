@@ -2873,7 +2873,7 @@
                 </span>
               </a>
 
-              <a class="btn-dl-hero" id="hero-quick-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55); box-shadow: 0 12px 30px rgba(5, 150, 105, 0.35);">
+              <a class="btn-dl-hero" id="hero-quick-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.3.apk" download="Brief-Android-v2.0.3.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55); box-shadow: 0 12px 30px rgba(5, 150, 105, 0.35);">
                 <span class="btn-dl-icon" aria-hidden="true">📱</span>
                 <span class="btn-dl-copy">
                   <span class="btn-dl-title">Android Phone &amp; Tablet (.apk)</span>
@@ -2931,7 +2931,7 @@
           <!-- Android Phone & Tablet Downloads (Samsung S26 to A-Series, Galaxy Tab, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi, Lenovo) -->
           <div class="os-cta-panel" id="os-panel-android">
             <div class="hero-cta-row">
-              <a class="btn-dl-hero" id="hero-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55);">
+              <a class="btn-dl-hero" id="hero-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.3.apk" download="Brief-Android-v2.0.3.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55);">
                 <span class="btn-dl-icon" aria-hidden="true">📱</span>
                 <span class="btn-dl-copy">
                   <span class="btn-dl-title">Android Phone &amp; Tablet APK (v2.0.3)</span>
@@ -4110,7 +4110,7 @@ Local MCP Bridge:
       const GITHUB_LATEST_LINUX_DEB = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-x64.deb';
       const GITHUB_LATEST_LINUX_APPIMAGE = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-x64.AppImage';
       const GITHUB_LATEST_LINUX_TAR = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Linux-x64.tar.gz';
-      const GITHUB_LATEST_APK = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Android.apk';
+      const GITHUB_LATEST_APK = 'https://github.com/' + GITHUB_REPO + '/releases/latest/download/Brief-Android-v2.0.3.apk';
 
       const TOOLS_CATALOG = [
         {
@@ -5675,7 +5675,7 @@ Local MCP Bridge:
               const find = function (name) { return assets.find(function (a) { return a.name === name; }) || null; };
               const exeAsset = find('Brief-Setup.exe');
               const zipAsset = find('brief-package.zip');
-              const apkAsset = find('Brief-Android.apk');
+              const apkAsset = find('Brief-Android-v2.0.3.apk') || find('Brief-Android.apk');
               const debAsset = find('Brief-Linux-x64.deb');
               const appImgAsset = find('Brief-Linux-x64.AppImage');
               const tarAsset = find('Brief-Linux-x64.tar.gz');

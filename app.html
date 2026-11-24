@@ -4685,8 +4685,84 @@
       width: 36px !important;
       height: 36px !important;
     }
+    /* Native Android WebView Root Scrolling on First-Run Welcome / Onboarding (html.is-key-gate-root) */
+    @media (max-width: 900px) {
+      html.is-key-gate-root,
+      html.is-key-gate-root body {
+        height: auto !important;
+        min-height: 100dvh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+      html.is-key-gate-root #icon-rail,
+      html.is-key-gate-root #sidebar,
+      html.is-key-gate-root #sidebar-resize-handle,
+      html.is-key-gate-root #top-header {
+        display: none !important;
+      }
+      html.is-key-gate-root #app-shell,
+      html.is-key-gate-root #main-area,
+      html.is-key-gate-root #workspace-body,
+      html.is-key-gate-root #view-key-gate {
+        display: block !important;
+        position: static !important;
+        height: auto !important;
+        min-height: 100dvh !important;
+        overflow: visible !important;
+      }
+      html.is-key-gate-root #view-key-gate {
+        padding: 18px 14px calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+    html[data-platform="android"].is-key-gate-root,
+    html[data-platform="android"].is-key-gate-root body {
+      height: auto !important;
+      min-height: 100dvh !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    html[data-platform="android"].is-key-gate-root #icon-rail,
+    html[data-platform="android"].is-key-gate-root #sidebar,
+    html[data-platform="android"].is-key-gate-root #sidebar-resize-handle,
+    html[data-platform="android"].is-key-gate-root #top-header {
+      display: none !important;
+    }
+    html[data-platform="android"].is-key-gate-root #app-shell,
+    html[data-platform="android"].is-key-gate-root #main-area,
+    html[data-platform="android"].is-key-gate-root #workspace-body,
+    html[data-platform="android"].is-key-gate-root #view-key-gate {
+      display: block !important;
+      position: static !important;
+      height: auto !important;
+      min-height: 100dvh !important;
+      overflow: visible !important;
+    }
     html[data-platform="android"] .gate-title {
       font-size: 20px !important;
+    }
+    html[data-platform="android"] .onb-steps-row {
+      flex-wrap: nowrap !important;
+      gap: 5px !important;
+    }
+    html[data-platform="android"] .onb-step-pill {
+      white-space: nowrap !important;
+      padding: 5px 8px !important;
+      font-size: 10.5px !important;
+    }
+    @media (max-width: 680px) {
+      .onb-steps-row {
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+      }
+      .onb-step-pill {
+        white-space: nowrap !important;
+        padding: 5px 8px !important;
+        font-size: 10.5px !important;
+      }
     }
     html[data-platform="android"] .popover-panel,
     html[data-platform="android"] #model-popover,
@@ -5493,23 +5569,23 @@
               <div class="onb-track" id="onb-track">
                 <!-- SLIDE 0: WELCOME -->
                 <div class="onb-slide active" id="onb-slide-0">
-                  <div class="gate-header" style="margin-bottom:10px;">
+                  <div class="gate-header" style="margin-bottom:12px;">
                     <div class="onb-hero-ring">
                       <img src="assets/icon.png" alt="Brief Logo">
                     </div>
-                    <h1 class="gate-title" style="font-size:26px;">Welcome to Brief</h1>
-                    <p class="gate-subtitle" style="line-height:1.55;">
-                      Your private AI partner on Windows, Linux &amp; Android Phones/Tablets — live web research, custom provider cursors, screen vision, and zero-root control.
+                    <h1 class="gate-title" style="font-size:24px;">Welcome to Brief</h1>
+                    <p class="gate-subtitle" style="line-height:1.5;">
+                      Your private AI partner across Windows, Linux &amp; Android Phones/Tablets — live web research, custom provider cursors, screen vision, and zero-root control.
                     </p>
                   </div>
-                  <div class="onb-feature-chips">
+                  <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:12px 0 14px;">
+                    <button class="btn-primary" id="onb-start-btn" type="button" style="min-width:180px;padding:11px 20px;font-size:14.5px;">Get Started →</button>
+                    <button class="btn-secondary" id="onb-skip-0-btn" type="button" style="padding:11px 15px;">Skip to App</button>
+                  </div>
+                  <div class="onb-feature-chips" style="margin:6px 0 2px;">
                     <span class="onb-feature-chip">👁 Screen Vision &amp; Research</span>
                     <span class="onb-feature-chip">🖱 Custom Provider Cursors</span>
                     <span class="onb-feature-chip">🔑 Gemini · OpenAI · Claude · OpenRouter</span>
-                  </div>
-                  <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:10px;">
-                    <button class="btn-primary" id="onb-start-btn" type="button" style="min-width:185px;padding:12px 22px;font-size:15px;">Get Started →</button>
-                    <button class="btn-secondary" id="onb-skip-0-btn" type="button" style="padding:12px 16px;">Skip to App</button>
                   </div>
                 </div>
 
@@ -7621,6 +7697,7 @@
         DOM.viewChat.classList.toggle('active', name === 'chat');
         document.body.classList.toggle('is-welcome', name === 'welcome');
         document.body.classList.toggle('is-key-gate', name === 'key-gate');
+        document.documentElement.classList.toggle('is-key-gate-root', name === 'key-gate');
         if (name === 'welcome') {
           renderWelcomeView({ triggerLogoAnim: !noAnim && (prev !== 'welcome' || !!forcedDir) });
         } else {

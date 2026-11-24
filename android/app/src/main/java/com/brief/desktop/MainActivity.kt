@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
                 allowContentAccess = false
                 textZoom = 86
                 mediaPlaybackRequiresUserGesture = false
-                cacheMode = WebSettings.LOAD_DEFAULT
+                cacheMode = WebSettings.LOAD_NO_CACHE
                 mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     @Suppress("DEPRECATION")
@@ -91,13 +91,20 @@ class MainActivity : AppCompatActivity() {
                     view: WebView,
                     request: WebResourceRequest
                 ): WebResourceResponse? {
-                    return assetLoader.shouldInterceptRequest(request.url)
+                    val resp = assetLoader.shouldInterceptRequest(request.url) ?: return null
+                    val headers = HashMap<String, String>(resp.responseHeaders ?: emptyMap())
+                    headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+                    headers["Pragma"] = "no-cache"
+                    headers["Expires"] = "0"
+                    resp.responseHeaders = headers
+                    return resp
                 }
             }
             addJavascriptInterface(BriefJsBridge(), "BriefAndroidBridge")
         }
         setContentView(webView)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html")
+        webView.clearCache(true)
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=205")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

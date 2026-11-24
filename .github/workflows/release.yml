@@ -168,12 +168,13 @@ jobs:
           gradle -p android assembleRelease --no-daemon
           mkdir -p download-site/public/downloads
           cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
+          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.0.3.apk
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
-          path: download-site/public/downloads/Brief-Android.apk
+          path: download-site/public/downloads/Brief-Android*.apk
 
   publish-release:
     needs: [build-windows, build-linux, build-android]
