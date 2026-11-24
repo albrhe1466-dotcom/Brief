@@ -5,24 +5,48 @@ import android.accessibilityservice.GestureDescription
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Path
+import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
+import android.util.Base64
+import android.view.Display
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.TextView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
+/**
+ * Unified Zero-Root Phone Control + Trusted Accessibility Cursor Overlay + On-Demand Vision.
+ *
+ * Uses Android's official `WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY` and
+ * `AccessibilityService.takeScreenshot` (Android 11+ / One UI 3–8 including Galaxy S26),
+ * completely eliminating `SYSTEM_ALERT_WINDOW`, `MediaProjection`, and background FGS
+ * permissions so Google Play Protect & Samsung Device Protection recognize Brief as safe!
+ */
 class BriefAccessibilityService : AccessibilityService() {
     companion object {
         @Volatile
         var instance: BriefAccessibilityService? = null
             private set
+
+        @Volatile
+        var onUserStopRequested: (() -> Unit)? = null
 
         fun isEnabled(context: Context): Boolean {
             if (instance != null) return true
@@ -35,6 +59,11 @@ class BriefAccessibilityService : AccessibilityService() {
         }
     }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var wm: WindowManager? = null
+    private var overlayView: CursorOverlayView? = null
+    private var stopPillView: TextView? = null
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
@@ -42,11 +71,154 @@ class BriefAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: android.view.accessibility.AccessibilityEvent?) {}
 
-    override fun onInterrupt() {}
+    override fun onInterrupt() {
+        hideOverlay()
+    }
 
     override fun onDestroy() {
+        hideOverlay()
         if (instance === this) instance = null
         super.onDestroy()
+    }
+
+    fun showOverlay(provider: ProviderId, status: String) {
+        mainHandler.post {
+            try {
+                if (overlayView == null) {
+                    val w = getSystemService(WINDOW_SERVICE) as WindowManager
+                    wm = w
+
+                    val view = CursorOverlayView(this)
+                    val lp = WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        PixelFormat.TRANSLUCENT
+                    ).apply {
+                        gravity = Gravity.TOP or Gravity.START
+                    }
+                    w.addView(view, lp)
+                    overlayView = view
+
+                    val dp = resources.displayMetrics.density
+                    val pill = TextView(this).apply {
+                        text = "■ Stop"
+                        setTextColor(Color.WHITE)
+                        textSize = 12f
+                        setPadding((12 * dp).toInt(), (6 * dp).toInt(), (12 * dp).toInt(), (6 * dp).toInt())
+                        background = GradientDrawable().apply {
+                            setColor(0xE6DC2626.toInt())
+                            cornerRadius = 999f
+                        }
+                        setOnClickListener {
+                            onUserStopRequested?.invoke()
+                        }
+                    }
+                    val pillLp = WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                        PixelFormat.TRANSLUCENT
+                    ).apply {
+                        gravity = Gravity.TOP or Gravity.END
+                        x = (12 * dp).toInt()
+                        y = (36 * dp).toInt()
+                    }
+                    w.addView(pill, pillLp)
+                    stopPillView = pill
+                }
+                overlayView?.visibility = View.VISIBLE
+                stopPillView?.visibility = View.VISIBLE
+                overlayView?.setState(provider, status)
+            } catch (_: Exception) {
+                // Ignore if window token is momentarily transitioning
+            }
+        }
+    }
+
+    fun updateOverlayState(provider: ProviderId, status: String) {
+        mainHandler.post {
+            overlayView?.setState(provider, status)
+        }
+    }
+
+    fun hideOverlay() {
+        mainHandler.post {
+            val w = wm
+            if (w != null) {
+                overlayView?.let { runCatching { w.removeView(it) } }
+                stopPillView?.let { runCatching { w.removeView(it) } }
+            }
+            overlayView = null
+            stopPillView = null
+        }
+    }
+
+    private fun setOverlayHiddenTemporarily(hidden: Boolean) {
+        mainHandler.post {
+            val vis = if (hidden) View.INVISIBLE else View.VISIBLE
+            overlayView?.visibility = vis
+            stopPillView?.visibility = vis
+        }
+    }
+
+    suspend fun captureScreenshotJpegBase64(): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        setOverlayHiddenTemporarily(true)
+        delay(45L)
+        val encoded = suspendCancellableCoroutine<String?> { cont ->
+            try {
+                takeScreenshot(
+                    Display.DEFAULT_DISPLAY,
+                    mainExecutor,
+                    object : TakeScreenshotCallback {
+                        override fun onSuccess(screenshot: ScreenshotResult) {
+                            try {
+                                val hwBuf = screenshot.hardwareBuffer
+                                val hwBmp = Bitmap.wrapHardwareBuffer(hwBuf, screenshot.colorSpace)
+                                val swBmp = hwBmp?.copy(Bitmap.Config.ARGB_8888, false)
+                                hwBmp?.recycle()
+                                hwBuf.close()
+                                if (swBmp == null) {
+                                    if (cont.isActive) cont.resume(null)
+                                    return
+                                }
+                                val scaled = if (swBmp.width > 900) {
+                                    val targetW = 900
+                                    val targetH = ((swBmp.height.toFloat() / swBmp.width.toFloat()) * targetW).toInt().coerceAtLeast(1)
+                                    Bitmap.createScaledBitmap(swBmp, targetW, targetH, true).also {
+                                        if (it !== swBmp) swBmp.recycle()
+                                    }
+                                } else {
+                                    swBmp
+                                }
+                                val out = ByteArrayOutputStream()
+                                scaled.compress(Bitmap.CompressFormat.JPEG, 76, out)
+                                scaled.recycle()
+                                val b64 = Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+                                if (cont.isActive) cont.resume(b64)
+                            } catch (_: Exception) {
+                                if (cont.isActive) cont.resume(null)
+                            }
+                        }
+
+                        override fun onFailure(errorCode: Int) {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    }
+                )
+            } catch (_: Exception) {
+                if (cont.isActive) cont.resume(null)
+            }
+        }
+        setOverlayHiddenTemporarily(false)
+        return encoded
     }
 
     private suspend fun dispatchPath(path: Path, durationMs: Long): Boolean {
@@ -71,9 +243,9 @@ class BriefAccessibilityService : AccessibilityService() {
         val px = DisplayUtils.normToPx(nx, w).coerceIn(4f, (w - 4).toFloat())
         val py = DisplayUtils.normToPx(ny, h).coerceIn(4f, (h - 4).toFloat())
 
-        CursorOverlayService.instance?.moveTo(px, py, 200L)
+        mainHandler.post { overlayView?.animateMoveTo(px, py, 200L) }
         delay(190L)
-        CursorOverlayService.instance?.rippleAt(px, py)
+        mainHandler.post { overlayView?.triggerRipple(px, py) }
 
         val p = Path().apply { moveTo(px, py) }
         return dispatchPath(p, if (longPress) 700L else 55L)
@@ -85,7 +257,7 @@ class BriefAccessibilityService : AccessibilityService() {
         val (w, h) = DisplayUtils.getRealScreenSize(this)
         val px = DisplayUtils.normToPx(nx, w).coerceIn(4f, (w - 4).toFloat())
         val py = DisplayUtils.normToPx(ny, h).coerceIn(4f, (h - 4).toFloat())
-        CursorOverlayService.instance?.rippleAt(px, py)
+        mainHandler.post { overlayView?.triggerRipple(px, py) }
         val ok2 = dispatchPath(Path().apply { moveTo(px, py) }, 50L)
         return ok1 && ok2
     }
@@ -97,9 +269,9 @@ class BriefAccessibilityService : AccessibilityService() {
         val ex = DisplayUtils.normToPx(x2, w).coerceIn(6f, (w - 6).toFloat())
         val ey = DisplayUtils.normToPx(y2, h).coerceIn(6f, (h - 6).toFloat())
 
-        CursorOverlayService.instance?.moveTo(sx, sy, 150L)
+        mainHandler.post { overlayView?.animateMoveTo(sx, sy, 150L) }
         delay(140L)
-        CursorOverlayService.instance?.moveTo(ex, ey, durationMs.coerceIn(140L, 900L))
+        mainHandler.post { overlayView?.animateMoveTo(ex, ey, durationMs.coerceIn(140L, 900L)) }
 
         val p = Path().apply {
             moveTo(sx, sy)

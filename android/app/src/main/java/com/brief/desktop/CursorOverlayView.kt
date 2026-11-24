@@ -1,18 +1,21 @@
 package com.brief.desktop
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
+import android.os.SystemClock
 import android.view.View
-import android.view.animation.DecelerateInterpolator
 import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * Click-through full-screen overlay drawing Brief's 4 custom provider cursors
- * (Gemini sparkle arrow, Claude orange starburst chevron, OpenAI sage-teal triangle,
- * OpenRouter black OR triangle) with ZERO particles and clean click ripples.
+ * Hardware-accelerated click-through Accessibility Overlay drawing Brief's 4 custom
+ * provider cursors (Gemini sparkle arrow, Claude orange starburst chevron,
+ * OpenAI sage-teal triangle, OpenRouter black OR triangle) with ZERO gray border,
+ * ZERO particles, and a real-time frame clock (`SystemClock.uptimeMillis` +
+ * `postOnAnimation`) so cursor glide & click ripples stay silky smooth at 60-120fps
+ * even when Samsung Power Saving / Reduce Animations disables ValueAnimator!
  */
 class CursorOverlayView(context: Context) : View(context) {
     private var provider: ProviderId = ProviderId.GEMINI
@@ -21,19 +24,26 @@ class CursorOverlayView(context: Context) : View(context) {
     private var cursorVisible: Boolean = false
     private var statusText: String = "Brief"
 
+    // Real-time cursor glide state (immune to ANIMATOR_DURATION_SCALE = 0 on Samsung battery saver)
+    private var moveStartX: Float = 0f
+    private var moveStartY: Float = 0f
+    private var moveTargetX: Float = 0f
+    private var moveTargetY: Float = 0f
+    private var moveStartTime: Long = 0L
+    private var moveDuration: Long = 220L
+    private var moveAnimating: Boolean = false
+
+    // Real-time click ripple state
     private var rippleX: Float = 0f
     private var rippleY: Float = 0f
+    private var rippleStartTime: Long = 0L
+    private var rippleDuration: Long = 380L
     private var rippleProgress: Float = 1f
     private var rippleActive: Boolean = false
 
-    private var moveAnim: ValueAnimator? = null
-    private var rippleAnim: ValueAnimator? = null
+    private var loopScheduled: Boolean = false
 
     private val dp = resources.displayMetrics.density
-    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 3f * dp
-    }
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
@@ -48,12 +58,59 @@ class CursorOverlayView(context: Context) : View(context) {
     }
     private val pillBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = 0xE60B0E17.toInt()
+        color = 0xEB090C14.toInt()
     }
     private val pillTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textSize = 11.5f * dp
         typeface = Typeface.DEFAULT_BOLD
+    }
+
+    private val frameTick = object : Runnable {
+        override fun run() {
+            loopScheduled = false
+            val now = SystemClock.uptimeMillis()
+            var needsMoreFrames = false
+
+            if (moveAnimating) {
+                val rawT = ((now - moveStartTime).toFloat() / moveDuration.toFloat()).coerceIn(0f, 1f)
+                val eased = 1f - (1f - rawT).pow(3)
+                cursorX = moveStartX + (moveTargetX - moveStartX) * eased
+                cursorY = moveStartY + (moveTargetY - moveStartY) * eased
+                if (rawT >= 1f) {
+                    moveAnimating = false
+                } else {
+                    needsMoreFrames = true
+                }
+            }
+
+            if (rippleActive) {
+                val rawR = ((now - rippleStartTime).toFloat() / rippleDuration.toFloat()).coerceIn(0f, 1f)
+                rippleProgress = 1f - (1f - rawR).pow(2)
+                if (rawR >= 1f) {
+                    rippleActive = false
+                } else {
+                    needsMoreFrames = true
+                }
+            }
+
+            invalidate()
+            if (needsMoreFrames) {
+                scheduleTick()
+            }
+        }
+    }
+
+    init {
+        setLayerType(LAYER_TYPE_HARDWARE, null)
+        setBackgroundColor(Color.TRANSPARENT)
+    }
+
+    private fun scheduleTick() {
+        if (!loopScheduled) {
+            loopScheduled = true
+            postOnAnimation(frameTick)
+        }
     }
 
     fun setState(p: ProviderId, status: String) {
@@ -63,6 +120,7 @@ class CursorOverlayView(context: Context) : View(context) {
     }
 
     fun showCursorAt(x: Float, y: Float) {
+        moveAnimating = false
         cursorX = x
         cursorY = y
         cursorVisible = true
@@ -70,7 +128,6 @@ class CursorOverlayView(context: Context) : View(context) {
     }
 
     fun animateMoveTo(tx: Float, ty: Float, durationMs: Long = 220L) {
-        moveAnim?.cancel()
         if (!cursorVisible || cursorX < 0f || cursorY < 0f) {
             cursorX = tx
             cursorY = ty
@@ -78,36 +135,24 @@ class CursorOverlayView(context: Context) : View(context) {
             invalidate()
             return
         }
-        val sx = cursorX
-        val sy = cursorY
-        moveAnim = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = durationMs.coerceIn(60L, 480L)
-            interpolator = DecelerateInterpolator()
-            addUpdateListener { anim ->
-                val t = anim.animatedValue as Float
-                cursorX = sx + (tx - sx) * t
-                cursorY = sy + (ty - sy) * t
-                invalidate()
-            }
-            start()
-        }
+        moveStartX = cursorX
+        moveStartY = cursorY
+        moveTargetX = tx
+        moveTargetY = ty
+        moveStartTime = SystemClock.uptimeMillis()
+        moveDuration = durationMs.coerceIn(70L, 520L)
+        moveAnimating = true
+        cursorVisible = true
+        scheduleTick()
     }
 
     fun triggerRipple(x: Float, y: Float) {
-        rippleAnim?.cancel()
         rippleX = x
         rippleY = y
+        rippleStartTime = SystemClock.uptimeMillis()
+        rippleProgress = 0f
         rippleActive = true
-        rippleAnim = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 380L
-            interpolator = DecelerateInterpolator()
-            addUpdateListener { anim ->
-                rippleProgress = anim.animatedValue as Float
-                if (rippleProgress >= 0.99f) rippleActive = false
-                invalidate()
-            }
-            start()
-        }
+        scheduleTick()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -118,20 +163,18 @@ class CursorOverlayView(context: Context) : View(context) {
 
         val accent = when (provider) {
             ProviderId.GEMINI -> 0xFF3B82F6.toInt()
-            ProviderId.OPENAI -> 0xFFFFFFFF.toInt()
+            ProviderId.OPENAI -> 0xFF2CB79F.toInt()
             ProviderId.ANTHROPIC -> 0xFFF97316.toInt()
             ProviderId.OPENROUTER -> 0xFF818CF8.toInt()
         }
-        borderPaint.color = (accent and 0x00FFFFFF) or 0xAA000000.toInt()
-        canvas.drawRect(borderPaint.strokeWidth / 2f, borderPaint.strokeWidth / 2f, w - borderPaint.strokeWidth / 2f, h - borderPaint.strokeWidth / 2f, borderPaint)
 
-        // Subtle status pill at top-left
+        // Compact obsidian status pill at top-left (NO full-screen gray border!)
         val msg = "${provider.displayName} · $statusText"
         val tw = pillTextPaint.measureText(msg)
         val pw = tw + 24f * dp
         val ph = 26f * dp
         val px = 14f * dp
-        val py = 34f * dp
+        val py = 36f * dp
         canvas.drawRoundRect(px, py, px + pw, py + ph, ph / 2f, ph / 2f, pillBgPaint)
         strokePaint.color = accent
         strokePaint.strokeWidth = 1.4f * dp
@@ -141,7 +184,7 @@ class CursorOverlayView(context: Context) : View(context) {
         // Clean single click ripple (NO particles)
         if (rippleActive) {
             val r = (8f + rippleProgress * 30f) * dp
-            val alpha = ((1f - rippleProgress) * 230).toInt().coerceIn(0, 255)
+            val alpha = ((1f - rippleProgress) * 235).toInt().coerceIn(0, 255)
             ripplePaint.color = (accent and 0x00FFFFFF) or (alpha shl 24)
             canvas.drawCircle(rippleX, rippleY, r, ripplePaint)
         }
@@ -251,63 +294,72 @@ class CursorOverlayView(context: Context) : View(context) {
 
     private fun drawOpenAiCursor(canvas: Canvas) {
         val path = Path().apply {
-            moveTo(6f, 6f)
-            lineTo(42f, 17f)
-            lineTo(17f, 42f)
+            moveTo(7.5f, 6.5f)
+            lineTo(39.0f, 21.0f)
+            lineTo(24.0f, 26.5f)
+            lineTo(18.5f, 41.0f)
             close()
         }
-        strokePaint.color = Color.argb(215, 255, 255, 255)
-        strokePaint.strokeWidth = 7.2f
-        canvas.drawPath(path, strokePaint)
-
-        val teal = 0xFF6C9E95.toInt()
-        strokePaint.color = teal
+        strokePaint.color = Color.WHITE
         strokePaint.strokeWidth = 5.0f
         canvas.drawPath(path, strokePaint)
-        fillPaint.color = teal
+
+        fillPaint.shader = LinearGradient(
+            7.5f, 6.5f, 38.0f, 38.0f,
+            0xFF2CB79F.toInt(),
+            0xFF147E6D.toInt(),
+            Shader.TileMode.CLAMP
+        )
         canvas.drawPath(path, fillPaint)
+        fillPaint.shader = null
 
         strokePaint.color = Color.WHITE
-        strokePaint.strokeWidth = 1.45f
-        for (i in 0 until 6) {
-            val a = i * Math.PI / 3.0
-            val ox = 20.5f + (cos(a) * 3.4).toFloat()
-            val oy = 20.5f + (sin(a) * 3.4).toFloat()
-            canvas.drawCircle(ox, oy, 3.1f, strokePaint)
+        strokePaint.strokeWidth = 1.6f
+        val cx = 22.0f
+        val cy = 21.0f
+        val r = 5.2f
+        for (k in 0 until 6) {
+            val a1 = Math.toRadians(k * 60.0)
+            val a2 = Math.toRadians(k * 60.0 + 75.0)
+            canvas.drawLine(
+                cx + (cos(a1) * r * 0.45f).toFloat(),
+                cy + (sin(a1) * r * 0.45f).toFloat(),
+                cx + (cos(a2) * r).toFloat(),
+                cy + (sin(a2) * r).toFloat(),
+                strokePaint
+            )
         }
     }
 
     private fun drawOpenRouterCursor(canvas: Canvas) {
         val path = Path().apply {
-            moveTo(9.5f, 5.5f)
-            lineTo(40.5f, 31.0f)
-            lineTo(21.5f, 35.5f)
-            lineTo(10.0f, 42.5f)
+            moveTo(6.5f, 5.5f)
+            lineTo(41.5f, 31.2f)
+            lineTo(24.0f, 35.0f)
+            lineTo(8.5f, 43.5f)
             close()
         }
-        strokePaint.color = Color.argb(155, 220, 228, 240)
-        strokePaint.strokeWidth = 4.2f
+        strokePaint.color = 0x55FFFFFF
+        strokePaint.strokeWidth = 2.6f
         canvas.drawPath(path, strokePaint)
 
-        strokePaint.color = 0xFF040406.toInt()
-        strokePaint.strokeWidth = 3.4f
-        canvas.drawPath(path, strokePaint)
-        fillPaint.color = 0xFF040406.toInt()
+        fillPaint.color = 0xFF050507.toInt()
         canvas.drawPath(path, fillPaint)
 
-        // Bold white "OR" monogram centered
+        // Bold white "OR" emblem inside triangle
         strokePaint.color = Color.WHITE
-        strokePaint.strokeWidth = 2.2f
-        canvas.drawCircle(16.6f, 24.2f, 3.2f, strokePaint)
+        strokePaint.strokeWidth = 2.6f
+        canvas.drawCircle(16.2f, 25.0f, 4.6f, strokePaint)
+
         val rPath = Path().apply {
-            moveTo(20.9f, 27.6f)
-            lineTo(20.9f, 20.8f)
-            lineTo(23.5f, 20.8f)
-            quadTo(25.8f, 20.8f, 25.8f, 22.6f)
-            quadTo(25.8f, 24.4f, 23.4f, 24.4f)
-            lineTo(21.3f, 24.4f)
-            moveTo(22.2f, 24.4f)
-            lineTo(25.7f, 27.6f)
+            moveTo(21.5f, 29.6f)
+            lineTo(21.5f, 20.5f)
+            lineTo(25.8f, 20.5f)
+            quadTo(29.0f, 20.5f, 29.0f, 23.2f)
+            quadTo(29.0f, 25.6f, 25.6f, 25.8f)
+            lineTo(21.8f, 25.8f)
+            moveTo(25.2f, 25.8f)
+            lineTo(29.6f, 29.6f)
         }
         canvas.drawPath(rPath, strokePaint)
     }

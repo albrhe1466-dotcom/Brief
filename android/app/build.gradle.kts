@@ -20,6 +20,11 @@ android {
         versionName = "2.0.1"
     }
 
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     if (keystorePath.isNotEmpty() && file(keystorePath).exists()) {
         signingConfigs {
             create("release") {
@@ -27,6 +32,9 @@ android {
                 storePassword = keystorePass
                 keyAlias = keystoreAlias
                 keyPassword = keystoreKeyPass
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
@@ -63,6 +71,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-ktx:1.9.2")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.webkit:webkit:1.12.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")

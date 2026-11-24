@@ -145,13 +145,15 @@ jobs:
           BRIEF_KEYSTORE_PASS: ${{ secrets.BRIEF_ANDROID_KEYSTORE_PASS }}
           BRIEF_KEY_ALIAS: ${{ secrets.BRIEF_ANDROID_KEY_ALIAS }}
         run: |
-          KS_PATH="/tmp/brief-release.jks"
+          KS_PATH="/tmp/brief-release.p12"
           KS_PASS="${BRIEF_KEYSTORE_PASS:-BriefAndroidRelease2026}"
           KS_ALIAS="${BRIEF_KEY_ALIAS:-brief}"
           if [ -n "$BRIEF_KEYSTORE_BASE64" ]; then
             echo "$BRIEF_KEYSTORE_BASE64" | base64 -d > "$KS_PATH"
+          elif [ -f "android/brief-release.p12" ]; then
+            cp "android/brief-release.p12" "$KS_PATH"
           else
-            keytool -genkeypair -v -keystore "$KS_PATH" -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias "$KS_ALIAS" -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Brief Desktop,O=Brief,L=Local,ST=Local,C=US"
+            keytool -genkeypair -v -keystore "$KS_PATH" -storetype PKCS12 -keyalg RSA -keysize 4096 -sigalg SHA256withRSA -validity 10000 -alias "$KS_ALIAS" -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Brief Assistant,OU=Android Engineering,O=Brief Open Source,L=Riyadh,ST=Riyadh,C=SA"
           fi
           echo "BRIEF_KEYSTORE_PATH=$KS_PATH" >> "$GITHUB_ENV"
           echo "BRIEF_KEYSTORE_PASS=$KS_PASS" >> "$GITHUB_ENV"

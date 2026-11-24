@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="only dark">
   <meta name="description" content="Download Brief for Windows, Linux (X11), and Android Phones — Private multi-agent AI with live custom provider cursors, OCR/screen vision, web research, and local zero-root control.">
   <meta name="theme-color" content="#090c12">
   <title>Download Brief — Private AI Agent for Windows, Linux &amp; Android</title>
@@ -95,7 +96,7 @@
     html {
       scroll-behavior: smooth;
       background-color: var(--bg-deep);
-      color-scheme: dark;
+      color-scheme: only dark;
       overflow-x: hidden;
       max-width: 100%;
       font-family: var(--font-sans) !important;
@@ -2715,16 +2716,7 @@
       }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-      }
-    }
+    /* Force smooth animations across Windows, Linux & Samsung/Android phones (even in Power Saving mode) */
   </style>
 </head>
 <body>
@@ -2888,24 +2880,29 @@
             </div>
           </div>
 
-          <!-- Android Phone Downloads (Samsung, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi, All Android) -->
+          <!-- Android Phone Downloads (Samsung S26 to A-Series, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi, All Android) -->
           <div class="os-cta-panel" id="os-panel-android">
             <div class="hero-cta-row">
               <a class="btn-dl-hero" id="hero-download-apk" href="https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk" download="Brief-Android.apk" style="background: linear-gradient(135deg, #059669, #047857); border-color: rgba(110, 231, 183, 0.55);">
                 <span class="btn-dl-icon" aria-hidden="true">📱</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title">Download Android APK (v2.0.1)</span>
-                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung · Pixel · LG · Infinix · Oppo · Vivo · No Root</span>
+                  <span class="btn-dl-title">Download Safe Android APK (v2.0.1)</span>
+                  <span class="btn-dl-sub" id="hero-apk-meta">Samsung S26 to A-Series · Pixel · LG · Infinix · Oppo · Vivo</span>
                 </span>
               </a>
 
               <a class="btn-dl-zip" href="#whats-new">
                 <span style="font-size: 20px;" aria-hidden="true">🛡️</span>
                 <span class="btn-dl-copy">
-                  <span class="btn-dl-title" style="font-size: 14.5px;">All-Android Zero-Root Guide</span>
-                  <span class="btn-dl-sub" style="color: var(--text-muted);">Overlay Cursor + Accessibility + Vision</span>
+                  <span class="btn-dl-title" style="font-size: 14.5px;">Safe Mode · 1-Switch Setup</span>
+                  <span class="btn-dl-sub" style="color: var(--text-muted);">Zero Root · Trusted Accessibility Overlay</span>
                 </span>
               </a>
+            </div>
+            <div style="margin-bottom: 16px; padding: 12px 15px; border-radius: 14px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(52, 211, 153, 0.35); font-size: 12.5px; color: #d1fae5; line-height: 1.55;">
+              <strong style="color: #6ee7b7;">Samsung Galaxy (S26 Ultra to A-Series) — Stop the Gray Switch in 2 Taps:</strong><br>
+              1. Open <strong>Settings → Security and privacy → Auto Blocker → Turn OFF</strong> (allows installing GitHub APKs &amp; stops Samsung graying out switches).<br>
+              2. Open <strong>Settings → Apps → Brief → top-right <code>⋮</code> → Allow restricted settings</strong>, then turn ON <strong>Brief Assistant</strong> in Accessibility!
             </div>
           </div>
 
@@ -4613,8 +4610,7 @@ Local MCP Bridge:
       }
 
       function prefersReducedMotion() {
-        return typeof window.matchMedia === 'function' &&
-          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        return false;
       }
 
       function copyTextSafe(text) {

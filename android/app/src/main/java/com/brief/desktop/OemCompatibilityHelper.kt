@@ -1,5 +1,6 @@
 package com.brief.desktop
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -8,12 +9,17 @@ import android.provider.Settings
 import android.widget.Toast
 
 /**
- * Zero-root OEM compatibility helper for Samsung (One UI), Google Pixel, LG,
- * Infinix (XOS), Tecno/Itel (HiOS), Oppo/Realme/OnePlus (ColorOS/OxygenOS),
- * Vivo/iQOO (FuntouchOS/OriginOS), Xiaomi/Redmi/POCO (HyperOS/MIUI), Motorola,
- * Honor/Huawei, Sony, Asus, Nothing, and all Android 8.0 - 15+ devices.
+ * Zero-root OEM compatibility helper for Samsung Galaxy (S26, S25, S24, S23, Z Fold/Flip,
+ * and A-series cheap-to-flagship One UI 5–8), Google Pixel, LG, Infinix (XOS),
+ * Tecno/Itel (HiOS), Oppo/Realme/OnePlus (ColorOS/OxygenOS), Vivo/iQOO (FuntouchOS),
+ * Xiaomi/Redmi/POCO (HyperOS/MIUI), Motorola, and all Android 8.0–16+ devices.
  */
 object OemCompatibilityHelper {
+
+    fun isSamsung(): Boolean {
+        val m = "${Build.MANUFACTURER} ${Build.BRAND}".lowercase()
+        return m.contains("samsung")
+    }
 
     fun detectedBrandLabel(): String {
         val m = (Build.MANUFACTURER ?: "").trim()
@@ -29,40 +35,37 @@ object OemCompatibilityHelper {
 
     fun getZeroRootSetupGuide(): String {
         val m = "${Build.MANUFACTURER} ${Build.BRAND}".lowercase()
-        val restrictedNote = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            "If Android 13–15 shows 'Restricted setting' on Accessibility: tap this box to open Brief App Info → tap top-right ⋮ menu → Allow restricted settings (zero root needed)."
-        } else {
-            "Tap this box anytime to open Brief App Info & permissions."
-        }
         return when {
             m.contains("samsung") ->
-                "Samsung Galaxy (One UI) Zero-Root Guide:\n• Enable 'Appear on top' (Floating Cursor) and 'Installed apps → Brief' in Accessibility.\n• $restrictedNote"
+                "Samsung Galaxy (S26 to A-Series · One UI) — Fix Gray Switch in 2 Taps:\n" +
+                    "1. Tap '1. Samsung Auto Blocker' → turn OFF Auto Blocker (stops Samsung blocking sideloaded apps & graying out switches).\n" +
+                    "2. Tap '2. Unlock Gray Switch (⋮)' → tap top-right ⋮ menu → 'Allow restricted settings'.\n" +
+                    "3. Tap '3. Enable Brief Assistant' → turn ON Brief in Installed Apps (enables both Floating Cursors + Touch Control in 1 switch!)."
             m.contains("infinix") || m.contains("tecno") || m.contains("itel") || m.contains("transsion") ->
-                "Infinix / Tecno (XOS / HiOS) Zero-Root Guide:\n• Enable 'Display over other apps' & Accessibility → Downloaded/Installed Services → Brief.\n• Turn on Auto-start in Phone Master / App Management so the cursor stays active.\n• $restrictedNote"
+                "Infinix / Tecno (XOS / HiOS) Zero-Root Guide:\n• Tap 'Unlock Gray Switch (⋮)' → App Info → ⋮ → Allow restricted settings, then enable Brief in Accessibility."
             m.contains("oppo") || m.contains("realme") || m.contains("oneplus") ->
-                "Oppo / Realme / OnePlus (ColorOS / OxygenOS) Zero-Root Guide:\n• Enable 'Floating Window / Display over other apps' and Accessibility → Downloaded apps → Brief.\n• $restrictedNote"
+                "Oppo / Realme / OnePlus (ColorOS / OxygenOS) Zero-Root Guide:\n• Tap 'Unlock Gray Switch (⋮)' → App Info → ⋮ → Allow restricted settings, then enable Brief in Accessibility → Downloaded apps."
             m.contains("vivo") || m.contains("iqoo") ->
-                "Vivo / iQOO (FuntouchOS / OriginOS) Zero-Root Guide:\n• Allow 'Floating window' & 'Background pop-ups' in App Info, then enable Brief in Accessibility.\n• $restrictedNote"
+                "Vivo / iQOO (FuntouchOS / OriginOS) Zero-Root Guide:\n• Tap 'Unlock Gray Switch (⋮)' → App Info → ⋮ → Allow restricted settings, then enable Brief in Accessibility."
             m.contains("xiaomi") || m.contains("redmi") || m.contains("poco") ->
-                "Xiaomi / Redmi / POCO (HyperOS / MIUI) Zero-Root Guide:\n• Allow 'Display pop-up windows while running in background' under Other Permissions, then enable Brief in Accessibility → Downloaded apps.\n• $restrictedNote"
-            m.contains("lge") || m.contains("lg") ->
-                "LG Android Zero-Root Guide:\n• Enable 'Draw over other apps' and turn on Brief under Settings → Accessibility → Services.\n• $restrictedNote"
-            m.contains("google") || m.contains("pixel") ->
-                "Google Pixel Zero-Root Guide:\n• Enable 'Display over other apps' and Accessibility → Downloaded apps → Brief.\n• $restrictedNote"
+                "Xiaomi / Redmi / POCO (HyperOS / MIUI) Zero-Root Guide:\n• Tap 'Unlock Gray Switch (⋮)' → App Info → Allow restricted settings, then enable Brief in Accessibility → Downloaded apps."
             else ->
-                "All-Android (${detectedBrandLabel()}) Zero-Root Guide:\n• Enable Floating Cursor Overlay + Brief Accessibility Service.\n• $restrictedNote"
+                "All-Android (${detectedBrandLabel()}) Zero-Root Guide:\n• If the Accessibility switch is gray ('Restricted setting'), tap '2. Unlock Gray Switch (⋮)' → top-right ⋮ → Allow restricted settings, then tap '3. Enable Brief Assistant'."
         }
     }
 
-    fun openOverlaySettingsSafe(context: Context) {
-        val pkgUri = Uri.parse("package:${context.packageName}")
+    fun openSamsungAutoBlockerSettingsSafe(context: Context) {
         val candidates = listOf(
-            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri),
-            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION),
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri),
+            Intent().setComponent(ComponentName("com.samsung.android.sm_cn", "com.samsung.android.sm.security.AutoBlockerActivity")),
+            Intent().setComponent(ComponentName("com.samsung.android.lool", "com.samsung.android.sm.security.AutoBlockerActivity")),
+            Intent(Settings.ACTION_SECURITY_SETTINGS),
             Intent(Settings.ACTION_SETTINGS)
         )
-        launchFirstAvailable(context, candidates, "Open 'Appear on top / Display over other apps' for Brief.")
+        launchFirstAvailable(
+            context,
+            candidates,
+            "In Security and privacy → tap Auto Blocker → toggle OFF so Samsung unlocks Brief."
+        )
     }
 
     fun openAccessibilitySettingsSafe(context: Context) {
@@ -70,7 +73,7 @@ object OemCompatibilityHelper {
             Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
             Intent(Settings.ACTION_SETTINGS)
         )
-        launchFirstAvailable(context, candidates, "Enable Brief under Installed / Downloaded Accessibility services.")
+        launchFirstAvailable(context, candidates, "Tap Installed apps → Brief Assistant → Turn ON.")
     }
 
     fun openAppDetailsSafe(context: Context) {
@@ -80,7 +83,7 @@ object OemCompatibilityHelper {
             Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS),
             Intent(Settings.ACTION_SETTINGS)
         )
-        launchFirstAvailable(context, candidates, "In App Info, tap top-right ⋮ → Allow restricted settings (if shown).")
+        launchFirstAvailable(context, candidates, "Tap top-right ⋮ menu → 'Allow restricted settings' to un-gray Brief!")
     }
 
     private fun launchFirstAvailable(context: Context, intents: List<Intent>, toastHint: String) {

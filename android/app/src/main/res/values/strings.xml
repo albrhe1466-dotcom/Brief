@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Brief</string>
-    <string name="accessibility_service_desc">Enables Brief to read visible screen labels, tap, swipe, scroll, navigate Back/Home, and type text on your Android phone without root. Only runs when you start a Work task and can be stopped anytime.</string>
+    <string name="accessibility_service_summary">Zero-root AI research &amp; floating cursor assistant</string>
+    <string name="accessibility_service_desc">Lets Brief display your selected AI provider cursor via Android Accessibility Overlay and assist with research, taps, scrolling, and typing only when you start a Work task. Zero root, zero background data collection, and instant Stop button.</string>
 </resources>

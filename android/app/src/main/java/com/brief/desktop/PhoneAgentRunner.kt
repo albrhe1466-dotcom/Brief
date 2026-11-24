@@ -23,7 +23,7 @@ class PhoneAgentRunner(
 
     fun stop() {
         stopped = true
-        runCatching { context.stopService(Intent(context, CursorOverlayService::class.java)) }
+        BriefAccessibilityService.instance?.hideOverlay()
     }
 
     suspend fun runUserMessage(
@@ -39,9 +39,9 @@ class PhoneAgentRunner(
         val model = vault.getActiveModel(provider)
         val thinking = vault.getThinkingLevel()
 
-        val initialShot = if (workMode && ScreenCaptureService.isReady()) {
+        val initialShot = if (workMode && BriefAccessibilityService.instance != null) {
             onStep("Looking at your phone screen…")
-            ScreenCaptureService.instance?.captureJpegBase64()
+            BriefAccessibilityService.instance?.captureScreenshotJpegBase64()
         } else null
 
         if (workMode) {
@@ -63,7 +63,7 @@ class PhoneAgentRunner(
             for (step in 1..maxSteps) {
                 if (stopped) return "Stopped by user."
                 onStep(if (workMode) "Step $step — Thinking…" else "Thinking…")
-                if (workMode) CursorOverlayService.instance?.updateState(provider, "Step $step…")
+                if (workMode) BriefAccessibilityService.instance?.updateOverlayState(provider, "Step $step…")
 
                 val res = aiClient.generate(
                     provider = provider,
@@ -102,7 +102,7 @@ class PhoneAgentRunner(
                             put("running", true)
                         }
                     )
-                    if (workMode) CursorOverlayService.instance?.updateState(provider, tc.name)
+                    if (workMode) BriefAccessibilityService.instance?.updateOverlayState(provider, tc.name)
                     val out = executeTool(tc, provider)
                     onStepItem?.invoke(
                         JSONObject().apply {
@@ -117,8 +117,8 @@ class PhoneAgentRunner(
                     results.add(tc to out)
                 }
 
-                val nextShot = if (workMode && ScreenCaptureService.isReady()) {
-                    ScreenCaptureService.instance?.captureJpegBase64()
+                val nextShot = if (workMode && BriefAccessibilityService.instance != null) {
+                    BriefAccessibilityService.instance?.captureScreenshotJpegBase64()
                 } else null
 
                 history.add(ConversationTurn(role = "tool_results", toolResults = results))
@@ -137,17 +137,14 @@ class PhoneAgentRunner(
             return "Error: ${e.message ?: "Request failed"}"
         } finally {
             if (workMode) {
-                runCatching { context.stopService(Intent(context, CursorOverlayService::class.java)) }
+                BriefAccessibilityService.instance?.hideOverlay()
             }
         }
     }
 
     private fun startOverlayIfAllowed(provider: ProviderId, status: String) {
-        if (!CursorOverlayService.canDrawOverlays(context)) return
-        val intent = Intent(context, CursorOverlayService::class.java)
-        runCatching { context.startForegroundService(intent) }
-        CursorOverlayService.onUserStopRequested = { stop() }
-        CursorOverlayService.instance?.updateState(provider, status)
+        BriefAccessibilityService.onUserStopRequested = { stop() }
+        BriefAccessibilityService.instance?.showOverlay(provider, status)
     }
 
     private suspend fun executeTool(tc: ToolCallSpec, provider: ProviderId): String {
