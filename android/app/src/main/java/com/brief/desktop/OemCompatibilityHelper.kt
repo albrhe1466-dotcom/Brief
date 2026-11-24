@@ -22,7 +22,15 @@ object OemCompatibilityHelper {
     }
 
     fun isTablet(context: Context? = null): Boolean {
-        return (context?.resources?.configuration?.smallestScreenWidthDp ?: 0) >= 600
+        val ctx = context ?: return false
+        val sw = ctx.resources.configuration.smallestScreenWidthDp
+        if (sw < 600) return false
+        val dm = ctx.resources.displayMetrics
+        if (dm.xdpi <= 0f || dm.ydpi <= 0f) return sw >= 720
+        val wInches = dm.widthPixels.toDouble() / dm.xdpi.toDouble()
+        val hInches = dm.heightPixels.toDouble() / dm.ydpi.toDouble()
+        val diag = kotlin.math.sqrt(wInches * wInches + hInches * hInches)
+        return diag >= 7.2
     }
 
     fun detectedBrandLabel(context: Context? = null): String {

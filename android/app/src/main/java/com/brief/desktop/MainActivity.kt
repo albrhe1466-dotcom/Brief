@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 databaseEnabled = true
                 allowFileAccess = false
                 allowContentAccess = false
-                textZoom = 100
+                textZoom = 86
                 mediaPlaybackRequiresUserGesture = false
                 cacheMode = WebSettings.LOAD_DEFAULT
                 mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
@@ -188,9 +188,9 @@ class MainActivity : AppCompatActivity() {
         obj.put("provider", activeProv.wireId)
         obj.put("activeModel", vault.getActiveModel(activeProv))
         obj.put("thinkingLevel", vault.getThinkingLevel().wire)
-        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+        val isLargeTablet = OemCompatibilityHelper.isTablet(this) && resources.configuration.smallestScreenWidthDp >= 720
         if (!obj.has("permissionMode")) obj.put("permissionMode", "full")
-        if (!obj.has("sidebarCollapsed")) obj.put("sidebarCollapsed", !isTablet)
+        if (!obj.has("sidebarCollapsed")) obj.put("sidebarCollapsed", !isLargeTablet)
         return obj
     }
 
@@ -247,9 +247,9 @@ class MainActivity : AppCompatActivity() {
             if (chatsRaw != null) JSONObject(chatsRaw) else JSONObject().put("chats", JSONArray()).put("projects", JSONArray())
         }.getOrElse { JSONObject().put("chats", JSONArray()).put("projects", JSONArray()) }
 
-        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+        val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.0.2")
+            put("version", "2.0.3")
             put("firstRunRequested", false)
             put(
                 "os",

@@ -16,8 +16,8 @@ android {
         applicationId = "com.brief.desktop"
         minSdk = 26
         targetSdk = 34
-        versionCode = 203
-        versionName = "2.0.2"
+        versionCode = 204
+        versionName = "2.0.3"
     }
 
     dependenciesInfo {

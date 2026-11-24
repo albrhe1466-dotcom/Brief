@@ -4536,6 +4536,194 @@
     }
 
     /* =====================================================================
+       ANDROID PHONES & ANDROID TABLETS COMPACT SCALE (html[data-platform="android"])
+       Shrinks UI ~18-20% exclusively on Android Phones & Tablets while keeping
+       Windows & Linux PCs 100% at full desktop scale, and centers popovers so
+       they NEVER clip off the top/bottom in portrait or landscape!
+    ===================================================================== */
+    html[data-platform="android"] {
+      --rail-width: 38px !important;
+      --sidebar-width: 186px;
+      --header-height: 40px !important;
+      font-size: 12.5px !important;
+    }
+    html[data-platform="android"] body {
+      font-size: 12.5px !important;
+    }
+    html[data-platform="android"] #icon-rail {
+      padding: 6px 0 8px !important;
+    }
+    html[data-platform="android"] .rail-brand {
+      width: 28px !important;
+      height: 28px !important;
+      margin-bottom: 4px !important;
+    }
+    html[data-platform="android"] .rail-brand img {
+      width: 17px !important;
+      height: 17px !important;
+    }
+    html[data-platform="android"] .rail-btn {
+      width: 30px !important;
+      height: 30px !important;
+    }
+    html[data-platform="android"] .rail-btn svg {
+      width: 15px !important;
+      height: 15px !important;
+    }
+    html[data-platform="android"] .rail-avatar {
+      width: 26px !important;
+      height: 26px !important;
+      font-size: 11px !important;
+    }
+    html[data-platform="android"] .sidebar-top {
+      padding: 0 8px 0 10px !important;
+    }
+    html[data-platform="android"] .brand-switcher {
+      font-size: 13.5px !important;
+      padding: 4px 6px !important;
+    }
+    html[data-platform="android"] .icon-btn {
+      width: 26px !important;
+      height: 26px !important;
+    }
+    html[data-platform="android"] .new-chat-btn {
+      padding: 6px 9px !important;
+      font-size: 12px !important;
+    }
+    html[data-platform="android"] .new-chat-kbd {
+      display: none !important;
+    }
+    html[data-platform="android"] .sb-item {
+      padding: 6px 9px !important;
+      font-size: 12px !important;
+    }
+    html[data-platform="android"] .local-badge-title {
+      font-size: 11px !important;
+    }
+    html[data-platform="android"] .local-badge-sub {
+      font-size: 9.5px !important;
+    }
+    html[data-platform="android"] #top-header {
+      padding: 0 10px !important;
+      gap: 6px !important;
+    }
+    html[data-platform="android"] .mode-seg-btn {
+      padding: 4px 12px !important;
+      font-size: 11.5px !important;
+    }
+    html[data-platform="android"] .header-pill-btn {
+      padding: 3px 7px !important;
+      font-size: 11px !important;
+    }
+    html[data-platform="android"] .usage-ring-btn {
+      width: 28px !important;
+      height: 28px !important;
+    }
+    html[data-platform="android"] body .welcome-title-row {
+      gap: 8px !important;
+      margin-bottom: 5px !important;
+    }
+    html[data-platform="android"] body .welcome-starburst {
+      width: 36px !important;
+      height: 36px !important;
+    }
+    html[data-platform="android"] body .welcome-starburst img {
+      width: 25px !important;
+      height: 25px !important;
+    }
+    html[data-platform="android"] body .welcome-heading {
+      font-size: clamp(17px, 3.1vw, 21px) !important;
+    }
+    html[data-platform="android"] body #composer-dock {
+      padding: 4px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    html[data-platform="android"] body .composer-wrap {
+      max-width: 580px !important;
+    }
+    html[data-platform="android"] body .composer-capsule {
+      padding: 5px 10px !important;
+      border-radius: 18px !important;
+    }
+    html[data-platform="android"] body #composer-input {
+      font-size: 12.5px !important;
+      min-height: 19px !important;
+    }
+    html[data-platform="android"] body .composer-tool-btn {
+      width: 25px !important;
+      height: 25px !important;
+      font-size: 13px !important;
+    }
+    html[data-platform="android"] body .selector-pill {
+      padding: 2px 8px !important;
+      font-size: 10.5px !important;
+      min-height: 24px !important;
+    }
+    html[data-platform="android"] body .send-btn,
+    html[data-platform="android"] body #send-btn {
+      width: 28px !important;
+      height: 28px !important;
+    }
+    html[data-platform="android"] body .msg-prose {
+      font-size: 12.5px !important;
+      line-height: 1.56 !important;
+    }
+    html[data-platform="android"] body .msg-bubble-user {
+      font-size: 12.5px !important;
+      padding: 7px 12px !important;
+    }
+    html[data-platform="android"] .gate-card {
+      max-width: 420px !important;
+      padding: 15px 16px !important;
+      border-radius: 16px !important;
+    }
+    html[data-platform="android"] .onb-hero-ring {
+      width: 56px !important;
+      height: 56px !important;
+      margin-bottom: 10px !important;
+    }
+    html[data-platform="android"] .onb-hero-ring img {
+      width: 36px !important;
+      height: 36px !important;
+    }
+    html[data-platform="android"] .gate-title {
+      font-size: 20px !important;
+    }
+    html[data-platform="android"] .popover-panel,
+    html[data-platform="android"] #model-popover,
+    html[data-platform="android"] #perm-popover,
+    html[data-platform="android"] #attach-popover {
+      position: fixed !important;
+      left: 50% !important;
+      top: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      transform: translate(-50%, -50%) !important;
+      width: min(390px, calc(100vw - 24px)) !important;
+      max-width: calc(100vw - 24px) !important;
+      max-height: calc(100dvh - 20px) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      padding: 10px 11px !important;
+      z-index: 125 !important;
+    }
+    html[data-platform="android"] .model-choice {
+      padding: 6px 9px !important;
+      margin-bottom: 4px !important;
+    }
+    html[data-platform="android"] .model-choice-title {
+      font-size: 12px !important;
+    }
+    html[data-platform="android"] .model-choice-sub {
+      font-size: 10.5px !important;
+      line-height: 1.32 !important;
+    }
+    html[data-platform="android"] .thinking-tier-btn {
+      padding: 4px 6px !important;
+      font-size: 10.5px !important;
+    }
+
+    /* =====================================================================
        PROVIDER VISUAL THEMES (EXACT CLAUDE, OPENAI, GEMINI & OPENROUTER)
     ===================================================================== */
     .welcome-title-row {
@@ -5270,7 +5458,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.2">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.3">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6168,7 +6356,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v2.0.2</span>
+          <span class="news-version-pill">News · v2.0.3</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -6176,7 +6364,7 @@
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.2 — Smooth 1-Hand Scrolling, Android Phones &amp; Tablets, Linux &amp; Windows
+              Brief v2.0.3 — Sleek Compact Fit on Android Phones &amp; Tablets + Full Scale on Windows &amp; Linux PCs
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
@@ -6214,10 +6402,10 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v2.0.2</span>
+              <span>What’s New in v2.0.3</span>
             </div>
             <ul class="news-list">
-              <li><strong>Android Phones &amp; Android Tablets + 1-Hand Smooth Scrolling:</strong> Full responsive UI for Android phones &amp; tablets (Samsung Galaxy S26, Galaxy Tab S10/S9/A9+, Pixel &amp; Pixel Tablet, Xiaomi Pad, Lenovo Tab, Oppo, Vivo, Infinix, LG) with effortless vertical touch scrolling across every screen and modal.</li>
+              <li><strong>Compact UI Scale for Android Phones &amp; Tablets (PCs Untouched):</strong> Sleeker, ~20% more compact icons, sidebar, header, composer, and centered scrollable model/permission popovers on Android phones &amp; tablets — while keeping Windows &amp; Linux PCs at full desktop size.</li>
               <li><strong>Samsung Safe Mode &amp; 2-Tap Un-Gray:</strong> Trusted Android Accessibility Overlay + RSA-4096 v1/v2/v3 signing eliminates false malware blocks and unlocks Samsung's gray switch in 2 taps.</li>
               <li><strong>Native Provider Themes, Forced Fonts &amp; 120fps Animations:</strong> Gemini (Google Sans + deep blue radial glow), OpenAI (pitch black + OpenAI Sans), Claude (warm charcoal + Newsreader serif &amp; orange starburst), and OpenRouter (obsidian-indigo + OR emblem).</li>
               <li><strong>Extra Thinking &amp; Usage Limit Ring:</strong> Choose Low, Medium, High, or <strong>Extra</strong> (deep parallel research + polish) alongside per-company Usage Limit tracking.</li>
@@ -6302,6 +6490,7 @@
       ==================================================================== */
 
       if (!window.locallyAPI && window.BriefAndroidBridge) {
+        document.documentElement.setAttribute('data-platform', 'android');
         const androidListeners = {};
         const androidPending = {};
         let androidCallSeq = 1;
@@ -8179,7 +8368,17 @@
       function togglePopover(popoverEl, force) {
         const willOpen = force !== undefined ? !!force : !popoverEl.classList.contains('open');
         closePopovers();
-        if (willOpen) popoverEl.classList.add('open');
+        if (willOpen) {
+          if (document.documentElement.getAttribute('data-platform') !== 'android') {
+            const wrap = document.querySelector('.composer-wrap');
+            if (wrap) {
+              const r = wrap.getBoundingClientRect();
+              const spaceAbove = Math.max(180, Math.floor(r.top - 18));
+              popoverEl.style.maxHeight = Math.min(515, spaceAbove) + 'px';
+            }
+          }
+          popoverEl.classList.add('open');
+        }
       }
 
       function closePopovers() {
@@ -10598,7 +10797,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.2';
+      const BRIEF_NEWS_VERSION = '2.0.3';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');
