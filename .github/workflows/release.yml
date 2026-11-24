@@ -160,6 +160,9 @@ jobs:
 
       - name: Build Signed Brief-Android.apk
         run: |
+          mkdir -p android/app/src/main/assets/assets
+          cp app.html android/app/src/main/assets/app.html
+          cp -r assets/* android/app/src/main/assets/assets/
           gradle -p android assembleRelease --no-daemon
           mkdir -p download-site/public/downloads
           cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
@@ -186,12 +189,12 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Publish to GitHub Release v2.0.0
+      - name: Publish to GitHub Release v2.0.1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v2.0.0"
-          NOTES="Brief v2.0.0 Multi-Platform Release (Windows, Linux X11, and Android Zero-Root): includes Windows Setup Wizard (Brief-Setup.exe + brief-package.zip), Linux X11 packages (Brief-Linux-x64.AppImage, .deb, .tar.gz with custom SVG provider cursors), Native Android APK (Brief-Android.apk — Samsung & Android 8+ with zero-root Accessibility phone control, MediaProjection screen vision, live research, and all 4 floating provider cursors), redesigned Gemini/Claude/OpenRouter cursors (zero particles), and OpenRouter obsidian-indigo theme."
+          TAG="v2.0.1"
+          NOTES="Brief v2.0.1 Multi-Platform Release (Windows, All Linux X11/XWayland x64 & ARM64, and All Android Phones Zero-Root): includes Windows Setup Wizard (Brief-Setup.exe + brief-package.zip), Linux packages (Brief-Linux-x64.deb, Brief-Linux-arm64.deb for Raspberry Pi & Kali ARM64, Universal .AppImage, .tar.gz), Native Android APK (Brief-Android.apk — Samsung, Pixel, LG, Infinix, Oppo, Vivo, Xiaomi & all Android 8+ phones with the full animated Brief UI, forced provider fonts, 3-slide onboarding tour, zero-root Accessibility phone control, MediaProjection screen vision, live research, and all 4 floating provider cursors)."
           if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release upload "$TAG" release-dist/* --repo "${{ github.repository }}" --clobber
             gh release edit "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android)" --notes "$NOTES" --latest

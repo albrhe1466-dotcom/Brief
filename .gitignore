@@ -26,3 +26,10 @@ download-site/public/downloads/
 # Windows metadata
 Thumbs.db
 Desktop.ini
+
+# Android build outputs & staged assets (bundled dynamically in CI)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/src/main/assets/

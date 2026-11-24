@@ -52,8 +52,8 @@ using Microsoft.Win32;
 [assembly: AssemblyCompany("Brief Desktop")]
 [assembly: AssemblyProduct("Brief Setup")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Brief Desktop")]
-[assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+[assembly: AssemblyVersion("2.0.1.0")]
+[assembly: AssemblyFileVersion("2.0.1.0")]
 
 namespace BriefSetupWizard
 {
@@ -788,7 +788,7 @@ namespace BriefSetupWizard
                 {
                     if (key == null) return;
                     key.SetValue("DisplayName", "Brief");
-                    key.SetValue("DisplayVersion", "2.0.0");
+                    key.SetValue("DisplayVersion", "2.0.1");
                     key.SetValue("Publisher", "Brief Desktop");
                     key.SetValue("URLInfoAbout", "https://github.com/albrhe1466-dotcom/Brief");
                     key.SetValue("InstallLocation", installDir);
@@ -828,7 +828,7 @@ namespace BriefSetupWizard
 function getSetupManifestXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity version="2.0.0.0" processorArchitecture="*" name="BriefDesktop.BriefSetup" type="win32"/>
+  <assemblyIdentity version="2.0.1.0" processorArchitecture="*" name="BriefDesktop.BriefSetup" type="win32"/>
   <description>Brief — Private Windows Desktop AI Assistant Setup Wizard</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
@@ -923,8 +923,8 @@ async function main() {
   const icoPath = path.join(ROOT, 'assets', 'icon.ico');
   await rcedit(briefExe, {
     icon: icoPath,
-    'file-version': '2.0.0.0',
-    'product-version': '2.0.0.0',
+    'file-version': '2.0.1.0',
+    'product-version': '2.0.1.0',
     'version-string': {
       ProductName: 'Brief',
       FileDescription: 'Brief — Private Windows Desktop AI Assistant',
@@ -972,11 +972,11 @@ async function main() {
     csPath
   ], { windowsHide: true, stdio: 'inherit' });
 
-  console.log('4/4 Embedding Brief Setup v2.0.0 metadata, SHA-256 checksums & optional Authenticode signature...');
+  console.log('4/4 Embedding Brief Setup v2.0.1 metadata, SHA-256 checksums & optional Authenticode signature...');
   await rcedit(SETUP_EXE_OUT, {
     icon: icoPath,
-    'file-version': '2.0.0.0',
-    'product-version': '2.0.0.0',
+    'file-version': '2.0.1.0',
+    'product-version': '2.0.1.0',
     'version-string': {
       ProductName: 'Brief Setup',
       FileDescription: 'Brief — Private Windows Desktop AI Assistant Setup Wizard',
@@ -997,7 +997,7 @@ async function main() {
 
   fs.rmSync(WORK_DIR, { recursive: true, force: true });
 
-  console.log('SUCCESS: Built native Windows installer and app archive (v2.0.0):');
+  console.log('SUCCESS: Built native Windows installer and app archive (v2.0.1):');
   console.log('  Setup Wizard EXE :', SETUP_EXE_OUT, `(${(exeBytes / 1024).toFixed(1)} KB, sha256=${shaExe.slice(0, 16)}...)`);
   console.log('  Payload Archive  :', ZIP_OUT, `(${(zipBytes / (1024 * 1024)).toFixed(1)} MB, sha256=${shaZip.slice(0, 16)}...)`);
   console.log('  SHA-256 Manifest :', sumsOut);

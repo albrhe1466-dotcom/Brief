@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://albrhe1466-dotcom.github.io https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
   <title>Brief</title>
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,10 +16,35 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap">
   <style>
     /* =====================================================================
-       Brief — BLUE DESKTOP THEME & GEORGIA TYPOGRAPHY DESIGN SYSTEM
-       Private local desktop AI agent powered by Google Gemini.
-       Zero telemetry · Zero cloud sync · Georgia font throughout
+       Brief — BLUE DESKTOP THEME & FORCED TYPOGRAPHY DESIGN SYSTEM
+       Forced webfont aliases ensure Android phones & Linux render the exact
+       same Google Sans, OpenAI Sans, Claude Sans & Newsreader/Georgia fonts
+       as Windows Desktop.
     ===================================================================== */
+    @font-face {
+      font-family: 'Google Sans';
+      src: local('Google Sans'), local('Plus Jakarta Sans'), url('https://fonts.gstatic.com/s/plusjakartasans/v8/L0xTDF4xlVMF-BfR8bXMIjhLq3-cXbKDO1w.woff2') format('woff2');
+      font-weight: 400 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'OpenAI Sans';
+      src: local('OpenAI Sans'), local('Inter'), url('https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2') format('woff2');
+      font-weight: 400 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Claude Sans';
+      src: local('Claude Sans'), local('Plus Jakarta Sans'), url('https://fonts.gstatic.com/s/plusjakartasans/v8/L0xTDF4xlVMF-BfR8bXMIjhLq3-cXbKDO1w.woff2') format('woff2');
+      font-weight: 400 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Georgia';
+      src: local('Georgia'), local('Newsreader'), url('https://fonts.gstatic.com/s/newsreader/v20/cY9qfjOCX1hbuyalUrK439vogqC9yFZCYg7oRZaLP4obnf7f.woff2') format('woff2');
+      font-weight: 400 700;
+      font-display: swap;
+    }
 
     :root {
       /* Core Black & White Charcoal Palette (matching reference desktop UI) */
@@ -80,7 +105,7 @@
       --shadow-blue: 0 6px 20px rgba(37, 99, 235, 0.35);
 
       /* Typography */
-      --font-serif: Georgia, 'Times New Roman', serif;
+      --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
       --font-mono: 'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace;
 
       /* Sizing & Motion */
@@ -117,10 +142,12 @@
       overflow: hidden;
       background-color: var(--bg-canvas);
       color: var(--text-primary);
-      font-family: var(--font-serif);
+      font-family: var(--font-serif) !important;
       font-size: 14.5px;
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
       text-rendering: optimizeLegibility;
       selection-background-color: var(--blue-600);
     }
@@ -4348,6 +4375,9 @@
     }
 
     @media (max-width: 680px) {
+      :root {
+        --rail-width: 46px;
+      }
       #widget-toggle-btn {
         display: none;
       }
@@ -4358,6 +4388,21 @@
         max-width: 130px;
         font-size: 11px;
         padding: 3px 8px;
+      }
+      .welcome-heading {
+        font-size: clamp(23px, 6.2vw, 32px) !important;
+      }
+      .welcome-inner {
+        padding: 18px 14px;
+      }
+      .modal-box {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: 90vh !important;
+      }
+      .news-gallery-grid,
+      .news-columns {
+        grid-template-columns: 1fr !important;
       }
     }
 
@@ -5096,7 +5141,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.0">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.1">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -5993,7 +6038,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v2.0.0</span>
+          <span class="news-version-pill">News · v2.0.1</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -6001,7 +6046,7 @@
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.0 — Windows, Linux X11 &amp; Android (No Root), New Cursors, OpenRouter Look &amp; Extra Thinking
+              Brief v2.0.1 — Unified Animated UI &amp; Forced Fonts Across Windows, Linux &amp; All Android Phones
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
@@ -6039,7 +6084,7 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v2.0.0</span>
+              <span>What’s New in v2.0.1</span>
             </div>
             <ul class="news-list">
               <li><strong>New Cursors (Zero Particles) &amp; OpenRouter Look:</strong> Updated Gemini, Claude, and OpenRouter desktop cursors with crisp transparent edges (zero particles), plus OpenRouter's new bold white <code class="mono">OR</code> logo and obsidian-indigo theme.</li>
@@ -6123,8 +6168,113 @@
       'use strict';
 
       /* ===================================================================
-         1. CORE STATE, DIAGNOSTICS & SAFE DOM UTILITIES
+         1. CORE STATE, ANDROID WEBVIEW BRIDGE & SAFE DOM UTILITIES
       ==================================================================== */
+
+      if (!window.locallyAPI && window.BriefAndroidBridge) {
+        const androidListeners = {};
+        const androidPending = {};
+        let androidCallSeq = 1;
+
+        window.__briefAndroidEvent = function (channel, payload) {
+          const list = androidListeners[channel] || [];
+          for (const fn of list) {
+            try { fn(payload); } catch (_) {}
+          }
+        };
+
+        window.__briefAndroidResolve = function (callId, res, err) {
+          const entry = androidPending[callId];
+          if (!entry) return;
+          delete androidPending[callId];
+          if (err) entry.reject(new Error(String(err)));
+          else entry.resolve(res);
+        };
+
+        function callAndroidAsync(methodName, argObj) {
+          return new Promise((resolve, reject) => {
+            const callId = 'ac_' + (androidCallSeq++);
+            androidPending[callId] = { resolve, reject };
+            try {
+              window.BriefAndroidBridge[methodName](callId, JSON.stringify(argObj || {}));
+            } catch (e) {
+              delete androidPending[callId];
+              reject(e);
+            }
+          });
+        }
+
+        function subAndroid(ch, fn) {
+          if (!androidListeners[ch]) androidListeners[ch] = [];
+          androidListeners[ch].push(fn);
+          return () => {
+            androidListeners[ch] = (androidListeners[ch] || []).filter((x) => x !== fn);
+          };
+        }
+
+        window.locallyAPI = {
+          bootstrap: async () => JSON.parse(window.BriefAndroidBridge.getBootstrapJson()),
+          showMain: async () => ({ ok: true }),
+          openExternal: async (url) => { window.BriefAndroidBridge.openExternalUrl(String(url || '')); return { ok: true }; },
+          openPath: async () => ({ ok: true }),
+          pickFolder: async () => ({ canceled: true }),
+          pickFiles: async () => ({ canceled: true, attachments: [] }),
+          pickFolderAttachment: async () => ({ canceled: true, attachments: [] }),
+          captureScreenAttachment: async () => JSON.parse(window.BriefAndroidBridge.captureScreenAttachmentJson()),
+          listDrives: async () => ({ drives: [], places: [] }),
+          getKeyStatus: async () => JSON.parse(window.BriefAndroidBridge.getKeyStatusJson()),
+          getKeySlots: async () => JSON.parse(window.BriefAndroidBridge.getKeySlotsJson()),
+          switchKeySlot: async (provider) => JSON.parse(window.BriefAndroidBridge.switchKeySlotJson(String(provider || 'gemini'))),
+          peekKey: async () => ({ key: '' }),
+          testKeyOnly: (key, testModel) => callAndroidAsync('validateKeyAsync', { key, testModel, save: false }),
+          saveKeyOnly: (key, testModel) => callAndroidAsync('validateKeyAsync', { key, testModel, save: true }),
+          saveAndValidateKey: (key, testModel) => callAndroidAsync('validateKeyAsync', { key, testModel, save: true }),
+          validateCurrentKey: (testModel) => callAndroidAsync('validateKeyAsync', { key: '', testModel, save: false }),
+          removeKey: async (provider) => JSON.parse(window.BriefAndroidBridge.removeKeyJson(String(provider || ''))),
+          testCustomModel: (modelId) => callAndroidAsync('validateKeyAsync', { key: '', testModel: modelId, save: false }),
+          refreshModels: async () => JSON.parse(window.BriefAndroidBridge.getBootstrapJson()),
+          getUsage: async () => ({ session: { total: 0, requests: 0, prompt: 0, output: 0, thoughts: 0 } }),
+          resetUsage: async () => ({ session: { total: 0, requests: 0, prompt: 0, output: 0, thoughts: 0 } }),
+          updateSettings: async (patch) => JSON.parse(window.BriefAndroidBridge.updateSettingsJson(JSON.stringify(patch || {}))),
+          setPermissionMode: async (mode) => JSON.parse(window.BriefAndroidBridge.updateSettingsJson(JSON.stringify({ permissionMode: mode }))),
+          setHotkey: async (accel) => ({ ok: true, hotkey: accel }),
+          saveChatsData: async (data) => { window.BriefAndroidBridge.saveChatsJson(JSON.stringify(data || {})); return { ok: true }; },
+          getDiagnostics: async () => JSON.parse(window.BriefAndroidBridge.getDiagnosticsJson()),
+          testAutomation: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true, detail: 'Opened Zero-Root Phone Control Setup.' }; },
+          testOverlay: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true, detail: 'Opened Floating Provider Cursor Setup.' }; },
+          toggleWidget: async () => ({ ok: true }),
+          toggleCursorOverlay: async () => ({ ok: true }),
+          listShareSources: async () => ({ sources: [] }),
+          captureSharePreview: async () => ({ base64: '' }),
+          runChat: (payload) => callAndroidAsync('runChatAsync', payload),
+          runWork: (payload) => callAndroidAsync('runWorkAsync', payload),
+          stopAgent: async () => { window.BriefAndroidBridge.stopAgent(); return { ok: true }; },
+          resolveApproval: async () => ({ ok: true }),
+          mcpList: async () => ({ servers: [] }),
+          mcpDetectApps: async () => ({ apps: [] }),
+          mcpScanLive: async () => ({ servers: [] }),
+          mcpBridgeInfo: async () => ({ url: '' }),
+          mcpSaveServer: async () => ({ ok: true }),
+          mcpConnect: async () => ({ ok: false }),
+          mcpDisconnect: async () => ({ ok: true }),
+          mcpRemove: async () => ({ ok: true }),
+          onStatus: (fn) => subAndroid('agent:status', fn),
+          onLog: (fn) => subAndroid('agent:log', fn),
+          onChatDelta: (fn) => subAndroid('agent:chat-delta', fn),
+          onWorkPlan: (fn) => subAndroid('agent:work-plan', fn),
+          onWorkThought: (fn) => subAndroid('agent:work-thought', fn),
+          onWorkNote: (fn) => subAndroid('agent:work-note', fn),
+          onWorkStep: (fn) => subAndroid('agent:work-step', fn),
+          onCommandOutput: (fn) => subAndroid('agent:command-output', fn),
+          onApprovalRequired: (fn) => subAndroid('agent:approval-required', fn),
+          onApprovalResolved: (fn) => subAndroid('agent:approval-resolved', fn),
+          onUsage: (fn) => subAndroid('usage:update', fn),
+          onSettingsChanged: (fn) => subAndroid('settings:changed', fn),
+          onModelsUpdated: (fn) => subAndroid('models:updated', fn),
+          onMcpUpdated: (fn) => subAndroid('mcp:updated', fn),
+          onCursorEvent: (fn) => subAndroid('cursor:event', fn)
+        };
+      }
 
       const api = window.locallyAPI || null;
 
@@ -10311,7 +10461,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.0';
+      const BRIEF_NEWS_VERSION = '2.0.1';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');

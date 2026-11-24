@@ -29,7 +29,8 @@ class PhoneAgentRunner(
     suspend fun runUserMessage(
         prompt: String,
         workMode: Boolean,
-        onStep: (String) -> Unit
+        onStep: (String) -> Unit,
+        onStepItem: ((JSONObject) -> Unit)? = null
     ): String {
         stopped = false
         val provider = vault.getActiveProvider()
@@ -91,8 +92,28 @@ class PhoneAgentRunner(
                 for (tc in res.toolCalls) {
                     if (stopped) return "Stopped by user."
                     onStep("Running ${tc.name}…")
+                    val callId = tc.id.ifEmpty { "step_${step}_${tc.name}" }
+                    onStepItem?.invoke(
+                        JSONObject().apply {
+                            put("step", step)
+                            put("toolCallId", callId)
+                            put("tool", tc.name)
+                            put("label", "${tc.name}(${tc.args.toString().take(60)})")
+                            put("running", true)
+                        }
+                    )
                     if (workMode) CursorOverlayService.instance?.updateState(provider, tc.name)
                     val out = executeTool(tc, provider)
+                    onStepItem?.invoke(
+                        JSONObject().apply {
+                            put("step", step)
+                            put("toolCallId", callId)
+                            put("tool", tc.name)
+                            put("label", "${tc.name} → ${out.take(80)}")
+                            put("running", false)
+                            put("ok", !out.contains("\"error\""))
+                        }
+                    )
                     results.add(tc to out)
                 }
 
