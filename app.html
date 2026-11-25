@@ -6020,7 +6020,12 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.6">
+          <button class="header-pill-btn" id="header-update-btn" type="button" title="New Brief Update Available" style="display:none;background:rgba(16,185,129,0.18);border-color:rgba(52,211,153,0.55);color:#6ee7b7;font-weight:700;">
+            <span aria-hidden="true">🚀</span>
+            <span id="header-update-label">Update</span>
+          </button>
+
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.7-beta">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6979,19 +6984,23 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v2.0.6</span>
+          <span class="news-version-pill" id="news-live-version-pill">News · v2.0.7-beta</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
       <div class="modal-body">
-        <div class="news-hero-strip">
-          <div>
-            <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.6 — Android Control Permissions &amp; Guaranteed Un-Gray Fix (Honor MagicOS · Samsung · All Android)
+        <div class="news-hero-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:220px;">
+            <div id="news-live-headline" style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
+              Brief v2.0.7-beta — 150-Frame Live Eyes, PC-Style Proportional Cursor, Zero Self-Stop &amp; Auto-Updater
             </div>
-            <div style="font-size: 12px; color: var(--text-secondary);">
-              Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
+            <div id="news-update-status" style="font-size: 12px; color: var(--text-secondary);">
+              You are on <strong>v2.0.7-beta</strong> · Live update &amp; news sync active for Android (Samsung &amp; Honor) &amp; PC.
             </div>
+          </div>
+          <div id="news-update-strip" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button class="btn-secondary" id="news-check-updates-btn" type="button" style="padding:7px 12px;font-size:12px;">🔄 Check Updates</button>
+            <button class="btn-primary" id="news-update-now-btn" type="button" style="display:none;padding:8px 15px;font-size:12.5px;background:linear-gradient(135deg,#059669,#047857);border-color:#6ee7b7;">⚡ Update Brief Now →</button>
           </div>
         </div>
 
@@ -7025,13 +7034,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v2.0.6</span>
+              <span id="news-col-ver-label">What’s New in v2.0.7-beta</span>
             </div>
-            <ul class="news-list">
-              <li><strong>Android Control Permissions &amp; Guaranteed Un-Gray Fix:</strong> Added official Android Notifications &amp; Always-Run-In-Background permissions plus the exact 4-step Apps-list un-gray flow so Honor MagicOS Tablets, Samsung (A-Series to S26), and every Android 8–16 phone unlock <code class="mono">⋮ → Allow restricted settings</code> cleanly.</li>
-              <li><strong>Claude Brief Code &amp; Brief Work (&lt;/&gt;):</strong> Top-left <code class="mono">[ Chat | &lt;/&gt; ]</code> switcher, 90%/80% &amp; 70%/60% faded code backdrop, streamlined sidebar, and selectable <strong>Work in Background</strong> vs. <strong>Send Live Photos</strong> execution.</li>
-              <li><strong>OpenAI Auto &amp; GPT-6 Terra + Gemini Chat | Task:</strong> OpenAI offers smart complexity-routed <strong>Auto</strong> and <strong>GPT-6 Terra</strong>; Gemini places <strong>Chat | Task</strong> at the chat bar with daily coding-font watermarks and <em>&ldquo;I am ready. What's your task?&rdquo;</em>.</li>
-              <li><strong>Extra Thinking &amp; Usage Limit Ring:</strong> Choose Low, Medium, High, or <strong>Extra</strong> alongside per-company Usage Limit tracking.</li>
+            <ul class="news-list" id="news-live-bullets">
+              <li><strong>Zero Self-Stop + PC-Style Proportional Cursor:</strong> Moved <code class="mono">■ Stop</code> out of top-right app search bars with hardware gesture pass-through so Brief NEVER clicks Stop by mistake. Cursor scales cleanly (<strong>Phones smallest → Tablets medium → PC full size</strong>) with smooth curved glide, custom speed, target-check reticle, and click bounce.</li>
+              <li><strong>150-Frame Live Vision &amp; Smarter Multi-Step Agent:</strong> Samples up to 150 rapid frames for UI stability, attaches calibrated <code class="mono">0..1000</code> HD vision + 150 interactive UI nodes on every step, auto-submits searches (YouTube, Chrome, etc.), and verifies full multi-step completion before stopping.</li>
+              <li><strong>Live News &amp; Auto-Updater (Samsung · Honor · PC):</strong> Automatically detects new releases on GitHub, shows live release news, and upgrades Samsung, Honor &amp; Android devices in-place while keeping your keys &amp; un-grayed control active.</li>
+              <li><strong>Claude Brief Code (&lt;/&gt;), OpenAI Auto/Terra &amp; Gemini Task:</strong> Full provider workspaces across Android, Windows &amp; Linux.</li>
             </ul>
           </div>
 
@@ -7183,6 +7192,7 @@
           saveChatsData: async (data) => { window.BriefAndroidBridge.saveChatsJson(JSON.stringify(data || {})); return { ok: true }; },
           getDiagnostics: async () => JSON.parse(window.BriefAndroidBridge.getDiagnosticsJson()),
           openPhoneSetup: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true }; },
+          startAndroidUpdate: async (apkUrl, ver) => JSON.parse(window.BriefAndroidBridge.startAndroidApkUpdateJson(String(apkUrl || ''), String(ver || ''))),
           testAutomation: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true, detail: 'Opened Zero-Root Phone Control Setup.' }; },
           testOverlay: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true, detail: 'Opened Floating Provider Cursor Setup.' }; },
           toggleWidget: async () => ({ ok: true }),
@@ -11637,7 +11647,37 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.6';
+      const BRIEF_NEWS_VERSION = '2.0.7-beta';
+      let latestRemoteRelease = null;
+
+      function parseBriefSemver(vStr) {
+        const raw = String(vStr || '').trim().replace(/^v/i, '');
+        const [core, pre] = raw.split('-', 2);
+        const nums = core.split('.').map((n) => parseInt(n, 10) || 0);
+        return {
+          major: nums[0] || 0,
+          minor: nums[1] || 0,
+          patch: nums[2] || 0,
+          isPre: !!pre,
+          pre: (pre || '').toLowerCase()
+        };
+      }
+
+      function isRemoteVersionNewer(remoteVer, localVer) {
+        if (!remoteVer) return false;
+        const rClean = String(remoteVer).trim().replace(/^v/i, '');
+        const lClean = String(localVer).trim().replace(/^v/i, '');
+        if (rClean === lClean) return false;
+        const r = parseBriefSemver(rClean);
+        const l = parseBriefSemver(lClean);
+        if (r.major !== l.major) return r.major > l.major;
+        if (r.minor !== l.minor) return r.minor > l.minor;
+        if (r.patch !== l.patch) return r.patch > l.patch;
+        // Same X.Y.Z: stable (no -beta) is newer than -beta
+        if (!r.isPre && l.isPre) return true;
+        if (r.isPre && !l.isPre) return false;
+        return r.pre.localeCompare(l.pre) > 0;
+      }
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');
@@ -11649,6 +11689,7 @@
       }
 
       function dismissWhatsNewPermanently() {
+        if (latestRemoteRelease && latestRemoteRelease.mandatoryLock) return;
         State.settings.seenNewsVersion = BRIEF_NEWS_VERSION;
         try { localStorage.setItem('brief_seen_news_version', BRIEF_NEWS_VERSION); } catch (_) { /* ignore */ }
         if (api && api.updateSettings) {
@@ -11660,21 +11701,144 @@
         openModal('modal-whats-new');
       }
 
-      async function checkGlobalNewsFeed() {
-        try {
-          if (State.ui.activeView === 'key-gate') return;
-          const resp = await fetch('https://albrhe1466-dotcom.github.io/Brief/news.json', { cache: 'no-store' });
-          if (!resp.ok) return;
-          const feed = await resp.json();
-          if (feed && feed.version && String(feed.version) !== String((State.settings && State.settings.seenNewsVersion) || '')) {
-            const seenLocal = localStorage.getItem('brief_seen_news_version');
-            if (seenLocal !== String(feed.version)) {
-              openWhatsNewModal();
-            }
+      async function triggerBriefAppUpgrade() {
+        const rel = latestRemoteRelease || {};
+        const targetVer = String(rel.version || BRIEF_NEWS_VERSION).replace(/^v/i, '');
+        const isAndroid = document.documentElement.getAttribute('data-platform') === 'android' ||
+          (State.os && State.os.platform === 'android');
+        const isLinux = !isAndroid && State.os && State.os.platform === 'linux';
+
+        const apkUrl = rel.apkUrl || 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk';
+        const winUrl = rel.winUrl || 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe';
+        const linuxUrl = rel.linuxDebUrl || 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb';
+
+        const statusEl = $('news-update-status');
+        if (isAndroid) {
+          if (statusEl) statusEl.textContent = 'Downloading Brief v' + targetVer + ' APK… Tap "Update" when Android prompts!';
+          if (api && api.startAndroidUpdate) {
+            await api.startAndroidUpdate(apkUrl, targetVer).catch(() => {});
+          } else if (api && api.openExternal) {
+            await api.openExternal(apkUrl).catch(() => {});
           }
-        } catch (_) { /* offline or sandboxed */ }
+          return;
+        }
+        const desktopUrl = isLinux ? linuxUrl : winUrl;
+        if (statusEl) statusEl.textContent = 'Opening Brief v' + targetVer + ' installer download…';
+        if (api && api.openExternal) {
+          await api.openExternal(desktopUrl).catch(() => {});
+        } else {
+          window.open(desktopUrl, '_blank');
+        }
       }
-      setTimeout(checkGlobalNewsFeed, 2400);
+
+      async function checkGlobalNewsFeed(manualCheck) {
+        const checkBtn = $('news-check-updates-btn');
+        if (manualCheck && checkBtn) {
+          checkBtn.disabled = true;
+          checkBtn.textContent = 'Checking…';
+        }
+        try {
+          let feed = null;
+          try {
+            const resp = await fetch('https://albrhe1466-dotcom.github.io/Brief/news.json?t=' + Date.now(), { cache: 'no-store' });
+            if (resp.ok) feed = await resp.json();
+          } catch (_) { /* try GitHub API next */ }
+
+          try {
+            const ghResp = await fetch('https://api.github.com/repos/albrhe1466-dotcom/Brief/releases/latest', { cache: 'no-store' });
+            if (ghResp.ok) {
+              const gh = await ghResp.json();
+              const ghVer = String(gh.tag_name || '').replace(/^v/i, '');
+              const assets = Array.isArray(gh.assets) ? gh.assets : [];
+              const findUrl = (pred) => {
+                const hit = assets.find((a) => a && pred(String(a.name || '')));
+                return hit ? hit.browser_download_url : '';
+              };
+              const apkHit = findUrl((n) => /^Brief-Android-v.*\.apk$/i.test(n)) || findUrl((n) => n === 'Brief-Android.apk');
+              const winHit = findUrl((n) => n === 'Brief-Setup.exe');
+              const debHit = findUrl((n) => n === 'Brief-Linux-x64.deb');
+              if (ghVer && (!feed || isRemoteVersionNewer(ghVer, feed.version || '0.0.0'))) {
+                feed = Object.assign({}, feed || {}, {
+                  version: ghVer,
+                  headline: gh.name || (feed && feed.headline) || ('Brief v' + ghVer + ' Available'),
+                  apkUrl: apkHit || (feed && feed.apkUrl),
+                  winUrl: winHit || (feed && feed.winUrl),
+                  linuxDebUrl: debHit || (feed && feed.linuxDebUrl),
+                  mandatoryAndroid: true
+                });
+              } else if (feed) {
+                if (apkHit) feed.apkUrl = apkHit;
+                if (winHit) feed.winUrl = winHit;
+                if (debHit) feed.linuxDebUrl = debHit;
+              }
+            }
+          } catch (_) { /* offline */ }
+
+          if (!feed || !feed.version) {
+            if (manualCheck) showToast('Could not reach update server — check internet connection.', 'warn');
+            return;
+          }
+
+          const remoteVer = String(feed.version).replace(/^v/i, '');
+          const newer = isRemoteVersionNewer(remoteVer, BRIEF_NEWS_VERSION);
+          const isAndroid = document.documentElement.getAttribute('data-platform') === 'android' ||
+            (State.os && State.os.platform === 'android');
+
+          // Update live news content inside modal if remote is newer
+          if (newer) {
+            if ($('news-live-version-pill')) $('news-live-version-pill').textContent = 'Update · v' + remoteVer;
+            if ($('news-col-ver-label')) $('news-col-ver-label').textContent = 'What’s New in v' + remoteVer;
+            if (feed.headline && $('news-live-headline')) $('news-live-headline').textContent = feed.headline;
+            if (Array.isArray(feed.bullets) && feed.bullets.length && $('news-live-bullets')) {
+              $('news-live-bullets').innerHTML = feed.bullets.map((b) => '<li>' + escapeHtml(String(b)) + '</li>').join('');
+            }
+
+            const mandatoryLock = !!(isAndroid && feed.mandatoryAndroid !== false);
+            latestRemoteRelease = Object.assign({}, feed, { version: remoteVer, mandatoryLock });
+
+            const hdrBtn = $('header-update-btn');
+            const hdrLbl = $('header-update-label');
+            if (hdrBtn) hdrBtn.style.display = 'inline-flex';
+            if (hdrLbl) hdrLbl.textContent = 'Update v' + remoteVer;
+
+            const upBtn = $('news-update-now-btn');
+            if (upBtn) {
+              upBtn.style.display = 'inline-flex';
+              upBtn.textContent = isAndroid ? ('⚡ Update to v' + remoteVer + ' Now (Required)') : ('⬇️ Update to v' + remoteVer + ' Now');
+            }
+            const stEl = $('news-update-status');
+            if (stEl) {
+              stEl.innerHTML = isAndroid
+                ? '<strong style="color:#6ee7b7;">Update Required for Samsung, Honor &amp; Android:</strong> New version <strong>v' + escapeHtml(remoteVer) + '</strong> is ready — tap Update Now to install straight over v' + escapeHtml(BRIEF_NEWS_VERSION) + '!'
+                : '<strong style="color:#6ee7b7;">New Update Available:</strong> Brief <strong>v' + escapeHtml(remoteVer) + '</strong> is ready to download and install!';
+            }
+            const closeX = $('whats-new-close-x');
+            if (closeX && mandatoryLock) {
+              closeX.style.display = 'none';
+            }
+            if (State.ui.activeView !== 'key-gate') {
+              openWhatsNewModal();
+              if (mandatoryLock && !State._autoUpdateTriggeredOnce) {
+                State._autoUpdateTriggeredOnce = true;
+                setTimeout(() => triggerBriefAppUpgrade(), 900);
+              }
+            }
+          } else if (manualCheck) {
+            const stEl = $('news-update-status');
+            if (stEl) stEl.innerHTML = '✅ You are running the latest version (<strong>v' + escapeHtml(BRIEF_NEWS_VERSION) + '</strong>).';
+            showToast('Brief v' + BRIEF_NEWS_VERSION + ' is up to date!', 'ok');
+          }
+        } catch (_) {
+          /* offline or sandboxed */
+        } finally {
+          if (manualCheck && checkBtn) {
+            checkBtn.disabled = false;
+            checkBtn.textContent = '🔄 Check Updates';
+          }
+        }
+      }
+      setTimeout(() => checkGlobalNewsFeed(false), 2000);
+      setInterval(() => checkGlobalNewsFeed(false), 10 * 60 * 1000);
 
       function openModal(id) {
         State.ui.activeModal = id;
@@ -12490,14 +12654,24 @@
 
         // Modals
         DOM.modalBackdrop.addEventListener('click', (e) => {
-          if (e.target === DOM.modalBackdrop) closeAllModals();
+          if (e.target === DOM.modalBackdrop) {
+            if (State.ui.activeModal === 'modal-whats-new' && latestRemoteRelease && latestRemoteRelease.mandatoryLock) return;
+            closeAllModals();
+          }
         });
         document.querySelectorAll('.modal-close-x').forEach((btn) => {
           btn.addEventListener('click', () => closeAllModals());
         });
         $('lightbox-close-btn').addEventListener('click', () => closeAllModals());
         $('whats-new-open-btn').addEventListener('click', () => openWhatsNewModal());
+        $('header-update-btn').addEventListener('click', () => {
+          openWhatsNewModal();
+          triggerBriefAppUpgrade();
+        });
+        $('news-update-now-btn').addEventListener('click', () => triggerBriefAppUpgrade());
+        $('news-check-updates-btn').addEventListener('click', () => checkGlobalNewsFeed(true));
         $('whats-new-close-x').addEventListener('click', () => {
+          if (latestRemoteRelease && latestRemoteRelease.mandatoryLock) return;
           dismissWhatsNewPermanently();
           closeAllModals();
         });

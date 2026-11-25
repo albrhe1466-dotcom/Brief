@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=208")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=209")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -281,7 +281,7 @@ class MainActivity : AppCompatActivity() {
 
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.0.6")
+            put("version", "2.0.7-beta")
             put("firstRunRequested", false)
             put(
                 "os",
@@ -399,6 +399,49 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun startAndroidApkUpdateJson(apkUrl: String, versionTag: String): String {
+            val cleanUrl = apkUrl.trim().ifEmpty {
+                "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk"
+            }
+            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").ifEmpty { "latest" }
+            return try {
+                val dm = getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                val req = android.app.DownloadManager.Request(Uri.parse(cleanUrl)).apply {
+                    setTitle("Brief Update v$safeVer")
+                    setDescription("Downloading Brief v$safeVer for Android — tap when complete to install update.")
+                    setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    setMimeType("application/vnd.android.package-archive")
+                    setAllowedOverMetered(true)
+                    setAllowedOverRoaming(true)
+                    setDestinationInExternalPublicDir(
+                        android.os.Environment.DIRECTORY_DOWNLOADS,
+                        "Brief-Android-$safeVer.apk"
+                    )
+                }
+                val downloadId = dm.enqueue(req)
+                // Also open the direct APK URL in browser so Samsung/Honor browsers offer immediate 1-tap Update!
+                runOnUiThread {
+                    android.widget.Toast.makeText(
+                        this@MainActivity,
+                        "Downloading Brief v$safeVer update… Tap 'Update' when prompted!",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl)))
+                    } catch (_: Exception) {}
+                }
+                JSONObject().put("ok", true).put("downloadId", downloadId).put("url", cleanUrl).toString()
+            } catch (e: Exception) {
+                runOnUiThread {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl)))
+                    } catch (_: Exception) {}
+                }
+                JSONObject().put("ok", true).put("fallbackBrowser", true).put("url", cleanUrl).toString()
+            }
+        }
+
+        @JavascriptInterface
         fun captureScreenAttachmentJson(): String {
             return JSONObject().put("canceled", true).toString()
         }
@@ -491,14 +534,25 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread { showNativePhoneSetupDialog() }
             }
 
+            val settingsNow = buildSettingsObject()
+            val rawSpeed = settingsNow.optLong("cursorSpeedMs", 580L)
+            val profile = settingsNow.optString("cursorSpeedProfile", "balanced").lowercase()
+            val effectiveSpeedMs = when {
+                rawSpeed in 180L..1500L && rawSpeed != 220L -> rawSpeed
+                profile == "slow" || profile == "deliberate" -> 820L
+                profile == "fast" -> 340L
+                else -> 580L
+            }
+
             val collectedSteps = JSONArray()
-            emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "work").put("stepText", "Starting phone work…"))
+            emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "work").put("stepText", "150f Live Vision — Starting…"))
             lifecycleScope.launch {
                 val reply = withContext(Dispatchers.IO) {
                     agent.runUserMessage(
                         prompt = task,
                         workMode = true,
                         workVisualMode = workVisualMode,
+                        cursorSpeedMs = effectiveSpeedMs,
                         onStep = { stepTxt ->
                             emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "work").put("stepText", stepTxt))
                         },

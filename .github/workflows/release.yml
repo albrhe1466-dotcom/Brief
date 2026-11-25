@@ -168,7 +168,7 @@ jobs:
           gradle -p android assembleRelease --no-daemon
           mkdir -p download-site/public/downloads
           cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
-          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.0.6.apk
+          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.0.7-beta.apk
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
@@ -192,15 +192,15 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Publish to GitHub Release v2.0.6
+      - name: Publish to GitHub Release v2.0.7-beta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v2.0.6"
-          NOTES="Brief v2.0.6 Multi-Platform Release (Android Phones & Tablets · Honor MagicOS · Samsung One UI · All Android 8–16 + Windows & Linux): adds official Android runtime & background control permissions (Notifications + Always-Run-In-Background), fixes Android 13–16 App Info deep-link hiding of the 3-dots (⋮) menu by launching the system Apps list in the exact required order (1. Allow Permissions -> 2. Tap gray switch once -> 3. Unlock ⋮ in Apps list -> 4. Turn ON Brief Assistant), plus 1-tap bilingual Arabic/English Android Control Permissions banner."
+          TAG="v2.0.7-beta"
+          NOTES="Brief v2.0.7-beta Multi-Platform Release (Android Phones & Tablets · Samsung · Honor MagicOS · Windows · Linux): eliminates Stop-button self-clicks with bottom-left dock + hardware gesture pass-through, upgrades Android cursor to PC-style proportional scale (Phones smallest -> Tablets medium -> PC full size) with Choreographer 150fps VSYNC curved glide + custom speed + target-check reticle + click bounce, adds 150-Frame Live Vision + calibrated 0..1000 HD screenshots + 150 UI nodes + smart YouTube/search submit + multi-step completion verifier, and enables automatic live news & in-app update prompts across Android & PC."
           if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release upload "$TAG" release-dist/* --repo "${{ github.repository }}" --clobber
-            gh release edit "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest
+            gh release edit "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --prerelease=false --latest
           else
             gh release create "$TAG" release-dist/* --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest
           fi

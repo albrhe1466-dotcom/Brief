@@ -3,47 +3,64 @@ package com.brief.desktop
 import android.content.Context
 import android.graphics.*
 import android.os.SystemClock
+import android.view.Choreographer
 import android.view.View
+import kotlin.math.atan2
 import kotlin.math.cos
-import kotlin.math.min
+import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * Hardware-accelerated click-through Accessibility Overlay drawing Brief's 4 custom
- * provider cursors (Gemini sparkle arrow, Claude orange starburst chevron,
- * OpenAI sage-teal triangle, OpenRouter black OR triangle) with ZERO gray border,
- * ZERO particles, and a real-time frame clock (`SystemClock.uptimeMillis` +
- * `postOnAnimation`) so cursor glide & click ripples stay silky smooth at 60-120fps
- * even when Samsung Power Saving / Reduce Animations disables ValueAnimator!
+ * PC-Grade Hardware-Accelerated Provider Cursor Overlay for Android Phones & Tablets.
+ *
+ * - Device-proportional scale: Phones (smallest: 21dp) -> Tablets (medium: 28dp) -> PC (full desktop).
+ * - Driven by `Choreographer` nanosecond VSYNC callbacks (smooth up to 120Hz / 144Hz / 150fps+
+ *   even when Battery Saver disables ValueAnimator).
+ * - Smooth human-like curved S-glide at custom speed, visible target-check reticle before clicking,
+ *   pointer press-down bounce animation, and dual concentric click ripples.
  */
 class CursorOverlayView(context: Context) : View(context) {
     private var provider: ProviderId = ProviderId.GEMINI
-    private var cursorX: Float = -200f
-    private var cursorY: Float = -200f
-    private var cursorVisible: Boolean = false
-    private var statusText: String = "Brief"
+    private val isTabletDevice: Boolean = OemCompatibilityHelper.isTablet(context)
 
-    // Real-time cursor glide state (immune to ANIMATOR_DURATION_SCALE = 0 on Samsung battery saver)
+    private var cursorX: Float = -1f
+    private var cursorY: Float = -1f
+    private var cursorVisible: Boolean = false
+    private var statusBadgeVisible: Boolean = true
+    private var statusText: String = "Ready"
+
+    // Smooth curved Bezier glide state
     private var moveStartX: Float = 0f
     private var moveStartY: Float = 0f
+    private var moveCtrlX: Float = 0f
+    private var moveCtrlY: Float = 0f
     private var moveTargetX: Float = 0f
     private var moveTargetY: Float = 0f
-    private var moveStartTime: Long = 0L
-    private var moveDuration: Long = 220L
+    private var moveStartMs: Long = 0L
+    private var moveDurationMs: Long = 560L
     private var moveAnimating: Boolean = false
 
-    // Real-time click ripple state
+    // Target inspection / "checking" reticle state
+    private var checkX: Float = 0f
+    private var checkY: Float = 0f
+    private var checkStartMs: Long = 0L
+    private var checkDurationMs: Long = 220L
+    private var checkProgress: Float = 0f
+    private var checkActive: Boolean = false
+
+    // Click press bounce + dual ripple state
     private var rippleX: Float = 0f
     private var rippleY: Float = 0f
-    private var rippleStartTime: Long = 0L
-    private var rippleDuration: Long = 380L
+    private var rippleStartMs: Long = 0L
+    private var rippleDurationMs: Long = 420L
     private var rippleProgress: Float = 1f
     private var rippleActive: Boolean = false
+    private var clickScale: Float = 1f
 
-    private var loopScheduled: Boolean = false
-
+    private var vsyncScheduled: Boolean = false
     private val dp = resources.displayMetrics.density
+
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
@@ -54,49 +71,73 @@ class CursorOverlayView(context: Context) : View(context) {
     }
     private val ripplePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.5f * dp
+        strokeWidth = (if (isTabletDevice) 2.4f else 1.9f) * dp
     }
     private val pillBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = 0xEB090C14.toInt()
+        color = 0xE80A0D16.toInt()
     }
     private val pillTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
-        textSize = 11.5f * dp
+        textSize = (if (isTabletDevice) 11.2f else 9.8f) * dp
         typeface = Typeface.DEFAULT_BOLD
     }
 
-    private val frameTick = object : Runnable {
-        override fun run() {
-            loopScheduled = false
+    private val frameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            vsyncScheduled = false
             val now = SystemClock.uptimeMillis()
-            var needsMoreFrames = false
+            var keepRunning = false
 
             if (moveAnimating) {
-                val rawT = ((now - moveStartTime).toFloat() / moveDuration.toFloat()).coerceIn(0f, 1f)
-                val eased = 1f - (1f - rawT).pow(3)
-                cursorX = moveStartX + (moveTargetX - moveStartX) * eased
-                cursorY = moveStartY + (moveTargetY - moveStartY) * eased
+                val rawT = ((now - moveStartMs).toFloat() / moveDurationMs.toFloat()).coerceIn(0f, 1f)
+                // Quintic smoothstep (smooth acceleration + gentle PC-style deceleration onto target)
+                val t = rawT * rawT * rawT * (rawT * (rawT * 6f - 15f) + 10f)
+                val inv = 1f - t
+                cursorX = inv * inv * moveStartX + 2f * inv * t * moveCtrlX + t * t * moveTargetX
+                cursorY = inv * inv * moveStartY + 2f * inv * t * moveCtrlY + t * t * moveTargetY
                 if (rawT >= 1f) {
+                    cursorX = moveTargetX
+                    cursorY = moveTargetY
                     moveAnimating = false
                 } else {
-                    needsMoreFrames = true
+                    keepRunning = true
+                }
+            }
+
+            if (checkActive) {
+                val rawC = ((now - checkStartMs).toFloat() / checkDurationMs.toFloat()).coerceIn(0f, 1f)
+                checkProgress = rawC
+                if (rawC >= 1f) {
+                    checkActive = false
+                } else {
+                    keepRunning = true
                 }
             }
 
             if (rippleActive) {
-                val rawR = ((now - rippleStartTime).toFloat() / rippleDuration.toFloat()).coerceIn(0f, 1f)
-                rippleProgress = 1f - (1f - rawR).pow(2)
+                val rawR = ((now - rippleStartMs).toFloat() / rippleDurationMs.toFloat()).coerceIn(0f, 1f)
+                rippleProgress = 1f - (1f - rawR).pow(2.4f)
+                // Pointer press-down bounce (1.0 -> 0.82 -> 1.05 -> 1.0)
+                clickScale = when {
+                    rawR < 0.22f -> 1f - 0.18f * (rawR / 0.22f)
+                    rawR < 0.55f -> 0.82f + 0.23f * ((rawR - 0.22f) / 0.33f)
+                    rawR < 0.82f -> 1.05f - 0.05f * ((rawR - 0.55f) / 0.27f)
+                    else -> 1f
+                }
                 if (rawR >= 1f) {
                     rippleActive = false
+                    clickScale = 1f
                 } else {
-                    needsMoreFrames = true
+                    keepRunning = true
                 }
+            } else {
+                clickScale = 1f
             }
 
             invalidate()
-            if (needsMoreFrames) {
-                scheduleTick()
+            if (keepRunning) {
+                scheduleVsync()
             }
         }
     }
@@ -106,53 +147,82 @@ class CursorOverlayView(context: Context) : View(context) {
         setBackgroundColor(Color.TRANSPARENT)
     }
 
-    private fun scheduleTick() {
-        if (!loopScheduled) {
-            loopScheduled = true
-            postOnAnimation(frameTick)
+    private fun scheduleVsync() {
+        if (!vsyncScheduled) {
+            vsyncScheduled = true
+            Choreographer.getInstance().postFrameCallback(frameCallback)
         }
     }
 
     fun setState(p: ProviderId, status: String) {
         provider = p
-        statusText = status.take(42)
-        invalidate()
-    }
-
-    fun showCursorAt(x: Float, y: Float) {
-        moveAnimating = false
-        cursorX = x
-        cursorY = y
-        cursorVisible = true
-        invalidate()
-    }
-
-    fun animateMoveTo(tx: Float, ty: Float, durationMs: Long = 220L) {
-        if (!cursorVisible || cursorX < 0f || cursorY < 0f) {
-            cursorX = tx
-            cursorY = ty
+        statusText = status.take(44)
+        if (!cursorVisible) {
+            val dm = resources.displayMetrics
+            cursorX = dm.widthPixels * 0.5f
+            cursorY = dm.heightPixels * 0.52f
             cursorVisible = true
-            invalidate()
-            return
+        }
+        invalidate()
+    }
+
+    fun setBadgeHiddenForCapture(hidden: Boolean) {
+        statusBadgeVisible = !hidden
+        invalidate()
+    }
+
+    fun animateMoveTo(tx: Float, ty: Float, durationMs: Long = 560L) {
+        val dm = resources.displayMetrics
+        if (!cursorVisible || cursorX < 0f || cursorY < 0f) {
+            cursorX = dm.widthPixels * 0.5f
+            cursorY = dm.heightPixels * 0.52f
+            cursorVisible = true
         }
         moveStartX = cursorX
         moveStartY = cursorY
         moveTargetX = tx
         moveTargetY = ty
-        moveStartTime = SystemClock.uptimeMillis()
-        moveDuration = durationMs.coerceIn(70L, 520L)
+
+        // Subtle natural arc perpendicular to travel vector (PC mouse feel)
+        val dx = tx - moveStartX
+        val dy = ty - moveStartY
+        val dist = hypot(dx, dy)
+        val midX = (moveStartX + tx) * 0.5f
+        val midY = (moveStartY + ty) * 0.5f
+        if (dist > 18f * dp) {
+            val angle = atan2(dy, dx) + (Math.PI / 2.0).toFloat()
+            val arc = (dist * 0.11f).coerceAtMost(28f * dp)
+            moveCtrlX = midX + cos(angle) * arc
+            moveCtrlY = midY + sin(angle) * arc
+        } else {
+            moveCtrlX = midX
+            moveCtrlY = midY
+        }
+
+        moveStartMs = SystemClock.uptimeMillis()
+        moveDurationMs = durationMs.coerceIn(180L, 1600L)
         moveAnimating = true
         cursorVisible = true
-        scheduleTick()
+        scheduleVsync()
+    }
+
+    fun animateCheckTarget(tx: Float, ty: Float, durationMs: Long = 210L) {
+        checkX = tx
+        checkY = ty
+        checkStartMs = SystemClock.uptimeMillis()
+        checkDurationMs = durationMs.coerceIn(100L, 600L)
+        checkProgress = 0f
+        checkActive = true
+        scheduleVsync()
     }
 
     fun triggerRipple(x: Float, y: Float) {
         rippleX = x
         rippleY = y
-        rippleStartTime = SystemClock.uptimeMillis()
+        rippleStartMs = SystemClock.uptimeMillis()
         rippleProgress = 0f
         rippleActive = true
-        scheduleTick()
+        scheduleVsync()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -168,34 +238,57 @@ class CursorOverlayView(context: Context) : View(context) {
             ProviderId.OPENROUTER -> 0xFF818CF8.toInt()
         }
 
-        // Compact obsidian status pill at top-left (NO full-screen gray border!)
-        val msg = "${provider.displayName} · $statusText"
-        val tw = pillTextPaint.measureText(msg)
-        val pw = tw + 24f * dp
-        val ph = 26f * dp
-        val px = 14f * dp
-        val py = 36f * dp
-        canvas.drawRoundRect(px, py, px + pw, py + ph, ph / 2f, ph / 2f, pillBgPaint)
-        strokePaint.color = accent
-        strokePaint.strokeWidth = 1.4f * dp
-        canvas.drawRoundRect(px, py, px + pw, py + ph, ph / 2f, ph / 2f, strokePaint)
-        canvas.drawText(msg, px + 12f * dp, py + 17.5f * dp, pillTextPaint)
-
-        // Clean single click ripple (NO particles)
-        if (rippleActive) {
-            val r = (8f + rippleProgress * 30f) * dp
-            val alpha = ((1f - rippleProgress) * 235).toInt().coerceIn(0, 255)
-            ripplePaint.color = (accent and 0x00FFFFFF) or (alpha shl 24)
-            canvas.drawCircle(rippleX, rippleY, r, ripplePaint)
+        // Top-center compact live HUD pill (keeps top-left Back & top-right Search completely clear!)
+        if (statusBadgeVisible) {
+            val msg = "${provider.displayName} · $statusText"
+            val tw = pillTextPaint.measureText(msg)
+            val padH = (if (isTabletDevice) 11f else 9f) * dp
+            val pw = (tw + padH * 2f).coerceAtMost(w * 0.78f)
+            val ph = (if (isTabletDevice) 24f else 20.5f) * dp
+            val px = ((w - pw) * 0.5f).coerceAtLeast(8f * dp)
+            val py = (if (isTabletDevice) 30f else 34f) * dp
+            canvas.drawRoundRect(px, py, px + pw, py + ph, ph / 2f, ph / 2f, pillBgPaint)
+            strokePaint.color = accent
+            strokePaint.strokeWidth = 1.2f * dp
+            canvas.drawRoundRect(px, py, px + pw, py + ph, ph / 2f, ph / 2f, strokePaint)
+            canvas.drawText(msg, px + padH, py + ph * 0.69f, pillTextPaint)
         }
 
-        if (cursorVisible) {
+        // Target inspection reticle ("checking" before clicking)
+        if (checkActive) {
+            val baseR = (if (isTabletDevice) 16f else 12f) * dp
+            val pulseR = baseR * (1.28f - 0.28f * checkProgress)
+            val alpha = ((0.85f - 0.35f * checkProgress) * 255).toInt().coerceIn(0, 255)
+            ripplePaint.color = (accent and 0x00FFFFFF) or (alpha shl 24)
+            canvas.drawCircle(checkX, checkY, pulseR, ripplePaint)
+        }
+
+        // Dual concentric click ripple
+        if (rippleActive) {
+            val maxR = (if (isTabletDevice) 26f else 19f) * dp
+            val r1 = (5f * dp) + rippleProgress * maxR
+            val a1 = ((1f - rippleProgress) * 235).toInt().coerceIn(0, 255)
+            ripplePaint.color = (accent and 0x00FFFFFF) or (a1 shl 24)
+            canvas.drawCircle(rippleX, rippleY, r1, ripplePaint)
+
+            if (rippleProgress > 0.14f) {
+                val p2 = ((rippleProgress - 0.14f) / 0.86f).coerceIn(0f, 1f)
+                val r2 = (3f * dp) + p2 * (maxR * 0.68f)
+                val a2 = ((1f - p2) * 175).toInt().coerceIn(0, 255)
+                ripplePaint.color = (0x00FFFFFF) or (a2 shl 24)
+                canvas.drawCircle(rippleX, rippleY, r2, ripplePaint)
+            }
+        }
+
+        if (cursorVisible && cursorX >= 0f && cursorY >= 0f) {
             drawProviderCursor(canvas, cursorX, cursorY)
         }
     }
 
     private fun drawProviderCursor(canvas: Canvas, tipX: Float, tipY: Float) {
-        val size = 40f * dp
+        // Proportional scale: Phones smallest (21dp) -> Tablets medium (28dp) -> Desktop largest
+        val baseSizeDp = if (isTabletDevice) 28f else 21f
+        val size = baseSizeDp * dp * clickScale
         val scale = size / 48f
         canvas.save()
         if (provider == ProviderId.OPENROUTER) {
@@ -346,7 +439,6 @@ class CursorOverlayView(context: Context) : View(context) {
         fillPaint.color = 0xFF050507.toInt()
         canvas.drawPath(path, fillPaint)
 
-        // Bold white "OR" emblem inside triangle
         strokePaint.color = Color.WHITE
         strokePaint.strokeWidth = 2.6f
         canvas.drawCircle(16.2f, 25.0f, 4.6f, strokePaint)

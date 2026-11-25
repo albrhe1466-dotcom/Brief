@@ -1,0 +1,35 @@
+{
+  "version": "2.0.7-beta",
+  "releasedAt": "2026-11-25",
+  "mandatoryAndroid": true,
+  "autoDownloadAndroid": true,
+  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.7-beta.apk",
+  "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
+  "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
+  "headline": "Brief v2.0.7-beta — 150-Frame Live Vision, PC-Style Proportional Cursor, Zero Self-Stop & Auto-Updater",
+  "bullets": [
+    "Zero Self-Stop + PC-Style Proportional Cursor: Moved Stop out of top-right app search bars with gesture pass-through; proportional Phone -> Tablet -> PC cursor with curved glide, custom speed, target check reticle & click bounce.",
+    "150-Frame Live Vision & Smarter Multi-Step AI: Samples up to 150 frames for UI stability, attaches calibrated 0..1000 HD vision + 150 UI nodes on every step, auto-submits searches, and completes full multi-step goals.",
+    "Live Remote News & Auto-Updater: Automatic update detection & in-place APK upgrade for Samsung, Honor & all Android phones/tablets plus Windows & Linux."
+  ],
+  "photos": [
+    {
+      "src": "assets/news-v200-android.png",
+      "tag": "Android Phones & Tablets · v2.0.7-beta",
+      "title": "150-Frame Live Vision & PC-Style Animated Cursor (Samsung · Honor · All Android)",
+      "caption": "Brief v2.0.7-beta — proportional animated cursor with custom speed, target check reticle, zero self-stop, and automatic in-app updates."
+    },
+    {
+      "src": "assets/news-v200-linux.png",
+      "tag": "All Linux · x64 & ARM64",
+      "title": "Kali Linux, Raspberry Pi ARM64, Ubuntu, Debian & Arch",
+      "caption": "Brief v2.0.7-beta Linux Packages — Brief-Linux-x64.deb, Brief-Linux-arm64.deb, Universal .AppImage & .tar.gz."
+    },
+    {
+      "src": "assets/news-v107-themes.png",
+      "tag": "Cursors & Themes",
+      "title": "Claude Brief Code (</>), OpenAI Auto/Terra & Gemini Task",
+      "caption": "Full provider workspaces, 4x supersampled provider cursors, Google Sans, OpenAI Sans & Claude serif themes."
+    }
+  ]
+}

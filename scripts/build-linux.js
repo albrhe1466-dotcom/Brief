@@ -200,9 +200,10 @@ StartupNotify=true
 `;
   fs.writeFileSync(path.join(debRoot, 'usr', 'share', 'applications', 'brief.desktop'), desktopEntry, 'utf8');
 
+  const debVersion = VERSION.replace(/-([a-zA-Z])/, '~$1');
   const extraDeps = debArch === 'arm64' ? ', curl, unzip' : '';
   const control = `Package: brief-desktop
-Version: ${VERSION}
+Version: ${debVersion}
 Section: utils
 Priority: optional
 Architecture: ${debArch}
