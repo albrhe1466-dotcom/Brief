@@ -8,29 +8,307 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/txtSetupHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Brief Android Permissions &amp; Control Setup"
+            android:textColor="#F8FAFC"
+            android:textSize="16.5sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtSetupHeaderSub"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Works on Honor MagicOS, Samsung (A-Series to S26), Xiaomi, Oppo, Vivo &amp; all Android phones/tablets."
+            android:textColor="#94A3B8"
+            android:textSize="12sp" />
+
+        <!-- SAMSUNG ONLY: Auto Blocker Row (Shown automatically on Samsung devices) -->
+        <LinearLayout
+            android:id="@+id/rowSamsungAutoBlocker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_assistant_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/titleSamsungAutoBlocker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Samsung Step 0: Turn OFF Auto Blocker"
+                    android:textColor="#FDE68A"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtSamsungBlockerSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Security &amp; Privacy → Auto Blocker (الحظر التلقائي) → OFF"
+                    android:textColor="#CBD5E1"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnSamsungAutoBlocker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill"
+                android:paddingStart="11dp"
+                android:paddingEnd="11dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Open"
+                android:textColor="#FDE68A"
+                android:textSize="11.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- STEP 1: Native Android App & Background Permissions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_assistant_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/titleStep1Perms"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1. Grant App &amp; Background Permissions"
+                    android:textColor="#F8FAFC"
+                    android:textSize="12.8sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtOverlayStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pops up official Android Notifications &amp; Always-Run-In-Background permissions"
+                    android:textColor="#94A3B8"
+                    android:textSize="11.2sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnGrantOverlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Allow"
+                android:textColor="#93C5FD"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- STEP 2 (Android 13+): Tap Gray Switch Once in Accessibility to Unlock ⋮ -->
+        <LinearLayout
+            android:id="@+id/rowStep2TriggerGray"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_assistant_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/titleStep2Trigger"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2. Tap Gray Switch Once (Required First!)"
+                    android:textColor="#F8FAFC"
+                    android:textSize="12.8sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtTriggerGrayStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Open Accessibility → Brief Assistant → tap gray switch ONCE until 'Denied / تم منع التطبيق' pops up → tap Close &amp; come back!"
+                    android:textColor="#94A3B8"
+                    android:textSize="11.2sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnTriggerGraySwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill"
+                android:paddingStart="11dp"
+                android:paddingEnd="11dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Tap 1x"
+                android:textColor="#FDBA74"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- STEP 3 (Android 13+): Unlock Restricted Settings via Apps List (⋮) -->
+        <LinearLayout
+            android:id="@+id/rowStep3UnlockDots"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_assistant_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/titleStep3Unlock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3. Unlock Gray Switch in Apps List (⋮)"
+                    android:textColor="#F8FAFC"
+                    android:textSize="12.8sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtScreenCapStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tap 'Brief' in Apps list → tap top ⋮ (top-left in Arabic / top-right in English) → 'Allow restricted settings / السماح بالإعدادات المقيدة'"
+                    android:textColor="#94A3B8"
+                    android:textSize="11.2sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnGrantScreenCap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill"
+                android:paddingStart="11dp"
+                android:paddingEnd="11dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Unlock ⋮"
+                android:textColor="#6EE7B7"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- STEP 4: Turn ON Brief Assistant Control -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_assistant_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/titleStep4Enable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4. Turn ON Brief Control Switch"
+                    android:textColor="#F8FAFC"
+                    android:textSize="12.8sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtAccessibilityStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Switch is now UN-GRAYED! Toggle Brief Assistant ON for full touch, typing &amp; cursors"
+                    android:textColor="#94A3B8"
+                    android:textSize="11.2sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnGrantAccessibility"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Turn ON"
+                android:textColor="#93C5FD"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Detailed Bilingual / OEM Help Card -->
+        <TextView
+            android:id="@+id/txtSamsungHelp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_assistant_card"
+            android:padding="10dp"
+            android:text="Why was it gray? Android 13–16 hides the ⋮ menu until you tap the gray Accessibility switch ONCE first, AND hides ⋮ if opened via shortcut instead of the Apps list!"
+            android:textColor="#BAE6FD"
+            android:textSize="11.2sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="#232A3E" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Brief Phone Setup (Zero Root · Safe Mode)"
-            android:textColor="#F8FAFC"
-            android:textSize="17.5sp"
+            android:text="API Key Vault (Optional Quick Switch)"
+            android:textColor="#CBD5E1"
+            android:textSize="13sp"
             android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Encrypted locally via Android Hardware Keystore. Paste any Gemini, OpenAI, Claude, or OpenRouter API key."
-            android:textColor="#94A3B8"
-            android:textSize="12.5sp" />
 
         <!-- Provider Slot Pills -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:scrollbars="none">
 
             <LinearLayout
@@ -49,7 +327,7 @@
                     android:paddingBottom="6dp"
                     android:text="Gemini"
                     android:textColor="#F8FAFC"
-                    android:textSize="12.5sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -64,7 +342,7 @@
                     android:paddingBottom="6dp"
                     android:text="OpenAI"
                     android:textColor="#94A3B8"
-                    android:textSize="12.5sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -79,7 +357,7 @@
                     android:paddingBottom="6dp"
                     android:text="Claude"
                     android:textColor="#94A3B8"
-                    android:textSize="12.5sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -94,7 +372,7 @@
                     android:paddingBottom="6dp"
                     android:text="OpenRouter"
                     android:textColor="#94A3B8"
-                    android:textSize="12.5sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </HorizontalScrollView>
@@ -103,18 +381,18 @@
             android:id="@+id/inputApiKey"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_composer"
             android:hint="Paste AIza…, sk-…, sk-ant-…, or sk-or-… key"
             android:inputType="textNoSuggestions|textPassword"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:paddingTop="9dp"
+            android:paddingBottom="9dp"
             android:singleLine="true"
             android:textColor="#F8FAFC"
             android:textColorHint="#64748B"
-            android:textSize="13.5sp" />
+            android:textSize="13sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -130,11 +408,11 @@
                 android:layout_weight="1"
                 android:background="@drawable/bg_pill"
                 android:gravity="center"
-                android:paddingTop="9dp"
-                android:paddingBottom="9dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:text="Verify &amp; Save Key"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="12.5sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -145,191 +423,20 @@
                 android:background="@drawable/bg_pill"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
-                android:paddingTop="9dp"
-                android:paddingBottom="9dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:text="Clear Key"
                 android:textColor="#FCA5A5"
-                android:textSize="12.5sp" />
+                android:textSize="12sp" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/txtKeyStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="No API key verified yet."
             android:textColor="#94A3B8"
-            android:textSize="12sp" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="14dp"
-            android:background="#232A3E" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Samsung &amp; Android Un-Gray + 1-Switch Control"
-            android:textColor="#F8FAFC"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <!-- 1. Samsung Auto Blocker Unlocker -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_assistant_card"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="10dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1. Samsung Auto Blocker (S26 / One UI)"
-                    android:textColor="#F8FAFC"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/txtOverlayStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Turn OFF Auto Blocker in Security &amp; Privacy so Samsung un-grays Brief"
-                    android:textColor="#94A3B8"
-                    android:textSize="11.5sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/btnGrantOverlay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_pill"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:text="Open"
-                android:textColor="#93C5FD"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- 2. Unlock Restricted Setting (Stops the Gray Switch!) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_assistant_card"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="10dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2. Unlock Gray Switch (App Info ⋮)"
-                    android:textColor="#F8FAFC"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/txtScreenCapStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tap top-right ⋮ → Allow restricted settings (turns gray switch BLUE)"
-                    android:textColor="#94A3B8"
-                    android:textSize="11.5sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/btnGrantScreenCap"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_pill"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:text="Unlock ⋮"
-                android:textColor="#6EE7B7"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- 3. Single Unified Accessibility Switch (Cursor + Touch + Vision) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_assistant_card"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="10dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="3. Enable Brief Assistant (1 Switch)"
-                    android:textColor="#F8FAFC"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/txtAccessibilityStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Powers Floating Cursors + Touch Control + Screen Vision with zero root"
-                    android:textColor="#94A3B8"
-                    android:textSize="11.5sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/btnGrantAccessibility"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_pill"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:text="Enable"
-                android:textColor="#93C5FD"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Samsung S26 / All-Samsung Step-by-Step Guide -->
-        <TextView
-            android:id="@+id/txtSamsungHelp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_assistant_card"
-            android:padding="10dp"
-            android:text="Samsung Galaxy (S26 to A-Series): Turn OFF Auto Blocker in Security &amp; Privacy, then tap Unlock ⋮ → Allow restricted settings."
-            android:textColor="#BAE6FD"
             android:textSize="11.5sp" />
 
         <TextView

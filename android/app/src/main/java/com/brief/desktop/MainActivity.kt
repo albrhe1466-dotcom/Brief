@@ -104,7 +104,16 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=207")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=208")
+
+        // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
+        if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
+            androidx.core.app.ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                1001
+            )
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -113,9 +122,20 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        refreshSetupDialogUi()
+        emitJsEvent("models:updated", buildBundleObject())
+    }
+
     override fun onResume() {
         super.onResume()
         refreshSetupDialogUi()
+        emitJsEvent("models:updated", buildBundleObject())
     }
 
     private fun emitJsEvent(channel: String, payload: JSONObject) {
@@ -203,22 +223,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun buildDiagnosticsObject(): JSONObject {
         val accOk = BriefAccessibilityService.isEnabled(this)
+        val permsOk = OemCompatibilityHelper.hasCoreAppPermissions(this)
         val (w, h) = DisplayUtils.getRealScreenSize(this)
         val checks = JSONArray().apply {
             put(
                 JSONObject().apply {
-                    put("id", "samsung-autoblocker")
-                    put("name", "1. Samsung Auto Blocker & Restricted Settings (Stops Gray Switch)")
-                    put("status", if (accOk) "granted" else "optional")
-                    put("detail", if (accOk) "Unlocked — Brief Assistant switch is active." else "On Galaxy S26 & Samsung One UI: turn OFF Auto Blocker in Security & Privacy, then tap App Info ⋮ → Allow restricted settings.")
+                    put("id", "android-app-permissions")
+                    put("name", "1. App & Background Permissions (Notifications + Keep-Alive)")
+                    put("status", if (permsOk) "granted" else "required")
+                    put("ok", permsOk)
+                    put("detail", if (permsOk) "Granted ✓ App & background execution permissions active." else "Tap 'Grant Permissions' to allow Notifications & Always-Run-In-Background.")
                 }
             )
             put(
                 JSONObject().apply {
                     put("id", "android-accessibility")
-                    put("name", "2. Brief Assistant 1-Switch Control (Cursors + Touch + Vision)")
+                    put("name", "2. Brief Assistant Screen Control (Un-Gray + Touch + Cursors)")
                     put("status", if (accOk) "granted" else "required")
-                    put("detail", if (accOk) "Enabled (${w}x${h}) — Floating provider cursors, touch & vision ready with zero root." else "Tap 'Test Input' or 'Test Overlay' below to open Samsung/Android setup.")
+                    put("ok", accOk)
+                    put("detail", if (accOk) "Enabled (${w}x${h}) — Floating provider cursors, touch & vision ready with zero root." else "Tap the green 'Enable Android Control Permissions' button to un-gray and activate Brief Assistant.")
                 }
             )
         }
@@ -232,6 +255,8 @@ class MainActivity : AppCompatActivity() {
         }
         return JSONObject().apply {
             put("platform", "android")
+            put("accessibilityEnabled", accOk)
+            put("permissionsGranted", permsOk)
             put("osLabel", OemCompatibilityHelper.detectedBrandLabel(this@MainActivity))
             put("backendName", "Android Safe Mode · Trusted Accessibility Overlay")
             put("dpiMode", "${w}x${h}")
@@ -256,7 +281,7 @@ class MainActivity : AppCompatActivity() {
 
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.0.4")
+            put("version", "2.0.6")
             put("firstRunRequested", false)
             put(
                 "os",
@@ -501,22 +526,70 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshSetupDialogUi() {
         val accOk = BriefAccessibilityService.isEnabled(this)
-        val isHonor = OemCompatibilityHelper.isHonorOrMagicOs()
+        val permsOk = OemCompatibilityHelper.hasCoreAppPermissions(this)
+        val isAr = OemCompatibilityHelper.isArabicLocale()
+        val needsUnGray = OemCompatibilityHelper.needsAndroid13RestrictedUnlock()
         setupDialog?.let { dlg ->
-            dlg.findViewById<TextView>(R.id.txtOverlayStatus)?.text = when {
-                accOk -> "Ready ✓ Device background protection configured"
-                isHonor -> "Honor MagicOS: allow Brief to 'Run in background' in App Launch"
-                else -> "Samsung One UI: turn OFF Auto Blocker in Security & Privacy"
+            dlg.findViewById<View>(R.id.rowSamsungAutoBlocker)?.visibility =
+                if (OemCompatibilityHelper.isSamsung() && !accOk) View.VISIBLE else View.GONE
+            dlg.findViewById<View>(R.id.rowStep2TriggerGray)?.visibility =
+                if (needsUnGray) View.VISIBLE else View.GONE
+            dlg.findViewById<View>(R.id.rowStep3UnlockDots)?.visibility =
+                if (needsUnGray) View.VISIBLE else View.GONE
+
+            if (isAr) {
+                dlg.findViewById<TextView>(R.id.txtSetupHeaderTitle)?.text = "إعداد أذونات وتحكم Brief لأجهزة أندرويد"
+                dlg.findViewById<TextView>(R.id.txtSetupHeaderSub)?.text = "يعمل على أجهزة Honor MagicOS وسامسونج وجميع هواتف وأجهزة أندرويد اللوحية."
+                dlg.findViewById<TextView>(R.id.titleSamsungAutoBlocker)?.text = "خطوة سامسونج: إيقاف الحظر التلقائي (Auto Blocker)"
+                dlg.findViewById<TextView>(R.id.titleStep1Perms)?.text = "١. منح أذونات التطبيق والعمل بالخلفية"
+                dlg.findViewById<TextView>(R.id.titleStep2Trigger)?.text = "٢. اضغط الزر الرمادي مرة واحدة أولاً!"
+                dlg.findViewById<TextView>(R.id.titleStep3Unlock)?.text = "٣. فك القفل من قائمة التطبيقات (⋮ أعلى اليسار)"
+                dlg.findViewById<TextView>(R.id.titleStep4Enable)?.text = "٤. تفعيل تحكم Brief Assistant"
             }
-            dlg.findViewById<TextView>(R.id.btnGrantOverlay)?.text = if (accOk) "OK ✓" else "Open"
 
-            dlg.findViewById<TextView>(R.id.txtScreenCapStatus)?.text =
-                if (accOk) "Unlocked ✓ Gray switch restriction cleared" else "Tap here → top-right ⋮ menu → 'Allow restricted settings' (stops gray switch!)"
-            dlg.findViewById<TextView>(R.id.btnGrantScreenCap)?.text = if (accOk) "Unlocked ✓" else "Unlock ⋮"
+            dlg.findViewById<TextView>(R.id.txtOverlayStatus)?.text = when {
+                permsOk -> if (isAr) "تم منح الأذونات ✓ الإشعارات والعمل بالخلفية مفعّلة" else "Granted ✓ Notifications & Always-Run-In-Background active"
+                isAr -> "يفتح نافذة أندرويد الرسمية للسماح بالإشعارات والعمل في الخلفية"
+                else -> "Pops up official Android Notifications & Always-Run-In-Background permissions"
+            }
+            dlg.findViewById<TextView>(R.id.btnGrantOverlay)?.text = when {
+                permsOk -> if (isAr) "تم ✓" else "Granted ✓"
+                isAr -> "سماح"
+                else -> "Allow"
+            }
 
-            dlg.findViewById<TextView>(R.id.txtAccessibilityStatus)?.text =
-                if (accOk) "Active ✓ Floating cursors, touch & vision enabled!" else "Turn ON Brief Assistant in Installed Apps (1 switch does it all!)"
-            dlg.findViewById<TextView>(R.id.btnGrantAccessibility)?.text = if (accOk) "Active ✓" else "Enable"
+            dlg.findViewById<TextView>(R.id.txtTriggerGrayStatus)?.text = when {
+                accOk -> if (isAr) "تم التجاوز ✓" else "Done ✓"
+                isAr -> "افتح Brief Assistant ← اضغط الزر الرمادي مرة واحدة حتى تظهر (تم منع التطبيق من الوصول) ثم اضغط (إغلاق) وارجع هنا!"
+                else -> "Tap Brief Assistant → tap the gray switch ONCE until 'App was denied access' pops up → tap Close & come back!"
+            }
+            dlg.findViewById<TextView>(R.id.btnTriggerGraySwitch)?.text = when {
+                accOk -> "✓"
+                isAr -> "اضغط ١×"
+                else -> "Tap 1x"
+            }
+
+            dlg.findViewById<TextView>(R.id.txtScreenCapStatus)?.text = when {
+                accOk -> if (isAr) "تم فك القفل الرمادي ✓" else "Unlocked ✓ Gray switch restriction cleared"
+                isAr -> "اختر Brief من قائمة التطبيقات ← اضغط النقاط الثلاث (⋮) أعلى اليسار ← (السماح بالإعدادات المقيدة)!"
+                else -> "Tap 'Brief' in Apps list → tap top corner ⋮ (or bottom on Xiaomi) → 'Allow restricted settings'!"
+            }
+            dlg.findViewById<TextView>(R.id.btnGrantScreenCap)?.text = when {
+                accOk -> "✓"
+                isAr -> "فك القفل ⋮"
+                else -> "Unlock ⋮"
+            }
+
+            dlg.findViewById<TextView>(R.id.txtAccessibilityStatus)?.text = when {
+                accOk -> if (isAr) "مفعّل ✓ المؤشرات واللمس والتحكم الكامل جاهز!" else "Active ✓ Floating cursors, touch & screen control enabled!"
+                isAr -> "الآن الزر لم يعد رمادياً! افتح وفعّل Brief Assistant (ON)"
+                else -> "Switch is now UN-GRAYED! Tap here & toggle Brief Assistant ON"
+            }
+            dlg.findViewById<TextView>(R.id.btnGrantAccessibility)?.text = when {
+                accOk -> if (isAr) "مفعّل ✓" else "Active ✓"
+                isAr -> "تفعيل"
+                else -> "Turn ON"
+            }
         }
     }
 
@@ -597,12 +670,20 @@ class MainActivity : AppCompatActivity() {
             txtKeyStatus.text = "Cleared ${selectedProv.displayName} key."
         }
 
-        view.findViewById<TextView>(R.id.btnGrantOverlay).setOnClickListener {
+        view.findViewById<TextView>(R.id.btnSamsungAutoBlocker)?.setOnClickListener {
             OemCompatibilityHelper.openOemStep1SettingsSafe(this)
         }
 
+        view.findViewById<TextView>(R.id.btnGrantOverlay).setOnClickListener {
+            OemCompatibilityHelper.requestNativeControlPermissions(this)
+        }
+
+        view.findViewById<TextView>(R.id.btnTriggerGraySwitch)?.setOnClickListener {
+            OemCompatibilityHelper.openAccessibilityTriggerStep(this)
+        }
+
         view.findViewById<TextView>(R.id.btnGrantScreenCap).setOnClickListener {
-            OemCompatibilityHelper.openAppDetailsSafe(this)
+            OemCompatibilityHelper.openAppsListForRestrictedUnlock(this)
         }
 
         view.findViewById<TextView>(R.id.btnGrantAccessibility).setOnClickListener {
@@ -612,7 +693,7 @@ class MainActivity : AppCompatActivity() {
         view.findViewById<TextView>(R.id.txtSamsungHelp).apply {
             text = OemCompatibilityHelper.getZeroRootSetupGuide(this@MainActivity)
             setOnClickListener {
-                OemCompatibilityHelper.openAppDetailsSafe(this@MainActivity)
+                OemCompatibilityHelper.openAppsListForRestrictedUnlock(this@MainActivity)
             }
         }
 
