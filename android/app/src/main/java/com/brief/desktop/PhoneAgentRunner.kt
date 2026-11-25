@@ -161,6 +161,13 @@ class PhoneAgentRunner(
                     ?: return JSONObject().put("error", "Enable Brief Accessibility Service in Setup first.").toString()
                 acc.readScreenElements().toString()
             }
+            "tap_element" -> {
+                val acc = BriefAccessibilityService.instance
+                    ?: return JSONObject().put("error", "Accessibility Service is off.").toString()
+                val (ok, msg) = acc.tapElementByLabel(a.optString("label"))
+                delay(320L)
+                JSONObject().put("ok", ok).put("detail", msg).toString()
+            }
             "tap" -> {
                 val acc = BriefAccessibilityService.instance
                     ?: return JSONObject().put("error", "Accessibility Service is off.").toString()
@@ -259,7 +266,13 @@ Stop politely and ask the user if you reach a banking login, password, payment, 
         )
 
         if (workMode) {
-            addTool("read_screen_ui", "Read clickable/editable UI labels and 0..1000 center coordinates on the phone screen.", JSONObject())
+            addTool("read_screen_ui", "Read clickable/editable UI labels and 0..1000 center coordinates on the phone or tablet screen.", JSONObject())
+            addTool(
+                "tap_element",
+                "Tap a visible button, tab, link, or input box by its text or label (most accurate on both Android phones and tablets).",
+                JSONObject().put("label", JSONObject().put("type", "string").put("description", "Visible text or icon label to tap")),
+                listOf("label")
+            )
             addTool(
                 "tap",
                 "Tap (or long-press) on the phone screen at normalized 0..1000 coordinates while moving the Brief cursor.",

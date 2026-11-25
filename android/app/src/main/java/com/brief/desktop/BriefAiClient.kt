@@ -191,14 +191,27 @@ class BriefAiClient {
         }
 
         val genCfg = JSONObject()
-        val isLite = model.contains("lite", ignoreCase = true)
-        val mappedLevel = when {
-            isLite && (thinking == ThinkingLevel.LOW || thinking == ThinkingLevel.MEDIUM) -> "MINIMAL"
-            thinking == ThinkingLevel.LOW -> "LOW"
-            thinking == ThinkingLevel.MEDIUM -> "MEDIUM"
-            else -> "HIGH"
+        val lowerModel = model.lowercase()
+        val isGemini3Plus = lowerModel.contains("gemini-3") || lowerModel.contains("gemini-4")
+        val isGemini25 = lowerModel.contains("gemini-2.5")
+        if (isGemini3Plus) {
+            val isLite = lowerModel.contains("lite")
+            val mappedLevel = when {
+                isLite && (thinking == ThinkingLevel.LOW || thinking == ThinkingLevel.MEDIUM) -> "MINIMAL"
+                thinking == ThinkingLevel.LOW -> "LOW"
+                thinking == ThinkingLevel.MEDIUM -> "MEDIUM"
+                else -> "HIGH"
+            }
+            genCfg.put("thinkingConfig", JSONObject().put("thinkingLevel", mappedLevel))
+        } else if (isGemini25) {
+            val budget = when (thinking) {
+                ThinkingLevel.LOW -> 0
+                ThinkingLevel.MEDIUM -> 1024
+                ThinkingLevel.HIGH -> 4096
+                ThinkingLevel.EXTRA -> 8192
+            }
+            genCfg.put("thinkingConfig", JSONObject().put("thinkingBudget", budget))
         }
-        genCfg.put("thinkingConfig", JSONObject().put("thinkingLevel", mappedLevel))
 
         val payload = JSONObject().apply {
             put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", systemPrompt))))

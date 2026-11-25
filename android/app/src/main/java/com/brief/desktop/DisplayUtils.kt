@@ -1,22 +1,30 @@
 package com.brief.desktop
 
 import android.content.Context
-import android.os.Build
+import android.hardware.display.DisplayManager
 import android.util.DisplayMetrics
-import android.view.WindowManager
+import android.view.Display
 
+/**
+ * Safe full-screen pixel metrics for both Activity and AccessibilityService contexts
+ * across Android 8–16, Samsung One UI, and Honor MagicOS 8/9 Tablets (Portrait & Landscape).
+ * Uses DisplayManager instead of WindowManager.maximumWindowMetrics so non-visual Service
+ * contexts never throw IllegalArgumentException on Android 12–16!
+ */
 object DisplayUtils {
     fun getRealScreenSize(context: Context): Pair<Int, Int> {
-        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val bounds = wm.maximumWindowMetrics.bounds
-            bounds.width() to bounds.height()
-        } else {
-            val dm = DisplayMetrics()
+        val dm = DisplayMetrics()
+        val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
+        val display = displayManager?.getDisplay(Display.DEFAULT_DISPLAY)
+        if (display != null) {
             @Suppress("DEPRECATION")
-            wm.defaultDisplay.getRealMetrics(dm)
-            dm.widthPixels to dm.heightPixels
+            display.getRealMetrics(dm)
+            if (dm.widthPixels > 0 && dm.heightPixels > 0) {
+                return dm.widthPixels to dm.heightPixels
+            }
         }
+        val resDm = context.resources.displayMetrics
+        return resDm.widthPixels.coerceAtLeast(360) to resDm.heightPixels.coerceAtLeast(640)
     }
 
     fun normToPx(norm: Double, maxPx: Int): Float {

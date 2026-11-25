@@ -4685,61 +4685,32 @@
       width: 36px !important;
       height: 36px !important;
     }
-    /* Native Android WebView Root Scrolling on First-Run Welcome / Onboarding (html.is-key-gate-root) */
+    /* Bulletproof Fixed-Viewport Scrolling on First-Run Welcome / Onboarding */
     @media (max-width: 900px) {
-      html.is-key-gate-root,
-      html.is-key-gate-root body {
-        height: auto !important;
-        min-height: 100dvh !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
-      }
-      html.is-key-gate-root #icon-rail,
-      html.is-key-gate-root #sidebar,
-      html.is-key-gate-root #sidebar-resize-handle,
-      html.is-key-gate-root #top-header {
-        display: none !important;
-      }
-      html.is-key-gate-root #app-shell,
-      html.is-key-gate-root #main-area,
-      html.is-key-gate-root #workspace-body,
-      html.is-key-gate-root #view-key-gate {
+      #view-key-gate.active {
         display: block !important;
-        position: static !important;
-        height: auto !important;
-        min-height: 100dvh !important;
-        overflow: visible !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 95 !important;
+        background: var(--bg-canvas) !important;
+        overflow-y: scroll !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        padding: 16px 12px calc(140px + env(safe-area-inset-bottom, 0px)) !important;
       }
-      html.is-key-gate-root #view-key-gate {
-        padding: 18px 14px calc(64px + env(safe-area-inset-bottom, 0px)) !important;
-      }
     }
-    html[data-platform="android"].is-key-gate-root,
-    html[data-platform="android"].is-key-gate-root body {
-      height: auto !important;
-      min-height: 100dvh !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-    }
-    html[data-platform="android"].is-key-gate-root #icon-rail,
-    html[data-platform="android"].is-key-gate-root #sidebar,
-    html[data-platform="android"].is-key-gate-root #sidebar-resize-handle,
-    html[data-platform="android"].is-key-gate-root #top-header {
-      display: none !important;
-    }
-    html[data-platform="android"].is-key-gate-root #app-shell,
-    html[data-platform="android"].is-key-gate-root #main-area,
-    html[data-platform="android"].is-key-gate-root #workspace-body,
-    html[data-platform="android"].is-key-gate-root #view-key-gate {
+    html[data-platform="android"] #view-key-gate.active {
       display: block !important;
-      position: static !important;
-      height: auto !important;
-      min-height: 100dvh !important;
-      overflow: visible !important;
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 95 !important;
+      background: var(--bg-canvas) !important;
+      overflow-y: scroll !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y !important;
+      padding: 16px 14px calc(150px + env(safe-area-inset-bottom, 0px)) !important;
     }
     html[data-platform="android"] .gate-title {
       font-size: 20px !important;
@@ -5534,7 +5505,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.3">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.4">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6432,7 +6403,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v2.0.3</span>
+          <span class="news-version-pill">News · v2.0.4</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -6440,7 +6411,7 @@
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.3 — Sleek Compact Fit on Android Phones &amp; Tablets + Full Scale on Windows &amp; Linux PCs
+              Brief v2.0.4 — Honor MagicOS Tablets, Samsung Phones, Smooth Touch Scroll &amp; Full Control
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
@@ -6478,10 +6449,10 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v2.0.3</span>
+              <span>What’s New in v2.0.4</span>
             </div>
             <ul class="news-list">
-              <li><strong>Compact UI Scale for Android Phones &amp; Tablets (PCs Untouched):</strong> Sleeker, ~20% more compact icons, sidebar, header, composer, and centered scrollable model/permission popovers on Android phones &amp; tablets — while keeping Windows &amp; Linux PCs at full desktop size.</li>
+              <li><strong>Honor MagicOS Tablets &amp; All Android Phones:</strong> Added dedicated Honor MagicOS 8/9 Tablet &amp; Samsung One UI zero-root control (<code class="mono">tap_element</code>, auto-focus typing, safe landscape/portrait coordinates), compact UI fit, and bulletproof Welcome/Chat touch scrolling.</li>
               <li><strong>Samsung Safe Mode &amp; 2-Tap Un-Gray:</strong> Trusted Android Accessibility Overlay + RSA-4096 v1/v2/v3 signing eliminates false malware blocks and unlocks Samsung's gray switch in 2 taps.</li>
               <li><strong>Native Provider Themes, Forced Fonts &amp; 120fps Animations:</strong> Gemini (Google Sans + deep blue radial glow), OpenAI (pitch black + OpenAI Sans), Claude (warm charcoal + Newsreader serif &amp; orange starburst), and OpenRouter (obsidian-indigo + OR emblem).</li>
               <li><strong>Extra Thinking &amp; Usage Limit Ring:</strong> Choose Low, Medium, High, or <strong>Extra</strong> (deep parallel research + polish) alongside per-company Usage Limit tracking.</li>
@@ -10874,7 +10845,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.3';
+      const BRIEF_NEWS_VERSION = '2.0.4';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');

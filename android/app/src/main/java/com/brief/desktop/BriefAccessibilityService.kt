@@ -280,21 +280,96 @@ class BriefAccessibilityService : AccessibilityService() {
         return dispatchPath(p, durationMs.coerceIn(140L, 900L))
     }
 
-    fun typeTextIntoFocused(text: String, submit: Boolean = false): Pair<Boolean, String> {
+    suspend fun typeTextIntoFocused(text: String, submit: Boolean = false): Pair<Boolean, String> {
         val root = rootInActiveWindow ?: return false to "No active window visible."
-        val target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: findFirstEditable(root, 0)
-            ?: return false to "No text box found on screen. Tap an input box first."
+        var target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        if (target == null || !target.isEditable) {
+            target = findFirstEditable(root, 0)
+        }
+        if (target == null) {
+            return false to "No editable text box visible on screen. Use tap_element or tap on a search/input bar first."
+        }
+
+        val rect = Rect()
+        target.getBoundsInScreen(rect)
+        if (rect.width() > 4 && rect.height() > 4) {
+            val cx = rect.exactCenterX()
+            val cy = rect.exactCenterY()
+            mainHandler.post { overlayView?.animateMoveTo(cx, cy, 170L) }
+            delay(160L)
+            mainHandler.post { overlayView?.triggerRipple(cx, cy) }
+        }
+        target.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
+        target.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        delay(90L)
 
         val args = Bundle().apply {
             putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
         }
         val setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
         if (setOk && submit) {
+            delay(80L)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 target.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
             }
         }
-        return setOk to (if (setOk) "Typed text cleanly." else "Input field rejected SET_TEXT.")
+        return setOk to (if (setOk) "Typed \"$text\" cleanly." else "Input field rejected SET_TEXT; try tapping it first.")
+    }
+
+    suspend fun tapElementByLabel(query: String): Pair<Boolean, String> {
+        val q = query.trim().lowercase()
+        if (q.isEmpty()) return false to "Element label cannot be empty."
+        val root = rootInActiveWindow ?: return false to "No active screen window."
+        val match = findNodeByLabel(root, q, exact = true, depth = 0)
+            ?: findNodeByLabel(root, q, exact = false, depth = 0)
+            ?: return false to "No visible element matching \"$query\" found on screen."
+
+        val rect = Rect()
+        match.getBoundsInScreen(rect)
+        val cx = rect.exactCenterX()
+        val cy = rect.exactCenterY()
+        if (rect.width() > 2 && rect.height() > 2) {
+            mainHandler.post { overlayView?.animateMoveTo(cx, cy, 190L) }
+            delay(180L)
+            mainHandler.post { overlayView?.triggerRipple(cx, cy) }
+        }
+
+        var clickable: AccessibilityNodeInfo? = match
+        var hops = 0
+        while (clickable != null && !clickable.isClickable && hops < 5) {
+            clickable = clickable.parent
+            hops++
+        }
+        val clickedNode = clickable?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        if (clickedNode) {
+            return true to "Tapped \"$query\" cleanly."
+        }
+        if (rect.width() > 2 && rect.height() > 2) {
+            val p = Path().apply { moveTo(cx, cy) }
+            val gestureOk = dispatchPath(p, 55L)
+            return gestureOk to (if (gestureOk) "Tapped \"$query\" at (${cx.toInt()}, ${cy.toInt()})." else "Gesture tap cancelled.")
+        }
+        return false to "Could not click \"$query\"."
+    }
+
+    private fun findNodeByLabel(
+        node: AccessibilityNodeInfo?,
+        q: String,
+        exact: Boolean,
+        depth: Int
+    ): AccessibilityNodeInfo? {
+        if (node == null || depth > 26) return null
+        if (node.isVisibleToUser) {
+            val txt = node.text?.toString()?.trim()?.lowercase().orEmpty()
+            val desc = node.contentDescription?.toString()?.trim()?.lowercase().orEmpty()
+            val hit = if (exact) (txt == q || desc == q) else (txt.contains(q) || desc.contains(q))
+            if (hit) return node
+        }
+        for (i in 0 until node.childCount) {
+            val found = findNodeByLabel(node.getChild(i), q, exact, depth + 1)
+            if (found != null) return found
+        }
+        return null
     }
 
     private fun findFirstEditable(node: AccessibilityNodeInfo?, depth: Int): AccessibilityNodeInfo? {

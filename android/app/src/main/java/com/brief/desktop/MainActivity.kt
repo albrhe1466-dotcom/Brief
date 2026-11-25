@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=205")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=206")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -226,7 +226,7 @@ class MainActivity : AppCompatActivity() {
             put(
                 JSONObject().apply {
                     put("title", OemCompatibilityHelper.detectedBrandLabel(this@MainActivity))
-                    put("steps", JSONArray().put(OemCompatibilityHelper.getZeroRootSetupGuide()))
+                    put("steps", JSONArray().put(OemCompatibilityHelper.getZeroRootSetupGuide(this@MainActivity)))
                 }
             )
         }
@@ -256,7 +256,7 @@ class MainActivity : AppCompatActivity() {
 
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.0.3")
+            put("version", "2.0.4")
             put("firstRunRequested", false)
             put(
                 "os",
@@ -499,9 +499,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshSetupDialogUi() {
         val accOk = BriefAccessibilityService.isEnabled(this)
+        val isHonor = OemCompatibilityHelper.isHonorOrMagicOs()
         setupDialog?.let { dlg ->
-            dlg.findViewById<TextView>(R.id.txtOverlayStatus)?.text =
-                if (accOk) "Unlocked ✓ Samsung Auto Blocker cleared" else "On Galaxy S26 & Samsung phones: turn OFF Auto Blocker in Security & Privacy"
+            dlg.findViewById<TextView>(R.id.txtOverlayStatus)?.text = when {
+                accOk -> "Ready ✓ Device background protection configured"
+                isHonor -> "Honor MagicOS: allow Brief to 'Run in background' in App Launch"
+                else -> "Samsung One UI: turn OFF Auto Blocker in Security & Privacy"
+            }
             dlg.findViewById<TextView>(R.id.btnGrantOverlay)?.text = if (accOk) "OK ✓" else "Open"
 
             dlg.findViewById<TextView>(R.id.txtScreenCapStatus)?.text =
@@ -592,7 +596,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         view.findViewById<TextView>(R.id.btnGrantOverlay).setOnClickListener {
-            OemCompatibilityHelper.openSamsungAutoBlockerSettingsSafe(this)
+            OemCompatibilityHelper.openOemStep1SettingsSafe(this)
         }
 
         view.findViewById<TextView>(R.id.btnGrantScreenCap).setOnClickListener {
@@ -604,7 +608,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         view.findViewById<TextView>(R.id.txtSamsungHelp).apply {
-            text = OemCompatibilityHelper.getZeroRootSetupGuide()
+            text = OemCompatibilityHelper.getZeroRootSetupGuide(this@MainActivity)
             setOnClickListener {
                 OemCompatibilityHelper.openAppDetailsSafe(this@MainActivity)
             }
