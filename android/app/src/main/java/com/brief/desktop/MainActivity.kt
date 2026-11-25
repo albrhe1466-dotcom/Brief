@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=206")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=207")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -454,6 +454,7 @@ class MainActivity : AppCompatActivity() {
         fun runWorkAsync(callId: String, payloadJson: String) {
             val payload = runCatching { JSONObject(payloadJson) }.getOrElse { JSONObject() }
             val chatId = payload.optString("chatId")
+            val workVisualMode = payload.optString("workVisualMode", "photos")
             val task = payload.optString("task").ifEmpty {
                 val msgs = payload.optJSONArray("messages") ?: JSONArray()
                 if (msgs.length() > 0) msgs.optJSONObject(msgs.length() - 1)?.optString("text").orEmpty() else ""
@@ -472,6 +473,7 @@ class MainActivity : AppCompatActivity() {
                     agent.runUserMessage(
                         prompt = task,
                         workMode = true,
+                        workVisualMode = workVisualMode,
                         onStep = { stepTxt ->
                             emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "work").put("stepText", stepTxt))
                         },

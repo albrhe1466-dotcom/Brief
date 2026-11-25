@@ -62,10 +62,8 @@ object ProviderModels {
             ModelPreset("gemini-4-argon", "Gemini 4 Argon", "Flagship")
         )
         ProviderId.OPENAI -> listOf(
-            ModelPreset("gpt-6-luna", "GPT-6 Luna", "Fastest"),
-            ModelPreset("gpt-6.1-terra", "GPT-6.1 Terra", "Balanced"),
-            ModelPreset("gpt-6-sol", "GPT-6 Sol", "Strong"),
-            ModelPreset("gpt-6.2-astra", "GPT-6.2 Astra", "Flagship")
+            ModelPreset("auto", "Auto", "Smart"),
+            ModelPreset("gpt-6.1-terra", "GPT-6 Terra", "Balanced")
         )
         ProviderId.ANTHROPIC -> listOf(
             ModelPreset("claude-haiku-5-5", "Claude Haiku 5.5", "Fastest", false),
@@ -92,7 +90,7 @@ object ProviderModels {
 
     fun defaultModelFor(provider: ProviderId): String = when (provider) {
         ProviderId.GEMINI -> "gemini-3.8-flash"
-        ProviderId.OPENAI -> "gpt-6.1-terra"
+        ProviderId.OPENAI -> "auto"
         ProviderId.ANTHROPIC -> "claude-sonnet-5-5"
         ProviderId.OPENROUTER -> "google/gemini-3.8-flash"
     }
@@ -131,6 +129,14 @@ object ProviderModels {
             }
             ProviderId.OPENAI -> {
                 when {
+                    id == "auto" || id == "openai_auto" -> {
+                        out.remove("auto")
+                        out.remove("openai_auto")
+                        add("gpt-6.1-terra")
+                        add("gpt-5-mini")
+                        add("gpt-5")
+                        add("gpt-4.1-mini")
+                    }
                     id.contains("luna") -> { add("gpt-6-luna"); add("gpt-5-nano"); add("gpt-5-mini"); add("gpt-4o-mini") }
                     id.contains("terra") -> { add("gpt-6.1-terra"); add("gpt-5-mini"); add("gpt-5"); add("gpt-4.1-mini") }
                     id.contains("sol") -> { add("gpt-6-sol"); add("gpt-5"); add("gpt-4.1") }

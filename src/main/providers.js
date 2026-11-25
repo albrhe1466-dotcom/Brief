@@ -9,32 +9,18 @@ const { GeminiClient, PRESETS: GEMINI_PRESETS, matchPresets: matchGeminiPresets,
 
 const OPENAI_PRESETS = [
   {
-    key: 'gpt6luna',
-    label: 'GPT-6 Luna',
-    hint: 'Fastest',
-    match: (m) => /gpt-?6(?:\.0)?-?luna/i.test(m.id),
-    base: 'gpt-6-luna'
+    key: 'openai_auto',
+    label: 'Auto',
+    hint: 'Smart',
+    match: (m) => m.id === 'auto' || /gpt-?6|gpt-?5|gpt-?4/i.test(m.id),
+    base: 'auto'
   },
   {
     key: 'gpt61terra',
-    label: 'GPT-6.1 Terra',
+    label: 'GPT-6 Terra',
     hint: 'Balanced',
     match: (m) => /gpt-?6\.1-?terra/i.test(m.id),
     base: 'gpt-6.1-terra'
-  },
-  {
-    key: 'gpt6sol',
-    label: 'GPT-6 Sol',
-    hint: 'Strong',
-    match: (m) => /gpt-?6(?:\.[0-2])?-?sol/i.test(m.id),
-    base: 'gpt-6-sol'
-  },
-  {
-    key: 'gpt62astra',
-    label: 'GPT-6.2 Astra',
-    hint: 'Flagship',
-    match: (m) => /gpt-?6(?:\.[0-2])?-?astra/i.test(m.id),
-    base: 'gpt-6.2-astra'
   }
 ];
 
@@ -90,10 +76,8 @@ const OPENROUTER_PRESETS = [
 ];
 
 const OPENAI_ALLOWLIST = [
-  { id: 'gpt-6-luna', name: 'models/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6.1-terra', name: 'models/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6-sol', name: 'models/gpt-6-sol', displayName: 'GPT-6 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6.2-astra', name: 'models/gpt-6.2-astra', displayName: 'GPT-6.2 Astra', description: 'Strongest', methods: ['generateContent'], inputTokenLimit: 1050000, outputTokenLimit: 128000, thinking: true }
+  { id: 'auto', name: 'models/auto', displayName: 'Auto', description: 'Automatically selects speed vs. deep reasoning by prompt complexity', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'gpt-6.1-terra', name: 'models/gpt-6.1-terra', displayName: 'GPT-6 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true }
 ];
 
 const ANTHROPIC_ALLOWLIST = [
@@ -172,30 +156,34 @@ function providerMeta(provider) {
 function matchPresetsForProvider(provider, models) {
   const list = Array.isArray(models) ? models : [];
   if (provider === 'openai') {
-    const presets = {};
-    for (const p of OPENAI_PRESETS) {
-      const hits = list.filter(p.match);
-      presets[p.key] = {
-        key: p.key,
-        label: p.label,
-        hint: p.hint,
-        id: hits.length ? hits[0].id : null,
-        displayName: hits.length ? hits[0].displayName : null,
-        alternatives: hits.slice(1, 5).map((x) => x.id),
-        available: hits.length > 0
-      };
-    }
-    const gen = list.filter((m) => m.methods && m.methods.includes('generateContent'));
-    const mini = gen.find((m) => /luna|mini|nano|haiku|flash/i.test(m.id));
-    const mid = gen.find((m) => /^(?:gpt-6|gpt-5)/i.test(m.id) && !/mini|nano|luna/i.test(m.id)) || gen.find((m) => !/mini|nano/i.test(m.id));
+    const presets = {
+      openai_auto: {
+        key: 'openai_auto',
+        label: 'Auto',
+        hint: 'Smart',
+        id: 'auto',
+        displayName: 'Auto',
+        alternatives: [],
+        available: true
+      },
+      gpt61terra: {
+        key: 'gpt61terra',
+        label: 'GPT-6 Terra',
+        hint: 'Balanced',
+        id: 'gpt-6.1-terra',
+        displayName: 'GPT-6 Terra',
+        alternatives: [],
+        available: true
+      }
+    };
     return {
       provider: 'openai',
       presets,
       computerUse: null,
       computerUseAll: [],
-      fast: (mini && mini.id) || (gen[0] && gen[0].id) || null,
-      bestFlash: (mid && mid.id) || (gen[0] && gen[0].id) || null,
-      bestPro: (mid && mid.id) || (gen[0] && gen[0].id) || null
+      fast: 'auto',
+      bestFlash: 'auto',
+      bestPro: 'gpt-6.1-terra'
     };
   }
 
@@ -381,6 +369,7 @@ let LIVE_OPENAI_MODELS = [];
 function isModernOpenAIModelId(id) {
   const clean = stripModelPrefix(id).toLowerCase();
   if (!clean) return false;
+  if (clean === 'auto' || clean === 'openai_auto') return true;
   if (/^(?:gpt-3|gpt-4(?:\.|o|-|$)|o1(?:-|$)|o4-mini|davinci|babbage|curie|ada)/i.test(clean)) return false;
   if (/(whisper|tts|dall-e|embedding|moderation|realtime|transcribe|sora|audio|image|search-preview|instruct)/i.test(clean)) return false;
   return /^(?:gpt-5|gpt-6|gpt-oss|o3|o4-pro|o5)/i.test(clean);
@@ -422,21 +411,8 @@ class OpenAIClient {
       const discovered = [];
       for (const rm of rawModels) {
         const id = stripModelPrefix(rm && rm.id);
-        if (!id || !isModernOpenAIModelId(id)) continue;
+        if (!id || id === 'auto' || !isModernOpenAIModelId(id)) continue;
         discovered.push(id);
-        if (!seen.has(id)) {
-          seen.add(id);
-          out.push({
-            id,
-            name: 'models/' + id,
-            displayName: id,
-            description: 'Active OpenAI GPT-5/GPT-6 model',
-            methods: ['generateContent'],
-            inputTokenLimit: 128000,
-            outputTokenLimit: 16384,
-            thinking: true
-          });
-        }
       }
       if (discovered.length) LIVE_OPENAI_MODELS = discovered;
     } catch (e) {
@@ -494,16 +470,50 @@ class OpenAIClient {
     };
   }
 
-  resolveRuntimeCandidates(model) {
+  resolveRuntimeCandidates(model, payload) {
     const exact = stripModelPrefix(model);
     const id = exact.toLowerCase();
     const out = [];
     const push = (cand) => {
       const clean = stripModelPrefix(cand);
-      if (clean && !out.includes(clean)) out.push(clean);
+      if (clean && clean !== 'auto' && !out.includes(clean)) out.push(clean);
     };
-    push(exact);
     const live = Array.isArray(LIVE_OPENAI_MODELS) ? LIVE_OPENAI_MODELS : [];
+    if (id === 'auto' || id === 'openai_auto') {
+      let promptText = '';
+      let hasToolsOrImages = false;
+      if (payload && typeof payload === 'object') {
+        if (Array.isArray(payload.tools) && payload.tools.length) hasToolsOrImages = true;
+        if (Array.isArray(payload.contents)) {
+          for (const turn of payload.contents) {
+            for (const p of (turn && turn.parts) || []) {
+              if (p && p.inlineData) hasToolsOrImages = true;
+              if (p && typeof p.text === 'string') promptText += ' ' + p.text;
+            }
+          }
+        }
+      }
+      const isComplex = hasToolsOrImages ||
+        promptText.trim().length > 180 ||
+        /\b(code|debug|fix|implement|build|refactor|algorithm|architecture|analyze|compare|prove|calculate|sql|python|javascript|typescript|rust|java|kotlin|html|css|step[- ]by[- ]step|detailed|plan)\b|```/i.test(promptText);
+      if (isComplex) {
+        for (const m of live) if (/terra|\bgpt-5\b/i.test(m)) push(m);
+        push('gpt-6.1-terra');
+        push('gpt-5');
+        push('gpt-5-mini');
+        push('gpt-4.1');
+        push('gpt-4o');
+      } else {
+        for (const m of live) if (/luna|5-mini|5-nano/i.test(m)) push(m);
+        push('gpt-6-luna');
+        push('gpt-5-mini');
+        push('gpt-5-nano');
+        push('gpt-4.1-mini');
+        push('gpt-4o-mini');
+      }
+      return out;
+    }
+    push(exact);
     // Same-tier endpoint resolution: try exact model slug first, then same-tier live endpoints on the key so it never 404s.
     if (/luna/.test(id)) {
       for (const m of live) if (/luna|5-nano|5-mini/i.test(m)) push(m);
@@ -559,13 +569,13 @@ class OpenAIClient {
   }
 
   async generate(model, payload, { signal, key, timeoutMs = 55000 } = {}) {
-    const cands = this._orderGood(model, this.resolveRuntimeCandidates(model));
+    const cands = this._orderGood(model, this.resolveRuntimeCandidates(model, payload));
     let lastErr;
     for (const cand of cands) {
       try {
         const res = await this._sendChatCandidate(cand, payload, false, { signal, key, timeoutMs });
         const json = await res.json();
-        { this._goodSet(model, cand); return this.normalizeResponse(model, json); }
+        { if (String(model).toLowerCase() !== 'auto') this._goodSet(model, cand); return this.normalizeResponse(model, json); }
       } catch (e) {
         lastErr = e;
         if (e.kind === 'noaccess' || e.status === 404 || e.kind === 'bad_request') continue;
@@ -576,13 +586,13 @@ class OpenAIClient {
   }
 
   async stream(model, payload, { signal, onText, onThought, onActivity, chunkTimeoutMs = 55000, timeoutMs = 55000 } = {}) {
-    const cands = this._orderGood(model, this.resolveRuntimeCandidates(model));
+    const cands = this._orderGood(model, this.resolveRuntimeCandidates(model, payload));
     let res;
     let lastErr;
     for (const cand of cands) {
       try {
         res = await this._sendChatCandidate(cand, payload, true, { signal, timeoutMs });
-        this._goodSet(model, cand);
+        if (String(model).toLowerCase() !== 'auto') this._goodSet(model, cand);
         break;
       } catch (e) {
         lastErr = e;

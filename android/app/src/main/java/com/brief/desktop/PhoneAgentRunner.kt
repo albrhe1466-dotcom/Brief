@@ -29,14 +29,21 @@ class PhoneAgentRunner(
     suspend fun runUserMessage(
         prompt: String,
         workMode: Boolean,
+        workVisualMode: String = "photos",
         onStep: (String) -> Unit,
         onStepItem: ((JSONObject) -> Unit)? = null
     ): String {
         stopped = false
+        val isBgVisual = workVisualMode.equals("background", ignoreCase = true)
         val provider = vault.getActiveProvider()
         val apiKey = vault.getKey(provider)
             ?: return "Please open Setup and verify your ${provider.displayName} API key first."
-        val model = vault.getActiveModel(provider)
+        val rawModel = vault.getActiveModel(provider)
+        val isComplexPrompt = workMode || prompt.length > 180 ||
+            Regex("\\b(code|debug|fix|implement|build|refactor|analyze|compare|prove|calculate|step[- ]by[- ]step|plan)\\b|```", RegexOption.IGNORE_CASE).containsMatchIn(prompt)
+        val model = if (provider == ProviderId.OPENAI && (rawModel.equals("auto", true) || rawModel.equals("openai_auto", true))) {
+            if (isComplexPrompt) "gpt-6.1-terra" else "gpt-6-luna"
+        } else rawModel
         val thinking = vault.getThinkingLevel()
 
         val initialShot = if (workMode && BriefAccessibilityService.instance != null) {
@@ -44,7 +51,7 @@ class PhoneAgentRunner(
             BriefAccessibilityService.instance?.captureScreenshotJpegBase64()
         } else null
 
-        if (workMode) {
+        if (workMode && !isBgVisual) {
             startOverlayIfAllowed(provider, "Starting…")
         }
 
@@ -102,16 +109,24 @@ class PhoneAgentRunner(
                             put("running", true)
                         }
                     )
-                    if (workMode) BriefAccessibilityService.instance?.updateOverlayState(provider, tc.name)
+                    if (workMode && !isBgVisual) BriefAccessibilityService.instance?.updateOverlayState(provider, tc.name)
                     val out = executeTool(tc, provider)
+                    val stepShot = if (workMode && !isBgVisual && BriefAccessibilityService.instance != null) {
+                        BriefAccessibilityService.instance?.captureScreenshotJpegBase64()
+                    } else null
                     onStepItem?.invoke(
                         JSONObject().apply {
                             put("step", step)
                             put("toolCallId", callId)
                             put("tool", tc.name)
+                            put("description", "${tc.name} → ${out.take(80)}")
                             put("label", "${tc.name} → ${out.take(80)}")
                             put("running", false)
                             put("ok", !out.contains("\"error\""))
+                            if (!stepShot.isNullOrBlank()) {
+                                put("screenshot", "data:image/jpeg;base64,$stepShot")
+                                put("forcePhoto", true)
+                            }
                         }
                     )
                     results.add(tc to out)

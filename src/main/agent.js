@@ -1107,7 +1107,7 @@ class AgentRunner extends EventEmitter {
   /**
    * Runs the full real multi-agent desktop pipeline (Strategist + Scout + Specialist + Precision Executor + QA Verifier).
    */
-  async runWork({ chatId, messages, task, attachments, webSearch, screenShare, _testMinWorkMs, _testMaxWorkMs }) {
+  async runWork({ chatId, messages, task, attachments, webSearch, screenShare, workVisualMode, _testMinWorkMs, _testMaxWorkMs }) {
     if (this.running) throw new Error('An agent task is already running. Press Stop first.');
     this.running = true;
     this.stopped = false;
@@ -1117,8 +1117,13 @@ class AgentRunner extends EventEmitter {
     const runId = ++this.runId;
     const workStartMs = Date.now();
     const settings = this.getSettings();
+    const effectiveVisualMode = String(workVisualMode || settings.briefWorkVisualMode || 'photos').toLowerCase() === 'background'
+      ? 'background'
+      : 'photos';
+    const isBackgroundVisualMode = effectiveVisualMode === 'background';
     const configuredMax = Math.max(1, Math.min(200, Number(settings.maxSteps) || 45));
     const agentModel = this.resolveModelForJob('agent');
+    if (agentModel.id === 'auto') agentModel.id = 'gpt-6.1-terra';
     const fastModel = this.resolveModelForJob('fast');
     const screenModel = this.resolveModelForJob('screen');
     const plannerModel = this.resolveModelForJob('planner');
@@ -1176,7 +1181,7 @@ class AgentRunner extends EventEmitter {
           await sleep(180);
         }
       }
-      if (settings.minimizeDuringAgent !== false) {
+      if (settings.minimizeDuringAgent !== false && !isBackgroundVisualMode) {
         this.emit('prepare-desktop-eyes');
         await sleep(80);
       }
@@ -1198,7 +1203,7 @@ class AgentRunner extends EventEmitter {
       // Immediately bring the target app window to the front & glide mouse there BEFORE Step 1
       // so the user sees immediate movement and Step 1 never wastes an API call on the wrong window!
       let currentShot = currentShotInit;
-      if (!(screenShare && screenShare.enabled && screenShare.kind === 'window') && openWindows.length && this.automation && typeof this.automation.focusWindow === 'function') {
+      if (!isBackgroundVisualMode && !(screenShare && screenShare.enabled && screenShare.kind === 'window') && openWindows.length && this.automation && typeof this.automation.focusWindow === 'function') {
         const taskStr = String(task || '');
         const preTarget = openWindows.find((w) => {
           const t = String(w.title || '').toLowerCase();
@@ -1352,10 +1357,15 @@ class AgentRunner extends EventEmitter {
 
       const urgencyDirective = '\n\n[EXECUTION DIRECTIVE: Act IMMEDIATELY on Step 1 — DO NOT pause to summarize screenshots. Taking screenshots without building, typing, scripting, keyframing, and testing inside the target app is strictly rejected by QA Verifier.]';
 
+      const visualModeHint = isBackgroundVisualMode
+        ? '\n\n[BRIEF CODE EXECUTION MODE — WORK IN BACKGROUND: Execute quietly behind the background using terminal commands (`run_command`), file read/write/edit tools, scripts, and web/MCP tools without moving the user\'s mouse cursor or stealing window focus unless GUI interaction is strictly unavoidable.]'
+        : '\n\n[BRIEF CODE EXECUTION MODE — LIVE + SEND PHOTOS: Brief automatically attaches live step-by-step screenshots of what you are doing right now so the user can follow your progress visually.]';
+
       const initialParts = [
         {
           text: task +
             urgencyDirective +
+            visualModeHint +
             longPressHint +
             webSearchBlock +
             initUiMap +
@@ -2019,7 +2029,8 @@ class AgentRunner extends EventEmitter {
             denied: !perm.allowed,
             result: resultObj,
             ms: Date.now() - t0,
-            screenshot: thumbOf(currentShot)
+            screenshot: isBackgroundVisualMode ? null : thumbOf(currentShot),
+            forcePhoto: !isBackgroundVisualMode
           };
           stepLog.push(stepItem);
           this.emit('work-step', { runId, chatId, item: stepItem });

@@ -1188,7 +1188,8 @@ function setupIpc() {
     if (!settingsStore.get().activeModel && cachedModels.length === 0 && startupModelsPromise) {
       await Promise.race([startupModelsPromise.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
     }
-    const shouldMin = s.showOverlay !== false && s.minimizeDuringAgent !== false && mainWindow && !mainWindow.isDestroyed();
+    const isBgMode = String((payload && payload.workVisualMode) || s.briefWorkVisualMode || '').toLowerCase() === 'background';
+    const shouldMin = !isBgMode && s.showOverlay !== false && s.minimizeDuringAgent !== false && mainWindow && !mainWindow.isDestroyed();
     if (shouldMin && s.permissionMode === 'full') mainWindow.minimize();
     try {
       const res = await agent.runWork(payload);

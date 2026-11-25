@@ -4822,17 +4822,105 @@
         radial-gradient(ellipse 68% 60% at 50% 48%, rgba(30, 58, 138, 0.62) 0%, rgba(20, 38, 92, 0.38) 36%, rgba(11, 16, 34, 0.14) 64%, transparent 82%),
         #090a0d !important;
     }
+    /* Provider-specific UI elements hidden by default */
+    #claude-corner-switch,
+    #claude-header-switch,
+    #claude-sb-nav,
+    #claude-chats-filter-btn,
+    #brief-code-banner,
+    #brief-code-emblem,
+    #brief-code-mode-chooser,
+    #brief-code-inline-toggle,
+    #welcome-code-backdrop,
+    #welcome-title-code-echo,
+    #gemini-mode-bar {
+      display: none;
+    }
+
     body[data-provider="gemini"] #top-header {
       background: transparent !important;
       border-bottom-color: rgba(255, 255, 255, 0.04) !important;
     }
-    body[data-provider="gemini"] .mode-segmented {
-      background: rgba(20, 22, 28, 0.78) !important;
-      border-color: rgba(255, 255, 255, 0.09) !important;
+    /* Gemini moves Chat | Task from top header to the chat bar */
+    body[data-provider="gemini"] #top-header .mode-segmented {
+      display: none !important;
     }
-    body[data-provider="gemini"] .mode-seg-btn.active {
+    body[data-provider="gemini"] #gemini-mode-bar {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin: 12px auto 2px;
+      padding: 3px;
+      border-radius: 999px;
+      width: fit-content;
+    }
+    body[data-provider="gemini"]:not(.is-welcome) .composer-shell {
+      display: flex;
+      flex-direction: column;
+    }
+    body[data-provider="gemini"]:not(.is-welcome) #gemini-mode-bar {
+      order: -1;
+      margin: 0 auto 8px;
+      background: rgba(20, 22, 28, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .gemini-seg-btn {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #9aa0a6;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 6px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+    .gemini-seg-btn:hover {
+      color: #e8eaed;
+    }
+    .gemini-seg-btn.active {
       background: #282a2e !important;
+      border-color: rgba(255, 255, 255, 0.09) !important;
       color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+    /* Gemini coding-font / code-language watermark behind daily greeting & Task ready title */
+    body[data-provider="gemini"] .welcome-title-row {
+      position: relative;
+      padding: 16px 20px;
+      isolation: isolate;
+    }
+    body[data-provider="gemini"] #welcome-title-code-echo {
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      position: absolute;
+      inset: -14px -48px;
+      z-index: -1;
+      pointer-events: none;
+      user-select: none;
+      overflow: hidden;
+      font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace !important;
+      font-size: 11.5px;
+      line-height: 1.42;
+      letter-spacing: 0.01em;
+      color: rgba(138, 180, 248, 0.24);
+      text-align: center;
+      white-space: nowrap;
+      mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 35%, transparent 95%);
+      -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 35%, transparent 95%);
+    }
+    body[data-provider="gemini"] #welcome-title-code-echo .code-echo-line.dim {
+      opacity: 0.55;
+      color: rgba(197, 209, 235, 0.22);
+    }
+    body[data-provider="gemini"] #welcome-title-code-echo .code-echo-line.mid {
+      opacity: 0.85;
+      color: rgba(138, 180, 248, 0.30);
     }
     body[data-provider="gemini"] .welcome-heading {
       font-family: "Google Sans", "Google Sans Flex", "Plus Jakarta Sans", sans-serif !important;
@@ -4840,6 +4928,7 @@
       font-weight: 400 !important;
       letter-spacing: -0.02em !important;
       color: #e8eaed !important;
+      text-shadow: 0 2px 16px rgba(9, 10, 13, 0.85);
     }
     body[data-provider="gemini"] .composer-capsule {
       background: #1e1f20 !important;
@@ -5018,15 +5107,183 @@
       background: transparent !important;
       border-bottom-color: rgba(255, 255, 255, 0.05) !important;
     }
-    body[data-provider="anthropic"] .mode-segmented {
-      background: #181817 !important;
-      border-color: rgba(255, 255, 255, 0.09) !important;
+    /* Claude uses top-left corner [ Chat | </> ] switcher instead of center Chat | Work */
+    body[data-provider="anthropic"] #top-header .mode-segmented {
+      display: none !important;
     }
-    body[data-provider="anthropic"] .mode-seg-btn.active {
-      background: #30302e !important;
-      color: #f5f4ef !important;
+    body[data-provider="anthropic"] #sb-projects-section,
+    body[data-provider="anthropic"] #rail-btn-projects,
+    body[data-provider="anthropic"] .sidebar-action-wrap,
+    body[data-provider="anthropic"] #sidebar-bell-btn,
+    body[data-provider="anthropic"] #sidebar-search-btn {
+      display: none !important;
     }
-    /* Show Claude orange starburst right beside "Back at it, [Name]" */
+    body[data-provider="anthropic"] #claude-corner-switch {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      background: #252523;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      margin-right: 4px;
+    }
+    /* Show [ Chat | </> ] in header-left when sidebar is collapsed or on narrow screens */
+    body[data-provider="anthropic"] #sidebar.collapsed ~ #main-area #claude-header-switch {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      background: #252523;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      margin-right: 6px;
+    }
+    @media (max-width: 900px) {
+      body[data-provider="anthropic"] #claude-header-switch {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 2px;
+        padding: 2px;
+        background: #252523;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 8px;
+        margin-right: 6px;
+      }
+    }
+    .claude-switch-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: #9c9a92;
+      width: 28px;
+      height: 24px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+      padding: 0;
+    }
+    .claude-switch-btn:hover {
+      color: #ecebe6;
+    }
+    .claude-switch-btn.active {
+      background: #383835;
+      color: #f5f4ef;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+    .claude-switch-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+    /* Claude Sidebar Nav (+ New, Search, Plugins — NO Projects, NO Artifacts) */
+    body[data-provider="anthropic"] #claude-sb-nav {
+      display: flex !important;
+      flex-direction: column;
+      gap: 2px;
+      padding: 4px 10px 8px;
+    }
+    .claude-nav-row {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: #d6d5cf;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.14s ease, color 0.14s ease;
+    }
+    .claude-nav-row.is-new {
+      background: rgba(255, 255, 255, 0.06);
+      color: #f3f2ed;
+      margin-bottom: 2px;
+    }
+    .claude-nav-row:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+    .claude-nav-row svg {
+      width: 15px;
+      height: 15px;
+      color: #a8a69e;
+      flex-shrink: 0;
+    }
+    .claude-nav-badge {
+      margin-left: auto;
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(217, 119, 87, 0.2);
+      color: #e89578;
+      border: 1px solid rgba(217, 119, 87, 0.35);
+    }
+    body[data-provider="anthropic"] #claude-chats-filter-btn {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: #8e8c84;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 5px;
+    }
+    body[data-provider="anthropic"] #claude-chats-filter-btn:hover {
+      color: #ecebe6;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .pinned-brief-work-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #deddd7;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 3px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .pinned-brief-work-row:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffffff;
+    }
+    .pinned-brief-work-row.active {
+      background: rgba(217, 119, 87, 0.16);
+      color: #f8f7f3;
+      border: 1px solid rgba(217, 119, 87, 0.32);
+    }
+    .pinned-brief-work-row svg {
+      width: 15px;
+      height: 15px;
+      color: #c8c6be;
+      flex-shrink: 0;
+    }
+    .pinned-brief-work-row.active svg {
+      color: #e58b6d;
+    }
+    body[data-provider="anthropic"] .chat-item-mode-dot {
+      width: 7px !important;
+      height: 7px !important;
+      border-radius: 50% !important;
+      background: transparent !important;
+      border: 1.3px solid rgba(255, 255, 255, 0.34) !important;
+      box-shadow: none !important;
+    }
+    body[data-provider="anthropic"] .chat-item-mode-dot.work {
+      border-color: #d97757 !important;
+    }
+    /* Show Claude orange starburst right beside "Let's have a think" or Brief Code emblem */
     body[data-provider="anthropic"] .welcome-starburst {
       display: inline-flex !important;
       align-items: center;
@@ -5041,12 +5298,163 @@
       height: 34px !important;
       object-fit: contain;
     }
+    body[data-provider="anthropic"][data-mode="work"] #welcome-provider-logo {
+      display: none !important;
+    }
+    body[data-provider="anthropic"][data-mode="work"] #brief-code-emblem {
+      display: inline-flex !important;
+      width: 36px;
+      height: 36px;
+      color: #d97757;
+      filter: drop-shadow(0 0 12px rgba(217, 119, 87, 0.35));
+    }
     body[data-provider="anthropic"] .welcome-heading {
       font-family: "Newsreader", Georgia, "Times New Roman", serif !important;
       font-size: 36px !important;
       font-weight: 400 !important;
       letter-spacing: -0.02em !important;
       color: #ecebe6 !important;
+    }
+    body[data-provider="anthropic"][data-mode="work"] .welcome-heading {
+      font-family: "JetBrains Mono", "Cascadia Code", "Claude Sans", monospace !important;
+      font-size: 32px !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.03em !important;
+      color: #f5f4ef !important;
+    }
+    /* Brief Code (</>) Faded Coding Text Backdrop (90%/80% fade + 70%/60% fade lines) */
+    body[data-provider="anthropic"][data-mode="work"] #view-welcome {
+      position: relative;
+      overflow-x: hidden;
+    }
+    body[data-provider="anthropic"][data-mode="work"] #welcome-code-backdrop {
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      position: absolute;
+      inset: 0;
+      padding: 28px 42px;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      overflow: hidden;
+      font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace !important;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #d8d5cc;
+      mask-image: radial-gradient(ellipse 52% 42% at 50% 46%, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.72) 56%, #000 100%);
+      -webkit-mask-image: radial-gradient(ellipse 52% 42% at 50% 46%, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.72) 56%, #000 100%);
+    }
+    #welcome-code-backdrop .bcode-line {
+      white-space: pre;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* 90% fade = 0.10 opacity, 80% fade = 0.20, 70% fade = 0.30, 60% fade = 0.40 */
+    #welcome-code-backdrop .bcode-line.fade-90 { opacity: 0.10; }
+    #welcome-code-backdrop .bcode-line.fade-80 { opacity: 0.20; }
+    #welcome-code-backdrop .bcode-line.fade-70 { opacity: 0.30; color: #e4b6a4; }
+    #welcome-code-backdrop .bcode-line.fade-60 { opacity: 0.40; color: #e89b7e; }
+    body[data-provider="anthropic"] .welcome-inner {
+      position: relative;
+      z-index: 2;
+    }
+    /* "You're in Brief Code · Brief Work" Banner & Visual Execution Chooser */
+    body[data-provider="anthropic"][data-mode="work"] #brief-code-banner {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 13px;
+      margin: 0 auto 12px;
+      border-radius: 999px;
+      background: rgba(217, 119, 87, 0.13);
+      border: 1px solid rgba(217, 119, 87, 0.34);
+      color: #f2d5c9;
+      font-family: "JetBrains Mono", "Cascadia Code", monospace;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .brief-code-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #d97757;
+      box-shadow: 0 0 8px #d97757;
+    }
+    .brief-code-subtag {
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f6f5f0;
+      font-size: 10.5px;
+      letter-spacing: 0.02em;
+    }
+    body[data-provider="anthropic"][data-mode="work"] #brief-code-mode-chooser {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 560px;
+      width: 100%;
+      margin: 14px auto 4px;
+    }
+    @media (max-width: 600px) {
+      body[data-provider="anthropic"][data-mode="work"] #brief-code-mode-chooser {
+        grid-template-columns: 1fr;
+      }
+    }
+    .brief-visual-card {
+      appearance: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: 12px;
+      background: rgba(34, 34, 32, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #deddd7;
+      text-align: left;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.16s ease, background 0.16s ease, transform 0.14s ease;
+    }
+    .brief-visual-card:hover {
+      background: rgba(45, 45, 42, 0.94);
+      border-color: rgba(217, 119, 87, 0.42);
+      transform: translateY(-1px);
+    }
+    .brief-visual-card.active {
+      background: rgba(54, 41, 36, 0.92);
+      border-color: #d97757;
+      box-shadow: 0 4px 18px rgba(217, 119, 87, 0.18);
+    }
+    .brief-visual-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(217, 119, 87, 0.15);
+      color: #e58a6b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .brief-visual-title {
+      font-size: 12.8px;
+      font-weight: 600;
+      color: #f5f4ef;
+      margin-bottom: 2px;
+    }
+    .brief-visual-desc {
+      font-size: 11.3px;
+      line-height: 1.38;
+      color: #a8a69e;
+    }
+    body[data-provider="anthropic"][data-mode="work"] #brief-code-inline-toggle {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 5px;
     }
     body[data-provider="anthropic"] .composer-capsule {
       background: #2b2b29 !important;
@@ -5091,11 +5499,37 @@
       font-size: 16px !important;
       line-height: 1.72 !important;
     }
-    /* Claude mode: ZERO buttons below the chat bar */
-    body[data-provider="anthropic"] #claude-topic-pills,
-    body[data-provider="anthropic"] .claude-topic-pills,
+    /* Claude Chat welcome pills (Write, Learn, Code, Life stuff, Brief's choice) */
+    body[data-provider="anthropic"].is-welcome[data-mode="chat"] #claude-topic-pills {
+      display: flex !important;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    body[data-provider="anthropic"]:not(.is-welcome) #claude-topic-pills,
+    body[data-provider="anthropic"][data-mode="work"] #claude-topic-pills,
     body[data-provider="anthropic"] .composer-footnote {
       display: none !important;
+    }
+    .claude-topic-pill {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: #282826;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: #c9c8c1;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .claude-topic-pill:hover {
+      background: #333330;
+      color: #f5f4ef;
+      border-color: rgba(255, 255, 255, 0.18);
     }
     body[data-provider="anthropic"].is-welcome .composer-disclaimer {
       display: none !important;
@@ -5370,6 +5804,21 @@
         </button>
 
         <div class="sidebar-top-icons">
+          <!-- Claude Top-Left Corner [ Chat | </> ] Switcher -->
+          <div id="claude-corner-switch" role="tablist" aria-label="Brief Chat or Brief Code">
+            <button class="claude-switch-btn active" id="claude-corner-chat-btn" type="button" title="Brief Chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </button>
+            <button class="claude-switch-btn" id="claude-corner-code-btn" type="button" title="Brief Code · Brief Work (&lt;/&gt;)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+                <line x1="14" y1="4" x2="10" y2="20"></line>
+              </svg>
+            </button>
+          </div>
           <button class="icon-btn" id="sidebar-bell-btn" title="Open Action Log">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -5402,15 +5851,40 @@
         </button>
       </div>
 
+      <!-- Claude Clean Sidebar Nav (+ New, Search, Plugins — Projects & Artifacts removed) -->
+      <div id="claude-sb-nav" aria-label="Claude Quick Navigation">
+        <button class="claude-nav-row is-new" id="claude-new-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New</span>
+        </button>
+        <button class="claude-nav-row" id="claude-search-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="20" y1="20" x2="16.2" y2="16.2"></line>
+          </svg>
+          <span>Search</span>
+        </button>
+        <button class="claude-nav-row" id="claude-plugins-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          <span>Plugins</span>
+          <span class="claude-nav-badge" id="claude-plugins-count" style="display:none;">0</span>
+        </button>
+      </div>
+
       <div class="sidebar-scroll">
-        <section class="sb-section" aria-label="Pinned">
+        <section class="sb-section" id="sb-pinned-section" aria-label="Pinned">
           <div class="sb-section-head">
             <span class="sb-section-title">Pinned</span>
           </div>
           <div id="pinned-list"></div>
         </section>
 
-        <section class="sb-section" aria-label="Projects">
+        <section class="sb-section" id="sb-projects-section" aria-label="Projects">
           <div class="sb-section-head">
             <span class="sb-section-title">Projects</span>
             <button class="sb-section-add" id="new-project-btn" title="Add Local Project Folder">+</button>
@@ -5418,9 +5892,16 @@
           <div id="projects-list"></div>
         </section>
 
-        <section class="sb-section" aria-label="Recents">
+        <section class="sb-section" id="sb-recents-section" aria-label="Recents">
           <div class="sb-section-head">
-            <span class="sb-section-title">Recents</span>
+            <span class="sb-section-title" id="sb-recents-title">Recents</span>
+            <button id="claude-chats-filter-btn" type="button" title="Filter &amp; Search Chats">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+                <line x1="10" y1="18" x2="14" y2="18"></line>
+              </svg>
+            </button>
           </div>
           <div id="recents-list"></div>
         </section>
@@ -5465,6 +5946,21 @@
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </button>
+          <!-- Mirror [ Chat | </> ] in top-left corner when sidebar is collapsed -->
+          <div id="claude-header-switch" role="tablist" aria-label="Brief Chat or Brief Code">
+            <button class="claude-switch-btn active" id="claude-header-chat-btn" type="button" title="Brief Chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </button>
+            <button class="claude-switch-btn" id="claude-header-code-btn" type="button" title="Brief Code · Brief Work (&lt;/&gt;)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+                <line x1="14" y1="4" x2="10" y2="20"></line>
+              </svg>
+            </button>
+          </div>
           <span class="header-title" id="header-chat-title">Brief</span>
           <span class="header-project-pill hidden" id="header-project-pill"></span>
           <span class="task-running-pill" id="task-running-pill" title="Task is actively running">
@@ -5505,7 +6001,7 @@
             <span class="selector-subbadge" id="log-count-badge">0</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.4">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.5">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -5638,10 +6134,26 @@
 
         <!-- 2. WELCOME SCREEN (ANIMATED PROVIDER LOGO + NAME + ROTATING MENU GREETING) -->
         <section class="workspace-view active" id="view-welcome" aria-label="Welcome">
+          <!-- Brief Code (</>) Faded Coding Backdrop (90%/80% + 70%/60% fade lines) -->
+          <div id="welcome-code-backdrop" aria-hidden="true"></div>
+
           <div class="welcome-inner">
+            <div id="brief-code-banner">
+              <span class="brief-code-live-dot"></span>
+              <span>You're in <strong>Brief Code</strong></span>
+              <span class="brief-code-subtag">Brief Work</span>
+            </div>
+
             <div class="welcome-title-row">
+              <div id="welcome-title-code-echo" aria-hidden="true"></div>
               <div class="welcome-starburst anim-logo-reveal" id="welcome-starburst">
                 <img src="assets/gemini-logo.png" id="welcome-provider-logo" alt="Provider Logo">
+                <!-- Replicated Brief Code / Brief Work Pixel-Terminal Starburst Emblem -->
+                <svg id="brief-code-emblem" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                  <rect x="3" y="4" width="30" height="28" rx="7" fill="#2b221e" stroke="#d97757" stroke-width="1.6"/>
+                  <path d="M18 9v18M10.2 13.5l15.6 9M25.8 13.5l-15.6 9M12.5 10.2l11 15.6M23.5 10.2l-11 15.6" stroke="#d97757" stroke-width="2.1" stroke-linecap="square"/>
+                  <circle cx="18" cy="18" r="3.1" fill="#2b221e" stroke="#f09a7d" stroke-width="1.6"/>
+                </svg>
               </div>
               <h1 class="welcome-heading" id="welcome-heading">Where should we begin?</h1>
             </div>
@@ -5655,6 +6167,36 @@
             <p class="welcome-sub" id="welcome-mode-sub">
               Work mode is active: Brief can observe your real screen, control your mouse and keyboard, search and organize files, write code, and run real terminal commands.
             </p>
+
+            <!-- Brief Code / Brief Work Execution Chooser: Background vs Live Photos -->
+            <div id="brief-code-mode-chooser" role="radiogroup" aria-label="Brief Work Execution Style">
+              <button class="brief-visual-card" id="brief-mode-bg-btn" type="button" data-visual-mode="background">
+                <span class="brief-visual-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                    <path d="M7 20h10"></path>
+                    <polyline points="8 9 10.5 11 8 13"></polyline>
+                    <line x1="12.5" y1="13" x2="16" y2="13"></line>
+                  </svg>
+                </span>
+                <span>
+                  <div class="brief-visual-title">Work in Background</div>
+                  <div class="brief-visual-desc">Runs code, files &amp; terminal silently behind the background without taking cursor focus.</div>
+                </span>
+              </button>
+              <button class="brief-visual-card active" id="brief-mode-photos-btn" type="button" data-visual-mode="photos">
+                <span class="brief-visual-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                </span>
+                <span>
+                  <div class="brief-visual-title">Send Live Photos</div>
+                  <div class="brief-visual-desc">Works live and sends real-time photos in chat of what Brief Work is doing right now.</div>
+                </span>
+              </button>
+            </div>
 
             <div class="starter-grid" id="welcome-starters" style="display:none !important"></div>
           </div>
@@ -5809,6 +6351,11 @@
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </button>
+
+                <!-- Brief Code Inline Background vs Live Photos Quick Switch -->
+                <button class="selector-pill" id="brief-code-inline-toggle" type="button" title="Switch Brief Work between Background execution and Live Photos">
+                  <span id="brief-code-inline-label">📸 Live Photos</span>
+                </button>
               </div>
 
               <div class="composer-controls-right">
@@ -5826,6 +6373,12 @@
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- Gemini Chat | Task Pill Switcher right at the chat bar -->
+          <div id="gemini-mode-bar" role="tablist" aria-label="Gemini Chat or Task Mode">
+            <button class="gemini-seg-btn" id="gemini-seg-chat" role="tab" type="button">Chat</button>
+            <button class="gemini-seg-btn active" id="gemini-seg-task" role="tab" type="button">Task</button>
           </div>
 
           <div class="claude-topic-pills" id="claude-topic-pills"></div>
@@ -6403,7 +6956,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill">News · v2.0.4</span>
+          <span class="news-version-pill">News · v2.0.5</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -6411,7 +6964,7 @@
         <div class="news-hero-strip">
           <div>
             <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.4 — Honor MagicOS Tablets, Samsung Phones, Smooth Touch Scroll &amp; Full Control
+              Brief v2.0.5 — Brief Code &amp; Brief Work (&lt;/&gt;), OpenAI Auto + GPT-6 Terra, Gemini Chat | Task &amp; Code Watermarks
             </div>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Click any screenshot below to zoom in. Click the red <strong>✕</strong> in the top-right corner to close (shown automatically once per update).
@@ -6449,12 +7002,12 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span>What’s New in v2.0.4</span>
+              <span>What’s New in v2.0.5</span>
             </div>
             <ul class="news-list">
-              <li><strong>Honor MagicOS Tablets &amp; All Android Phones:</strong> Added dedicated Honor MagicOS 8/9 Tablet &amp; Samsung One UI zero-root control (<code class="mono">tap_element</code>, auto-focus typing, safe landscape/portrait coordinates), compact UI fit, and bulletproof Welcome/Chat touch scrolling.</li>
-              <li><strong>Samsung Safe Mode &amp; 2-Tap Un-Gray:</strong> Trusted Android Accessibility Overlay + RSA-4096 v1/v2/v3 signing eliminates false malware blocks and unlocks Samsung's gray switch in 2 taps.</li>
-              <li><strong>Native Provider Themes, Forced Fonts &amp; 120fps Animations:</strong> Gemini (Google Sans + deep blue radial glow), OpenAI (pitch black + OpenAI Sans), Claude (warm charcoal + Newsreader serif &amp; orange starburst), and OpenRouter (obsidian-indigo + OR emblem).</li>
+              <li><strong>Claude Brief Code &amp; Brief Work (&lt;/&gt;):</strong> Top-left <code class="mono">[ Chat | &lt;/&gt; ]</code> switcher, 90%/80% &amp; 70%/60% faded code backdrop, streamlined sidebar (New, Search, Plugins, Pinned Brief Work, Chats), and selectable <strong>Work in Background</strong> vs. <strong>Send Live Photos</strong> execution.</li>
+              <li><strong>OpenAI Auto &amp; GPT-6 Terra + Gemini Chat | Task:</strong> OpenAI offers smart complexity-routed <strong>Auto</strong> and <strong>GPT-6 Terra</strong>; Gemini places <strong>Chat | Task</strong> at the chat bar with daily coding-font watermarks and <em>&ldquo;I am ready. What's your task?&rdquo;</em>.</li>
+              <li><strong>Honor MagicOS Tablets &amp; All Android Phones:</strong> Dedicated Honor MagicOS 8/9 Tablet &amp; Samsung One UI zero-root control, compact UI fit, and bulletproof Welcome/Chat touch scrolling.</li>
               <li><strong>Extra Thinking &amp; Usage Limit Ring:</strong> Choose Low, Medium, High, or <strong>Extra</strong> (deep parallel research + polish) alongside per-company Usage Limit tracking.</li>
             </ul>
           </div>
@@ -7496,6 +8049,18 @@
       }
 
       function renderSidebar() {
+        const isClaude = State.provider === 'anthropic';
+        const recTitle = $('sb-recents-title');
+        if (recTitle) recTitle.textContent = isClaude ? 'Chats' : 'Recents';
+        const plugBadge = $('claude-plugins-count');
+        if (plugBadge) {
+          const mcpCount = Array.isArray(State.mcpServers)
+            ? State.mcpServers.filter((s) => s && s.status === 'connected').length
+            : 0;
+          plugBadge.textContent = String(mcpCount);
+          plugBadge.style.display = mcpCount > 0 ? 'inline-flex' : 'none';
+        }
+
         const filteredChats = State.activeProjectId
           ? State.chats.filter((c) => c.projectId === State.activeProjectId)
           : State.chats;
@@ -7503,8 +8068,35 @@
         const pinned = filteredChats.filter((c) => c.pinned);
         const recents = filteredChats.filter((c) => !c.pinned);
 
-        renderChatListSection(DOM.pinnedList, pinned, 'No pinned chats');
-        renderChatListSection(DOM.recentsList, recents, 'No recent chats yet');
+        if (isClaude) {
+          DOM.pinnedList.innerHTML = '';
+          const isWorkActive = State.workspaceTab !== 'chat' && (State.settings.permissionMode !== 'chat');
+          const workRow = createElement('div', {
+            className: 'pinned-brief-work-row' + (isWorkActive ? ' active' : ''),
+            title: 'Open Brief Work (Brief Code)',
+            onClick: () => {
+              setWorkspaceTab('work');
+              if (!State.activeChatId) setView('welcome');
+              if (DOM.composerInput) DOM.composerInput.focus();
+            }
+          });
+          workRow.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M5 7h14M6 4h12"></path>' +
+            '<rect x="3" y="10" width="18" height="10" rx="2.2"></rect>' +
+            '<path d="M9.5 14.5h5"></path>' +
+            '</svg>' +
+            '<span>Brief Work</span>';
+          DOM.pinnedList.appendChild(workRow);
+          if (pinned.length) {
+            const frag = document.createDocumentFragment();
+            renderChatListSection(frag, pinned, '');
+            DOM.pinnedList.appendChild(frag);
+          }
+        } else {
+          renderChatListSection(DOM.pinnedList, pinned, 'No pinned chats');
+        }
+        renderChatListSection(DOM.recentsList, recents, isClaude ? 'No chats yet' : 'No recent chats yet');
 
         DOM.projectsList.innerHTML = '';
         if (!State.projects.length) {
@@ -7554,9 +8146,9 @@
       }
 
       function renderChatListSection(container, list, emptyMsg) {
-        container.innerHTML = '';
+        if (container.innerHTML !== undefined) container.innerHTML = '';
         if (!list.length) {
-          container.appendChild(createElement('div', { className: 'sb-empty', text: emptyMsg }));
+          if (emptyMsg) container.appendChild(createElement('div', { className: 'sb-empty', text: emptyMsg }));
           return;
         }
         for (const chat of list) {
@@ -7899,10 +8491,8 @@
           { key: 'argon',       id: 'gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Flagship', desc: 'Flagship — analyzes, critically thinks, works, tests & keeps fixing issues' }
         ],
         openai: [
-          { key: 'gpt6luna',    id: 'gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',  desc: 'Lightest & fastest — quick, helpful replies as fast as possible' },
-          { key: 'gpt61terra',  id: 'gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced', desc: 'Balanced — thinks before starting & handles daily work cleanly' },
-          { key: 'gpt6sol',     id: 'gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',   desc: 'Strong — analyzes, thinks, builds a plan, then executes cleanly' },
-          { key: 'gpt62astra',  id: 'gpt-6.2-astra',         label: 'GPT-6.2 Astra',         hint: 'Flagship', desc: 'Flagship — critically thinks, executes, tests & fixes until passing' }
+          { key: 'openai_auto', id: 'auto',          label: 'Auto',        hint: 'Smart',    desc: 'Automatically routes speed vs. deep reasoning based on prompt complexity' },
+          { key: 'gpt61terra',  id: 'gpt-6.1-terra', label: 'GPT-6 Terra', hint: 'Balanced', desc: 'Balanced flagship OpenAI model — thinks cleanly and executes work reliably' }
         ],
         anthropic: [
           { key: 'claudehaiku55',  id: 'claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest',    desc: 'Super fast helper — crisp speed for everyday tasks' },
@@ -7979,49 +8569,181 @@
         };
       }
 
+      function isCurrentModeWork() {
+        const perm = (State.settings && State.settings.permissionMode) || 'ask';
+        return !(perm === 'chat' || State.workspaceTab === 'chat');
+      }
+
       function buildWelcomeGreeting(rawName) {
         const name = String(rawName || '').trim();
         const p = String(State.provider || 'gemini').toLowerCase();
-        if (p === 'anthropic' || p === 'claude') {
-          return 'Back at it' + (name ? (', ' + name) : '');
-        }
-        if (p === 'openai' || p === 'gemini' || p === 'openrouter') {
-          return 'Where should we begin?';
-        }
+        const work = isCurrentModeWork();
         const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
         const who = name ? (', ' + name) : '';
-        const phrases = [
-          "What's on the agenda" + who + '?',
-          'Coffee time and Brief' + who + '?',
-          'Happy ' + weekday + who + '!',
-          'Happy ' + weekday + '! What are we making' + who + '?',
-          'Ready when you are' + who + '.',
-          "What's on the agenda today" + who + '?',
-          'Coffee time and Brief?'
-        ];
-        if (State.greetingSeed === undefined) State.greetingSeed = Math.floor(Math.random() * 1000);
-        const idx = Math.abs(Number(State.greetingIdx || 0) + State.greetingSeed) % phrases.length;
-        return phrases[idx];
+
+        if (p === 'anthropic' || p === 'claude') {
+          if (work) return 'Brief Code';
+          return 'Let’s have a think' + who;
+        }
+        if (p === 'gemini') {
+          if (work) return "I am ready. What's your task?";
+          const geminiDaily = [
+            'Happy ' + weekday + who,
+            'Where should we begin?',
+            "What's on the agenda" + who + '?'
+          ];
+          const gIdx = Math.abs(Number(State.greetingIdx || 0)) % geminiDaily.length;
+          return geminiDaily[gIdx];
+        }
+        if (p === 'openai' || p === 'openrouter') {
+          return 'Where should we begin?';
+        }
+        return 'Happy ' + weekday + who + '!';
+      }
+
+      function renderWelcomeCodeBackdrop() {
+        const codeBackdrop = $('welcome-code-backdrop');
+        const geminiEcho = $('welcome-title-code-echo');
+        const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
+        const work = isCurrentModeWork();
+        const visualMode = (State.settings && State.settings.briefWorkVisualMode) || 'photos';
+
+        if (codeBackdrop && !codeBackdrop.dataset.populated) {
+          codeBackdrop.dataset.populated = '1';
+          const lines = [
+            ['fade-90', '// brief-code/runtime/pipeline.ts — autonomous local workspace engine'],
+            ['fade-80', 'import { BriefWork, TerminalSession, VisionStream } from "@brief/core";'],
+            ['fade-60', 'export async function executeBriefWork(task: WorkSpec, mode: "background" | "photos") {'],
+            ['fade-70', '  const session = await BriefWork.attach({ localOnly: true, zeroTelemetry: true });'],
+            ['fade-80', '  const plan = await session.analyzeArchitecture(task.prompt, { verifyDiff: true });'],
+            ['fade-90', '  for (const step of plan.steps) {'],
+            ['fade-60', '    const res = await session.dispatchTool(step.tool, step.args, { silentBackground: mode === "background" });'],
+            ['fade-70', '    if (mode === "photos") await VisionStream.emitLiveStepPhoto(step.id, res.frame);'],
+            ['fade-80', '    await session.assertCleanBuild({ checkTypes: true, runTests: true });'],
+            ['fade-90', '  }'],
+            ['fade-70', '  return { ok: true, workspace: "Brief Code", engine: "Brief Work", verified: true };'],
+            ['fade-80', '}'],
+            ['fade-90', ''],
+            ['fade-80', 'fn verify_patch(diff: &WorkspaceDiff) -> Result<AuditPass, CompileError> {'],
+            ['fade-60', '    let ast = Parser::parse_strict(&diff.target_source)?;'],
+            ['fade-70', '    ast.validate_invariants()?.emit_verified_artifact()'],
+            ['fade-90', '}'],
+            ['fade-80', '$ brief-work run --mode=' + visualMode + ' --verify-all && echo "READY"'],
+            ['fade-60', 'const status = { agent: "Brief Code", background: true, livePhotos: true, latencyMs: 14 };'],
+            ['fade-70', 'await Promise.all([lintWorkspace(), runUnitSuite(), captureVerificationProof()]);']
+          ];
+          codeBackdrop.innerHTML = lines
+            .map(([cls, txt]) => '<div class="bcode-line ' + cls + '">' + escapeHtml(txt) + '</div>')
+            .join('');
+        }
+
+        if (geminiEcho) {
+          const echoLines = work
+            ? [
+                ['dim', '// gemini.task_runner :: autonomous_ready = true'],
+                ['mid', 'async fn run_task(goal: &str) -> Result<CompletedTask> { agent.execute(goal).await }'],
+                ['dim', 'const tools = ["screen_vision", "code_exec", "web_research", "workspace"];']
+              ]
+            : [
+                ['dim', '// brief.daily_greeting({ day: "' + weekday + '", mode: "chat" })'],
+                ['mid', 'const session = await gemini.begin({ day: "' + weekday + '", tools: ["@apps", "@skills"] });'],
+                ['dim', 'export default () => session.streamResponse({ precision: "high" });']
+              ];
+          geminiEcho.innerHTML = echoLines
+            .map(([cls, txt]) => '<div class="code-echo-line ' + cls + '">' + escapeHtml(txt) + '</div>')
+            .join('');
+        }
+      }
+
+      function renderBriefWorkVisualModeUI() {
+        const mode = String((State.settings && State.settings.briefWorkVisualMode) || 'photos').toLowerCase() === 'background'
+          ? 'background'
+          : 'photos';
+        const bgBtn = $('brief-mode-bg-btn');
+        const phBtn = $('brief-mode-photos-btn');
+        const inlineLbl = $('brief-code-inline-label');
+        if (bgBtn) bgBtn.classList.toggle('active', mode === 'background');
+        if (phBtn) phBtn.classList.toggle('active', mode === 'photos');
+        if (inlineLbl) {
+          inlineLbl.textContent = mode === 'background' ? '⚡ Background' : '📸 Live Photos';
+        }
+      }
+
+      async function setBriefWorkVisualMode(nextMode) {
+        const norm = String(nextMode || '').toLowerCase() === 'background' ? 'background' : 'photos';
+        State.settings.briefWorkVisualMode = norm;
+        renderBriefWorkVisualModeUI();
+        if (api && api.updateSettings) {
+          await api.updateSettings({ briefWorkVisualMode: norm }).catch(() => {});
+        }
+        showToast(
+          norm === 'background'
+            ? 'Brief Work: Working quietly behind the background'
+            : 'Brief Work: Sending live photos of what Brief is doing right now',
+          'ok'
+        );
       }
 
       function renderClaudeTopicPills() {
-        // User requested NO buttons below the Claude chat bar — keep hidden & empty.
         const el = $('claude-topic-pills');
         if (!el) return;
-        el.style.display = 'none';
+        const isClaudeWelcomeChat = State.provider === 'anthropic' && !isCurrentModeWork() && (!State.ui || State.ui.activeView !== 'chat');
+        if (!isClaudeWelcomeChat) {
+          el.style.display = 'none';
+          el.innerHTML = '';
+          return;
+        }
+        el.style.display = 'flex';
         el.innerHTML = '';
+        const items = [
+          { icon: '✏️', label: 'Write', prompt: 'Help me draft something clear and compelling: ' },
+          { icon: '🎓', label: 'Learn', prompt: 'Explain this topic clearly from first principles: ' },
+          { icon: '</>', label: 'Code', isBriefCode: true },
+          { icon: '☕', label: 'Life stuff', prompt: 'Help me plan and organize: ' },
+          { icon: '💡', label: "Brief's choice", prompt: 'Surprise me with a fascinating deep-dive or practical tip today.' }
+        ];
+        for (const item of items) {
+          const btn = createElement('button', {
+            className: 'claude-topic-pill',
+            type: 'button',
+            onClick: () => {
+              if (item.isBriefCode) {
+                setWorkspaceTab('work');
+                if (DOM.composerInput) DOM.composerInput.focus();
+                return;
+              }
+              if (DOM.composerInput) {
+                DOM.composerInput.value = item.prompt || '';
+                autoResizeComposer();
+                DOM.composerInput.focus();
+              }
+            }
+          });
+          btn.appendChild(createElement('span', { text: item.icon }));
+          btn.appendChild(createElement('span', { text: item.label }));
+          el.appendChild(btn);
+        }
       }
 
       function updateProviderPlaceholder(norm) {
         const input = $('composer-input');
         if (!input) return;
-        const isChat = State.ui && State.ui.activeView === 'chat';
+        const inThread = State.ui && State.ui.activeView === 'chat';
+        const work = isCurrentModeWork();
         if (norm === 'anthropic') {
-          input.placeholder = isChat ? 'Write a message…' : 'How can I help you today?';
+          if (work) {
+            input.placeholder = 'Ask Brief Code to build, refactor, or automate anything (Brief Work)…';
+          } else {
+            input.placeholder = inThread ? 'Write a message…' : 'How can I help you today?';
+          }
         } else if (norm === 'openai') {
-          input.placeholder = 'Ask Brief';
+          input.placeholder = work ? 'Ask Brief or describe a task…' : 'Ask Brief';
         } else if (norm === 'gemini') {
-          input.placeholder = isChat ? 'Ask Gemini' : 'Ask Brief or type @ for apps, tools, and skills';
+          if (work) {
+            input.placeholder = 'Tell me about the task';
+          } else {
+            input.placeholder = inThread ? 'Ask Brief' : 'Ask Brief or type @ for apps, tools, and skills';
+          }
         } else {
           input.placeholder = 'Ask Brief…';
         }
@@ -8034,6 +8756,7 @@
           : (p === 'openrouter' ? 'openrouter' : 'gemini');
         State.provider = norm;
         document.body.dataset.provider = norm;
+        document.body.dataset.mode = isCurrentModeWork() ? 'work' : 'chat';
         updateProviderPlaceholder(norm);
         const vis = providerVisual(norm);
         const logo = $('welcome-provider-logo');
@@ -8045,6 +8768,8 @@
         const heading = $('welcome-heading');
         const userName = String((State.settings && State.settings.userName) || '').trim();
         if (heading) heading.textContent = buildWelcomeGreeting(userName);
+        renderWelcomeCodeBackdrop();
+        renderBriefWorkVisualModeUI();
         renderClaudeTopicPills();
         if (typeof renderUsageRing === 'function') { try { renderUsageRing(); } catch (_) { /* not ready yet */ } }
       }
@@ -8216,9 +8941,9 @@
         }
 
         const matchedPreset = State.presets.find((p) => p.id === active || p.key === State.settings.activePreset);
-        const matchedGen = genModels.find((m) => m.id === active);
+        const matchedGen = vis.id === 'openai' ? null : genModels.find((m) => m.id === active);
         if (!matchedPreset && !matchedGen && State.presets.length) {
-          active = (State.presets[1] || State.presets[0]).id;
+          active = vis.id === 'openai' ? State.presets[0].id : (State.presets[1] || State.presets[0]).id;
           State.settings.activeModel = active;
         }
 
@@ -8326,11 +9051,28 @@
       function renderPermissionAndModeUI() {
         const perm = State.settings.permissionMode || 'ask';
         const isChat = perm === 'chat' || State.workspaceTab === 'chat';
+        document.body.dataset.mode = isChat ? 'chat' : 'work';
 
         DOM.modeSegChat.classList.toggle('active', isChat);
         DOM.modeSegChat.setAttribute('aria-selected', String(isChat));
         DOM.modeSegWork.classList.toggle('active', !isChat);
         DOM.modeSegWork.setAttribute('aria-selected', String(!isChat));
+
+        // Sync Claude top-left [ Chat | </> ] buttons & Gemini [ Chat | Task ] bar
+        for (const id of ['claude-corner-chat-btn', 'claude-header-chat-btn', 'gemini-seg-chat']) {
+          const el = $(id);
+          if (el) {
+            el.classList.toggle('active', isChat);
+            el.setAttribute('aria-selected', String(isChat));
+          }
+        }
+        for (const id of ['claude-corner-code-btn', 'claude-header-code-btn', 'gemini-seg-task']) {
+          const el = $(id);
+          if (el) {
+            el.classList.toggle('active', !isChat);
+            el.setAttribute('aria-selected', String(!isChat));
+          }
+        }
 
         DOM.permTriggerBtn.classList.remove('perm-full', 'perm-chat');
         DOM.permTriggerDot.className = 'selector-dot ' + perm;
@@ -8349,16 +9091,26 @@
           btn.classList.toggle('active', btn.dataset.perm === perm);
         });
 
-        if (perm === 'chat') {
-          DOM.composerInput.placeholder = 'Ask Brief…';
-          DOM.welcomeModeSub.textContent = 'Chat mode is active: talk, brainstorm, or write snippets without touching your files, mouse, or terminal. Switch to Work at the top to run real tasks on your desktop.';
+        if (State.provider === 'anthropic' && !isChat) {
+          DOM.welcomeModeSub.textContent = 'Brief Code (Brief Work) is active — choose whether Brief works silently behind the background or sends live photos of what it is doing right now.';
+        } else if (State.provider === 'gemini' && !isChat) {
+          DOM.welcomeModeSub.textContent = 'Task mode is active: describe your task below and Brief will plan, execute, and verify it step by step.';
+        } else if (isChat) {
+          DOM.welcomeModeSub.textContent = 'Chat mode is active: talk, brainstorm, or write snippets without touching your files, mouse, or terminal.';
         } else if (perm === 'full') {
-          DOM.composerInput.placeholder = 'Give Brief a real desktop task (Full access active — permanent deletion still asks)…';
           DOM.welcomeModeSub.textContent = 'Full Access Work mode is active: Brief observes your real screen and acts immediately. Permanent deletion always asks for confirmation.';
         } else {
-          DOM.composerInput.placeholder = 'Ask Brief or give a desktop task…';
           DOM.welcomeModeSub.textContent = 'Work mode is active: Brief observes your screen, controls mouse/keyboard, manages files, and runs terminal commands — asking your permission before every action.';
         }
+
+        updateProviderPlaceholder(State.provider);
+        const heading = $('welcome-heading');
+        const userName = String((State.settings && State.settings.userName) || '').trim();
+        if (heading) heading.textContent = buildWelcomeGreeting(userName);
+        renderWelcomeCodeBackdrop();
+        renderBriefWorkVisualModeUI();
+        renderClaudeTopicPills();
+        if (DOM.pinnedList) renderSidebar();
       }
 
       async function setWorkspaceTab(tab, skipPermissionSync) {
@@ -8997,7 +9749,7 @@
 
           // Photo of what Brief sees / did (with loading ring while it is looking)
           const shotSrc = st.screenshot || st.seenShot;
-          if (!isTerminalTool && (shotSrc || st.running)) {
+          if ((st.forcePhoto || !isTerminalTool) && (shotSrc || st.running)) {
             const ph = createElement('div', { className: 'step-photo' + (st.running ? ' is-looking' : '') });
             if (shotSrc) {
               ph.appendChild(createElement('img', {
@@ -9013,7 +9765,7 @@
               ov.appendChild(createElement('span', { text: 'Looking & working…' }));
               ph.appendChild(ov);
             } else if (st.screenshot) {
-              ph.appendChild(createElement('span', { className: 'step-photo-tag', text: 'What I did' }));
+              ph.appendChild(createElement('span', { className: 'step-photo-tag', text: st.forcePhoto ? 'Live · What Brief Work is doing' : 'What I did' }));
             }
             box.appendChild(ph);
           }
@@ -9632,7 +10384,8 @@
               task: promptText,
               attachments,
               webSearch,
-              screenShare: activeShare
+              screenShare: activeShare,
+              workVisualMode: (State.settings && State.settings.briefWorkVisualMode) || 'photos'
             });
             const finalTxt = String(res.text || '');
             assistantMsg.model = res.model || assistantMsg.model;
@@ -10845,7 +11598,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.4';
+      const BRIEF_NEWS_VERSION = '2.0.5';
 
       function shouldShowWhatsNew() {
         const seen = String((State.settings && State.settings.seenNewsVersion) || '');
@@ -11513,9 +12266,29 @@
         });
         bindComposerDragDrop();
 
-        // Header mode tabs
+        // Header & Provider-Specific Mode Switchers (Claude [ Chat | </> ], Gemini [ Chat | Task ], Brief Work Visual Mode)
         DOM.modeSegChat.addEventListener('click', () => setWorkspaceTab('chat'));
         DOM.modeSegWork.addEventListener('click', () => setWorkspaceTab('work'));
+        $('claude-corner-chat-btn').addEventListener('click', () => setWorkspaceTab('chat'));
+        $('claude-corner-code-btn').addEventListener('click', () => setWorkspaceTab('work'));
+        $('claude-header-chat-btn').addEventListener('click', () => setWorkspaceTab('chat'));
+        $('claude-header-code-btn').addEventListener('click', () => setWorkspaceTab('work'));
+        $('gemini-seg-chat').addEventListener('click', () => setWorkspaceTab('chat'));
+        $('gemini-seg-task').addEventListener('click', () => setWorkspaceTab('work'));
+
+        // Claude Clean Sidebar Nav (+ New, Search, Plugins, Filter)
+        $('claude-new-btn').addEventListener('click', () => startNewChat());
+        $('claude-search-btn').addEventListener('click', () => openSearchModal());
+        $('claude-plugins-btn').addEventListener('click', () => openSettingsModal('mcp'));
+        $('claude-chats-filter-btn').addEventListener('click', () => openSearchModal());
+
+        // Brief Code / Brief Work Execution Chooser (Background vs Send Live Photos)
+        $('brief-mode-bg-btn').addEventListener('click', () => setBriefWorkVisualMode('background'));
+        $('brief-mode-photos-btn').addEventListener('click', () => setBriefWorkVisualMode('photos'));
+        $('brief-code-inline-toggle').addEventListener('click', () => {
+          const cur = String((State.settings && State.settings.briefWorkVisualMode) || 'photos').toLowerCase();
+          setBriefWorkVisualMode(cur === 'background' ? 'photos' : 'background');
+        });
         DOM.usagePillBtn.addEventListener('click', () => {
           renderUsageIndicators();
           openModal('modal-usage');
