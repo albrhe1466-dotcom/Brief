@@ -198,9 +198,11 @@ jobs:
         run: |
           TAG="v2.0.7-beta"
           NOTES="Brief v2.0.7-beta Multi-Platform Release (Android Phones & Tablets · Samsung · Honor MagicOS · Windows · Linux): eliminates Stop-button self-clicks with bottom-left dock + hardware gesture pass-through, upgrades Android cursor to PC-style proportional scale (Phones smallest -> Tablets medium -> PC full size) with Choreographer 150fps VSYNC curved glide + custom speed + target-check reticle + click bounce, adds 150-Frame Live Vision + calibrated 0..1000 HD screenshots + 150 UI nodes + smart YouTube/search submit + multi-step completion verifier, and enables automatic live news & in-app update prompts across Android & PC."
-          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            gh release upload "$TAG" release-dist/* --repo "${{ github.repository }}" --clobber
-            gh release edit "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --prerelease=false --latest
-          else
-            gh release create "$TAG" release-dist/* --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest
+          if ! gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest=false
           fi
+          for attempt in 1 2 3; do
+            gh release upload "$TAG" release-dist/* --repo "${{ github.repository }}" --clobber && break
+            sleep 5
+          done
+          gh release edit "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --prerelease=false --latest
