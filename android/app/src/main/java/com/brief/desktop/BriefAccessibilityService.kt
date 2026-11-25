@@ -535,7 +535,7 @@ class BriefAccessibilityService : AccessibilityService() {
         }
         val setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
 
-        val idHint = "${target.viewIdResourceName.orEmpty()} ${target.hintText.orEmpty()} ${target.contentDescription.orEmpty()}".lowercase()
+        val idHint = "${target.viewIdResourceName.orEmpty()} ${target.hintText?.toString().orEmpty()} ${target.contentDescription?.toString().orEmpty()}".lowercase()
         val isSearchField = idHint.contains("search") || idHint.contains("query") || idHint.contains("url") || idHint.contains("بحث")
         val shouldSubmit = submit || isSearchField
 

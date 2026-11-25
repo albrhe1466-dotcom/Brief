@@ -462,7 +462,7 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
                 "Type text into the focused/visible input or search bar. Set submit=true (default) to press Search/Enter automatically!",
                 JSONObject()
                     .put("text", JSONObject().put("type", "string"))
-                    .put("submit", JSONObject().put("type", "boolean", "description", "True to press Search/Enter after typing")),
+                    .put("submit", JSONObject().put("type", "boolean").put("description", "True to press Search/Enter after typing")),
                 listOf("text")
             )
             addTool("press_back", "Press the Android system Back button.", JSONObject())
