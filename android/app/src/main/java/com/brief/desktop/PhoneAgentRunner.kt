@@ -173,6 +173,7 @@ class PhoneAgentRunner(
 
                 val results = mutableListOf<Pair<ToolCallSpec, String>>()
                 var openedExternalAppThisTurn = false
+                var lastStepFrame: VisionFrame? = null
 
                 for (tc in res.toolCalls) {
                     if (stopped) return "Stopped by user."
@@ -220,6 +221,7 @@ class PhoneAgentRunner(
                             expectAwayFromBrief = openedExternalAppThisTurn
                         )
                     } else null
+                    if (stepFrame != null) lastStepFrame = stepFrame
 
                     onStepItem?.invoke(
                         JSONObject().apply {
@@ -241,7 +243,7 @@ class PhoneAgentRunner(
 
                 val accEnd = BriefAccessibilityService.instance
                 val latestFrame = if (workMode && accEnd != null) {
-                    accEnd.captureLiveVisionFrame(
+                    lastStepFrame ?: accEnd.captureLiveVisionFrame(
                         settleMaxMs = if (openedExternalAppThisTurn) 900L else 420L,
                         expectAwayFromBrief = openedExternalAppThisTurn
                     )

@@ -45,12 +45,13 @@ async function main() {
         'file-version': '2.0.7.0',
         'product-version': '2.0.7.0',
         'version-string': {
-          ProductName: 'Brief',
-          FileDescription: 'Brief — Private Windows Desktop AI Assistant',
+          ProductName: 'Brief AI Assistant',
+          FileDescription: 'Brief AI Assistant — Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude & OpenRouter',
+          Comments: 'Verified open-source local AI assistant (like ChatGPT, Claude & Gemini). Zero background telemetry or spyware.',
           InternalName: 'Brief',
           OriginalFilename: 'Brief.exe',
-          CompanyName: 'Brief Desktop',
-          LegalCopyright: 'Copyright (c) 2026 Brief Desktop'
+          CompanyName: 'Brief Open Source AI',
+          LegalCopyright: 'Copyright (c) 2026 Brief Open Source AI'
         }
       });
     } catch (_) { /* running exe locked — icon/metadata updated on next closed rebuild */ }

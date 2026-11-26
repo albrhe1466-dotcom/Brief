@@ -753,6 +753,32 @@ function setupIpc() {
     };
   });
 
+  ipcMain.handle('app:install-update', async (_e, rawUrl) => {
+    const cleanUrl = String(rawUrl || '').trim() ||
+      (process.platform === 'linux'
+        ? 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb'
+        : 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe');
+    if (process.platform !== 'win32') {
+      await shell.openExternal(cleanUrl);
+      return { ok: true, mode: 'browser' };
+    }
+    try {
+      const destPath = path.join(os.tmpdir(), 'Brief-Setup-Update.exe');
+      const resp = await fetch(cleanUrl, { redirect: 'follow' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const buf = Buffer.from(await resp.arrayBuffer());
+      if (buf.length < 40000) throw new Error('Downloaded installer was incomplete.');
+      await fsp.writeFile(destPath, buf);
+      const { spawn } = require('child_process');
+      const child = spawn(destPath, [], { detached: true, stdio: 'ignore', windowsHide: false });
+      child.unref();
+      return { ok: true, mode: 'launched', path: destPath };
+    } catch (err) {
+      await shell.openExternal(cleanUrl);
+      return { ok: true, mode: 'browser', fallbackError: err.message };
+    }
+  });
+
   ipcMain.handle('app:capture-screenshot-attachment', async () => {
     const wasVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized();
     if (wasVisible) {

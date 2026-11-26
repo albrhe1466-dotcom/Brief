@@ -4918,7 +4918,8 @@
       justify-content: center;
       gap: 3px;
       position: absolute;
-      inset: -14px -48px;
+      inset: -14px 0;
+      max-width: 100%;
       z-index: -1;
       pointer-events: none;
       user-select: none;
@@ -5344,7 +5345,6 @@
     /* Brief Code (</>) Faded Coding Text Backdrop (90%/80% fade + 70%/60% fade lines) */
     body[data-provider="anthropic"][data-mode="work"] #view-welcome {
       position: relative;
-      overflow-x: hidden;
     }
     body[data-provider="anthropic"][data-mode="work"] #welcome-code-backdrop {
       display: flex !important;
@@ -5743,6 +5743,226 @@
     .prov-status-dot.saved {
       background: #86efac;
       box-shadow: 0 0 6px #86efac;
+    }
+
+    /* =====================================================================
+       CLEAN FLAGSHIP PHONE LAYOUT (v2.0.7-beta) — loaded LAST so it wins.
+       Full edge-to-edge width (no cramped left rail), 3-item clean top bar,
+       spacious composer (Stop hidden until running), and effortless scrolling.
+    ===================================================================== */
+    @media (max-width: 640px) {
+      :root,
+      html[data-platform="android"] {
+        --rail-width: 0px !important;
+        --header-height: 46px !important;
+      }
+      html, body, #app-shell, #main-area {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+      }
+      #icon-rail,
+      #sidebar-resize-handle {
+        display: none !important;
+      }
+      #sidebar:not(.collapsed) {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: min(82vw, 290px) !important;
+        max-width: 85vw !important;
+        z-index: 120 !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
+      }
+      #top-header {
+        height: 46px !important;
+        padding: 0 12px !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        overflow: hidden;
+        gap: 6px !important;
+      }
+      #sidebar-expand-btn {
+        display: inline-flex !important;
+        width: 32px !important;
+        height: 32px !important;
+        flex-shrink: 0;
+      }
+      #top-header .header-left {
+        min-width: 0;
+        flex: 0 1 auto;
+        gap: 6px;
+      }
+      #top-header .header-right {
+        min-width: 0;
+        flex: 0 0 auto;
+        gap: 6px;
+      }
+      #header-chat-title,
+      #header-project-pill,
+      #usage-pill-btn,
+      #widget-toggle-btn,
+      #log-toggle-btn,
+      #whats-new-open-btn,
+      #header-mcp-badges,
+      .composer-footnote,
+      .composer-disclaimer {
+        display: none !important;
+      }
+      #header-update-btn span {
+        display: inline !important;
+      }
+      #header-update-btn {
+        padding: 4px 9px !important;
+        font-size: 11px !important;
+        white-space: nowrap;
+      }
+      #settings-open-btn {
+        padding: 5px 8px !important;
+      }
+      #top-header .mode-segmented .mode-seg-btn {
+        padding: 5px 13px !important;
+        font-size: 12px !important;
+      }
+      /* Clean vertical scrolling on Welcome — zero overlap, zero clipping */
+      body.is-welcome #main-area {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        padding: 18px 0 calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      body.is-welcome #workspace-body {
+        flex: 0 0 auto !important;
+        margin: 14px 0 6px !important;
+      }
+      body.is-welcome #view-welcome {
+        padding: 0 16px 6px !important;
+      }
+      body.is-welcome #composer-dock {
+        flex: 0 0 auto !important;
+        margin: 6px 0 0 !important;
+        padding: 6px 12px 14px !important;
+      }
+      body:not(.is-welcome) #composer-dock {
+        padding: 6px 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .welcome-title-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+        text-align: center;
+        padding: 6px 8px !important;
+      }
+      body .welcome-heading,
+      html[data-platform="android"] body .welcome-heading {
+        font-size: 23px !important;
+        line-height: 1.28 !important;
+        overflow-wrap: anywhere;
+        max-width: 100%;
+      }
+      .welcome-sub {
+        font-size: 12px !important;
+        line-height: 1.45 !important;
+        padding: 0 4px !important;
+      }
+      body[data-provider="gemini"] #welcome-title-code-echo {
+        font-size: 9px !important;
+        opacity: 0.7;
+      }
+      body[data-provider="anthropic"][data-mode="work"] #welcome-code-backdrop {
+        padding: 12px 10px !important;
+        font-size: 9px !important;
+      }
+      body[data-provider="anthropic"][data-mode="work"] #brief-code-mode-chooser {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        margin-top: 10px !important;
+      }
+      .brief-visual-card {
+        padding: 9px 11px !important;
+      }
+      /* Clean spacious phone composer */
+      html[data-platform="android"] body .composer-capsule,
+      .composer-capsule {
+        padding: 9px 12px !important;
+        border-radius: 20px !important;
+      }
+      html[data-platform="android"] body #composer-input,
+      #composer-input {
+        font-size: 14.5px !important;
+        min-height: 24px !important;
+      }
+      .composer-bottom-bar {
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        margin-top: 4px !important;
+      }
+      .composer-controls-left {
+        flex: 1 1 auto;
+        min-width: 0;
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .composer-controls-left::-webkit-scrollbar {
+        display: none;
+      }
+      .composer-controls-left > * {
+        flex-shrink: 0;
+      }
+      .composer-controls-right {
+        flex: 0 0 auto;
+        gap: 6px;
+      }
+      /* Hide Stop button on phones when idle so it never crowds the composer; show bold red when armed */
+      .stop-btn:not(.armed) {
+        display: none !important;
+      }
+      .stop-btn.armed {
+        padding: 5px 10px !important;
+        font-size: 11.5px !important;
+      }
+      #model-trigger-badge,
+      .stop-btn-kbd {
+        display: none !important;
+      }
+      .selector-pill {
+        max-width: 138px !important;
+        padding: 4px 9px !important;
+        font-size: 11.5px !important;
+      }
+      body[data-provider="anthropic"][data-mode="work"] #brief-code-inline-toggle {
+        display: none !important;
+      }
+      #claude-topic-pills {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px !important;
+      }
+      .claude-topic-pill {
+        padding: 5px 10px;
+        font-size: 11.5px;
+      }
+      #gemini-mode-bar {
+        max-width: 100%;
+        margin-top: 10px !important;
+      }
+      html[data-platform="android"] #android-perm-banner.needs-perms {
+        border-radius: 14px;
+        padding: 8px 12px;
+        font-size: 11.5px;
+        line-height: 1.35;
+        width: 100%;
+        max-width: 100%;
+      }
     }
   </style>
 </head>
@@ -11689,7 +11909,6 @@
       }
 
       function dismissWhatsNewPermanently() {
-        if (latestRemoteRelease && latestRemoteRelease.mandatoryLock) return;
         State.settings.seenNewsVersion = BRIEF_NEWS_VERSION;
         try { localStorage.setItem('brief_seen_news_version', BRIEF_NEWS_VERSION); } catch (_) { /* ignore */ }
         if (api && api.updateSettings) {
@@ -11723,11 +11942,31 @@
           return;
         }
         const desktopUrl = isLinux ? linuxUrl : winUrl;
-        if (statusEl) statusEl.textContent = 'Opening Brief v' + targetVer + ' installer download…';
-        if (api && api.openExternal) {
-          await api.openExternal(desktopUrl).catch(() => {});
-        } else {
-          window.open(desktopUrl, '_blank');
+        const upBtn = $('news-update-now-btn');
+        if (upBtn) {
+          upBtn.disabled = true;
+          upBtn.textContent = 'Downloading Update…';
+        }
+        if (statusEl) statusEl.textContent = 'Downloading & launching Brief v' + targetVer + ' installer…';
+        try {
+          if (api && api.installDesktopUpdate) {
+            const res = await api.installDesktopUpdate(desktopUrl);
+            if (res && res.mode === 'launched') {
+              if (statusEl) statusEl.textContent = '✅ Brief Setup v' + targetVer + ' launched! Follow the quick wizard to finish updating.';
+              showToast('Brief v' + targetVer + ' installer launched!', 'ok');
+              return;
+            }
+          } else if (api && api.openExternal) {
+            await api.openExternal(desktopUrl);
+          } else {
+            window.open(desktopUrl, '_blank');
+          }
+          if (statusEl) statusEl.textContent = 'Opened Brief v' + targetVer + ' download — run the installer when finished.';
+        } finally {
+          if (upBtn) {
+            upBtn.disabled = false;
+            upBtn.textContent = '⬇️ Update to v' + targetVer + ' Now';
+          }
         }
       }
 
@@ -11739,10 +11978,18 @@
         }
         try {
           let feed = null;
-          try {
-            const resp = await fetch('https://albrhe1466-dotcom.github.io/Brief/news.json?t=' + Date.now(), { cache: 'no-store' });
-            if (resp.ok) feed = await resp.json();
-          } catch (_) { /* try GitHub API next */ }
+          for (const feedUrl of [
+            'https://albrhe1466-dotcom.github.io/Brief/news.json?t=' + Date.now(),
+            'https://raw.githubusercontent.com/albrhe1466-dotcom/Brief/main/news.json?t=' + Date.now()
+          ]) {
+            try {
+              const resp = await fetch(feedUrl, { cache: 'no-store' });
+              if (resp.ok) {
+                feed = await resp.json();
+                if (feed && feed.version) break;
+              }
+            } catch (_) { /* try next feed source */ }
+          }
 
           try {
             const ghResp = await fetch('https://api.github.com/repos/albrhe1466-dotcom/Brief/releases/latest', { cache: 'no-store' });
@@ -11813,15 +12060,9 @@
                 : '<strong style="color:#6ee7b7;">New Update Available:</strong> Brief <strong>v' + escapeHtml(remoteVer) + '</strong> is ready to download and install!';
             }
             const closeX = $('whats-new-close-x');
-            if (closeX && mandatoryLock) {
-              closeX.style.display = 'none';
-            }
+            if (closeX) closeX.style.display = '';
             if (State.ui.activeView !== 'key-gate') {
               openWhatsNewModal();
-              if (mandatoryLock && !State._autoUpdateTriggeredOnce) {
-                State._autoUpdateTriggeredOnce = true;
-                setTimeout(() => triggerBriefAppUpgrade(), 900);
-              }
             }
           } else if (manualCheck) {
             const stEl = $('news-update-status');
@@ -12438,6 +12679,7 @@
         $('sidebar-search-btn').addEventListener('click', () => openSearchModal());
         $('sidebar-collapse-btn').addEventListener('click', () => toggleSidebar(true));
         DOM.sidebarExpandBtn.addEventListener('click', () => toggleSidebar(false));
+        $('sidebar-backdrop').addEventListener('click', () => toggleSidebar(true));
         bindSidebarResizer();
         $('new-chat-btn').addEventListener('click', () => startNewChat());
         $('new-project-btn').addEventListener('click', () => openProjectModal());
@@ -12654,10 +12896,7 @@
 
         // Modals
         DOM.modalBackdrop.addEventListener('click', (e) => {
-          if (e.target === DOM.modalBackdrop) {
-            if (State.ui.activeModal === 'modal-whats-new' && latestRemoteRelease && latestRemoteRelease.mandatoryLock) return;
-            closeAllModals();
-          }
+          if (e.target === DOM.modalBackdrop) closeAllModals();
         });
         document.querySelectorAll('.modal-close-x').forEach((btn) => {
           btn.addEventListener('click', () => closeAllModals());
@@ -12671,7 +12910,6 @@
         $('news-update-now-btn').addEventListener('click', () => triggerBriefAppUpgrade());
         $('news-check-updates-btn').addEventListener('click', () => checkGlobalNewsFeed(true));
         $('whats-new-close-x').addEventListener('click', () => {
-          if (latestRemoteRelease && latestRemoteRelease.mandatoryLock) return;
           dismissWhatsNewPermanently();
           closeAllModals();
         });

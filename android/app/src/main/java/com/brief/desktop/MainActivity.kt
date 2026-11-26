@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=209")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=210")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {

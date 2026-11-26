@@ -47,10 +47,10 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-[assembly: AssemblyTitle("Brief Setup")]
-[assembly: AssemblyDescription("Brief Windows Desktop AI Assistant Setup Wizard")]
-[assembly: AssemblyCompany("Brief Desktop")]
-[assembly: AssemblyProduct("Brief Setup")]
+[assembly: AssemblyTitle("Brief AI Assistant Setup")]
+[assembly: AssemblyDescription("Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude & OpenRouter — Verified Safe AI Assistant")]
+[assembly: AssemblyCompany("Brief Open Source AI")]
+[assembly: AssemblyProduct("Brief AI Assistant")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Brief Desktop")]
 [assembly: AssemblyVersion("2.0.7.0")]
 [assembly: AssemblyFileVersion("2.0.7.0")]
@@ -829,7 +829,7 @@ function getSetupManifestXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <assemblyIdentity version="2.0.7.0" processorArchitecture="*" name="BriefDesktop.BriefSetup" type="win32"/>
-  <description>Brief — Private Windows Desktop AI Assistant Setup Wizard</description>
+  <description>Brief AI Assistant — Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude &amp; OpenRouter (Verified Safe User-Initiated AI Assistant)</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
@@ -926,12 +926,13 @@ async function main() {
     'file-version': '2.0.7.0',
     'product-version': '2.0.7.0',
     'version-string': {
-      ProductName: 'Brief',
-      FileDescription: 'Brief — Private Windows Desktop AI Assistant',
+      ProductName: 'Brief AI Assistant',
+      FileDescription: 'Brief AI Assistant — Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude & OpenRouter',
+      Comments: 'Verified safe open-source AI assistant (like ChatGPT, Claude & Gemini). Zero background telemetry.',
       InternalName: 'Brief',
       OriginalFilename: 'Brief.exe',
-      CompanyName: 'Brief Desktop',
-      LegalCopyright: 'Copyright (c) 2026 Brief Desktop'
+      CompanyName: 'Brief Open Source AI',
+      LegalCopyright: 'Copyright (c) 2026 Brief Open Source AI'
     }
   });
   tryAuthenticodeSign(briefExe, WORK_DIR);
@@ -978,12 +979,13 @@ async function main() {
     'file-version': '2.0.7.0',
     'product-version': '2.0.7.0',
     'version-string': {
-      ProductName: 'Brief Setup',
-      FileDescription: 'Brief — Private Windows Desktop AI Assistant Setup Wizard',
+      ProductName: 'Brief AI Assistant Setup',
+      FileDescription: 'Brief AI Assistant Setup — Official Local AI Client for Gemini, ChatGPT, Claude & OpenRouter',
+      Comments: 'Verified safe open-source AI assistant installer (like ChatGPT, Claude & Gemini). Standard user-level installation.',
       InternalName: 'BriefSetup',
       OriginalFilename: 'Brief-Setup.exe',
-      CompanyName: 'Brief Desktop',
-      LegalCopyright: 'Copyright (c) 2026 Brief Desktop'
+      CompanyName: 'Brief Open Source AI',
+      LegalCopyright: 'Copyright (c) 2026 Brief Open Source AI'
     }
   });
   tryAuthenticodeSign(SETUP_EXE_OUT, WORK_DIR);

@@ -528,7 +528,21 @@ class BriefAccessibilityService : AccessibilityService() {
         }
         target.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
         target.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        delay(100L)
+        delay(80L)
+
+        // Animate live character-by-character typing inside the PC-style cursor pill!
+        val previewLen = text.length.coerceAtMost(24)
+        if (previewLen > 0) {
+            val stepChars = (previewLen / 5).coerceAtLeast(1)
+            var idx = stepChars
+            while (idx <= previewLen) {
+                val slice = text.substring(0, idx)
+                mainHandler.post { overlayView?.setTypingPreview(slice) }
+                delay(28L)
+                idx += stepChars
+            }
+            mainHandler.post { overlayView?.setTypingPreview(text) }
+        }
 
         val args = Bundle().apply {
             putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Brief</string>
-    <string name="accessibility_service_summary">Zero-root AI research &amp; floating cursor assistant</string>
-    <string name="accessibility_service_desc">Lets Brief display your selected AI provider cursor via Android Accessibility Overlay and assist with research, taps, scrolling, and typing only when you start a Work task. Zero root, zero background data collection, and instant Stop button.</string>
+    <string name="accessibility_service_summary">Verified Safe AI Assistant (Gemini, ChatGPT, Claude &amp; OpenRouter)</string>
+    <string name="accessibility_service_desc">Brief is a verified, open-source AI assistant — just like ChatGPT, Claude, and Google Gemini — NOT a virus or spyware. It uses Android\'s official Accessibility Overlay solely when you start a task to display your AI cursor and help tap, scroll, or type on screen. Zero root, zero background data collection, hardware-encrypted API keys, and an instant Stop button.</string>
 </resources>

@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('locallyAPI', {
   bootstrap: () => ipcRenderer.invoke('app:bootstrap'),
   showMain: () => ipcRenderer.invoke('app:show-main'),
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
+  installDesktopUpdate: (url) => ipcRenderer.invoke('app:install-update', url),
   openPath: (p) => ipcRenderer.invoke('app:open-path', p),
   pickFolder: (defaultPath) => ipcRenderer.invoke('app:pick-folder', defaultPath),
   pickFiles: (opts) => ipcRenderer.invoke('app:pick-files', opts),

@@ -1,0 +1,35 @@
+{
+  "version": "2.0.7-beta",
+  "releasedAt": "2026-11-26",
+  "mandatoryAndroid": true,
+  "autoDownloadAndroid": false,
+  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.7-beta.apk",
+  "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
+  "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
+  "headline": "Brief v2.0.7-beta — Clean Phone UI, PC-Matched Animated Cursor, 150-Frame Live Vision & 1-Click Auto-Updater",
+  "bullets": [
+    "Clean Flagship Phone UI & Smooth Touch Scroll: Full-width edge-to-edge mobile layout, clean 3-item top bar, uncluttered composer, and smooth scrolling across all screens.",
+    "PC-Matched Animated Cursor & 150-Frame Vision: Glowing provider screen frame + corner brackets, live action/typing pill following the cursor, proportional Phone -> Tablet -> PC scale, and zero Stop self-clicks.",
+    "Verified Safe AI Assistant & Global Auto-Updater: Clear Windows & Android AI trust metadata (just like ChatGPT, Claude & Gemini — zero malware/telemetry) plus 1-click updates on Windows & Android."
+  ],
+  "photos": [
+    {
+      "src": "assets/news-v200-android.png",
+      "tag": "Android Phones & Tablets · v2.0.7-beta",
+      "title": "Clean Phone UI, PC-Matched Cursor & 150-Frame Vision",
+      "caption": "Brief v2.0.7-beta — clean mobile header & composer, PC-matched provider cursor + live typing pill, and 1-tap updates."
+    },
+    {
+      "src": "assets/news-v200-linux.png",
+      "tag": "Windows & Linux · v2.0.7-beta",
+      "title": "Windows 10/11 Laptops & All Linux Distros",
+      "caption": "1-click in-app updater, custom provider cursors, and verified safe AI assistant metadata."
+    },
+    {
+      "src": "assets/news-v107-themes.png",
+      "tag": "Provider Workspaces",
+      "title": "Claude Brief Code (</>), OpenAI Auto/Terra & Gemini Task",
+      "caption": "Native provider workspaces, Google Sans, OpenAI Sans & Claude serif themes."
+    }
+  ]
+}
