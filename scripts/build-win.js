@@ -42,8 +42,8 @@ async function main() {
     try {
       await rcedit(launchExe, {
         icon: installedIco,
-        'file-version': '2.0.7.0',
-        'product-version': '2.0.7.0',
+        'file-version': '2.0.8.0',
+        'product-version': '2.0.8.0',
         'version-string': {
           ProductName: 'Brief AI Assistant',
           FileDescription: 'Brief AI Assistant — Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude & OpenRouter',

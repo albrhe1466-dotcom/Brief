@@ -1,33 +1,34 @@
 {
-  "version": "2.0.7-beta",
+  "version": "2.0.8-beta",
   "releasedAt": "2026-11-26",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
-  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.7-beta.apk",
+  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.8-beta.apk",
   "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
   "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
-  "headline": "Brief v2.0.7-beta — Provider Live Animations, 4–5 Idea Steps Retry Checklist, Clean Phone UI & 150f Vision",
+  "headline": "Brief v2.0.8-beta — Claude 4-State #d9693f Animations, OpenAI Side Moon, 4–5 Step Retry Checklist & 150f Vision",
   "bullets": [
-    "Provider-Specific Live Working UI: Claude 4-state #d9693f animations (spinning/breathing petals, 3D orbiting dots, file-create wave bounce & file-find/validate pulse), OpenAI inline side moon, and Gemini & OpenRouter shiny-gray shimmer.",
-    "4–5 Idea Steps Plan & Auto-Retry Checklist: Shows total planned steps, marks finished steps with ✓, and marks failed steps with ✕ while automatically inserting +1 extra retry step.",
-    "Clean Phone UI, PC-Matched Animated Cursor & 150-Frame Live Vision: Edge-to-edge mobile layout, proportional Phone -> Tablet -> PC cursor + live typing pill, zero Stop self-clicks, and 1-click updates."
+    "Claude 4-State Orange (#d9693f) Live Animations: Spinning & breathing starburst petals when starting & checking, 3D orbiting dots while thinking/fathoming/choosing/working, 3-dot wave bounce exclusively when creating files, and 3-dot shrink/expand pulse when finding files or validating.",
+    "OpenAI Side Moon + Gemini & OpenRouter Shimmer: Animated crescent moon placed inline beside status words for OpenAI, plus sweeping bright-shiny & gray word shimmer for Gemini and OpenRouter.",
+    "4–5 Idea Steps Plan & Auto-Retry Checklist: Displays total planned steps up front, marks finished steps with ✓, and marks failed steps with ✕ while automatically inserting +1 extra retry step.",
+    "Clean Phone UI, PC-Matched Animated Cursor & Global Auto-Updater: Edge-to-edge phone layout, proportional Phone -> Tablet -> PC cursor + live typing pill, 150-Frame Live Vision, zero Stop self-clicks, and 1-click updates on Windows, Linux, Samsung & Honor MagicOS."
   ],
   "photos": [
     {
       "src": "assets/news-v200-android.png",
-      "tag": "Android Phones & Tablets · v2.0.7-beta",
+      "tag": "Android Phones & Tablets · v2.0.8-beta",
       "title": "Clean Phone UI, PC-Matched Cursor & 150-Frame Vision",
-      "caption": "Brief v2.0.7-beta — clean mobile header & composer, PC-matched provider cursor + live typing pill, and 1-tap updates."
+      "caption": "Brief v2.0.8-beta — clean mobile header & composer, PC-matched provider cursor + live typing pill, and 1-tap updates."
     },
     {
       "src": "assets/news-v200-linux.png",
-      "tag": "Windows & Linux · v2.0.7-beta",
-      "title": "Provider Live Animations & 4–5 Idea Steps Checklist",
-      "caption": "Claude #d9693f 4-state animations, OpenAI side moon, Gemini/OpenRouter shimmer, and ✓ / ✕ +1 retry checklist."
+      "tag": "Windows & Linux · v2.0.8-beta",
+      "title": "Claude #d9693f Animations, Side Moon & 4–5 Step Retry Checklist",
+      "caption": "Claude 4-state #d9693f animations, OpenAI side moon, Gemini/OpenRouter shimmer, and ✓ / ✕ +1 retry checklist."
     },
     {
       "src": "assets/news-v107-themes.png",
-      "tag": "Provider Workspaces",
+      "tag": "Provider Workspaces · v2.0.8-beta",
       "title": "Claude Brief Code (</>), OpenAI Auto/Terra & Gemini Task",
       "caption": "Native provider workspaces, Google Sans, OpenAI Sans & Claude serif themes."
     }

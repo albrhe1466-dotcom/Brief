@@ -281,7 +281,7 @@ class MainActivity : AppCompatActivity() {
 
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.0.7-beta")
+            put("version", "2.0.8-beta")
             put("firstRunRequested", false)
             put(
                 "os",

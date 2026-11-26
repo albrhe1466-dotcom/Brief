@@ -168,7 +168,7 @@ jobs:
           gradle -p android assembleRelease --no-daemon
           mkdir -p download-site/public/downloads
           cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
-          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.0.7-beta.apk
+          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.0.8-beta.apk
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
@@ -192,12 +192,12 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Publish to GitHub Release v2.0.7-beta
+      - name: Publish to GitHub Release v2.0.8-beta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v2.0.7-beta"
-          NOTES="Brief v2.0.7-beta Multi-Platform Release (Android Phones & Tablets · Samsung · Honor MagicOS · Windows · Linux): eliminates Stop-button self-clicks with bottom-left dock + hardware gesture pass-through, upgrades Android cursor to PC-style proportional scale (Phones smallest -> Tablets medium -> PC full size) with Choreographer 150fps VSYNC curved glide + custom speed + target-check reticle + click bounce, adds 150-Frame Live Vision + calibrated 0..1000 HD screenshots + 150 UI nodes + smart YouTube/search submit + multi-step completion verifier, and enables automatic live news & in-app update prompts across Android & PC."
+          TAG="v2.0.8-beta"
+          NOTES="Brief v2.0.8-beta Multi-Platform Release (Windows · Linux · Android Phones & Tablets · Samsung · Honor MagicOS): adds Claude 4-state #d9693f live animations (spinning/breathing starburst petals on start/check, 3D orbiting dots while thinking/fathoming/choosing/working, 3-dot wave bounce when creating files, and 3-dot soft shrink/expand pulse when finding files or validating), OpenAI inline side moon beside status words, Gemini & OpenRouter shiny-gray word shimmer, and the upgraded 4–5 Idea Steps Plan & Auto-Retry Checklist (✓ done, ✕ failed + automatic +1 extra retry step), plus Clean Phone UI, PC-Matched Animated Cursor, 150-Frame Live Vision, and global 1-click updates."
           if ! gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release create "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest=false
           fi
