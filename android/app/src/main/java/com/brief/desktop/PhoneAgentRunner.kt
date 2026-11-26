@@ -47,13 +47,59 @@ class PhoneAgentRunner(
         return sb.toString()
     }
 
+    private fun buildIdeaStepsJson(rawTask: String): JSONArray {
+        val clean = rawTask.replace(Regex("\\s+"), " ").trim()
+        val clauses = clean
+            .split(Regex("\\b(?:and\\s+then|then|after\\s+that|next|finally)\\b|[;]+", RegexOption.IGNORE_CASE))
+            .map { it.trim(' ', ',', '.') }
+            .filter { it.length >= 4 }
+        val titles: List<String> = when {
+            clauses.size >= 3 -> clauses.take(4).map { it.replaceFirstChar { c -> c.uppercase() }.take(84) } +
+                listOf("Verify result on screen")
+            Regex("\\b(youtube|video|short|shorts|channel|watch|play|music|spotify)\\b", RegexOption.IGNORE_CASE).containsMatchIn(clean) -> listOf(
+                "Check screen & open target app",
+                "Search for requested channel or topic",
+                "Open matching channel or result",
+                "Select & open requested video or Short",
+                "Verify live screen state"
+            )
+            Regex("\\b(write|create|edit|code|file|script|html|build)\\b", RegexOption.IGNORE_CASE).containsMatchIn(clean) -> listOf(
+                "Inspect context & target files",
+                "Plan implementation steps",
+                "Create & update content",
+                "Validate output & finish"
+            )
+            else -> {
+                val shortGoal = if (clean.length > 52) clean.take(49) + "…" else clean.ifEmpty { "requested task" }
+                listOf(
+                    "Observe live 150f screen & UI elements",
+                    "Open or focus target for: $shortGoal",
+                    "Execute actions with animated cursor",
+                    "Verify completion on screen"
+                )
+            }
+        }
+        val arr = JSONArray()
+        titles.take(5).forEachIndexed { idx, t ->
+            arr.put(
+                JSONObject()
+                    .put("id", "idea-${idx + 1}")
+                    .put("title", t)
+                    .put("status", if (idx == 0) "running" else "pending")
+                    .put("isRetry", false)
+            )
+        }
+        return arr
+    }
+
     suspend fun runUserMessage(
         prompt: String,
         workMode: Boolean,
         workVisualMode: String = "photos",
         cursorSpeedMs: Long = 560L,
         onStep: (String) -> Unit,
-        onStepItem: ((JSONObject) -> Unit)? = null
+        onStepItem: ((JSONObject) -> Unit)? = null,
+        onPlan: ((JSONObject) -> Unit)? = null
     ): String {
         stopped = false
         BriefAccessibilityService.configuredCursorSpeedMs = cursorSpeedMs.coerceIn(220L, 1400L)
@@ -71,6 +117,20 @@ class PhoneAgentRunner(
         val thinking = vault.getThinkingLevel()
 
         val accInit = BriefAccessibilityService.instance
+        if (workMode) {
+            val planSteps = buildIdeaStepsJson(prompt)
+            val planLines = buildString {
+                for (i in 0 until planSteps.length()) {
+                    if (i > 0) append("\n")
+                    append("${i + 1}. ${planSteps.getJSONObject(i).optString("title")}")
+                }
+            }
+            onPlan?.invoke(
+                JSONObject()
+                    .put("plan", planLines)
+                    .put("planSteps", planSteps)
+            )
+        }
         if (workMode && !isBgVisual) {
             startOverlayIfAllowed(provider, "Observing (150f)…")
         }

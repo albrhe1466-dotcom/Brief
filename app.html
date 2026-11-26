@@ -2324,10 +2324,294 @@
 
     .trace-head-shimmer {
       display: inline-block;
-      color: #e5edff;
+      background: linear-gradient(90deg, #6b7280 0%, #8a9099 30%, #ffffff 50%, #8a9099 70%, #6b7280 100%);
+      background-size: 220% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmerLine 1.55s linear infinite;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    body[data-provider="anthropic"] .trace-head-shimmer {
+      background: none !important;
+      -webkit-background-clip: border-box !important;
+      background-clip: border-box !important;
+      color: #e7e4dd !important;
+      animation: none !important;
+    }
+
+    body[data-provider="openai"] .trace-head-shimmer {
+      background: none !important;
+      -webkit-background-clip: border-box !important;
+      background-clip: border-box !important;
+      color: #ececec !important;
+      animation: none !important;
+    }
+
+    /* Provider-specific live working indicators (Claude 4-state #d9693f, OpenAI side moon, Gemini/OpenRouter shimmer) */
+    .provider-live-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .provider-live-wrap.is-chat-block {
+      padding: 3px 0;
+      gap: 10px;
+    }
+
+    .provider-live-label {
+      font-size: 13.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    body[data-provider="anthropic"] .provider-live-label {
+      color: #cdc9c0;
+      font-family: "Claude Sans", "Plus Jakarta Sans", "Inter", sans-serif;
+      font-size: 13.5px;
+    }
+
+    body[data-provider="openai"] .provider-live-label {
+      color: #e5e5e5;
+      font-family: "OpenAI Sans", "Inter", "Plus Jakarta Sans", sans-serif;
+      font-size: 14px;
+    }
+
+    .claude-live-anim {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      filter: drop-shadow(0 0 3.5px rgba(217, 105, 63, 0.36));
+    }
+
+    .claude-live-anim.is-chat {
+      width: 36px;
+      height: 36px;
+    }
+
+    .claude-live-anim svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .claude-live-anim circle {
+      fill: #d9693f;
+    }
+
+    .claude-live-anim line {
+      stroke: #d9693f;
+    }
+
+    .openai-side-moon-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .openai-moon-svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 0 5px rgba(244, 244, 245, 0.28));
+    }
+
+    .provider-live-wrap.is-chat-block .openai-moon-svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Upgraded 4-5 Idea Steps Plan & Dynamic Retry Checklist */
+    .idea-steps-card {
+      padding: 10px 12px 11px;
+      border-radius: 11px;
+      background: rgba(20, 21, 25, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    body[data-provider="anthropic"] .idea-steps-card {
+      background: rgba(31, 30, 28, 0.96);
+      border-color: rgba(217, 105, 63, 0.24);
+    }
+
+    body[data-provider="openai"] .idea-steps-card {
+      background: rgba(24, 24, 24, 0.96);
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+
+    .idea-steps-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .idea-steps-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: #e4e4e7;
+    }
+
+    body[data-provider="anthropic"] .idea-steps-title {
+      color: #f0ede6;
+    }
+
+    .idea-steps-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      color: #d4d4d8;
+    }
+
+    .idea-steps-count-badge.has-retry {
+      border-color: rgba(251, 191, 36, 0.42);
+      color: #fde68a;
+      background: rgba(245, 158, 11, 0.12);
+    }
+
+    .idea-steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .idea-step-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid transparent;
+      transition: background 0.16s ease, border-color 0.16s ease;
+    }
+
+    .idea-step-row.running {
+      background: rgba(96, 165, 250, 0.09);
+      border-color: rgba(96, 165, 250, 0.32);
+    }
+
+    body[data-provider="anthropic"] .idea-step-row.running {
+      background: rgba(217, 105, 63, 0.11);
+      border-color: rgba(217, 105, 63, 0.38);
+    }
+
+    body[data-provider="openai"] .idea-step-row.running {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .idea-step-row.done {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(52, 211, 153, 0.18);
+    }
+
+    .idea-step-row.failed {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(248, 113, 113, 0.28);
+    }
+
+    .idea-step-mark {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #a1a1aa;
+    }
+
+    .idea-step-mark.done {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(52, 211, 153, 0.62);
+      color: #34d399;
+    }
+
+    .idea-step-mark.failed {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: rgba(248, 113, 113, 0.68);
+      color: #f87171;
+    }
+
+    .idea-step-mark.running {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(96, 165, 250, 0.7);
+      color: #93c5fd;
+      animation: crosshairPulse 1.3s ease-in-out infinite;
+    }
+
+    body[data-provider="anthropic"] .idea-step-mark.running {
+      background: rgba(217, 105, 63, 0.22);
+      border-color: rgba(217, 105, 63, 0.78);
+      color: #f28b63;
+    }
+
+    .idea-step-label {
+      flex: 1;
+      min-width: 0;
+      font-size: 12.5px;
+      line-height: 1.4;
+      color: #e4e4e7;
+      word-break: break-word;
+    }
+
+    .idea-step-row.pending .idea-step-label {
+      color: #a1a1aa;
+    }
+
+    .idea-step-row.failed .idea-step-label {
+      color: #fca5a5;
+      text-decoration: line-through;
+      text-decoration-color: rgba(248, 113, 113, 0.65);
+    }
+
+    .idea-step-retry-pill {
+      flex-shrink: 0;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: rgba(245, 158, 11, 0.16);
+      border: 1px solid rgba(251, 191, 36, 0.42);
+      color: #fcd34d;
     }
 
     .work-trace-body {
@@ -9588,7 +9872,8 @@
         const prose = createElement('div', { className: 'msg-prose' });
         if (msg.streaming && !msg.text) {
           if (msg.mode !== 'work') {
-            prose.innerHTML = '<div class="thinking-shimmer">Thinking</div>';
+            prose.appendChild(renderProviderLiveIndicatorEl(msg, msg.liveStatus || 'Thinking', { isChat: true }));
+            ensureProviderAnimLoop();
           }
         } else if (msg.error) {
           const isQuotaErr = /quota|rate limit|limit:\s*\d|too many requests|429|credit balance|insufficient_quota|RESOURCE_EXHAUSTED|requests\/day|usage limit/i.test(String(msg.error));
@@ -9852,11 +10137,511 @@
         }
       }
 
+      /* ====================================================================
+         PROVIDER LIVE ANIMATIONS (CLAUDE 4-STATE #d9693f, OPENAI SIDE MOON,
+         GEMINI & OPENROUTER SHINY/GRAY SHIMMER) + 4-5 IDEA STEPS CHECKLIST
+      ==================================================================== */
+      const CLAUDE_PETAL_SPEEDS = [3.6, 2.7, 4.3, 3.1, 4.8, 2.9, 3.9, 4.5, 2.6, 4.1, 3.3, 4.7];
+      const CLAUDE_PETAL_PHASES = [0.0, 1.3, 2.5, 0.7, 3.1, 1.9, 4.2, 0.4, 2.8, 5.1, 1.6, 3.7];
+      let providerAnimRaf = 0;
+
+      function getActiveUiProvider() {
+        return String((document.body && document.body.dataset && document.body.dataset.provider) || State.provider || 'gemini').toLowerCase();
+      }
+
+      function isFileCreateStep(toolName, args, descText) {
+        const t = String(toolName || '').toLowerCase();
+        if (['write_file', 'create_file', 'edit_file', 'append_file', 'replace_in_file', 'patch_file', 'save_file'].includes(t)) {
+          return true;
+        }
+        const combined = (String(descText || '') + ' ' + JSON.stringify(args || {})).toLowerCase();
+        if (t === 'run_command' && /\b(set-content|out-file|add-content|new-item|write_file|cat\s*>|echo\s+.*>|touch\s+|creating\s+file|writing\s+file)\b/.test(combined)) {
+          return true;
+        }
+        return /\b(?:creating|writing|saving|editing|updating)\s+(?:a\s+|the\s+)?file\b/i.test(String(descText || ''));
+      }
+
+      function isFileFindOrValidateStep(toolName, args, descText, statusState) {
+        if (String(statusState || '').toLowerCase() === 'validating') return true;
+        const t = String(toolName || '').toLowerCase();
+        if (['find_files', 'list_dir', 'list_directory', 'read_file', 'search_files', 'grep', 'glob', 'stat_file', 'file_exists', 'read_screen_text', 'zoom_region'].includes(t)) {
+          return true;
+        }
+        const combined = (String(descText || '') + ' ' + JSON.stringify(args || {})).toLowerCase();
+        if (t === 'run_command' && /\b(get-childitem|select-string|findstr|dir\b|ls\b|find\b|grep\b|rg\b|check\.js|selftest|validat|verif)\b/.test(combined)) {
+          return true;
+        }
+        return /\b(?:find(?:ing)?\s+(?:a\s+|the\s+)?file|search(?:ing)?\s+(?:for\s+)?(?:a\s+|the\s+)?file|locat(?:e|ing)\s+file|read(?:ing)?\s+file|validat(?:e|ing)|verif(?:y|ying)|qa\s+tester|testing\s*&\s*verifying)\b/i.test(String(descText || ''));
+      }
+
+      function detectClaudeAnimState(msg) {
+        if (!msg) return 'orbit';
+        const now = Date.now();
+        const steps = Array.isArray(msg.steps) ? msg.steps : [];
+        const activeStep = [...steps].reverse().find((s) => s && s.running);
+        const latestStep = steps.length ? steps[steps.length - 1] : null;
+        const liveTxt = String(msg.liveStatus || '');
+
+        if (activeStep) {
+          if (isFileCreateStep(activeStep.tool, activeStep.args, activeStep.description || liveTxt)) {
+            msg._claudeHoldState = 'file-create';
+            msg._claudeHoldUntil = now + 720;
+            return 'file-create';
+          }
+          if (isFileFindOrValidateStep(activeStep.tool, activeStep.args, activeStep.description || liveTxt, msg._lastStatusState)) {
+            msg._claudeHoldState = 'file-find';
+            msg._claudeHoldUntil = now + 680;
+            return 'file-find';
+          }
+          if (activeStep.toolCallId === 'observe-init' || activeStep.tool === 'observe_screen' || activeStep.tool === 'live_vision_150f') {
+            return 'start';
+          }
+        }
+
+        if (isFileCreateStep('', null, liveTxt)) {
+          msg._claudeHoldState = 'file-create';
+          msg._claudeHoldUntil = now + 720;
+          return 'file-create';
+        }
+        if (isFileFindOrValidateStep('', null, liveTxt, msg._lastStatusState)) {
+          msg._claudeHoldState = 'file-find';
+          msg._claudeHoldUntil = now + 680;
+          return 'file-find';
+        }
+
+        // Preserve brief visual visibility on ultra-fast local file create/find steps ("whether taking a long while or quick")
+        if (latestStep && !latestStep.running && latestStep._seenClaudeHoldId !== latestStep.toolCallId) {
+          latestStep._seenClaudeHoldId = latestStep.toolCallId;
+          if (isFileCreateStep(latestStep.tool, latestStep.args, latestStep.description)) {
+            msg._claudeHoldState = 'file-create';
+            msg._claudeHoldUntil = now + 720;
+          } else if (isFileFindOrValidateStep(latestStep.tool, latestStep.args, latestStep.description, '')) {
+            msg._claudeHoldState = 'file-find';
+            msg._claudeHoldUntil = now + 680;
+          }
+        }
+
+        if (msg._claudeHoldState && msg._claudeHoldUntil && now < msg._claudeHoldUntil) {
+          return msg._claudeHoldState;
+        }
+
+        const startedMs = msg._startedMs || (msg.at ? Date.parse(msg.at) : now) || now;
+        const realStepsCount = steps.filter((s) => s && s.toolCallId !== 'observe-init').length;
+        const thoughtsCount = Array.isArray(msg.thoughts) ? msg.thoughts.length : 0;
+        if (realStepsCount === 0 && thoughtsCount === 0 && (now - startedMs < 1650 || /^(?:starting|looking|observing|brief scanning|150f live vision|checking)\b/i.test(liveTxt))) {
+          return 'start';
+        }
+
+        return 'orbit';
+      }
+
+      function buildClaudeAnimSvgHtml(animKind) {
+        if (animKind === 'start') {
+          let lines = '';
+          for (let k = 0; k < 12; k++) {
+            lines += '<line class="claude-petal" data-petal="' + k + '" x1="50" y1="41" x2="50" y2="16" stroke="#d9693f" stroke-width="6.8" stroke-linecap="round"/>';
+          }
+          return '<svg viewBox="0 0 100 100" role="img" aria-label="Starting and checking"><g class="claude-petal-group">' + lines + '</g></svg>';
+        }
+        if (animKind === 'file-create') {
+          return '<svg viewBox="0 0 120 64" role="img" aria-label="Creating file">' +
+            '<circle class="claude-wave-dot" data-dot="0" cx="28" cy="32" r="8.2" fill="#d9693f"/>' +
+            '<circle class="claude-wave-dot" data-dot="1" cx="60" cy="32" r="8.2" fill="#d9693f"/>' +
+            '<circle class="claude-wave-dot" data-dot="2" cx="92" cy="32" r="8.2" fill="#d9693f"/>' +
+            '</svg>';
+        }
+        if (animKind === 'file-find') {
+          return '<svg viewBox="0 0 120 64" role="img" aria-label="Finding file or validating">' +
+            '<circle class="claude-pulse-dot" data-dot="0" cx="28" cy="32" r="7" fill="#d9693f"/>' +
+            '<circle class="claude-pulse-dot" data-dot="1" cx="60" cy="32" r="7" fill="#d9693f"/>' +
+            '<circle class="claude-pulse-dot" data-dot="2" cx="92" cy="32" r="7" fill="#d9693f"/>' +
+            '</svg>';
+        }
+        // Default 'orbit': Exact 3D Orbiting Dots HTML/SVG formula in #d9693f
+        return '<svg viewBox="16 16 168 168" role="img" aria-label="Thinking">' +
+          '<circle class="claude-orbit-dot" data-dot="0" cx="100" cy="100" r="8" fill="#d9693f"/>' +
+          '<circle class="claude-orbit-dot" data-dot="1" cx="100" cy="100" r="8" fill="#d9693f"/>' +
+          '<circle class="claude-orbit-dot" data-dot="2" cx="100" cy="100" r="8" fill="#d9693f"/>' +
+          '</svg>';
+      }
+
+      function buildOpenAiMoonSvgHtml() {
+        return '<svg class="openai-moon-svg" viewBox="0 0 24 24" role="img" aria-label="Working">' +
+          '<g class="openai-moon-group">' +
+          '<path class="openai-moon-path" fill="#f4f4f5" d="M 12 4.2 A 7.8 7.8 0 1 1 12 19.8 A 4.4 7.8 0 1 0 12 4.2 Z"/>' +
+          '<circle class="openai-moon-star" cx="7.2" cy="7.5" r="1.25" fill="#e2e8f0" opacity="0.82"/>' +
+          '</g>' +
+          '</svg>';
+      }
+
+      function tickProviderAnims(ms) {
+        const claudeEls = document.querySelectorAll('.claude-live-anim');
+        const moonEls = document.querySelectorAll('.openai-moon-svg');
+        if (!claudeEls.length && !moonEls.length) {
+          providerAnimRaf = 0;
+          return;
+        }
+
+        // 1. Animate Claude 4-state #d9693f SVGs
+        const a = 70, b = 26, cx = 100, cy = 100;
+        const base = [-30, 30, 90], drift = [11, -8, 13], speeds = [1.5, 1.1, 1.9];
+        for (let eIdx = 0; eIdx < claudeEls.length; eIdx++) {
+          const el = claudeEls[eIdx];
+          const kind = el.getAttribute('data-claude-anim') || 'orbit';
+          if (kind === 'orbit') {
+            const dots = el.querySelectorAll('.claude-orbit-dot');
+            for (let i = 0; i < dots.length && i < 3; i++) {
+              const deg = base[i] + ms / 1000 * drift[i];
+              const tilt = deg * Math.PI / 180;
+              const ph = ms / 1000 * speeds[i] + i * 2.1;
+              const x = a * Math.cos(ph), y = b * Math.sin(ph);
+              const rx = x * Math.cos(tilt) - y * Math.sin(tilt);
+              const ry = x * Math.sin(tilt) + y * Math.cos(tilt);
+              const depth = (Math.sin(ph) + 1) / 2;
+              const d = dots[i];
+              d.setAttribute('cx', (cx + rx).toFixed(2));
+              d.setAttribute('cy', (cy + ry).toFixed(2));
+              d.setAttribute('r', (5.5 + depth * 4.5).toFixed(2));
+              d.setAttribute('opacity', (0.55 + depth * 0.45).toFixed(2));
+            }
+          } else if (kind === 'start') {
+            const grp = el.querySelector('.claude-petal-group');
+            if (grp) {
+              const spinDeg = (ms * 0.072) % 360;
+              grp.setAttribute('transform', 'rotate(' + spinDeg.toFixed(1) + ' 50 50)');
+            }
+            const petals = el.querySelectorAll('.claude-petal');
+            for (let k = 0; k < petals.length; k++) {
+              const ang = (k * 30) * Math.PI / 180;
+              const wave = (Math.sin(ms / 1000 * CLAUDE_PETAL_SPEEDS[k % 12] + CLAUDE_PETAL_PHASES[k % 12]) + 1) / 2;
+              const rIn = 8.5;
+              const rOut = 21 + wave * 18.5;
+              const sinA = Math.sin(ang);
+              const cosA = -Math.cos(ang);
+              const p = petals[k];
+              p.setAttribute('x1', (50 + sinA * rIn).toFixed(2));
+              p.setAttribute('y1', (50 + cosA * rIn).toFixed(2));
+              p.setAttribute('x2', (50 + sinA * rOut).toFixed(2));
+              p.setAttribute('y2', (50 + cosA * rOut).toFixed(2));
+              p.setAttribute('opacity', (0.72 + wave * 0.28).toFixed(2));
+            }
+          } else if (kind === 'file-create') {
+            const wDots = el.querySelectorAll('.claude-wave-dot');
+            for (let i = 0; i < wDots.length; i++) {
+              const ph = ms / 1000 * 5.4 - i * 0.95;
+              const wy = 33 - Math.sin(ph) * 13.5;
+              wDots[i].setAttribute('cy', wy.toFixed(2));
+              wDots[i].setAttribute('opacity', (0.78 + 0.22 * ((Math.sin(ph) + 1) / 2)).toFixed(2));
+            }
+          } else if (kind === 'file-find') {
+            const pDots = el.querySelectorAll('.claude-pulse-dot');
+            for (let i = 0; i < pDots.length; i++) {
+              const wave = (Math.sin(ms / 1000 * 4.6 - i * 1.05) + 1) / 2;
+              pDots[i].setAttribute('r', (3.8 + wave * 6.4).toFixed(2));
+              pDots[i].setAttribute('opacity', (0.45 + wave * 0.55).toFixed(2));
+            }
+          }
+        }
+
+        // 2. Animate OpenAI inline side moon (smooth crescent phase + gentle orbital look)
+        for (let mIdx = 0; mIdx < moonEls.length; mIdx++) {
+          const mSvg = moonEls[mIdx];
+          const grp = mSvg.querySelector('.openai-moon-group');
+          const path = mSvg.querySelector('.openai-moon-path');
+          const star = mSvg.querySelector('.openai-moon-star');
+          const tSec = ms / 1000;
+          const rockDeg = -20 + Math.sin(tSec * 2.3) * 18;
+          if (grp) {
+            grp.setAttribute('transform', 'rotate(' + rockDeg.toFixed(1) + ' 12 12)');
+          }
+          if (path) {
+            const cutRx = (2.2 + ((Math.sin(tSec * 2.8) + 1) / 2) * 3.6).toFixed(2);
+            path.setAttribute('d', 'M 12 4.2 A 7.8 7.8 0 1 1 12 19.8 A ' + cutRx + ' 7.8 0 1 0 12 4.2 Z');
+          }
+          if (star) {
+            const gl = (Math.sin(tSec * 3.6) + 1) / 2;
+            star.setAttribute('cx', (6.8 + Math.cos(tSec * 2.1) * 1.1).toFixed(2));
+            star.setAttribute('cy', (7.3 + Math.sin(tSec * 2.1) * 1.1).toFixed(2));
+            star.setAttribute('r', (0.9 + gl * 0.65).toFixed(2));
+            star.setAttribute('opacity', (0.45 + gl * 0.5).toFixed(2));
+          }
+        }
+
+        providerAnimRaf = requestAnimationFrame(tickProviderAnims);
+      }
+
+      function ensureProviderAnimLoop() {
+        if (!providerAnimRaf) {
+          providerAnimRaf = requestAnimationFrame(tickProviderAnims);
+        }
+      }
+
+      function renderProviderLiveIndicatorEl(msg, labelText, opts) {
+        const options = opts || {};
+        const prov = getActiveUiProvider();
+        const text = String(labelText || 'Thinking');
+
+        if (prov === 'anthropic') {
+          const claudeKind = detectClaudeAnimState(msg);
+          const wrap = createElement('div', {
+            className: 'provider-live-wrap' + (options.isChat ? ' is-chat-block' : '')
+          });
+          const iconSpan = createElement('span', {
+            className: 'claude-live-anim' + (options.isChat ? ' is-chat' : ''),
+            dataset: { claudeAnim: claudeKind },
+            html: buildClaudeAnimSvgHtml(claudeKind)
+          });
+          wrap.appendChild(iconSpan);
+          if (!options.iconOnly) {
+            wrap.appendChild(createElement('span', {
+              className: 'provider-live-label',
+              text
+            }));
+          }
+          return wrap;
+        }
+
+        if (prov === 'openai') {
+          const wrap = createElement('div', {
+            className: 'provider-live-wrap openai-side-moon-wrap' + (options.isChat ? ' is-chat-block' : '')
+          });
+          wrap.insertAdjacentHTML('beforeend', buildOpenAiMoonSvgHtml());
+          if (!options.iconOnly) {
+            wrap.appendChild(createElement('span', {
+              className: 'provider-live-label',
+              text
+            }));
+          }
+          return wrap;
+        }
+
+        // Gemini & OpenRouter: shiny bright + gray sweeping word shimmer
+        return createElement('div', {
+          className: options.isChat ? 'thinking-shimmer' : 'trace-head-shimmer',
+          text
+        });
+      }
+
+      function syncProviderLiveIndicatorInRow(row, msg, statusText) {
+        if (!row || !msg) return;
+        const prov = getActiveUiProvider();
+        if (prov === 'anthropic') {
+          const nextKind = detectClaudeAnimState(msg);
+          const animBoxes = row.querySelectorAll('.work-trace-head .claude-live-anim, .msg-prose .claude-live-anim');
+          animBoxes.forEach((box) => {
+            if (box.getAttribute('data-claude-anim') !== nextKind) {
+              box.setAttribute('data-claude-anim', nextKind);
+              box.innerHTML = buildClaudeAnimSvgHtml(nextKind);
+            }
+          });
+          if (statusText) {
+            row.querySelectorAll('.work-trace-head .provider-live-label, .msg-prose .provider-live-label').forEach((lbl) => {
+              if (lbl.textContent !== statusText) lbl.textContent = statusText;
+            });
+          }
+          if (msg._claudeHoldUntil && Date.now() < msg._claudeHoldUntil) {
+            const waitMs = Math.max(60, msg._claudeHoldUntil - Date.now() + 25);
+            setTimeout(() => {
+              if (msg.streaming) syncProviderLiveIndicatorInRow(document.querySelector('[data-msg-id="' + msg.id + '"]'), msg, msg.liveStatus);
+            }, waitMs);
+          }
+          ensureProviderAnimLoop();
+          return;
+        }
+        if (prov === 'openai') {
+          if (statusText) {
+            row.querySelectorAll('.work-trace-head .provider-live-label, .msg-prose .provider-live-label').forEach((lbl) => {
+              if (lbl.textContent !== statusText) lbl.textContent = statusText;
+            });
+          }
+          ensureProviderAnimLoop();
+          return;
+        }
+        if (statusText) {
+          const shimmerHead = row.querySelector('.work-trace-head .trace-head-shimmer');
+          if (shimmerHead && shimmerHead.textContent !== statusText) shimmerHead.textContent = statusText;
+        }
+      }
+
+      function buildFallbackIdeaSteps(taskPrompt, planText) {
+        if (planText) {
+          const lines = String(planText)
+            .split(/\r?\n/)
+            .map((l) => l.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
+            .filter((l) => l.length >= 5 && !/^\[Specialist/i.test(l));
+          if (lines.length >= 3) {
+            return lines.slice(0, 5).map((t, i) => ({
+              id: 'idea-' + (i + 1),
+              title: t.slice(0, 92),
+              status: i === 0 ? 'running' : 'pending',
+              isRetry: false
+            }));
+          }
+        }
+        const clean = String(taskPrompt || '').replace(/\s+/g, ' ').trim();
+        const clauses = clean
+          .split(/\b(?:and\s+then|then|after\s+that|next|finally)\b|[;]+/i)
+          .map((s) => s.replace(/^[\s,]+|[\s,.]+$/g, '').trim())
+          .filter((s) => s.length >= 4);
+        let titles = [];
+        if (clauses.length >= 3) {
+          titles = clauses.slice(0, 4).map((c) => c.charAt(0).toUpperCase() + c.slice(1, 84));
+          titles.push('Verify result & finish cleanly');
+        } else if (/\b(write|create|edit|code|html|css|js|python|script|file|refactor|build|implement)\b/i.test(clean)) {
+          titles = [
+            'Check workspace & locate target files',
+            'Plan structure & implementation details',
+            'Create & update required files',
+            'Run verification check',
+            'Confirm clean output & summarize'
+          ];
+        } else if (/\b(youtube|video|short|shorts|channel|watch|play|music|spotify)\b/i.test(clean)) {
+          titles = [
+            'Check screen & open target app',
+            'Search for requested channel or topic',
+            'Open matching channel or result',
+            'Select & launch requested video or Short',
+            'Verify playback on screen'
+          ];
+        } else {
+          const shortGoal = clean.length > 52 ? (clean.slice(0, 49) + '…') : (clean || 'requested task');
+          titles = [
+            'Inspect screen & active context',
+            'Prepare target for: ' + shortGoal,
+            'Execute actions step by step',
+            'Validate result & finish cleanly'
+          ];
+        }
+        return titles.slice(0, 5).map((t, i) => ({
+          id: 'idea-' + (i + 1),
+          title: t,
+          status: i === 0 ? 'running' : 'pending',
+          isRetry: false
+        }));
+      }
+
+      function syncIdeaChecklistState(msg) {
+        if (!msg) return [];
+        if (!Array.isArray(msg.ideaChecklist) || !msg.ideaChecklist.length) {
+          if (Array.isArray(msg.planSteps) && msg.planSteps.length >= 2) {
+            msg.ideaChecklist = msg.planSteps.map((s, idx) => ({
+              id: s.id || ('idea-' + (idx + 1)),
+              title: String(s.title || ('Step ' + (idx + 1))),
+              status: s.status || (idx === 0 ? 'running' : 'pending'),
+              isRetry: !!s.isRetry
+            }));
+          } else {
+            msg.ideaChecklist = buildFallbackIdeaSteps(getTaskPromptForMsg(msg), msg.plan);
+          }
+        }
+        if (!(msg._handledFailedCallIds instanceof Set)) {
+          const seeded = msg.ideaChecklist
+            .filter((x) => x && x.isRetry && String(x.id || '').indexOf('retry-') === 0)
+            .map((x) => String(x.id).slice(6));
+          msg._handledFailedCallIds = new Set(seeded);
+        }
+
+        const list = msg.ideaChecklist;
+        const realSteps = (Array.isArray(msg.steps) ? msg.steps : []).filter((s) => s && s.toolCallId !== 'observe-init');
+
+        // Detect any failed/denied execution step -> mark current idea step with ✕ and insert +1 retry step right after!
+        for (const st of realSteps) {
+          const failKey = st.toolCallId || ('step-' + st.step + '-' + st.tool);
+          if (!st.running && (st.ok === false || st.denied) && !msg._handledFailedCallIds.has(failKey)) {
+            msg._handledFailedCallIds.add(failKey);
+            let targetIdx = list.findIndex((x) => x.status === 'running');
+            if (targetIdx < 0) targetIdx = list.findIndex((x) => x.status === 'pending');
+            if (targetIdx < 0) targetIdx = list.length - 1;
+            if (targetIdx >= 0) {
+              const failedIdea = list[targetIdx];
+              failedIdea.status = 'failed';
+              const cleanBaseTitle = String(failedIdea.title || '').replace(/^Retry:\s*/i, '');
+              const retryStep = {
+                id: 'retry-' + failKey,
+                title: 'Retry: ' + cleanBaseTitle,
+                status: 'running',
+                isRetry: true
+              };
+              list.splice(targetIdx + 1, 0, retryStep);
+            }
+          }
+        }
+
+        const nonFailed = list.filter((x) => x.status !== 'failed');
+        const okCount = realSteps.filter((s) => !s.running && s.ok !== false && !s.denied).length;
+
+        if (!msg.streaming && !msg.error) {
+          for (const item of nonFailed) item.status = 'done';
+        } else if (!msg.streaming && msg.error) {
+          const doneBeforeErr = Math.min(Math.max(0, nonFailed.length - 1), okCount);
+          for (let i = 0; i < nonFailed.length; i++) {
+            if (i < doneBeforeErr) nonFailed[i].status = 'done';
+            else if (i === doneBeforeErr) nonFailed[i].status = 'failed';
+            else nonFailed[i].status = 'pending';
+          }
+        } else {
+          const doneCount = Math.min(Math.max(0, nonFailed.length - 1), okCount);
+          for (let i = 0; i < nonFailed.length; i++) {
+            if (i < doneCount) nonFailed[i].status = 'done';
+            else if (i === doneCount) nonFailed[i].status = 'running';
+            else nonFailed[i].status = 'pending';
+          }
+        }
+
+        return list;
+      }
+
+      function buildIdeaChecklistCardEl(msg) {
+        const checklist = syncIdeaChecklistState(msg);
+        const total = checklist.length;
+        const doneCount = checklist.filter((s) => s.status === 'done').length;
+        const retryCount = checklist.filter((s) => s.isRetry).length;
+
+        const card = createElement('div', { className: 'idea-steps-card' });
+        const head = createElement('div', { className: 'idea-steps-head' });
+        head.appendChild(createElement('div', {
+          className: 'idea-steps-title',
+          text: 'Idea Steps Plan'
+        }));
+        const countLabel = doneCount + ' / ' + total + ' steps' + (retryCount > 0 ? (' · +' + retryCount + (retryCount === 1 ? ' retry' : ' retries')) : '');
+        head.appendChild(createElement('span', {
+          className: 'idea-steps-count-badge' + (retryCount > 0 ? ' has-retry' : ''),
+          text: countLabel
+        }));
+        card.appendChild(head);
+
+        const listEl = createElement('div', { className: 'idea-steps-list' });
+        checklist.forEach((item, idx) => {
+          const st = item.status || 'pending';
+          const row = createElement('div', { className: 'idea-step-row ' + st });
+          const markText = st === 'done' ? '✓' : (st === 'failed' ? '✕' : String(idx + 1));
+          row.appendChild(createElement('span', {
+            className: 'idea-step-mark ' + st,
+            text: markText
+          }));
+          row.appendChild(createElement('span', {
+            className: 'idea-step-label',
+            text: item.title
+          }));
+          if (item.isRetry) {
+            row.appendChild(createElement('span', {
+              className: 'idea-step-retry-pill',
+              text: 'Extra Retry Step'
+            }));
+          }
+          listEl.appendChild(row);
+        });
+        card.appendChild(listEl);
+        return card;
+      }
+
       function buildWorkTraceEl(msg) {
         const steps = Array.isArray(msg.steps) ? msg.steps : [];
         const thoughts = Array.isArray(msg.thoughts) ? msg.thoughts : [];
         const isLive = !!msg.streaming;
+        const uiProv = getActiveUiProvider();
         const target = extractWorkTarget(getTaskPromptForMsg(msg), steps, thoughts, msg.liveStatus);
+        const checklist = syncIdeaChecklistState(msg);
         const wrap = createElement('div', {
           className: 'work-trace' + (msg.traceCollapsed ? ' collapsed' : '')
         });
@@ -9869,16 +10654,25 @@
           }
         });
         const title = createElement('div', { className: 'work-trace-title' });
-        if (isLive) {
-          title.appendChild(createElement('span', { className: 'trace-live-orb' }));
-        }
         const statusText = isLive
           ? (msg.liveStatus || ('Working in ' + target + '…'))
-          : ('Worked ' + (msg.elapsedLabel ? (msg.elapsedLabel + ' ') : '') + 'in ' + target + ' · ' + steps.length + ' step' + (steps.length === 1 ? '' : 's'));
-        title.appendChild(createElement('span', {
-          className: isLive ? 'trace-head-shimmer' : '',
-          text: statusText
-        }));
+          : ('Worked ' + (msg.elapsedLabel ? (msg.elapsedLabel + ' ') : '') + 'in ' + target + ' · ' + checklist.length + ' step' + (checklist.length === 1 ? '' : 's'));
+        if (isLive) {
+          if (uiProv === 'anthropic' || uiProv === 'openai') {
+            title.appendChild(renderProviderLiveIndicatorEl(msg, statusText, { isChat: false }));
+            ensureProviderAnimLoop();
+          } else {
+            title.appendChild(createElement('span', { className: 'trace-live-orb' }));
+            title.appendChild(createElement('span', {
+              className: 'trace-head-shimmer',
+              text: statusText
+            }));
+          }
+        } else {
+          title.appendChild(createElement('span', {
+            text: statusText
+          }));
+        }
         const chevron = createElement('span', {
           className: 'trace-chevron',
           title: 'Show or hide live thinking & steps',
@@ -9896,10 +10690,11 @@
         }
         head.appendChild(title);
         const crewModels = Array.isArray(msg.crew) ? [...new Set(msg.crew.filter(Boolean))] : [];
+        const doneIdeas = checklist.filter((c) => c.status === 'done').length;
         const rightBadgeText = [
           msg.elapsedLabel ? ('⏱ ' + msg.elapsedLabel) : (isLive ? '⏱ 0s' : ''),
           crewModels.length > 1 ? (crewModels.length + ' agents') : '',
-          steps.length ? (steps.length + (steps.length === 1 ? ' action' : ' actions')) : (isLive ? 'Live' : '0 steps')
+          checklist.length ? (doneIdeas + '/' + checklist.length + ' steps') : (steps.length ? (steps.length + ' actions') : 'Live')
         ].filter(Boolean).join(' · ');
         head.appendChild(createElement('span', {
           className: 'selector-subbadge',
@@ -9910,15 +10705,10 @@
         const body = createElement('div', { className: 'work-trace-body' });
         const timeline = createElement('div', { className: 'trace-timeline' });
 
-        // Unified single-card timeline: no constantly jumping 4-pill bar or blinking between-step cards.
-        if (msg.plan) {
-          const pNode = createElement('div', { className: 'trace-node ok' });
-          const pBox = createElement('div', { className: 'trace-inner-box' });
-          pBox.appendChild(createElement('div', { className: 'trace-thought-label', text: 'Plan' }));
-          pBox.appendChild(createElement('div', { className: 'live-thought-text', text: msg.plan }));
-          pNode.appendChild(pBox);
-          timeline.appendChild(pNode);
-        }
+        // Interactive 4-5 Idea Steps Plan & Dynamic Checklist (✓ done, ✕ failed + automatic extra retry step)
+        const pNode = createElement('div', { className: 'trace-node ' + (!isLive && !msg.error ? 'ok' : (isLive ? 'running' : '')) });
+        pNode.appendChild(buildIdeaChecklistCardEl(msg));
+        timeline.appendChild(pNode);
 
         // Pair thoughts and steps cleanly along the connected vertical line
         for (const th of thoughts.slice(-1)) {
@@ -9973,7 +10763,7 @@
           }));
           top.appendChild(createElement('span', {
             className: 'step-status-pill ' + stClass,
-            text: st.running ? (st.toolCallId === 'observe-init' ? 'Observing…' : 'Working…') : (st.denied ? 'Denied' : (st.ok ? 'Done (' + formatDuration(st.ms) + ')' : 'Failed'))
+            text: st.running ? (st.toolCallId === 'observe-init' ? 'Observing…' : 'Working…') : (st.denied ? '✕ Denied' : (st.ok ? '✓ Done (' + formatDuration(st.ms) + ')' : '✕ Failed'))
           }));
           box.appendChild(top);
 
@@ -10039,10 +10829,8 @@
         if (!thoughts.length && !steps.length && isLive) {
           const wNode = createElement('div', { className: 'trace-node running' });
           const wBox = createElement('div', { className: 'trace-inner-box' });
-          wBox.appendChild(createElement('div', {
-            className: 'trace-head-shimmer',
-            text: msg.liveStatus || ('Working in ' + target + '…')
-          }));
+          wBox.appendChild(renderProviderLiveIndicatorEl(msg, msg.liveStatus || ('Working in ' + target + '…'), { isChat: false }));
+          ensureProviderAnimLoop();
           wNode.appendChild(wBox);
           timeline.appendChild(wNode);
         }
@@ -10521,10 +11309,12 @@
           steps: [],
           notes: [],
           plan: '',
+          planSteps: [],
+          _startedMs: Date.now(),
           live: mode === 'work',
           traceCollapsed: false,
           streaming: true,
-          liveStatus: mode === 'work' ? ('Starting: ' + clipWorkLabel(text, 34)) : 'Thinking',
+          liveStatus: mode === 'work' ? ('Starting: ' + clipWorkLabel(text, 34)) : 'Checking…',
           at: new Date().toISOString()
         };
         chat.messages.push(assistantMsg);
@@ -10573,10 +11363,12 @@
           steps: [],
           notes: [],
           plan: '',
+          planSteps: [],
+          _startedMs: Date.now(),
           live: mode === 'work',
           traceCollapsed: false,
           streaming: true,
-          liveStatus: mode === 'work' ? ('Starting: ' + clipWorkLabel(regenPrompt, 34)) : 'Thinking',
+          liveStatus: mode === 'work' ? ('Starting: ' + clipWorkLabel(regenPrompt, 34)) : 'Checking…',
           at: new Date().toISOString()
         };
         chat.messages.push(assistantMsg);
@@ -10586,7 +11378,18 @@
 
       async function executeAssistantTurn(chat, assistantMsg, promptText, attachments, mode) {
         if (!assistantMsg.taskPrompt && promptText) assistantMsg.taskPrompt = promptText;
+        if (!assistantMsg._startedMs) assistantMsg._startedMs = Date.now();
         setRunningState(true);
+        // Smoothly transition Claude from initial spinning/breathing petals ('start') to 3D orbiting dots ('orbit') after initial check
+        setTimeout(() => {
+          if (assistantMsg && assistantMsg.streaming && !assistantMsg.text) {
+            if (assistantMsg.mode !== 'work' && /^Checking/i.test(String(assistantMsg.liveStatus || ''))) {
+              assistantMsg.liveStatus = 'Thinking…';
+            }
+            const activeRow = document.querySelector('[data-msg-id="' + assistantMsg.id + '"]');
+            if (activeRow) syncProviderLiveIndicatorInRow(activeRow, assistantMsg, assistantMsg.liveStatus);
+          }
+        }, 1680);
         if (mode === 'work') {
           State.liveWork = { chatId: chat.id, msgId: assistantMsg.id, plan: '', thoughts: [], notes: [], steps: [] };
         } else {
@@ -13188,20 +13991,19 @@
           const chat = getActiveChat();
           const activeAssistant = chat && chat.messages[chat.messages.length - 1];
           if (activeAssistant && activeAssistant.streaming && st) {
+            if (st.state) activeAssistant._lastStatusState = st.state;
             if (st.stepText) activeAssistant.liveStatus = st.stepText;
             if (st.elapsedLabel) activeAssistant.elapsedLabel = st.elapsedLabel;
             if (Array.isArray(st.crew)) activeAssistant.crew = st.crew;
             const row = document.querySelector('[data-msg-id="' + activeAssistant.id + '"]');
             if (row) {
-              const shimmerHead = row.querySelector('.work-trace-head .trace-head-shimmer');
-              if (shimmerHead && st.stepText && shimmerHead.textContent !== st.stepText) {
-                shimmerHead.textContent = st.stepText;
-              }
+              syncProviderLiveIndicatorInRow(row, activeAssistant, st.stepText);
               const rightPill = row.querySelector('.work-trace-head > .selector-subbadge');
               if (rightPill) {
-                const stepsCount = Array.isArray(activeAssistant.steps) ? activeAssistant.steps.length : 0;
-                const nextPillText = stepsCount
-                  ? (stepsCount + (stepsCount === 1 ? ' action' : ' actions'))
+                const checklist = syncIdeaChecklistState(activeAssistant);
+                const doneIdeas = checklist.filter((c) => c.status === 'done').length;
+                const nextPillText = checklist.length
+                  ? (doneIdeas + '/' + checklist.length + ' steps')
                   : 'Live';
                 if (rightPill.textContent !== nextPillText) rightPill.textContent = nextPillText;
               }
@@ -13211,7 +14013,17 @@
               }
               const prose = row.querySelector('.msg-prose');
               if (prose && !activeAssistant.text && activeAssistant.mode !== 'work' && st.stepText) {
-                prose.innerHTML = '<div class="thinking-shimmer">' + escapeHtml(st.stepText) + '</div>';
+                const uiProvNow = getActiveUiProvider();
+                if (uiProvNow === 'anthropic' || uiProvNow === 'openai') {
+                  if (!prose.querySelector('.provider-live-wrap')) {
+                    prose.innerHTML = '';
+                    prose.appendChild(renderProviderLiveIndicatorEl(activeAssistant, st.stepText, { isChat: true }));
+                  } else {
+                    syncProviderLiveIndicatorInRow(row, activeAssistant, st.stepText);
+                  }
+                } else {
+                  prose.innerHTML = '<div class="thinking-shimmer">' + escapeHtml(st.stepText) + '</div>';
+                }
               }
             }
           }
@@ -13309,6 +14121,15 @@
           const msg = chat.messages[chat.messages.length - 1];
           if (!msg) return;
           msg.plan = p.plan;
+          if (Array.isArray(p.planSteps) && p.planSteps.length >= 2 && (!Array.isArray(msg.ideaChecklist) || !msg.ideaChecklist.some((s) => s.status === 'done' || s.status === 'failed'))) {
+            msg.planSteps = p.planSteps;
+            msg.ideaChecklist = p.planSteps.map((s, idx) => ({
+              id: s.id || ('idea-' + (idx + 1)),
+              title: String(s.title || ('Step ' + (idx + 1))),
+              status: s.status || (idx === 0 ? 'running' : 'pending'),
+              isRetry: !!s.isRetry
+            }));
+          }
           if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
         });
 

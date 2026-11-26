@@ -562,6 +562,15 @@ class MainActivity : AppCompatActivity() {
                                 "agent:work-step",
                                 JSONObject().put("chatId", chatId).put("item", item)
                             )
+                        },
+                        onPlan = { planObj ->
+                            emitJsEvent(
+                                "agent:work-plan",
+                                JSONObject()
+                                    .put("chatId", chatId)
+                                    .put("plan", planObj.optString("plan"))
+                                    .put("planSteps", planObj.optJSONArray("planSteps"))
+                            )
                         }
                     )
                 }

@@ -1326,6 +1326,73 @@ class AgentRunner extends EventEmitter {
           ]
         : [];
 
+      // Build structured 4-5 idea steps immediately so the live checklist shows total steps right away
+      const buildIdeaStepsForTask = (rawTask, specBlueprint) => {
+        const clean = String(rawTask || '').replace(/\s+/g, ' ').trim();
+        if (specBlueprint) {
+          const bullets = String(specBlueprint)
+            .split(/\r?\n/)
+            .map((l) => l.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
+            .filter((l) => l.length >= 6 && !/^\[Specialist/i.test(l));
+          if (bullets.length >= 3) {
+            return bullets.slice(0, 5).map((t, idx) => ({
+              id: 'idea-' + (idx + 1),
+              title: t.slice(0, 92),
+              status: idx === 0 ? 'running' : 'pending',
+              isRetry: false
+            }));
+          }
+        }
+        const clauses = clean
+          .split(/\b(?:and\s+then|then|after\s+that|next|finally)\b|[;]+/i)
+          .map((s) => s.replace(/^[\s,]+|[\s,.]+$/g, '').trim())
+          .filter((s) => s.length >= 4);
+        let titles = [];
+        if (clauses.length >= 3) {
+          titles = clauses.slice(0, 4).map((c) => c.charAt(0).toUpperCase() + c.slice(1, 84));
+          titles.push('Verify result & confirm completion');
+        } else if (/\b(write|create|edit|code|html|css|js|python|script|file|refactor|build|implement)\b/i.test(clean)) {
+          titles = [
+            'Check workspace & locate target files',
+            'Plan structure & implementation details',
+            'Create & update required files',
+            'Run verification check',
+            'Confirm clean output & summarize'
+          ];
+        } else if (/\b(youtube|video|short|shorts|channel|watch|play|music|spotify)\b/i.test(clean)) {
+          titles = [
+            'Check screen & open target app',
+            'Search for requested channel or topic',
+            'Open matching channel or result',
+            'Select & launch requested video or Short',
+            'Verify playback on screen'
+          ];
+        } else {
+          const shortGoal = clean.length > 56 ? (clean.slice(0, 53) + '…') : (clean || 'requested task');
+          titles = [
+            'Inspect screen & active context',
+            'Prepare target app for: ' + shortGoal,
+            'Execute primary actions step by step',
+            'Validate result & finish cleanly'
+          ];
+        }
+        return titles.slice(0, 5).map((t, idx) => ({
+          id: 'idea-' + (idx + 1),
+          title: t,
+          status: idx === 0 ? 'running' : 'pending',
+          isRetry: false
+        }));
+      };
+
+      let ideaPlanSteps = buildIdeaStepsForTask(task, '');
+      this.emit('work-plan', {
+        runId,
+        chatId,
+        model: agentModel.id,
+        plan: ideaPlanSteps.map((s, i) => `${i + 1}. ${s.title}`).join('\n'),
+        planSteps: ideaPlanSteps
+      });
+
       const concurrentCrewPromise = crewList.length
         ? Promise.allSettled(crewList).then((settled) => {
             const r = settled[0] && settled[0].status === 'fulfilled' ? settled[0].value : null;
@@ -1337,7 +1404,7 @@ class AgentRunner extends EventEmitter {
             if (specTxt) {
               planText = `[Specialist (${specialistModelId}) Blueprint]\n${specTxt}`;
               this.emitLog({ kind: 'plan', status: 'ok', model: specialistModelId, tool: 'parallel_crew', detail: planText });
-              this.emit('work-plan', { runId, chatId, model: specialistModelId, plan: planText });
+              this.emit('work-plan', { runId, chatId, model: specialistModelId, plan: planText, planSteps: ideaPlanSteps });
             }
             return planText;
           }).catch(() => '')
@@ -1723,7 +1790,7 @@ class AgentRunner extends EventEmitter {
           if (runQaNow) {
             this.setStatus({
               running: true,
-              state: 'thinking',
+              state: 'validating',
               mode: 'work',
               model: qaModelId,
               crew: [activeStepModel],
@@ -1731,7 +1798,7 @@ class AgentRunner extends EventEmitter {
               elapsedLabel: formatWorkedTime(elapsedNow),
               step,
               maxSteps,
-              stepText: `Testing & verifying (${qaModelId})…`
+              stepText: `Validating & verifying (${qaModelId})…`
             });
             const verdict = await this.runTaskVerifierAgent({
               task,
