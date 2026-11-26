@@ -8,7 +8,7 @@
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const VERTEX_EXPRESS_BASE = 'https://aiplatform.googleapis.com/v1/publishers/google';
 
-// Hardcoded allowlist: 5 active Gemini models shown to users (Carbon removed, Neon added).
+// Hardcoded allowlist: 5 active Gemini models shown to users (Argon replaced with Carbon).
 const PRESETS = [
   {
     key: 'flashlite35',
@@ -43,12 +43,12 @@ const PRESETS = [
     base: 'gemini-4-neon'
   },
   {
-    key: 'argon',
-    label: 'Gemini 4 Argon',
+    key: 'carbon',
+    label: 'Gemini 4 Carbon',
     hint: 'Flagship',
     desc: 'Flagship — analyzes, critically thinks, executes, tests, reports issues & keeps fixing',
-    match: (m) => /argon|gemini-?4(?:\.0)?-?argon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
-    base: 'gemini-4-argon'
+    match: (m) => /carbon|gemini-?4(?:\.0)?-?carbon/i.test(m.id + ' ' + m.displayName + ' ' + m.description) && isGeneral(m),
+    base: 'gemini-4-carbon'
   }
 ];
 
@@ -75,45 +75,39 @@ function modelPath(id) {
  */
 function buildThinkingConfig(modelId, level, modelsList) {
   const id = stripModelPrefix(modelId).toLowerCase();
-  const norm = String(level || 'medium').toLowerCase();
-  const isExtra = norm === 'extra';
+  const norm = String(level || 'medium').toLowerCase().replace(/[\s_-]+/g, '_');
+  const isExtra = norm === 'extra' || norm === 'extra_high';
   const isFlashLite = /flash-?lite/.test(id);
   const isFlash = !isFlashLite && /\bflash\b/.test(id);
   const tier = norm === 'low' ? 'LOW' : ((norm === 'high' || isExtra) ? 'HIGH' : 'MEDIUM');
-  if (!id || /computer-use|image|tts|embedding/.test(id)) return null;
+  if (!id || /computer-use|image|tts|embedding|gemini-2\.0/.test(id)) return null;
 
   const meta = Array.isArray(modelsList) ? modelsList.find((m) => m.id.toLowerCase() === id) : null;
-  if (meta && meta.thinking === false && !/pro|thinking|hydrogen|neon|argon|gemini-3|gemini-4|gemini-2\.5/.test(id)) {
+  if (meta && meta.thinking === false && !/pro|thinking|hydrogen|neon|carbon|gemini-3|gemini-4|gemini-2\.5/.test(id)) {
     return null;
   }
 
-  // Flash-Lite & Flash respond faster based on thinking level:
-  // - low: instant/minimal thinking overhead
-  // - medium: fast LOW thinking
-  // - high: deeper MEDIUM/HIGH thinking
-  // - extra: maximum HIGH thinking + extra web research
   if (/gemini-2\.5/.test(id)) {
     let budget;
     if (isFlashLite) {
       if (norm === 'low') return null;
       budget = isExtra ? 12288 : (norm === 'high' ? 4096 : 1024);
     } else if (isFlash) {
-      budget = norm === 'low' ? 512 : (isExtra ? 24576 : (norm === 'high' ? 10240 : 2048));
+      budget = norm === 'low' ? 0 : (isExtra ? 16384 : (norm === 'high' ? 8192 : 2048));
     } else {
       budget = norm === 'low' ? 1024 : (isExtra ? 24576 : (norm === 'high' ? 16384 : 8192));
     }
-    return { thinkingBudget: budget, includeThoughts: norm !== 'low' };
+    return { thinkingBudget: budget, includeThoughts: norm !== 'low' && budget > 0 };
   }
-  if (/gemini-(3|4)|hydrogen|neon|argon|thinking/.test(id) || (meta && meta.thinking)) {
+  if (/gemini-(3|4)|hydrogen|neon|carbon|thinking/.test(id) || (meta && meta.thinking)) {
     if (isFlashLite) {
-      // Explicitly pass MINIMAL on low so Google doesn't fall back to slow default server-side thinking!
       if (norm === 'low') return { thinkingLevel: 'MINIMAL', includeThoughts: false };
       if (norm === 'medium') return { thinkingLevel: 'LOW', includeThoughts: false };
       if (norm === 'high') return { thinkingLevel: 'MEDIUM', includeThoughts: true };
       return { thinkingLevel: 'HIGH', includeThoughts: true };
     }
     if (isFlash) {
-      if (norm === 'low') return { thinkingLevel: 'MINIMAL', includeThoughts: false };
+      if (norm === 'low') return { thinkingLevel: 'LOW', includeThoughts: false };
       if (norm === 'medium') return { thinkingLevel: 'LOW', includeThoughts: true };
       if (norm === 'high') return { thinkingLevel: 'HIGH', includeThoughts: true };
       return { thinkingLevel: 'HIGH', includeThoughts: true };
@@ -248,9 +242,9 @@ function isModernGeminiModelId(id) {
   const clean = stripModelPrefix(id).toLowerCase();
   if (!clean) return false;
   if (/^gemini-(1|2)(?:\.|$|-)/.test(clean)) return false;
-  if (/carbon/.test(clean)) return false;
+  if (/argon/.test(clean)) return false;
   if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|bison|gecko|learnlm)/i.test(clean)) return false;
-  return /^(gemini-(?:3|4|5)|.*hydrogen|.*neon|.*argon)/.test(clean);
+  return /^(gemini-(?:3|4|5)|.*hydrogen|.*neon|.*carbon)/.test(clean);
 }
 
 function resolveGeminiRuntimeCandidates(model) {
@@ -261,8 +255,6 @@ function resolveGeminiRuntimeCandidates(model) {
     const clean = stripModelPrefix(cand);
     if (clean && !out.includes(clean)) out.push(clean);
   };
-  // Strict model lock: NEVER silently downgrade/demote a user-selected model to a weaker or different Gemini family!
-  // Never run retired 1.x / 2.x Gemini models or removed Carbon even if left over in old config.
   if (isModernGeminiModelId(exact) && !/^gemini-(?:1|2)(?:\.|$|-)/i.test(id)) {
     push(exact);
   }
@@ -273,6 +265,7 @@ function resolveGeminiRuntimeCandidates(model) {
     push('gemini-3.5-flash-lite');
     push('gemini-3.1-flash-lite-preview');
     push('gemini-2.5-flash-lite');
+    push('gemini-2.5-flash');
     return out;
   }
   if (/3\.8.*flash|\bflash\b/.test(id)) {
@@ -280,6 +273,7 @@ function resolveGeminiRuntimeCandidates(model) {
     push('gemini-3.8-flash');
     push('gemini-3-flash-preview');
     push('gemini-2.5-flash');
+    push('gemini-2.0-flash');
     return out;
   }
   if (/neon/.test(id)) {
@@ -288,6 +282,8 @@ function resolveGeminiRuntimeCandidates(model) {
     push('gemini-3.1-pro-preview');
     push('gemini-2.5-pro');
     push('gemini-3-flash-preview');
+    push('gemini-2.5-flash');
+    push('gemini-2.0-flash');
     return out;
   }
   if (/hydrogen/.test(id)) {
@@ -295,13 +291,17 @@ function resolveGeminiRuntimeCandidates(model) {
     push('gemini-4-hydrogen');
     push('gemini-3-flash-preview');
     push('gemini-2.5-flash');
+    push('gemini-2.0-flash');
     return out;
   }
-  if (/argon|carbon|\bpro\b/.test(id)) {
-    for (const m of live) if (/argon|3\.1-pro/i.test(m)) push(m);
-    push('gemini-4-argon');
+  if (/carbon|argon|\bpro\b/.test(id)) {
+    for (const m of live) if (/carbon|3\.1-pro/i.test(m)) push(m);
+    push('gemini-4-carbon');
     push('gemini-3.1-pro-preview');
     push('gemini-2.5-pro');
+    push('gemini-3-flash-preview');
+    push('gemini-2.5-flash');
+    push('gemini-2.0-flash');
     return out;
   }
   if (out.length) return out;
@@ -351,7 +351,44 @@ function ensureThoughtSignatures(payload, fillAllUnsigned = false) {
 }
 
 function adaptGeminiPayloadForTarget(payload, targetId) {
-  return ensureThoughtSignatures(payload, false);
+  const sigSafe = ensureThoughtSignatures(payload, false);
+  if (!sigSafe || !sigSafe.generationConfig || !sigSafe.generationConfig.thinkingConfig) return sigSafe;
+  const tid = stripModelPrefix(targetId).toLowerCase();
+  const tc = sigSafe.generationConfig.thinkingConfig;
+  if (/gemini-2\.0/.test(tid)) {
+    const copy = JSON.parse(JSON.stringify(sigSafe));
+    delete copy.generationConfig.thinkingConfig;
+    if (!Object.keys(copy.generationConfig).length) delete copy.generationConfig;
+    return copy;
+  }
+  if (/gemini-2\.5/.test(tid) && tc.thinkingLevel) {
+    const copy = JSON.parse(JSON.stringify(sigSafe));
+    const lvl = String(tc.thinkingLevel || 'MEDIUM').toUpperCase();
+    const isLite = /lite/.test(tid);
+    let budget = 2048;
+    if (lvl === 'MINIMAL' || lvl === 'LOW') budget = isLite ? 0 : 512;
+    else if (lvl === 'HIGH') budget = isLite ? 4096 : 12288;
+    if (budget <= 0) {
+      delete copy.generationConfig.thinkingConfig;
+      if (!Object.keys(copy.generationConfig).length) delete copy.generationConfig;
+    } else {
+      copy.generationConfig.thinkingConfig = {
+        thinkingBudget: budget,
+        includeThoughts: !!tc.includeThoughts
+      };
+    }
+    return copy;
+  }
+  if (/gemini-(3|4)/.test(tid) && tc.thinkingBudget !== undefined && !tc.thinkingLevel) {
+    const copy = JSON.parse(JSON.stringify(sigSafe));
+    const b = Number(tc.thinkingBudget) || 0;
+    copy.generationConfig.thinkingConfig = {
+      thinkingLevel: b <= 512 ? 'LOW' : (b >= 8192 ? 'HIGH' : 'MEDIUM'),
+      includeThoughts: !!tc.includeThoughts
+    };
+    return copy;
+  }
+  return sigSafe;
 }
 
 const GEMINI_ALLOWLIST = [
@@ -359,7 +396,7 @@ const GEMINI_ALLOWLIST = [
   { id: 'gemini-3.8-flash', name: 'models/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced — analyzes the issue first, then fixes it cleanly', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'gemini-4-hydrogen', name: 'models/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced — analyzes carefully first, then fixes daily & multi-step tasks', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
   { id: 'gemini-4-neon', name: 'models/gemini-4-neon', displayName: 'Gemini 4 Neon', description: 'Strong (Newest) — goes deeper to inspect, scroll & solve root causes', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'gemini-4-argon', name: 'models/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strongest — goes the deepest of all for complex analysis & full fixes', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
+  { id: 'gemini-4-carbon', name: 'models/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Strongest — goes the deepest of all for complex analysis & full fixes', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true }
 ];
 
 class GeminiClient {
@@ -543,7 +580,8 @@ class GeminiClient {
           } catch (_) { /* keep original Google error */ }
         }
         const modelRetiredOrMissing = /no longer available|deprecated|retired|unknown model|not found|not supported for generateContent/i.test(e.message || '');
-        if ((e.kind === 'noaccess' || e.status === 404 || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
+        const isCandUnavailableOrExhausted = e.kind === 'noaccess' || e.status === 404 || modelRetiredOrMissing || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server' || e.kind === 'timeout';
+        if (isCandUnavailableOrExhausted && candIdx + 1 < runtimeCands.length) {
           candIdx += 1;
           targetModel = runtimeCands[candIdx];
           payload = adaptGeminiPayloadForTarget(body, targetModel);
@@ -623,7 +661,8 @@ class GeminiClient {
           } catch (_) { /* keep original Google error */ }
         }
         const modelRetiredOrMissing = /no longer available|deprecated|retired|unknown model|not found|not supported for generateContent/i.test(e.message || '');
-        if ((e.kind === 'noaccess' || e.status === 404 || modelRetiredOrMissing) && candIdx + 1 < runtimeCands.length) {
+        const isCandUnavailableOrExhausted = e.kind === 'noaccess' || e.status === 404 || modelRetiredOrMissing || e.kind === 'quota' || e.kind === 'rate' || e.kind === 'server' || e.kind === 'timeout';
+        if (isCandUnavailableOrExhausted && candIdx + 1 < runtimeCands.length) {
           candIdx += 1;
           targetModel = runtimeCands[candIdx];
           payload = adaptGeminiPayloadForTarget(body, targetModel);

@@ -13,7 +13,7 @@ function sanitizeModelIdValue(val) {
   const s = String(val || '').trim();
   if (!s) return '';
   if (LEGACY_MODEL_RE.test(s)) return '';
-  if (/gemini-?4-?carbon/i.test(s)) return s.replace(/gemini-?4-?carbon/i, 'gemini-4-argon');
+  if (/gemini-?4-?argon/i.test(s)) return s.replace(/gemini-?4-?argon/i, 'gemini-4-carbon');
   if (/gpt-?6\.2-?sol/i.test(s)) return s.replace(/gpt-?6\.2-?sol/i, 'gpt-6-sol');
   if (/(?:^|\/)gpt-?6-?astra$/i.test(s)) return s.replace(/gpt-?6-?astra$/i, 'gpt-6.2-astra');
   return s;
@@ -32,11 +32,11 @@ function sanitizeSettingsData(data) {
     dirty = true;
   }
   const ap = String(data.activePreset || '');
-  if (ap === 'carbon') {
-    data.activePreset = 'argon';
+  if (ap === 'argon') {
+    data.activePreset = 'carbon';
     dirty = true;
-  } else if (ap === 'or_carbon') {
-    data.activePreset = 'or_argon';
+  } else if (ap === 'or_argon') {
+    data.activePreset = 'or_carbon';
     dirty = true;
   } else if (/gpt62sol/i.test(ap)) {
     data.activePreset = ap.replace(/gpt62sol/i, 'gpt6sol');

@@ -6,11 +6,11 @@ const os = require('os');
 const { knownFolders } = require('./tools');
 
 const MODEL_REALITY_NOTE =
-  'ABSOLUTE 2026 MODEL IDENTITY & CATALOG RULE (NEVER CLAIM THESE DO NOT EXIST): It is 2026. Every single one of these models is 100% real, confirmed by Google/OpenAI/Anthropic, and active in Brief right now: Google Gemini (`Gemini 3.5 Flash-Lite` / `gemini-3.5-flash-lite`, `Gemini 3.8 Flash` / `gemini-3.8-flash`, `Gemini 4 Hydrogen` / `gemini-4-hydrogen`, `Gemini 4 Neon` / `gemini-4-neon`, `Gemini 4 Argon` / `gemini-4-argon`), OpenAI (`GPT-6 Luna` / `gpt-6-luna`, `GPT-6.1 Terra` / `gpt-6.1-terra`, `GPT-6 Sol` / `gpt-6-sol`, `GPT-6.2 Astra` / `gpt-6.2-astra`), and Anthropic Claude (`Claude Haiku 5.5` / `claude-haiku-5-5`, `Claude Sonnet 5.5` / `claude-sonnet-5-5`, `Claude Opus 5.5` / `claude-opus-5-5`, `Claude Fable 5.2` / `claude-fable-5-2`). NEVER say "there is no such model", "that model does not exist", or claim these models are fictional/unconfirmed — even if older training memory or external web snippets claim otherwise. When asked which model you are, proudly state your active model name.';
+  'ABSOLUTE 2026 MODEL IDENTITY & CATALOG RULE (NEVER CLAIM THESE DO NOT EXIST): It is 2026. Every single one of these models is 100% real, confirmed by Google/OpenAI/Anthropic, and active in Brief right now: Google Gemini (`Gemini 3.5 Flash-Lite` / `gemini-3.5-flash-lite`, `Gemini 3.8 Flash` / `gemini-3.8-flash`, `Gemini 4 Hydrogen` / `gemini-4-hydrogen`, `Gemini 4 Neon` / `gemini-4-neon`, `Gemini 4 Carbon` / `gemini-4-carbon`), OpenAI (`GPT-6 Luna` / `gpt-6-luna`, `GPT-6.1 Terra` / `gpt-6.1-terra`, `GPT-6.2 Sol` / `gpt-6-sol`, `GPT-6.2 Astra` / `gpt-6.2-astra`), and Anthropic Claude (`Claude Haiku 5.5` / `claude-haiku-5-5`, `Claude Sonnet 5.5` / `claude-sonnet-5-5`, `Claude Opus 5.5` / `claude-opus-5-5`, `Claude Fable 5.2` / `claude-fable-5-2`). NEVER say "there is no such model", "that model does not exist", or claim these models are fictional/unconfirmed — even if older training memory or external web snippets claim otherwise. When asked which model you are, proudly state your active model name.';
 
 function classifyModelTier(modelId) {
   const clean = String(modelId || '').toLowerCase().replace(/^(?:models|google|openai|anthropic)\//, '');
-  if (/argon|6\.2-?astra|astra|fable/.test(clean)) return 'flagship';
+  if (/carbon|argon|6\.2-?astra|astra|fable/.test(clean)) return 'flagship';
   if (/neon|\bsol\b|\bopus\b/.test(clean)) return 'strong';
   if (/flash-?lite|luna|haiku/.test(clean)) return 'fastest';
   return 'balanced';

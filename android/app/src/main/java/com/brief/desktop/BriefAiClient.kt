@@ -133,10 +133,10 @@ class BriefAiClient {
                 }
             } catch (e: HttpStatusException) {
                 lastError = e
-                if (e.code == 401 || e.code == 403 || e.code == 429) throw e
+                // Only abort immediately on 401 (invalid key). On 404/403/400/429 (e.g. Pro limit:0 on free tier) or 5xx, try next candidate!
+                if (e.code == 401) throw e
             } catch (e: Exception) {
                 lastError = e
-                throw e
             }
         }
         throw lastError ?: IllegalStateException("No available model endpoints responded.")
@@ -197,9 +197,8 @@ class BriefAiClient {
         if (isGemini3Plus) {
             val isLite = lowerModel.contains("lite")
             val mappedLevel = when {
-                isLite && (thinking == ThinkingLevel.LOW || thinking == ThinkingLevel.MEDIUM) -> "MINIMAL"
-                thinking == ThinkingLevel.LOW -> "LOW"
-                thinking == ThinkingLevel.MEDIUM -> "MEDIUM"
+                isLite && thinking == ThinkingLevel.LOW -> "MINIMAL"
+                thinking == ThinkingLevel.LOW || thinking == ThinkingLevel.MEDIUM -> "LOW"
                 else -> "HIGH"
             }
             genCfg.put("thinkingConfig", JSONObject().put("thinkingLevel", mappedLevel))
@@ -210,54 +209,76 @@ class BriefAiClient {
                 ThinkingLevel.HIGH -> 4096
                 ThinkingLevel.EXTRA -> 8192
             }
-            genCfg.put("thinkingConfig", JSONObject().put("thinkingBudget", budget))
-        }
-
-        val payload = JSONObject().apply {
-            put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", systemPrompt))))
-            put("contents", contents)
-            put("generationConfig", genCfg)
-            if (toolDefs.length() > 0) {
-                put("tools", JSONArray().put(JSONObject().put("functionDeclarations", toolDefs)))
+            if (budget > 0) {
+                genCfg.put("thinkingConfig", JSONObject().put("thinkingBudget", budget))
             }
         }
 
-        val req = Request.Builder()
-            .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=${URLEncoder.encode(apiKey, "UTF-8")}")
-            .post(payload.toString().toRequestBody(jsonMedia))
-            .build()
-
-        http.newCall(req).execute().use { resp ->
-            val raw = resp.body?.string().orEmpty()
-            if (!resp.isSuccessful) {
-                val msg = runCatching { JSONObject(raw).optJSONObject("error")?.optString("message") }.getOrNull()
-                throw HttpStatusException(resp.code, msg ?: "HTTP ${resp.code}: ${raw.take(180)}")
-            }
-            val json = JSONObject(raw)
-            val cand = json.optJSONArray("candidates")?.optJSONObject(0)
-            val parts = cand?.optJSONObject("content")?.optJSONArray("parts") ?: JSONArray()
-            val sb = StringBuilder()
-            val calls = mutableListOf<ToolCallSpec>()
-            for (i in 0 until parts.length()) {
-                val p = parts.optJSONObject(i) ?: continue
-                if (p.optBoolean("thought", false)) continue
-                val t = p.optString("text")
-                if (t.isNotEmpty()) sb.append(t)
-                val fc = p.optJSONObject("functionCall")
-                if (fc != null) {
-                    val sig = p.optString("thoughtSignature").takeIf { it.isNotEmpty() }
-                    calls.add(
-                        ToolCallSpec(
-                            id = "g_${System.currentTimeMillis()}_$i",
-                            name = fc.optString("name"),
-                            args = fc.optJSONObject("args") ?: JSONObject(),
-                            thoughtSignature = sig
-                        )
-                    )
+        fun buildReqPayload(includeThinking: Boolean): JSONObject {
+            val cfg = if (includeThinking) genCfg else JSONObject()
+            return JSONObject().apply {
+                put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", systemPrompt))))
+                put("contents", contents)
+                if (cfg.length() > 0) put("generationConfig", cfg)
+                if (toolDefs.length() > 0) {
+                    put("tools", JSONArray().put(JSONObject().put("functionDeclarations", toolDefs)))
                 }
             }
-            return AiTurnResult(sb.toString().trim(), calls, parts)
         }
+
+        fun executeOnce(bodyObj: JSONObject): String {
+            val req = Request.Builder()
+                .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=${URLEncoder.encode(apiKey, "UTF-8")}")
+                .post(bodyObj.toString().toRequestBody(jsonMedia))
+                .build()
+            http.newCall(req).execute().use { resp ->
+                val raw = resp.body?.string().orEmpty()
+                if (!resp.isSuccessful) {
+                    val msg = runCatching { JSONObject(raw).optJSONObject("error")?.optString("message") }.getOrNull()
+                    throw HttpStatusException(resp.code, msg ?: "HTTP ${resp.code}: ${raw.take(180)}")
+                }
+                return raw
+            }
+        }
+
+        val raw = try {
+            executeOnce(buildReqPayload(includeThinking = true))
+        } catch (e: HttpStatusException) {
+            if (e.code == 400 && genCfg.has("thinkingConfig")) {
+                executeOnce(buildReqPayload(includeThinking = false))
+            } else {
+                throw e
+            }
+        }
+
+        val json = JSONObject(raw)
+        val cand = json.optJSONArray("candidates")?.optJSONObject(0)
+        val parts = cand?.optJSONObject("content")?.optJSONArray("parts") ?: JSONArray()
+        val sb = StringBuilder()
+        val calls = mutableListOf<ToolCallSpec>()
+        for (i in 0 until parts.length()) {
+            val p = parts.optJSONObject(i) ?: continue
+            if (p.optBoolean("thought", false)) continue
+            val t = p.optString("text")
+            if (t.isNotEmpty()) sb.append(t)
+            val fc = p.optJSONObject("functionCall")
+            if (fc != null) {
+                val sig = p.optString("thoughtSignature").takeIf { it.isNotEmpty() }
+                calls.add(
+                    ToolCallSpec(
+                        id = "g_${System.currentTimeMillis()}_$i",
+                        name = fc.optString("name"),
+                        args = fc.optJSONObject("args") ?: JSONObject(),
+                        thoughtSignature = sig
+                    )
+                )
+            }
+        }
+        val finalText = sb.toString().trim()
+        if (finalText.isEmpty() && calls.isEmpty()) {
+            throw HttpStatusException(502, "Model $model returned an empty response; trying next candidate.")
+        }
+        return AiTurnResult(finalText, calls, parts)
     }
 
     private fun callOpenAi(

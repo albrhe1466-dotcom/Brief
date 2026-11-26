@@ -52,8 +52,8 @@ using Microsoft.Win32;
 [assembly: AssemblyCompany("Brief Open Source AI")]
 [assembly: AssemblyProduct("Brief AI Assistant")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Brief Desktop")]
-[assembly: AssemblyVersion("2.0.8.0")]
-[assembly: AssemblyFileVersion("2.0.8.0")]
+[assembly: AssemblyVersion("2.0.9.0")]
+[assembly: AssemblyFileVersion("2.0.9.0")]
 
 namespace BriefSetupWizard
 {
@@ -828,7 +828,7 @@ namespace BriefSetupWizard
 function getSetupManifestXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity version="2.0.8.0" processorArchitecture="*" name="BriefDesktop.BriefSetup" type="win32"/>
+  <assemblyIdentity version="2.0.9.0" processorArchitecture="*" name="BriefDesktop.BriefSetup" type="win32"/>
   <description>Brief AI Assistant — Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude &amp; OpenRouter (Verified Safe User-Initiated AI Assistant)</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
@@ -923,8 +923,8 @@ async function main() {
   const icoPath = path.join(ROOT, 'assets', 'icon.ico');
   await rcedit(briefExe, {
     icon: icoPath,
-    'file-version': '2.0.8.0',
-    'product-version': '2.0.8.0',
+    'file-version': '2.0.9.0',
+    'product-version': '2.0.9.0',
     'version-string': {
       ProductName: 'Brief AI Assistant',
       FileDescription: 'Brief AI Assistant — Official Local AI Client for Google Gemini, OpenAI ChatGPT, Anthropic Claude & OpenRouter',
@@ -976,8 +976,8 @@ async function main() {
   console.log('4/4 Embedding Brief Setup v2.0.4 metadata, SHA-256 checksums & optional Authenticode signature...');
   await rcedit(SETUP_EXE_OUT, {
     icon: icoPath,
-    'file-version': '2.0.8.0',
-    'product-version': '2.0.8.0',
+    'file-version': '2.0.9.0',
+    'product-version': '2.0.9.0',
     'version-string': {
       ProductName: 'Brief AI Assistant Setup',
       FileDescription: 'Brief AI Assistant Setup — Official Local AI Client for Gemini, ChatGPT, Claude & OpenRouter',

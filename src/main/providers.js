@@ -16,11 +16,32 @@ const OPENAI_PRESETS = [
     base: 'auto'
   },
   {
+    key: 'gpt6luna',
+    label: 'GPT-6 Luna',
+    hint: 'Fastest',
+    match: (m) => /gpt-?6-?luna/i.test(m.id),
+    base: 'gpt-6-luna'
+  },
+  {
     key: 'gpt61terra',
-    label: 'GPT-6 Terra',
+    label: 'GPT-6.1 Terra',
     hint: 'Balanced',
-    match: (m) => /gpt-?6\.1-?terra/i.test(m.id),
+    match: (m) => /gpt-?6(?:\.1)?-?terra/i.test(m.id),
     base: 'gpt-6.1-terra'
+  },
+  {
+    key: 'gpt6sol',
+    label: 'GPT-6.2 Sol',
+    hint: 'Strong',
+    match: (m) => /gpt-?6(?:\.2)?-?sol/i.test(m.id),
+    base: 'gpt-6-sol'
+  },
+  {
+    key: 'gpt62astra',
+    label: 'GPT-6.2 Astra',
+    hint: 'Flagship',
+    match: (m) => /gpt-?6(?:\.2)?-?astra/i.test(m.id),
+    base: 'gpt-6.2-astra'
   }
 ];
 
@@ -62,7 +83,7 @@ const OPENROUTER_PRESETS = [
   { key: 'or_flash38',     label: 'Gemini 3.8 Flash',      hint: 'Balanced', base: 'google/gemini-3.8-flash' },
   { key: 'or_hydrogen',    label: 'Gemini 4 Hydrogen',     hint: 'Balanced', base: 'google/gemini-4-hydrogen' },
   { key: 'or_neon',        label: 'Gemini 4 Neon',         hint: 'Strong',    base: 'google/gemini-4-neon' },
-  { key: 'or_argon',       label: 'Gemini 4 Argon',        hint: 'Flagship',  base: 'google/gemini-4-argon' },
+  { key: 'or_carbon',      label: 'Gemini 4 Carbon',       hint: 'Flagship',  base: 'google/gemini-4-carbon' },
   // OpenAI via OpenRouter
   { key: 'or_gpt6luna',    label: 'GPT-6 Luna',            hint: 'Fastest',   base: 'openai/gpt-6-luna' },
   { key: 'or_gpt61terra',  label: 'GPT-6.1 Terra',         hint: 'Balanced',  base: 'openai/gpt-6.1-terra' },
@@ -77,7 +98,10 @@ const OPENROUTER_PRESETS = [
 
 const OPENAI_ALLOWLIST = [
   { id: 'auto', name: 'models/auto', displayName: 'Auto', description: 'Automatically selects speed vs. deep reasoning by prompt complexity', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
-  { id: 'gpt-6.1-terra', name: 'models/gpt-6.1-terra', displayName: 'GPT-6 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true }
+  { id: 'gpt-6-luna', name: 'models/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'gpt-6.1-terra', name: 'models/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'gpt-6-sol', name: 'models/gpt-6-sol', displayName: 'GPT-6.2 Sol', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
+  { id: 'gpt-6.2-astra', name: 'models/gpt-6.2-astra', displayName: 'GPT-6.2 Astra', description: 'Flagship', methods: ['generateContent'], inputTokenLimit: 1050000, outputTokenLimit: 128000, thinking: true }
 ];
 
 const ANTHROPIC_ALLOWLIST = [
@@ -93,7 +117,7 @@ const OPENROUTER_ALLOWLIST = [
   { id: 'google/gemini-3.8-flash', name: 'models/google/gemini-3.8-flash', displayName: 'Gemini 3.8 Flash', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 1048576, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-4-hydrogen', name: 'models/google/gemini-4-hydrogen', displayName: 'Gemini 4 Hydrogen', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
   { id: 'google/gemini-4-neon', name: 'models/google/gemini-4-neon', displayName: 'Gemini 4 Neon', description: 'Strong', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
-  { id: 'google/gemini-4-argon', name: 'models/google/gemini-4-argon', displayName: 'Gemini 4 Argon', description: 'Strongest', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
+  { id: 'google/gemini-4-carbon', name: 'models/google/gemini-4-carbon', displayName: 'Gemini 4 Carbon', description: 'Strongest', methods: ['generateContent'], inputTokenLimit: 2097152, outputTokenLimit: 65536, thinking: true },
   // OpenAI
   { id: 'openai/gpt-6-luna', name: 'models/openai/gpt-6-luna', displayName: 'GPT-6 Luna', description: 'Fastest', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
   { id: 'openai/gpt-6.1-terra', name: 'models/openai/gpt-6.1-terra', displayName: 'GPT-6.1 Terra', description: 'Balanced', methods: ['generateContent'], inputTokenLimit: 128000, outputTokenLimit: 16384, thinking: true },
@@ -157,33 +181,20 @@ function matchPresetsForProvider(provider, models) {
   const list = Array.isArray(models) ? models : [];
   if (provider === 'openai') {
     const presets = {
-      openai_auto: {
-        key: 'openai_auto',
-        label: 'Auto',
-        hint: 'Smart',
-        id: 'auto',
-        displayName: 'Auto',
-        alternatives: [],
-        available: true
-      },
-      gpt61terra: {
-        key: 'gpt61terra',
-        label: 'GPT-6 Terra',
-        hint: 'Balanced',
-        id: 'gpt-6.1-terra',
-        displayName: 'GPT-6 Terra',
-        alternatives: [],
-        available: true
-      }
+      openai_auto: { key: 'openai_auto', label: 'Auto', hint: 'Smart', id: 'auto', displayName: 'Auto', alternatives: [], available: true },
+      gpt6luna: { key: 'gpt6luna', label: 'GPT-6 Luna', hint: 'Fastest', id: 'gpt-6-luna', displayName: 'GPT-6 Luna', alternatives: [], available: true },
+      gpt61terra: { key: 'gpt61terra', label: 'GPT-6.1 Terra', hint: 'Balanced', id: 'gpt-6.1-terra', displayName: 'GPT-6.1 Terra', alternatives: [], available: true },
+      gpt6sol: { key: 'gpt6sol', label: 'GPT-6.2 Sol', hint: 'Strong', id: 'gpt-6-sol', displayName: 'GPT-6.2 Sol', alternatives: [], available: true },
+      gpt62astra: { key: 'gpt62astra', label: 'GPT-6.2 Astra', hint: 'Flagship', id: 'gpt-6.2-astra', displayName: 'GPT-6.2 Astra', alternatives: [], available: true }
     };
     return {
       provider: 'openai',
       presets,
       computerUse: null,
       computerUseAll: [],
-      fast: 'auto',
-      bestFlash: 'auto',
-      bestPro: 'gpt-6.1-terra'
+      fast: 'gpt-6-luna',
+      bestFlash: 'gpt-6.1-terra',
+      bestPro: 'gpt-6.2-astra'
     };
   }
 
@@ -1319,11 +1330,12 @@ class OpenRouterClient {
       push('google/gemini-2.5-flash');
       return out;
     }
-    if (/argon|carbon/.test(id)) {
-      for (const m of live) if (/google\/gemini.*(?:argon|3\.1-pro|2\.5-pro)/i.test(m)) push(m);
-      push('google/gemini-4-argon');
+    if (/carbon|argon/.test(id)) {
+      for (const m of live) if (/google\/gemini.*(?:carbon|3\.1-pro|2\.5-pro)/i.test(m)) push(m);
+      push('google/gemini-4-carbon');
       push('google/gemini-3.1-pro-preview');
       push('google/gemini-2.5-pro');
+      push('google/gemini-2.5-flash');
       return out;
     }
     if (/luna/.test(id)) {

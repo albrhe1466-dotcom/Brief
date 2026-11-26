@@ -37,7 +37,7 @@ enum class ThinkingLevel(val wire: String, val label: String) {
     LOW("low", "Low"),
     MEDIUM("medium", "Medium"),
     HIGH("high", "High"),
-    EXTRA("extra", "Extra");
+    EXTRA("extra", "Extra High");
 
     fun next(): ThinkingLevel {
         val all = entries
@@ -59,11 +59,14 @@ object ProviderModels {
             ModelPreset("gemini-3.8-flash", "Gemini 3.8 Flash", "Balanced"),
             ModelPreset("gemini-4-hydrogen", "Gemini 4 Hydrogen", "Balanced"),
             ModelPreset("gemini-4-neon", "Gemini 4 Neon", "Strong"),
-            ModelPreset("gemini-4-argon", "Gemini 4 Argon", "Flagship")
+            ModelPreset("gemini-4-carbon", "Gemini 4 Carbon", "Flagship")
         )
         ProviderId.OPENAI -> listOf(
             ModelPreset("auto", "Auto", "Smart"),
-            ModelPreset("gpt-6.1-terra", "GPT-6 Terra", "Balanced")
+            ModelPreset("gpt-6-luna", "GPT-6 Luna", "Fastest"),
+            ModelPreset("gpt-6.1-terra", "GPT-6.1 Terra", "Balanced"),
+            ModelPreset("gpt-6-sol", "GPT-6.2 Sol", "Strong"),
+            ModelPreset("gpt-6.2-astra", "GPT-6.2 Astra", "Flagship")
         )
         ProviderId.ANTHROPIC -> listOf(
             ModelPreset("claude-haiku-5-5", "Claude Haiku 5.5", "Fastest", false),
@@ -76,7 +79,7 @@ object ProviderModels {
             ModelPreset("google/gemini-3.8-flash", "Gemini 3.8 Flash", "Balanced"),
             ModelPreset("google/gemini-4-hydrogen", "Gemini 4 Hydrogen", "Balanced"),
             ModelPreset("google/gemini-4-neon", "Gemini 4 Neon", "Strong"),
-            ModelPreset("google/gemini-4-argon", "Gemini 4 Argon", "Flagship"),
+            ModelPreset("google/gemini-4-carbon", "Gemini 4 Carbon", "Flagship"),
             ModelPreset("openai/gpt-6-luna", "GPT-6 Luna", "Fastest"),
             ModelPreset("openai/gpt-6.1-terra", "GPT-6.1 Terra", "Balanced"),
             ModelPreset("openai/gpt-6-sol", "GPT-6 Sol", "Strong"),
@@ -112,18 +115,22 @@ object ProviderModels {
                         add("gemini-3.5-flash-lite")
                         add("gemini-3.1-flash-lite-preview")
                         add("gemini-2.5-flash-lite")
+                        add("gemini-2.5-flash")
                     }
-                    id.contains("neon") || id.contains("argon") || id.contains("pro") -> {
-                        discovered.filter { it.contains("pro", true) || it.contains("neon", true) || it.contains("argon", true) }.forEach(::add)
-                        add("gemini-4-argon")
+                    id.contains("neon") || id.contains("carbon") || id.contains("argon") || id.contains("pro") -> {
+                        discovered.filter { it.contains("pro", true) || it.contains("neon", true) || it.contains("carbon", true) }.forEach(::add)
+                        add("gemini-4-carbon")
                         add("gemini-3.1-pro-preview")
                         add("gemini-2.5-pro")
+                        add("gemini-3-flash-preview")
+                        add("gemini-2.5-flash")
                     }
                     else -> {
                         discovered.filter { it.contains("flash", true) && !it.contains("lite", true) }.forEach(::add)
                         add("gemini-3.8-flash")
                         add("gemini-3-flash-preview")
                         add("gemini-2.5-flash")
+                        add("gemini-2.0-flash")
                     }
                 }
             }
@@ -139,7 +146,7 @@ object ProviderModels {
                     }
                     id.contains("luna") -> { add("gpt-6-luna"); add("gpt-5-nano"); add("gpt-5-mini"); add("gpt-4o-mini") }
                     id.contains("terra") -> { add("gpt-6.1-terra"); add("gpt-5-mini"); add("gpt-5"); add("gpt-4.1-mini") }
-                    id.contains("sol") -> { add("gpt-6-sol"); add("gpt-5"); add("gpt-4.1") }
+                    id.contains("sol") -> { add("gpt-6-sol"); add("gpt-6.2-sol"); add("gpt-5"); add("gpt-4.1") }
                     else -> { add("gpt-6.2-astra"); add("gpt-5.2"); add("gpt-5"); add("gpt-4.1") }
                 }
             }
@@ -154,6 +161,11 @@ object ProviderModels {
                 when {
                     id.contains("flash-lite") -> { add("google/gemini-3.5-flash-lite"); add("google/gemini-2.5-flash-lite") }
                     id.contains("3.8-flash") -> { add("google/gemini-3.8-flash"); add("google/gemini-2.5-flash") }
+                    id.contains("carbon") || id.contains("argon") || id.contains("neon") -> {
+                        add("google/gemini-4-carbon")
+                        add("google/gemini-2.5-pro")
+                        add("google/gemini-2.5-flash")
+                    }
                     id.contains("luna") -> { add("openai/gpt-6-luna"); add("openai/gpt-5-nano"); add("openai/gpt-4o-mini") }
                     id.contains("terra") -> { add("openai/gpt-6.1-terra"); add("openai/gpt-5-mini"); add("openai/gpt-4.1-mini") }
                     id.contains("haiku") -> { add("anthropic/claude-haiku-5-5"); add("anthropic/claude-haiku-4.5") }

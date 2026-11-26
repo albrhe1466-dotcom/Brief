@@ -2104,65 +2104,131 @@
       color: #ffffff;
     }
 
-    /* Code Blocks with Language Badge, Syntax Tokens, Copy Button */
+    /* Universal Live Code Execution Card (</> HTML / JS / CSS / PY — Work & Chat across all 4 providers) */
     .code-block {
-      margin: 10px 0;
-      border-radius: var(--radius-md);
-      background: #111111;
-      border: 1px solid var(--border-default);
+      margin: 12px 0;
+      border-radius: 16px;
+      background: #2b2b2b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       overflow: hidden;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.34);
     }
 
     .code-block-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 7px 12px;
-      background: rgba(32, 32, 32, 0.94);
-      border-bottom: 1px solid var(--border-subtle);
-      font-size: 11.5px;
-      color: var(--blue-300);
+      gap: 10px;
+      padding: 11px 16px 8px;
+      background: #2b2b2b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12.5px;
+      color: #f4f4f5;
     }
 
     .code-block-lang {
-      font-family: var(--font-mono);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 12.5px;
+      color: #f4f4f5;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
+    }
+
+    .code-lang-glyph {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12px;
+      color: #b4b4bb;
+      letter-spacing: -0.04em;
     }
 
     .code-block-btns {
-      display: flex;
-      gap: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
     }
 
+    .code-icon-btn,
     .code-copy-btn {
-      padding: 3px 9px;
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid var(--border-subtle);
-      color: var(--blue-100);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #d4d4d8;
       font-size: 11.5px;
-      transition: background 0.14s ease;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
     }
 
+    .code-icon-btn:hover,
     .code-copy-btn:hover {
-      background: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .code-icon-btn.active {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .code-live-spinner {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      border-top-color: #f4f4f5;
+      animation: spinSlow 0.8s linear infinite;
+      flex-shrink: 0;
     }
 
     .code-block pre {
-      padding: 12px 14px;
-      overflow-x: auto;
+      margin: 0;
+      padding: 12px 18px 16px;
+      max-height: 320px;
+      overflow: auto;
+      font-family: var(--font-mono);
       font-size: 12.5px;
-      line-height: 1.55;
-      color: #dce9ff;
+      line-height: 1.62;
+      color: #e5e7eb;
+      background: #2b2b2b;
     }
 
-    .tok-kw { color: #7dd3fc; font-weight: 600; }
-    .tok-str { color: #86efac; }
-    .tok-num { color: #fcd34d; }
-    .tok-com { color: #64748b; font-style: italic; }
-    .tok-fn { color: #93c5fd; }
+    .code-block.wrap-lines pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .code-exec-frame {
+      width: 100%;
+      height: 290px;
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      background: #ffffff;
+      display: none;
+    }
+
+    .code-block.showing-preview .code-exec-frame {
+      display: block;
+    }
+
+    .tok-sel { color: #e5c07b; font-weight: 600; }
+    .tok-prop { color: #e8d5b7; }
+    .tok-kw { color: #b392f0; font-weight: 600; }
+    .tok-str { color: #e07a5f; }
+    .tok-num { color: #e07a5f; }
+    .tok-com { color: #7c7f87; font-style: italic; }
+    .tok-fn { color: #b392f0; }
 
     /* Message Toolbar (Copy, Regenerate) */
     .msg-actions {
@@ -2428,7 +2494,7 @@
       height: 18px;
       flex-shrink: 0;
       display: block;
-      filter: drop-shadow(0 0 5px rgba(244, 244, 245, 0.28));
+      filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.36));
     }
 
     .provider-live-wrap.is-chat-block .openai-moon-svg {
@@ -4600,6 +4666,13 @@
       transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     }
 
+    .thinking-level-bar .thinking-tier-btn[data-thinking="extra"] {
+      grid-column: 1 / -1;
+      justify-self: center;
+      min-width: 54%;
+      padding: 5px 18px;
+    }
+
     .thinking-tier-btn:hover {
       color: #ffffff;
       background: rgba(255, 255, 255, 0.08);
@@ -6529,7 +6602,7 @@
             <span id="header-update-label">Update</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.8-beta">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.9-beta">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6804,7 +6877,7 @@
                 <button class="thinking-tier-btn" type="button" data-thinking="low">Low</button>
                 <button class="thinking-tier-btn active" type="button" data-thinking="medium">Medium</button>
                 <button class="thinking-tier-btn" type="button" data-thinking="high">High</button>
-                <button class="thinking-tier-btn" type="button" data-thinking="extra">Extra</button>
+                <button class="thinking-tier-btn" type="button" data-thinking="extra">Extra High</button>
               </div>
               <div class="field-hint" id="thinking-level-note" style="margin-top: 5px; display: block;">
                 Balanced real thinking depth · streams thought summaries when supported by model
@@ -7488,7 +7561,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill" id="news-live-version-pill">News · v2.0.8-beta</span>
+          <span class="news-version-pill" id="news-live-version-pill">News · v2.0.9-beta</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -7496,10 +7569,10 @@
         <div class="news-hero-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:220px;">
             <div id="news-live-headline" style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.8-beta — Claude 4-State Orange Animations, OpenAI Side Moon, 4–5 Step Retry Checklist &amp; 150f Vision
+              Brief v2.0.9-beta — Gemini 4 Carbon &amp; 3.8 Flash Fix, 48 Claude Greetings, Extra High &amp; OpenAI GPT-6 Work Suite
             </div>
             <div id="news-update-status" style="font-size: 12px; color: var(--text-secondary);">
-              You are on <strong>v2.0.8-beta</strong> · Live global update &amp; news sync active for Android (Samsung &amp; Honor) &amp; PC.
+              You are on <strong>v2.0.9-beta</strong> · Live global update &amp; news sync active for Android (Samsung &amp; Honor) &amp; PC.
             </div>
           </div>
           <div id="news-update-strip" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -7538,13 +7611,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span id="news-col-ver-label">What’s New in v2.0.8-beta</span>
+              <span id="news-col-ver-label">What’s New in v2.0.9-beta</span>
             </div>
             <ul class="news-list" id="news-live-bullets">
-              <li><strong>Claude 4-State Orange (<code class="mono">#d9693f</code>) Animations:</strong> Spinning &amp; breathing starburst petals when starting &amp; checking, 3D orbiting dots while thinking, fathoming, choosing &amp; working, 3-dot wave bounce exclusively when creating/editing files, and 3-dot shrink/expand pulse when finding files or validating.</li>
-              <li><strong>OpenAI Side Moon &amp; Gemini / OpenRouter Shimmer:</strong> Animated crescent moon placed inline on the side of status words for OpenAI, plus sweeping bright-shiny &amp; gray word shimmer for Gemini and OpenRouter.</li>
-              <li><strong>4–5 Idea Steps Plan &amp; Auto-Retry Checklist:</strong> Displays total planned steps up front, marks completed steps with <strong>✓</strong>, and marks failed steps with <strong>✕</strong> while automatically inserting <strong>+1 extra retry step</strong> to try again.</li>
-              <li><strong>Clean Phone UI, PC-Matched Cursor &amp; 150-Frame Vision:</strong> Zero Stop self-clicks, proportional Phone → Tablet → PC cursor + live typing pill, and 1-click global updates across Samsung, Honor MagicOS, Windows &amp; Linux.</li>
+              <li><strong>Gemini 4 Carbon + Fast Gemini 3.8 Flash Fix:</strong> Replaced Gemini 4 Argon with <strong>Gemini 4 Carbon</strong>, fixed Gemini 3.8 Flash streaming &amp; thinking config handoff, and eliminated false 100% usage lockouts on free-tier Pro endpoints.</li>
+              <li><strong>Centered Extra High Thinking &amp; 48 Rotating Claude Greetings:</strong> Renamed Extra to <strong>Extra High</strong> centered below Low / Medium / High, and added 48 dynamic weekday &amp; conversational Claude greetings that rotate every time.</li>
+              <li><strong>OpenAI Chat vs. Full GPT-6 Work Suite:</strong> Streamlined <code class="mono">Auto</code> + <code class="mono">GPT-6.1 Terra</code> in Chat mode, and full <code class="mono">GPT-6 Luna</code>, <code class="mono">GPT-6.1 Terra</code>, <code class="mono">GPT-6.2 Sol</code> &amp; <code class="mono">GPT-6.2 Astra</code> selection in Work mode.</li>
+              <li><strong>Provider Live Animations &amp; 4–5 Step Auto-Retry Checklist:</strong> Claude 4-state <code class="mono">#d9693f</code> animations, OpenAI side moon, Gemini/OpenRouter shimmer, and <strong>✓</strong> / <strong>✕</strong> +1 retry step checklist.</li>
             </ul>
           </div>
 
@@ -7554,7 +7627,7 @@
               <span>What Has Been Fixed</span>
             </div>
             <ul class="news-list">
-              <li><strong>All 2026 Models Verified &amp; Working:</strong> Same-tier runtime endpoint resolution ensures Gemini 4 (Hydrogen, Neon, Argon), Gemini 3.8 Flash, Gemini 3.5 Flash-Lite, GPT-6 (Luna, 6.1 Terra, Sol, 6.2 Astra), and Claude 5.5 / Fable 5.2 work reliably without 404s or false "model does not exist" replies.</li>
+              <li><strong>All 2026 Models Verified &amp; Working:</strong> Smart runtime endpoint resolution ensures Gemini 4 (Hydrogen, Neon, Carbon), Gemini 3.8 Flash, Gemini 3.5 Flash-Lite, GPT-6 (Luna, 6.1 Terra, 6.2 Sol, 6.2 Astra), and Claude 5.5 / Fable 5.2 respond reliably without 404s or false 100% usage locks.</li>
               <li><strong>Fixed Slow Chat &amp; Mid-Reply Cutoffs:</strong> Fixed the streaming timer bug that cut off replies mid-sentence, enabled IPv4-first networking, removed forced 2.6s web-search waits on simple chats, and sent explicit <code class="mono">MINIMAL</code> thinking on Flash-Lite &amp; Flash Low for instant replies.</li>
               <li><strong>Fixed Slow Work Mode on Flash-Lite &amp; Flash:</strong> Fast models now use direct non-streaming tool calls, skip heavy 2.4s OCR scans on non-GUI and fast steps, and trim pre/post-step dead waits.</li>
               <li><strong>Fixed Quota Burn &amp; OpenRouter Validation:</strong> Eliminated 16× nested retry burn and duplicate parallel calls on the same model, fixed OpenRouter rejecting pasted keys as model IDs, and recognized Anthropic zero-credit keys so Claude UI still activates cleanly.</li>
@@ -7743,7 +7816,7 @@
         keyAvailable: true,
         provider: 'gemini',
         providerInfo: null,
-        greetingIdx: 0,
+        greetingIdx: Math.floor(Math.random() * 48),
         os: {
           platform: 'win32',
           release: '',
@@ -7802,7 +7875,7 @@
           { key: 'flash38', label: 'Gemini 3.8 Flash', hint: 'Balanced' },
           { key: 'hydrogen', label: 'Gemini 4 Hydrogen', hint: 'Balanced' },
           { key: 'neon', label: 'Gemini 4 Neon', hint: 'Strong' },
-          { key: 'argon', label: 'Gemini 4 Argon', hint: 'Flagship' }
+          { key: 'carbon', label: 'Gemini 4 Carbon', hint: 'Flagship' }
         ],
         usage: {
           startedAt: Date.now(),
@@ -8107,12 +8180,24 @@
         if (norm === 'json') {
           safe = safe.replace(/\b(true|false|null)\b/g, '<span class="tok-kw">$1</span>');
           safe = safe.replace(/\b(-?\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
+        } else if (norm === 'css' || (norm === 'html' && /^\s*(?:[.#][A-Za-z0-9_-]+|[a-z-]+:\s*[^;]+;|\})/.test(line))) {
+          safe = safe.replace(/^(\s*)([.#][A-Za-z0-9_:-]+(?:\s*,\s*[.#]?[A-Za-z0-9_:-]+)*)(?=\s*\{)/, '$1<span class="tok-sel">$2</span>');
+          safe = safe.replace(/^(\s*)([a-z-]+)(?=\s*:)/i, '$1<span class="tok-prop">$2</span>');
+          safe = safe.replace(/(--[A-Za-z0-9_-]+)/g, '<span class="tok-kw">$1</span>');
+          safe = safe.replace(/\b(var|translate[XY]?|scale[XY]?|rotate|calc|rgb|rgba|hsl|linear-gradient|radial-gradient)(?=\s*\()/g, '<span class="tok-fn">$1</span>');
+          safe = safe.replace(/(-?\d+(?:\.\d+)?(?:px|rem|em|vh|vw|vmin|vmax|%|deg|s|ms)?)\b/g, '<span class="tok-num">$1</span>');
+          safe = safe.replace(/\b(solid|transparent|none|auto|inherit|flex|grid|block|inline-flex|center|pointer|relative|absolute|fixed|hidden)\b/g, '<span class="tok-str">$1</span>');
         } else {
+          if (norm === 'html') {
+            safe = safe.replace(/(&lt;\/?[A-Za-z0-9:-]+)/g, '<span class="tok-sel">$1</span>');
+            safe = safe.replace(/\b([A-Za-z_:][A-Za-z0-9_.:-]*)(?==)/g, '<span class="tok-prop">$1</span>');
+          }
           const kwRe = LANG_KEYWORDS[norm];
           if (kwRe) {
             safe = safe.replace(kwRe, '<span class="tok-kw">$1</span>');
           }
-          safe = safe.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
+          safe = safe.replace(/(--[A-Za-z0-9_-]+)/g, '<span class="tok-kw">$1</span>');
+          safe = safe.replace(/\b(-?\d+(?:\.\d+)?(?:px|rem|em|%|s|ms)?)\b/g, '<span class="tok-num">$1</span>');
           safe = safe.replace(/\b([A-Za-z_][A-Za-z0-9_]*)(?=\s*\()/g, '<span class="tok-fn">$1</span>');
         }
 
@@ -8234,24 +8319,91 @@
         return s;
       }
 
-      function buildCodeBlockElement(code, lang) {
-        const cleanLang = (lang || 'text').trim() || 'text';
+      function inferLangFromFilePath(filePath) {
+        const p = String(filePath || '').trim().toLowerCase();
+        const ext = (p.split('.').pop() || '').trim();
+        const map = {
+          htm: 'html', html: 'html', svg: 'svg', css: 'css', scss: 'css',
+          js: 'javascript', mjs: 'javascript', cjs: 'javascript', jsx: 'jsx',
+          ts: 'typescript', tsx: 'tsx', py: 'python', kt: 'kotlin', java: 'java',
+          lua: 'luau', luau: 'luau', json: 'json', md: 'markdown',
+          sh: 'bash', ps1: 'powershell', cmd: 'batch', bat: 'batch', sql: 'sql', rs: 'rust', go: 'go', cpp: 'cpp', c: 'c'
+        };
+        return map[ext] || (ext || 'code');
+      }
+
+      function buildCodeBlockElement(code, lang, opts) {
+        const options = opts || {};
+        const cleanLang = (lang || 'code').trim() || 'code';
+        const normLang = normalizeLangTag(cleanLang);
+        const isRunnableHtml = normLang === 'html' || /^(?:html|svg)$/i.test(cleanLang) || /<!DOCTYPE\s+html|<html[\s>]|<svg[\s>]/i.test(String(code || ''));
         const wrap = createElement('div', { className: 'code-block' });
         const head = createElement('div', { className: 'code-block-head' });
-        head.appendChild(createElement('span', { className: 'code-block-lang', text: cleanLang }));
+
+        const langWrap = createElement('span', { className: 'code-block-lang' });
+        langWrap.appendChild(createElement('span', { className: 'code-lang-glyph', text: '</>' }));
+        const titleLabel = options.fileLabel
+          ? (cleanLang.toUpperCase() + ' · ' + options.fileLabel)
+          : cleanLang.toUpperCase();
+        langWrap.appendChild(createElement('span', { text: titleLabel }));
+        head.appendChild(langWrap);
 
         const btns = createElement('div', { className: 'code-block-btns' });
+
+        let iframeEl = null;
+        if (isRunnableHtml && !options.isStreaming) {
+          const runBtn = createElement('button', {
+            className: 'code-icon-btn',
+            type: 'button',
+            title: 'Execute & preview live HTML output',
+            text: '▶ Execute',
+            onClick: (ev) => {
+              ev.stopPropagation();
+              const showing = wrap.classList.toggle('showing-preview');
+              runBtn.classList.toggle('active', showing);
+              runBtn.textContent = showing ? '</> Hide Preview' : '▶ Execute';
+              if (showing && iframeEl) {
+                iframeEl.srcdoc = String(code || '');
+              }
+            }
+          });
+          btns.appendChild(runBtn);
+        }
+
+        const wrapBtn = createElement('button', {
+          className: 'code-icon-btn',
+          type: 'button',
+          title: 'Toggle line wrap',
+          html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M13 8l4 4-4 4"/><path d="M20 5v14"/></svg>',
+          onClick: (ev) => {
+            ev.stopPropagation();
+            const on = wrap.classList.toggle('wrap-lines');
+            wrapBtn.classList.toggle('active', on);
+          }
+        });
+        btns.appendChild(wrapBtn);
+
         const copyBtn = createElement('button', {
           className: 'code-copy-btn',
           type: 'button',
-          text: 'Copy code',
-          onClick: () => {
+          title: 'Copy code',
+          text: 'Copy',
+          onClick: (ev) => {
+            ev.stopPropagation();
             copyToClipboard(code, 'Code copied.');
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => { copyBtn.textContent = 'Copy code'; }, 1400);
+            copyBtn.textContent = '✓ Copied';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1400);
           }
         });
         btns.appendChild(copyBtn);
+
+        if (options.isStreaming) {
+          btns.appendChild(createElement('span', {
+            className: 'code-live-spinner',
+            title: 'Writing & executing code live…'
+          }));
+        }
+
         head.appendChild(btns);
         wrap.appendChild(head);
 
@@ -8260,6 +8412,21 @@
         codeEl.innerHTML = highlightCodeBlock(code, cleanLang);
         pre.appendChild(codeEl);
         wrap.appendChild(pre);
+
+        if (isRunnableHtml) {
+          iframeEl = createElement('iframe', {
+            className: 'code-exec-frame',
+            sandbox: 'allow-scripts',
+            title: 'Live code execution preview'
+          });
+          wrap.appendChild(iframeEl);
+        }
+
+        if (options.isStreaming) {
+          requestAnimationFrame(() => {
+            pre.scrollTop = pre.scrollHeight;
+          });
+        }
         return wrap;
       }
 
@@ -8273,18 +8440,19 @@
         while (idx < lines.length) {
           const line = lines[idx];
 
-          // Fenced code block
+          // Fenced code block (tracks unclosed live-streaming fences too!)
           const fenceMatch = /^```([^\s`]*)\s*$/.exec(line);
           if (fenceMatch) {
-            const lang = fenceMatch[1] || 'text';
+            const lang = fenceMatch[1] || 'code';
             const codeLines = [];
             idx += 1;
             while (idx < lines.length && !/^```\s*$/.test(lines[idx])) {
               codeLines.push(lines[idx]);
               idx += 1;
             }
+            const isUnclosedLive = idx >= lines.length;
             if (idx < lines.length) idx += 1;
-            blocks.push({ type: 'code', lang, code: codeLines.join('\n') });
+            blocks.push({ type: 'code', lang, code: codeLines.join('\n'), isStreaming: isUnclosedLive });
             continue;
           }
 
@@ -8374,7 +8542,7 @@
 
         for (const blk of blocks) {
           if (blk.type === 'code') {
-            container.appendChild(buildCodeBlockElement(blk.code, blk.lang));
+            container.appendChild(buildCodeBlockElement(blk.code, blk.lang, { isStreaming: !!blk.isStreaming }));
           } else if (blk.type === 'hr') {
             container.appendChild(createElement('hr', {
               style: 'border:none;border-top:1px solid var(--border-subtle);margin:12px 0;'
@@ -8493,7 +8661,7 @@
         State.activeChatId = null;
         State.attachments = [];
         if (!silent) {
-          State.greetingIdx = ((State.greetingIdx || 0) + 1) % 5;
+          State.greetingIdx = ((State.greetingIdx || 0) + 1 + Math.floor(Math.random() * 45)) % 48;
         }
         renderAttachments();
         renderThread();
@@ -9020,18 +9188,27 @@
          5. MODEL SELECTOR, JOB ROUTING & PERMISSION MODE CONTROLLER
       ==================================================================== */
 
+      const OPENAI_CHAT_PRESETS = [
+        { key: 'openai_auto', id: 'auto',          label: 'Auto',          hint: 'Smart',    desc: 'Automatically routes speed vs. deep reasoning based on prompt complexity' },
+        { key: 'gpt61terra',  id: 'gpt-6.1-terra', label: 'GPT-6.1 Terra', hint: 'Balanced', desc: 'Balanced GPT-6 model — crisp reasoning, coding & everyday conversation' }
+      ];
+
+      const OPENAI_WORK_PRESETS = [
+        { key: 'gpt6luna',    id: 'gpt-6-luna',    label: 'GPT-6 Luna',    hint: 'Fastest',  desc: 'Fastest GPT-6 work agent — rapid actions & lightweight desktop tasks' },
+        { key: 'gpt61terra',  id: 'gpt-6.1-terra', label: 'GPT-6.1 Terra', hint: 'Balanced', desc: 'Balanced GPT-6 work agent — reliable coding & multi-step control' },
+        { key: 'gpt6sol',     id: 'gpt-6-sol',     label: 'GPT-6.2 Sol',   hint: 'Strong',   desc: 'Strong GPT-6.2 work agent — deep planning, terminal & tool execution' },
+        { key: 'gpt62astra',  id: 'gpt-6.2-astra', label: 'GPT-6.2 Astra', hint: 'Flagship', desc: 'Flagship GPT-6.2 work agent — maximum reasoning, building & QA checks' }
+      ];
+
       const PROVIDER_DEFAULT_PRESETS = {
         gemini: [
           { key: 'flashlite35', id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', hint: 'Fastest',  desc: 'Lightest & fastest — quick, helpful answers & fast fixes right away' },
           { key: 'flash38',     id: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced', desc: 'Balanced — thinks carefully before starting, then helps cleanly' },
           { key: 'hydrogen',    id: 'gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced', desc: 'Balanced — thinks before starting & solves daily tasks reliably' },
           { key: 'neon',        id: 'gemini-4-neon',         label: 'Gemini 4 Neon',         hint: 'Strong',   desc: 'Strong — analyzes, thinks, makes a clear plan, then executes deeply' },
-          { key: 'argon',       id: 'gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Flagship', desc: 'Flagship — analyzes, critically thinks, works, tests & keeps fixing issues' }
+          { key: 'carbon',      id: 'gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Flagship', desc: 'Flagship — analyzes, critically thinks, works, tests & keeps fixing issues' }
         ],
-        openai: [
-          { key: 'openai_auto', id: 'auto',          label: 'Auto',        hint: 'Smart',    desc: 'Automatically routes speed vs. deep reasoning based on prompt complexity' },
-          { key: 'gpt61terra',  id: 'gpt-6.1-terra', label: 'GPT-6 Terra', hint: 'Balanced', desc: 'Balanced flagship OpenAI model — thinks cleanly and executes work reliably' }
-        ],
+        openai: OPENAI_CHAT_PRESETS,
         anthropic: [
           { key: 'claudehaiku55',  id: 'claude-haiku-5-5',   label: 'Claude Haiku 5.5',      hint: 'Fastest',    desc: 'Super fast helper — crisp speed for everyday tasks' },
           { key: 'claudesonnet55', id: 'claude-sonnet-5-5',  label: 'Claude Sonnet 5.5',     hint: 'Balanced',   desc: 'Balanced for everyday use — smooth writing & daily tasks' },
@@ -9043,7 +9220,7 @@
           { key: 'or_flash38',     id: 'google/gemini-3.8-flash',      label: 'Gemini 3.8 Flash',      hint: 'Balanced',   desc: 'Google Gemini · Balanced — thinks before starting' },
           { key: 'or_hydrogen',    id: 'google/gemini-4-hydrogen',     label: 'Gemini 4 Hydrogen',     hint: 'Balanced',   desc: 'Google Gemini · Balanced — thinks before starting' },
           { key: 'or_neon',        id: 'google/gemini-4-neon',         label: 'Gemini 4 Neon',         hint: 'Strong',     desc: 'Google Gemini · Strong — analyzes, thinks & plans' },
-          { key: 'or_argon',       id: 'google/gemini-4-argon',        label: 'Gemini 4 Argon',        hint: 'Flagship',   desc: 'Google Gemini · Flagship — critically thinks, works & tests' },
+          { key: 'or_carbon',      id: 'google/gemini-4-carbon',       label: 'Gemini 4 Carbon',       hint: 'Flagship',   desc: 'Google Gemini · Flagship — critically thinks, works & tests' },
           { key: 'or_gpt6luna',    id: 'openai/gpt-6-luna',            label: 'GPT-6 Luna',            hint: 'Fastest',    desc: 'OpenAI · Lightest & fastest helper' },
           { key: 'or_gpt61terra',  id: 'openai/gpt-6.1-terra',         label: 'GPT-6.1 Terra',         hint: 'Balanced',   desc: 'OpenAI · Balanced — thinks before starting' },
           { key: 'or_gpt6sol',     id: 'openai/gpt-6-sol',             label: 'GPT-6 Sol',             hint: 'Strong',     desc: 'OpenAI · Strong — analyzes, thinks & plans' },
@@ -9054,6 +9231,13 @@
           { key: 'or_fable52',     id: 'anthropic/claude-fable-5-2',   label: 'Claude Fable 5.2',      hint: 'Challenger', desc: 'Anthropic · Deepest challenger reasoning tier' }
         ]
       };
+
+      function getPresetsForProviderAndMode(provId) {
+        if (provId === 'openai') {
+          return (isCurrentModeWork() ? OPENAI_WORK_PRESETS : OPENAI_CHAT_PRESETS).slice();
+        }
+        return (PROVIDER_DEFAULT_PRESETS[provId] || PROVIDER_DEFAULT_PRESETS.gemini).slice();
+      }
 
       function detectKeyProviderClient(rawKey) {
         const k = String(rawKey || '').trim();
@@ -9116,19 +9300,75 @@
         const name = String(rawName || '').trim();
         const p = String(State.provider || 'gemini').toLowerCase();
         const work = isCurrentModeWork();
-        const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
+        const now = new Date();
+        const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()];
+        const hr = now.getHours();
+        const timeOfDay = hr < 12 ? 'morning' : (hr < 17 ? 'afternoon' : 'evening');
         const who = name ? (', ' + name) : '';
 
         if (p === 'anthropic' || p === 'claude') {
           if (work) return 'Brief Code';
-          return 'Let’s have a think' + who;
+          const claudeGreetings = [
+            'Happy ' + weekday + who,
+            'What’s on the agenda' + who + '?',
+            'Good ' + timeOfDay + who,
+            'Let’s have a think' + who,
+            'Where should we begin' + who + '?',
+            'What are we working on today' + who + '?',
+            'How’s your ' + weekday + ' going' + who + '?',
+            'What’s on your mind' + who + '?',
+            'How can I help you today' + who + '?',
+            'Ready when you are' + who,
+            'What shall we explore today' + who + '?',
+            'Let’s figure it out together',
+            'What would you like to tackle' + who + '?',
+            'Got an idea brewing' + who + '?',
+            'What’s next on your list' + who + '?',
+            'Let’s build something great' + who,
+            'Tell me what you’re thinking',
+            'Lovely ' + weekday + who,
+            'What problem can we untangle?',
+            'Ready to dive in' + who,
+            'What’s sparking your curiosity?',
+            'Let’s make this ' + weekday + ' count',
+            'Where shall we take things' + who + '?',
+            'What can we create today?',
+            'Bring me your toughest question',
+            'Let’s map things out' + who,
+            'What’s top of mind right now?',
+            'Always happy to brainstorm' + who,
+            'What story are we writing today?',
+            'Let’s turn ideas into action',
+            'Need a second pair of eyes' + who + '?',
+            'What’s worth exploring today?',
+            'Let’s sketch out a plan',
+            'Ready for a fresh start' + who,
+            'What are you curious about today?',
+            'Let’s get into the details',
+            'How can we make things easier?',
+            'What’s the big picture today' + who + '?',
+            'Ready to think things through',
+            'What challenge is on your desk?',
+            'Let’s craft something thoughtful',
+            'Where do you want to focus' + who + '?',
+            'What would make today a win?',
+            'Let’s take a closer look',
+            'Ready whenever inspiration strikes',
+            'What’s waiting to be solved?',
+            'Let’s work through it step by step',
+            'Open canvas — where to first' + who + '?'
+          ];
+          const cIdx = Math.abs(Number(State.greetingIdx || 0)) % claudeGreetings.length;
+          return claudeGreetings[cIdx];
         }
         if (p === 'gemini') {
           if (work) return "I am ready. What's your task?";
           const geminiDaily = [
             'Happy ' + weekday + who,
             'Where should we begin?',
-            "What's on the agenda" + who + '?'
+            "What's on the agenda" + who + '?',
+            'Good ' + timeOfDay + who,
+            'What are we exploring today' + who + '?'
           ];
           const gIdx = Math.abs(Number(State.greetingIdx || 0)) % geminiDaily.length;
           return geminiDaily[gIdx];
@@ -9449,7 +9689,7 @@
 
       function getMatchedPresetInfo(presetKey) {
         const vis = providerVisual(State.provider);
-        const defList = PROVIDER_DEFAULT_PRESETS[vis.id] || PROVIDER_DEFAULT_PRESETS.gemini;
+        const defList = getPresetsForProviderAndMode(vis.id);
         const fallbackDef = defList.find((x) => x.key === presetKey);
         const matchObj = State.match && State.match.presets && State.match.presets[presetKey];
         const modelId = (matchObj && matchObj.id) || (fallbackDef && fallbackDef.id) || presetKey;
@@ -9467,21 +9707,44 @@
         if (typeof renderUsageRing === 'function') { try { renderUsageRing(); } catch (_) { /* ring not ready yet */ } }
         const genModels = (State.models || []).filter((m) => Array.isArray(m.methods) && m.methods.includes('generateContent'));
         let active = State.settings.activeModel || '';
+        if (/gemini-?4-?argon/i.test(active)) {
+          active = active.replace(/gemini-?4-?argon/i, 'gemini-4-carbon');
+          State.settings.activeModel = active;
+          if (State.settings.activePreset === 'argon') State.settings.activePreset = 'carbon';
+          if (State.settings.activePreset === 'or_argon') State.settings.activePreset = 'or_carbon';
+        }
         const tLevel = (State.settings.thinkingLevel || 'medium').toLowerCase();
-        const tLabel = tLevel === 'extra' ? 'Extra' : (tLevel === 'high' ? 'High' : (tLevel === 'low' ? 'Low' : 'Medium'));
+        const tLabel = tLevel === 'extra' ? 'Extra High' : (tLevel === 'high' ? 'High' : (tLevel === 'low' ? 'Low' : 'Medium'));
         const vis = providerVisual(State.provider);
+        const inWorkMode = isCurrentModeWork();
 
-        State.presets = (PROVIDER_DEFAULT_PRESETS[vis.id] || PROVIDER_DEFAULT_PRESETS.gemini).slice();
+        State.presets = getPresetsForProviderAndMode(vis.id);
+
+        if (vis.id === 'openai') {
+          if (inWorkMode && active === 'auto') {
+            State.settings.openaiChatModel = 'auto';
+            active = State.settings.openaiWorkModel || 'gpt-6.1-terra';
+            State.settings.activeModel = active;
+          } else if (!inWorkMode && active && active !== 'auto' && active !== 'gpt-6.1-terra') {
+            State.settings.openaiWorkModel = active;
+            active = State.settings.openaiChatModel || 'auto';
+            State.settings.activeModel = active;
+          }
+        }
 
         const headingEl = $('model-popover-heading');
         if (headingEl) {
-          headingEl.textContent = vis.name + ' Models';
+          headingEl.textContent = vis.id === 'openai'
+            ? (inWorkMode ? 'OpenAI GPT-6 Work Models' : 'OpenAI Chat Models')
+            : (vis.name + ' Models');
         }
 
         const matchedPreset = State.presets.find((p) => p.id === active || p.key === State.settings.activePreset);
         const matchedGen = vis.id === 'openai' ? null : genModels.find((m) => m.id === active);
         if (!matchedPreset && !matchedGen && State.presets.length) {
-          active = vis.id === 'openai' ? State.presets[0].id : (State.presets[1] || State.presets[0]).id;
+          active = vis.id === 'openai'
+            ? (inWorkMode ? 'gpt-6.1-terra' : 'auto')
+            : (State.presets[1] || State.presets[0]).id;
           State.settings.activeModel = active;
         }
 
@@ -9505,7 +9768,7 @@
         const tNote = $('thinking-level-note');
         if (tNote) {
           if (tLevel === 'extra') {
-            tNote.textContent = 'Extra Thinking — extra web research to understand deeply + extra touches & polish for standout results.';
+            tNote.textContent = 'Extra High Thinking — maximum reasoning depth + extra web research & polish for standout results.';
           } else if (tLevel === 'high') {
             tNote.textContent = 'High Thinking — serious maximum-depth analysis, root-cause tracing, and full verification.';
           } else if (tLevel === 'low') {
@@ -9568,6 +9831,10 @@
         if (!clean) return;
         State.settings.activeModel = clean;
         State.settings.activePreset = presetKey || '';
+        if (State.provider === 'openai') {
+          if (isCurrentModeWork()) State.settings.openaiWorkModel = clean;
+          else State.settings.openaiChatModel = clean;
+        }
         renderModelSelector();
         closePopovers();
         if (api && api.updateSettings) {
@@ -9583,7 +9850,8 @@
         if (api && api.updateSettings) {
           await api.updateSettings({ thinkingLevel: norm }).catch(() => {});
         }
-        showToast('Thinking level set to ' + norm.toUpperCase(), 'ok');
+        const nice = norm === 'extra' ? 'EXTRA HIGH' : norm.toUpperCase();
+        showToast('Thinking level set to ' + nice, 'ok');
       }
 
       function renderPermissionAndModeUI() {
@@ -9648,6 +9916,7 @@
         renderWelcomeCodeBackdrop();
         renderBriefWorkVisualModeUI();
         renderClaudeTopicPills();
+        renderModelSelector();
         if (DOM.pinnedList) renderSidebar();
       }
 
@@ -10268,8 +10537,8 @@
       function buildOpenAiMoonSvgHtml() {
         return '<svg class="openai-moon-svg" viewBox="0 0 24 24" role="img" aria-label="Working">' +
           '<g class="openai-moon-group">' +
-          '<path class="openai-moon-path" fill="#f4f4f5" d="M 12 4.2 A 7.8 7.8 0 1 1 12 19.8 A 4.4 7.8 0 1 0 12 4.2 Z"/>' +
-          '<circle class="openai-moon-star" cx="7.2" cy="7.5" r="1.25" fill="#e2e8f0" opacity="0.82"/>' +
+          '<path class="openai-moon-path" fill="#f5a623" d="M 12 4.2 A 7.8 7.8 0 1 1 12 19.8 A 4.4 7.8 0 1 0 12 4.2 Z"/>' +
+          '<circle class="openai-moon-star" cx="7.2" cy="7.5" r="1.25" fill="#fde68a" opacity="0.88"/>' +
           '</g>' +
           '</svg>';
       }
@@ -10766,6 +11035,19 @@
             text: st.running ? (st.toolCallId === 'observe-init' ? 'Observing…' : 'Working…') : (st.denied ? '✕ Denied' : (st.ok ? '✓ Done (' + formatDuration(st.ms) + ')' : '✕ Failed'))
           }));
           box.appendChild(top);
+
+          // Universal Live </> Code Execution Card for file creation / editing steps in Work mode (all 4 providers)
+          const isCodeWriteTool = ['write_file', 'create_file', 'edit_file', 'append_file', 'replace_in_file', 'patch_file', 'save_file'].includes(String(st.tool || ''));
+          const stepCodeContent = st.args && (st.args.content || st.args.replace || st.args.new_str || st.args.code || '');
+          if (isCodeWriteTool && typeof stepCodeContent === 'string' && stepCodeContent.trim()) {
+            const rawTargetFile = String((st.args && (st.args.path || st.args.file || st.args.filename)) || '');
+            const baseFile = rawTargetFile ? rawTargetFile.split(/[\\/]/).pop() : '';
+            const stepLang = inferLangFromFilePath(baseFile || rawTargetFile);
+            box.appendChild(buildCodeBlockElement(stepCodeContent.slice(-14000), stepLang, {
+              isStreaming: !!st.running,
+              fileLabel: baseFile
+            }));
+          }
 
           // Live Command Prompt / PowerShell Terminal output block
           const isTerminalTool = ['run_command', 'terminal_open', 'terminal_send', 'terminal_read'].includes(String(st.tool || ''));
@@ -11507,7 +11789,7 @@
 
       function usageTierOf(modelId) {
         const id = String(modelId || '').toLowerCase().replace(/^(?:models|google|openai|anthropic)\//, '');
-        if (/argon|astra|fable/.test(id)) return 'flagship';
+        if (/carbon|argon|astra|fable/.test(id)) return 'flagship';
         if (/neon|\bsol\b|\bopus\b/.test(id)) return 'strong';
         if (/flash-?lite|luna|haiku/.test(id)) return 'fastest';
         return 'balanced';
@@ -11696,8 +11978,9 @@
         const err = String(assistantMsg.error || '');
         if (err) {
           if (/stopped/i.test(err)) return;
-          if (/quota|rate limit|limit:\s*\d|too many requests|429|credit balance|insufficient_quota|RESOURCE_EXHAUSTED|requests\/day|usage limit/i.test(err)) {
-            // Strictly 2 hours (Fastest/Balanced) or 3 hours (Strong/Flagship) — NEVER 17h/22h/23h!
+          // Do NOT lock the entire provider to 100% on a single model's free-tier limit: 0 restriction!
+          const isSingleModelTierZero = /limit:\s*0\b|not enabled on this API key/i.test(err);
+          if (!isSingleModelTierZero && /quota|rate limit|too many requests|429|credit balance|insufficient_quota|RESOURCE_EXHAUSTED|requests\/day|usage limit/i.test(err)) {
             const waitMs = usageWaitWindowFor(modelId);
             setUsageMeter(100, Date.now() + waitMs, modelId);
             openUsageLimitModal();
@@ -11759,6 +12042,13 @@
             }, 140);
           });
         }
+        // One-time v2.0.9-beta cleanup: clear any false 100% Gemini lock triggered by the old Argon limit:0 check
+        try {
+          if (localStorage.getItem('brief_v209_quota_unbrick') !== '1') {
+            localStorage.setItem('brief_v209_quota_unbrick', '1');
+            saveUsageMeter({ percent: 0, startedAt: 0, resetAt: 0 }, 'gemini');
+          }
+        } catch (_) { /* ignore */ }
         // Silently initialize background local-time check without displaying any time in UI
         syncBackgroundUsageTimer();
         renderUsageRing();
@@ -12670,7 +12960,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.8-beta';
+      const BRIEF_NEWS_VERSION = '2.0.9-beta';
       let latestRemoteRelease = null;
 
       function parseBriefSemver(vStr) {
@@ -13170,7 +13460,7 @@
             group: 'Settings & Safety',
             icon: '🧠',
             title: 'Settings: Models & Job Routing',
-            desc: 'Assign Flash-Lite, Hydrogen, 3.1 Pro, Argon, or Computer-Use per job',
+            desc: 'Assign Flash-Lite, Hydrogen, Neon, Carbon, or Computer-Use per job',
             run: () => openSettingsModal('models')
           },
           {
@@ -13442,6 +13732,8 @@
           closePopovers();
           setActiveRailButton('home');
           toggleSidebar(false);
+          State.greetingIdx = ((State.greetingIdx || 0) + 1 + Math.floor(Math.random() * 45)) % 48;
+          renderWelcomeView({ triggerLogoAnim: false });
           setView(State.hasKey ? 'welcome' : 'key-gate');
         });
         $('rail-btn-work').addEventListener('click', () => {

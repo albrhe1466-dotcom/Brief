@@ -481,7 +481,7 @@ class AgentRunner extends EventEmitter {
     const push = (id) => {
       const clean = stripModelPrefix(id || '');
       if (!clean || bad.has(clean) || seen.has(clean)) return;
-      if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools|carbon)/i.test(clean)) return;
+      if (/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools|argon)/i.test(clean)) return;
       seen.add(clean);
       out.push(clean);
     };
@@ -490,7 +490,7 @@ class AgentRunner extends EventEmitter {
       push(m.presets.hydrogen && m.presets.hydrogen.id);
       push(m.presets.flashlite35 && m.presets.flashlite35.id);
       push(m.presets.neon && m.presets.neon.id);
-      push(m.presets.argon && m.presets.argon.id);
+      push(m.presets.carbon && m.presets.carbon.id);
     }
     const availableIds = new Set(all.filter((x) => Array.isArray(x.methods) && x.methods.includes('generateContent')).map((x) => x.id));
     for (const modernId of [
@@ -498,7 +498,7 @@ class AgentRunner extends EventEmitter {
       'gemini-3.8-flash',
       'gemini-3.5-flash-lite',
       'gemini-4-neon',
-      'gemini-4-argon',
+      'gemini-4-carbon',
       'gemini-3-flash-preview',
       'gemini-3.1-flash-lite-preview',
       'gemini-3.1-pro-preview'
@@ -510,10 +510,10 @@ class AgentRunner extends EventEmitter {
     const general = all
       .filter((x) => Array.isArray(x.methods) && x.methods.includes('generateContent'))
       .map((x) => x.id)
-      .filter((id) => !/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools|carbon)/i.test(id));
+      .filter((id) => !/(image|tts|audio|live|embedding|aqa|imagen|veo|native-audio|robotics|computer-use|customtools|argon)/i.test(id));
     general.sort((a, b) => {
-      const aHeavy = /\bpro\b|argon|neon|\bopus\b|fable|astra|sol/i.test(a) ? 1 : 0;
-      const bHeavy = /\bpro\b|argon|neon|\bopus\b|fable|astra|sol/i.test(b) ? 1 : 0;
+      const aHeavy = /\bpro\b|carbon|neon|\bopus\b|fable|astra|sol/i.test(a) ? 1 : 0;
+      const bHeavy = /\bpro\b|carbon|neon|\bopus\b|fable|astra|sol/i.test(b) ? 1 : 0;
       if (aHeavy !== bHeavy) return aHeavy - bHeavy;
       const va = parseFloat((/(?:gemini-|gpt-|claude-[^-]*-)(\d+(?:\.\d+)?)/.exec(a) || [])[1] || '0');
       const vb = parseFloat((/(?:gemini-|gpt-|claude-[^-]*-)(\d+(?:\.\d+)?)/.exec(b) || [])[1] || '0');
@@ -521,11 +521,11 @@ class AgentRunner extends EventEmitter {
       return b.localeCompare(a);
     });
     for (const id of general) {
-      if (!/\bpro\b|argon|neon|\bopus\b|fable|astra|sol/i.test(id)) push(id);
+      if (!/\bpro\b|carbon|neon|\bopus\b|fable|astra|sol/i.test(id)) push(id);
     }
     if (m.presets) {
       push(m.presets.neon && m.presets.neon.id);
-      push(m.presets.argon && m.presets.argon.id);
+      push(m.presets.carbon && m.presets.carbon.id);
       push(m.presets.pro31 && m.presets.pro31.id);
     }
     push(m.bestPro);
@@ -631,7 +631,7 @@ class AgentRunner extends EventEmitter {
         ? `${prevTopic} ${rawPrompt}`.trim()
         : rawPrompt;
       const isTrivialGreeting = /^(?:hi+|hello+|hey+|yo+|sup|good\s+(?:morning|afternoon|evening)|thanks|thank\s+you|ok(?:ay)?|who\s+are\s+you\??|what\s+is\s+your\s+name\??)\s*[!?.]*$/i.test(rawPrompt);
-      const mentionsBrief2026Models = /\b(gemini[\s-]*(?:3\.5|3\.8|4)|hydrogen|neon|argon|gpt[\s-]*6|luna|terra|sol|astra|claude[\s-]*(?:5\.5|5\.2|fable))\b/i.test(effectiveSearchQuery);
+      const mentionsBrief2026Models = /\b(gemini[\s-]*(?:3\.5|3\.8|4)|hydrogen|neon|carbon|argon|gpt[\s-]*6|luna|terra|sol|astra|claude[\s-]*(?:5\.5|5\.2|fable))\b/i.test(effectiveSearchQuery);
       const needsNormalWebSearch = !isTrivialGreeting && !mentionsBrief2026Models && effectiveSearchQuery.length > 3 && (
         isFollowUpSearch ||
         /\b(search|look up|latest|news|yesterday|today|tonight|recent|happened|event|riyadh|saudi|city|country|world|weather|price|cost|release|2025|2026|who|what|when|where|why|how|compare|vs\.?|best\b|review|docs|documentation|error|version|update|download|current|live|fact|research|explain)\b/i.test(effectiveSearchQuery)
@@ -754,6 +754,24 @@ class AgentRunner extends EventEmitter {
                   this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: activeChatModel, stepText: `${activeChatModel} busy — retrying (${Math.round(r.wait / 1000)}s)…` });
                 }
               });
+            }
+            // Guarantee non-empty reply if streaming closed early without visible text or tool calls
+            const streamPartsCheck = (res && res.candidates && res.candidates[0] && res.candidates[0].content && res.candidates[0].content.parts) || (res && res.parts) || [];
+            const hasToolCallInStream = Array.isArray(streamPartsCheck) && streamPartsCheck.some((p) => p && p.functionCall);
+            if (!fullText && !(res && res.text) && !hasToolCallInStream && typeof this.gemini.generate === 'function') {
+              const directJson = await this.gemini.generate(activeChatModel, {
+                systemInstruction: chatPayload.systemInstruction,
+                contents
+              }, {
+                retries: 0,
+                timeoutMs: fastTimeoutMs,
+                signal: this.abortController.signal
+              });
+              const dc = (directJson && directJson.candidates || [])[0];
+              const dp = (dc && dc.content && dc.content.parts) || [];
+              fullText = dp.filter((p) => typeof p.text === 'string' && !p.thought).map((p) => p.text).join('');
+              if (fullText) this.emit('chat-delta', { runId, chatId, delta: fullText, full: fullText });
+              res = { text: fullText, thought: thoughtText, candidates: directJson && directJson.candidates, usage: directJson && directJson.usageMetadata };
             }
             break;
           } catch (chatErr) {
@@ -1261,7 +1279,7 @@ class AgentRunner extends EventEmitter {
       const workThinkingLvl = String(settings.thinkingLevel || 'medium').toLowerCase();
       const isExtraWork = workThinkingLvl === 'extra';
       const isFastWork = /flash-?lite|3\.8-?flash|\bflash\b|luna|haiku/i.test(agentModel.id) || workThinkingLvl === 'low';
-      const mentions2026ModelsWork = /\b(gemini[\s-]*(?:3\.5|3\.8|4)|hydrogen|neon|argon|gpt[\s-]*6|luna|terra|sol|astra|claude[\s-]*(?:5\.5|5\.2|fable))\b/i.test(String(task || ''));
+      const mentions2026ModelsWork = /\b(gemini[\s-]*(?:3\.5|3\.8|4)|hydrogen|neon|carbon|argon|gpt[\s-]*6|luna|terra|sol|astra|claude[\s-]*(?:5\.5|5\.2|fable))\b/i.test(String(task || ''));
       const needsPreSearch = useSearch && task && !mentions2026ModelsWork && (isExtraWork || (!isFastWork && /\b(search|look up|what is|who is|why|how does|news|weather|price|cause|causes|effects|facts|information|research|find out|essay|report|summary|pollution|how to)\b/i.test(String(task))));
       const initialWebHits = needsPreSearch
         ? await Promise.race([

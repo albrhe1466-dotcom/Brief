@@ -133,7 +133,7 @@ async function runFunctionalTests(screen, automation) {
     assert.strictEqual(matched.presets.flashlite35.id, 'gemini-3.5-flash-lite');
     assert.strictEqual(matched.presets.flash38.id, 'gemini-3.8-flash');
     assert.strictEqual(matched.presets.hydrogen.available, false, 'Missing Hydrogen must be marked unavailable instead of guessing');
-    assert.strictEqual(matched.presets.argon.available, false, 'Missing Argon must be marked unavailable instead of guessing');
+    assert.strictEqual(matched.presets.carbon.available, false, 'Missing Carbon must be marked unavailable instead of guessing');
     assert.strictEqual(matched.computerUse, 'gemini-2.5-computer-use-preview-10-2025');
     pass('preset-matching', 'Matched real IDs & honestly marked missing codenames unavailable');
   } catch (e) {
@@ -189,13 +189,13 @@ async function runFunctionalTests(screen, automation) {
     fail('thinking-config', e);
   }
 
-  // 8. All 4 Providers modern routing (Neon + Argon, Carbon removed, GPT-6.2 Astra added, Claude untouched)
+  // 8. All 4 Providers modern routing (Neon + Carbon, Argon replaced, GPT-6.2 Astra added, Claude untouched)
   try {
-    for (const modelId of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-4-neon', 'gemini-4-argon']) {
+    for (const modelId of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-4-neon', 'gemini-4-carbon']) {
       const cands = resolveGeminiRuntimeCandidates(modelId);
       assert.strictEqual(cands[0], modelId, 'Exact Gemini model must come first: ' + modelId);
-      const legacy = cands.filter((c) => /^gemini-(1|2)(?:\.|$|-)/i.test(c));
-      assert.strictEqual(legacy.length, 0, 'Legacy 1.x/2.x Gemini models forbidden: ' + legacy.join(', '));
+      const legacy = cands.filter((c) => /^gemini-1(?:\.|$|-)/i.test(c));
+      assert.strictEqual(legacy.length, 0, 'Legacy 1.x Gemini models forbidden: ' + legacy.join(', '));
     }
     const openai = new OpenAIClient(() => '', () => {});
     for (const modelId of ['gpt-6-luna', 'gpt-6.1-terra', 'gpt-6-sol', 'gpt-6.2-astra']) {
@@ -217,19 +217,19 @@ async function runFunctionalTests(screen, automation) {
       assert.strictEqual(legacy.length, 0, 'Legacy Claude models forbidden: ' + legacy.join(', '));
     }
     const orClient = new OpenRouterClient(() => '', () => {});
-    for (const modelId of ['google/gemini-4-neon', 'google/gemini-4-argon', 'openai/gpt-6-sol', 'openai/gpt-6.2-astra', 'anthropic/claude-haiku-5-5', 'anthropic/claude-fable-5-2']) {
+    for (const modelId of ['google/gemini-4-neon', 'google/gemini-4-carbon', 'openai/gpt-6-sol', 'openai/gpt-6.2-astra', 'anthropic/claude-haiku-5-5', 'anthropic/claude-fable-5-2']) {
       const cands = orClient.resolveRuntimeCandidates(modelId);
       assert.strictEqual(cands[0], modelId, 'Exact OpenRouter model must come first: ' + modelId);
       const legacy = cands.filter((c) => !isModernOpenRouterModelId(c) && c !== modelId);
       assert.strictEqual(legacy.length, 0, 'Legacy OpenRouter models forbidden: ' + legacy.join(', '));
     }
     assert.strictEqual(isModernGeminiModelId('gemini-2.5-pro'), false);
-    assert.strictEqual(isModernGeminiModelId('gemini-4-carbon'), false, 'Gemini 4 Carbon must be removed');
+    assert.strictEqual(isModernGeminiModelId('gemini-4-argon'), false, 'Gemini 4 Argon must be removed');
     assert.strictEqual(isModernGeminiModelId('gemini-4-neon'), true, 'Gemini 4 Neon must be active');
-    assert.strictEqual(isModernGeminiModelId('gemini-4-argon'), true, 'Gemini 4 Argon must be active');
-    assert.strictEqual(resolveGeminiRuntimeCandidates('gemini-2.5-pro').some((c) => /gemini-(1|2)\./i.test(c)), false, 'gemini-2.5-pro runtime candidates must never run retired 2.5');
+    assert.strictEqual(isModernGeminiModelId('gemini-4-carbon'), true, 'Gemini 4 Carbon must be active');
+    assert.strictEqual(resolveGeminiRuntimeCandidates('gemini-2.5-pro').some((c) => /gemini-1\./i.test(c)), false, 'gemini-2.5-pro runtime candidates must never run retired 1.x');
     assert.strictEqual(sanitizeModelIdValue('gemini-2.5-pro'), '');
-    assert.strictEqual(sanitizeModelIdValue('gemini-4-carbon'), 'gemini-4-argon');
+    assert.strictEqual(sanitizeModelIdValue('gemini-4-argon'), 'gemini-4-carbon');
     assert.strictEqual(sanitizeModelIdValue('gpt-6.2-sol'), 'gpt-6-sol');
     assert.strictEqual(sanitizeModelIdValue('gpt-6.2-astra'), 'gpt-6.2-astra');
     assert.strictEqual(sanitizeModelIdValue('gpt-6-astra'), 'gpt-6.2-astra');
@@ -473,7 +473,7 @@ async function runFunctionalTests(screen, automation) {
     assert.strictEqual(classifyModelTier('gpt-6.1-terra'), 'balanced');
     assert.strictEqual(classifyModelTier('gemini-4-neon'), 'strong');
     assert.strictEqual(classifyModelTier('gpt-6-sol'), 'strong');
-    assert.strictEqual(classifyModelTier('gemini-4-argon'), 'flagship');
+    assert.strictEqual(classifyModelTier('gemini-4-carbon'), 'flagship');
     assert.strictEqual(classifyModelTier('gpt-6.2-astra'), 'flagship');
 
     const promptBase = {
@@ -488,13 +488,13 @@ async function runFunctionalTests(screen, automation) {
     const fastPrompt = buildWorkSystemPrompt(Object.assign({}, promptBase, { modelId: 'gemini-3.5-flash-lite' }));
     const balPrompt = buildWorkSystemPrompt(Object.assign({}, promptBase, { modelId: 'gemini-4-hydrogen' }));
     const neonPrompt = buildWorkSystemPrompt(Object.assign({}, promptBase, { modelId: 'gemini-4-neon' }));
-    const argonPrompt = buildWorkSystemPrompt(Object.assign({}, promptBase, { modelId: 'gemini-4-argon' }));
+    const carbonPrompt = buildWorkSystemPrompt(Object.assign({}, promptBase, { modelId: 'gemini-4-carbon' }));
     assert(fastPrompt.includes('MODEL TIER = FASTEST'), 'Fastest model must receive speed-first tier directive');
     assert(balPrompt.includes('MODEL TIER = BALANCED'), 'Balanced model must receive think-before-starting tier directive');
     assert(neonPrompt.includes('MODEL TIER = STRONG') && /plan/i.test(neonPrompt), 'Neon Strong tier must direct analyze, think, plan & execute');
-    assert(argonPrompt.includes('MODEL TIER = FLAGSHIP') && /missing authenticator/i.test(argonPrompt) && /terminal_open/i.test(argonPrompt), 'Argon Flagship tier must direct critical thinking, testing, self-fixing & terminal control');
-    assert(argonPrompt.includes('ctrl+a') && argonPrompt.includes('ctrl+c') && argonPrompt.includes('ctrl+v'), 'Work prompt must include full keyboard control instructions');
-    assert(!argonPrompt.includes('gemini-4-carbon'), 'System prompt must not reference removed gemini-4-carbon');
+    assert(carbonPrompt.includes('MODEL TIER = FLAGSHIP') && /missing authenticator/i.test(carbonPrompt) && /terminal_open/i.test(carbonPrompt), 'Carbon Flagship tier must direct critical thinking, testing, self-fixing & terminal control');
+    assert(carbonPrompt.includes('ctrl+a') && carbonPrompt.includes('ctrl+c') && carbonPrompt.includes('ctrl+v'), 'Work prompt must include full keyboard control instructions');
+    assert(!carbonPrompt.includes('gemini-4-argon'), 'System prompt must not reference removed gemini-4-argon');
 
     assert.strictEqual(DEFAULT_SETTINGS.typingDelayMs, 42, 'Default typingDelayMs must be slower (42ms) for visible typing animation');
     assert.strictEqual(DEFAULT_SETTINGS.pasteLongText, false, 'Default pasteLongText must be false so Brief types visibly rather than copy-pasting');
@@ -556,11 +556,12 @@ async function runFunctionalTests(screen, automation) {
     // Gemini runtime candidates must NEVER cross-demote across models
     const neonCands = resolveGeminiRuntimeCandidates('gemini-4-neon');
     assert.strictEqual(neonCands[0], 'gemini-4-neon');
-    assert(!neonCands.some((c) => /hydrogen|3\.8-flash|flash-lite|argon/i.test(c)), 'Neon must NEVER demote to Argon/Hydrogen/Flash/Flash-Lite: ' + neonCands.join(', '));
-    const argonCands = resolveGeminiRuntimeCandidates('gemini-4-argon');
-    assert(!argonCands.some((c) => /neon|hydrogen|3\.8-flash|flash-lite/i.test(c)), 'Argon must NEVER demote: ' + argonCands.join(', '));
+    assert(!neonCands.some((c) => /hydrogen|3\.8-flash|flash-lite|argon/i.test(c)), 'Neon must NEVER demote to Argon/Hydrogen/Flash-Lite: ' + neonCands.join(', '));
+    const carbonCands = resolveGeminiRuntimeCandidates('gemini-4-carbon');
+    assert.strictEqual(carbonCands[0], 'gemini-4-carbon');
+    assert(!carbonCands.some((c) => /neon|hydrogen|3\.8-flash|flash-lite|argon/i.test(c)), 'Carbon must NEVER demote to Neon/Hydrogen/Flash-Lite: ' + carbonCands.join(', '));
     const hydroCands = resolveGeminiRuntimeCandidates('gemini-4-hydrogen');
-    assert(!hydroCands.some((c) => /3\.8-flash|flash-lite/i.test(c)), 'Hydrogen must NEVER demote to Flash or Flash-Lite: ' + hydroCands.join(', '));
+    assert(!hydroCands.some((c) => /3\.8-flash|flash-lite/i.test(c)), 'Hydrogen must NEVER demote to 3.8-Flash or Flash-Lite: ' + hydroCands.join(', '));
     const flash38Cands = resolveGeminiRuntimeCandidates('gemini-3.8-flash');
     assert(!flash38Cands.some((c) => /flash-lite/i.test(c)), '3.8 Flash must NEVER demote to Flash-Lite: ' + flash38Cands.join(', '));
 
@@ -570,7 +571,7 @@ async function runFunctionalTests(screen, automation) {
     const clCands = new AnthropicClient(() => '', () => {}).resolveRuntimeCandidates('claude-opus-5-5');
     assert(!clCands.some((c) => /sonnet|haiku|fable/i.test(c)), 'Claude Opus 5.5 must NEVER demote: ' + clCands.join(', '));
     const orCands = new OpenRouterClient(() => '', () => {}).resolveRuntimeCandidates('google/gemini-4-neon');
-    assert(!orCands.some((c) => /hydrogen|flash|argon/i.test(c)), 'OpenRouter Neon must NEVER demote: ' + orCands.join(', '));
+    assert(!orCands.some((c) => /hydrogen|flash-lite|argon/i.test(c)), 'OpenRouter Neon must NEVER demote: ' + orCands.join(', '));
 
     // Real AgentRunner strict lock: if gemini-4-neon fails with 404/quota, NEVER call hydrogen/flash/flash-lite!
     const calledModels = [];
@@ -590,7 +591,7 @@ async function runFunctionalTests(screen, automation) {
       getMatch: () => ({
         presets: {
           neon: { id: 'gemini-4-neon' },
-          argon: { id: 'gemini-4-argon' },
+          carbon: { id: 'gemini-4-carbon' },
           hydrogen: { id: 'gemini-4-hydrogen' },
           flash38: { id: 'gemini-3.8-flash' },
           flashlite35: { id: 'gemini-3.5-flash-lite' }

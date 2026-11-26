@@ -607,7 +607,7 @@ function chooseDefaultModelIfNeeded(match, models, provider) {
       (p.flashlite35 && p.flashlite35.id) ||
       (p.hydrogen && p.hydrogen.id) ||
       (p.neon && p.neon.id) ||
-      (p.argon && p.argon.id) ||
+      (p.carbon && p.carbon.id) ||
       (match && match.bestFlash) ||
       (match && match.fast) ||
       (match && match.bestPro) ||
