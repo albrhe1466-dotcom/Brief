@@ -5759,6 +5759,62 @@
       position: relative;
       z-index: 2;
     }
+    /* Brief Code Clawd mascot (exact pixel-art GIFs on 100% transparent background perched on the Brief Code input bar) */
+    body[data-provider="anthropic"][data-mode="work"] #composer-capsule {
+      position: relative;
+      margin-top: 52px;
+    }
+    html[data-platform="android"] body[data-provider="anthropic"][data-mode="work"] #composer-capsule {
+      margin-top: 40px;
+    }
+    #brief-code-clawd {
+      display: none;
+      position: absolute;
+      right: 26px;
+      bottom: calc(100% - 1px);
+      z-index: 6;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0;
+      margin: 0;
+      line-height: 0;
+      cursor: pointer;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body[data-provider="anthropic"][data-mode="work"] #brief-code-clawd {
+      display: block;
+    }
+    #brief-code-clawd img {
+      display: block;
+      width: 98px;
+      height: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    #brief-code-clawd[data-clawd="soccer"] img {
+      width: 112px;
+    }
+    html[data-platform="android"] #brief-code-clawd {
+      right: 18px;
+    }
+    html[data-platform="android"] #brief-code-clawd img {
+      width: 76px;
+    }
+    html[data-platform="android"] #brief-code-clawd[data-clawd="soccer"] img {
+      width: 88px;
+    }
+    /* Never show Ask for permission / Full access in regular Chat mode across all 4 AIs */
+    .perm-hidden-in-chat,
+    body[data-mode="chat"] #perm-trigger-btn,
+    body[data-mode="chat"] #perm-popover,
+    body[data-mode="chat"] #brief-code-inline-toggle {
+      display: none !important;
+    }
+
     /* "You're in Brief Code · Brief Work" Banner & Visual Execution Chooser */
     body[data-provider="anthropic"][data-mode="work"] #brief-code-banner {
       display: inline-flex !important;
@@ -6625,7 +6681,7 @@
             <span id="header-update-label">Update</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.0-beta">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.1-beta">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6765,7 +6821,7 @@
             <div id="brief-code-banner">
               <span class="brief-code-live-dot"></span>
               <span>You're in <strong>Brief Code</strong></span>
-              <span class="brief-code-subtag">Brief Work</span>
+              <span class="brief-code-subtag">Clawd · Brief Work</span>
             </div>
 
             <div class="welcome-title-row">
@@ -6936,6 +6992,9 @@
           </button>
 
           <div class="composer-capsule" id="composer-capsule">
+            <div id="brief-code-clawd" data-clawd="code" role="button" tabindex="0" title="Clawd · Brief Code mascot (tap to switch Coding / Soccer)">
+              <img id="brief-code-clawd-img" src="assets/clawd-code.gif" alt="Clawd" draggable="false">
+            </div>
             <div id="composer-approval-panel"></div>
             <div class="composer-attachments" id="composer-attachments"></div>
 
@@ -7574,7 +7633,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 24px; height: 24px; border-radius: 5px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.0-beta</span>
+          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.1-beta</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -7582,10 +7641,10 @@
         <div class="news-hero-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:220px;">
             <div id="news-live-headline" style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.1.0-beta — Authentic Claude #d9693f Animations &amp; Official Brief Code Emblem, New Brief^Ai Logo &amp; Live Touch Screen Typing
+              Brief v2.1.1-beta — Clawd Mascot Animations in Brief Code, Clean Work-Only Permissions &amp; Automatic Touch Typing
             </div>
             <div id="news-update-status" style="font-size: 12px; color: var(--text-secondary);">
-              You are on <strong>v2.1.0-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Samsung &amp; Honor).
+              You are on <strong>v2.1.1-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Samsung &amp; Honor).
             </div>
           </div>
           <div id="news-update-strip" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -7624,13 +7683,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span id="news-col-ver-label">What’s New in v2.1.0-beta</span>
+              <span id="news-col-ver-label">What’s New in v2.1.1-beta</span>
             </div>
             <ul class="news-list" id="news-live-bullets">
-              <li><strong>Authentic Claude 4-State <code class="mono">#d9693f</code> Animations &amp; Official Brief Code Mascot:</strong> Exact 8-frame hand-drawn Claude starburst for Starting/Checking, untouched <code class="mono">200×200</code> 3D Orbiting Dots for Thinking, crisp solid bouncing &amp; pulsing circles for Creating/Finding files, and Anthropic’s official Claude Code pixel mascot on Brief Code.</li>
-              <li><strong>New White-on-Black <code class="mono">brief^Ai</code> Brand Identity:</strong> Crisp white <code class="mono">brief^Ai</code> lettering on pure black fitted across Windows, Linux, Android phones &amp; tablets, website navbar, and GitHub.</li>
-              <li><strong>Live Touch Screen Typing (Recommended) vs. Keyboard Method:</strong> Highlights what Brief clicks on screen and types visibly letter-by-letter on Android tablets &amp; phones, or switch to direct Windows-style keyboard input anytime.</li>
-              <li><strong>Gemini 4 Carbon, 3.8 Flash Fix &amp; Universal <code class="mono">&lt;/&gt;</code> Live Code Card:</strong> Fast reliable Gemini 3.8 Flash &amp; 4 Carbon routing, centered Extra High thinking, 48 rotating Claude greetings, OpenAI GPT-6 Work suite, and live <code class="mono">&lt;/&gt;</code> code execution cards.</li>
+              <li><strong>Clawd Pixel Mascot GIFs in Brief Code:</strong> Added <strong>Clawd</strong> (coding on his laptop &amp; playing soccer with his ball) perched seamlessly on Brief Code’s input bar with daily/random rotation and 1-tap switching.</li>
+              <li><strong>Clean Work-Only Permission Controls Across All 4 AIs:</strong> Regular Chat mode hides permission controls completely across Gemini, OpenAI, Claude &amp; OpenRouter; Work / Brief Code / Task shows strictly <strong>Ask for permission</strong> or <strong>Full access</strong>.</li>
+              <li><strong>Automatic Built-In Touch Screen Typing + Ultra-HD <code class="mono">brief^Ai</code> Icons:</strong> Touch target highlighting &amp; live letter-by-letter touch typing work automatically under the hood alongside crisp <code class="mono">1024×1024</code> white-on-black <code class="mono">brief^Ai</code> icons.</li>
+              <li><strong>Authentic Claude 4-State <code class="mono">#d9693f</code> Animations &amp; Official Emblem:</strong> Exact 8-frame Tenor starburst, untouched <code class="mono">200×200</code> 3D Orbiting Dots, solid wave/pulse circles, and official Claude Code pixel emblem.</li>
             </ul>
           </div>
 
@@ -9391,6 +9450,31 @@
         return 'Happy ' + weekday + who + '!';
       }
 
+      const CLAWD_GIFS = [
+        { key: 'code', src: 'assets/clawd-code.gif', alt: 'Clawd coding on his laptop' },
+        { key: 'soccer', src: 'assets/clawd-soccer.gif', alt: 'Clawd playing soccer with his ball' }
+      ];
+
+      // Brief Code Clawd mascot: rotates daily & randomly between Coding on Laptop and Playing Soccer (tap Clawd to toggle anytime).
+      function renderBriefCodeClawd(forceIdx) {
+        const card = $('brief-code-clawd');
+        const img = $('brief-code-clawd-img');
+        if (!card || !img) return;
+        if (typeof forceIdx === 'number') {
+          State.clawdIdx = ((forceIdx % CLAWD_GIFS.length) + CLAWD_GIFS.length) % CLAWD_GIFS.length;
+        }
+        if (typeof State.clawdIdx !== 'number') {
+          const localDay = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+          State.clawdIdx = (localDay + Math.floor(Math.random() * CLAWD_GIFS.length)) % CLAWD_GIFS.length;
+        }
+        const pick = CLAWD_GIFS[State.clawdIdx];
+        if (card.getAttribute('data-clawd') !== pick.key || img.getAttribute('src') !== pick.src) {
+          card.setAttribute('data-clawd', pick.key);
+          img.setAttribute('src', pick.src);
+          img.setAttribute('alt', pick.alt);
+        }
+      }
+
       function renderWelcomeCodeBackdrop() {
         const codeBackdrop = $('welcome-code-backdrop');
         const geminiEcho = $('welcome-title-code-echo');
@@ -9894,6 +9978,11 @@
 
         DOM.permTriggerBtn.classList.remove('perm-full', 'perm-chat');
         DOM.permTriggerDot.className = 'selector-dot ' + perm;
+
+        // Permission choice (Ask / Full access) only belongs to Work / Brief Code / Task — never plain Chat.
+        DOM.permTriggerBtn.classList.toggle('perm-hidden-in-chat', isChat);
+        if (isChat && DOM.permPopover) DOM.permPopover.classList.remove('open');
+        renderBriefCodeClawd();
 
         if (perm === 'full') {
           DOM.permTriggerBtn.classList.add('perm-full');
@@ -12953,7 +13042,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.1.0-beta';
+      const BRIEF_NEWS_VERSION = '2.1.1-beta';
       let latestRemoteRelease = null;
 
       function parseBriefSemver(vStr) {
@@ -13823,6 +13912,14 @@
         // Brief Code / Brief Work Execution Chooser (Background vs Send Live Photos)
         $('brief-mode-bg-btn').addEventListener('click', () => setBriefWorkVisualMode('background'));
         $('brief-mode-photos-btn').addEventListener('click', () => setBriefWorkVisualMode('photos'));
+        const clawdCard = $('brief-code-clawd');
+        if (clawdCard) {
+          const swapClawd = () => renderBriefCodeClawd((State.clawdIdx || 0) + 1);
+          clawdCard.addEventListener('click', swapClawd);
+          clawdCard.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); swapClawd(); }
+          });
+        }
         $('brief-code-inline-toggle').addEventListener('click', () => {
           const cur = String((State.settings && State.settings.briefWorkVisualMode) || 'photos').toLowerCase();
           setBriefWorkVisualMode(cur === 'background' ? 'photos' : 'background');
