@@ -62,6 +62,22 @@ class CursorOverlayView(context: Context) : View(context) {
     private var rippleActive: Boolean = false
     private var clickScale: Float = 1f
 
+    // v2.1.0-beta Touch Screen Target Highlight Box & Live Keystroke Touch Pulse
+    private val touchTargetRect = RectF()
+    private var touchTargetLabel: String = ""
+    private var touchTargetStartMs: Long = 0L
+    private var touchTargetDurationMs: Long = 680L
+    private var touchTargetProgress: Float = 1f
+    private var touchTargetActive: Boolean = false
+
+    private var keyPulseX: Float = 0f
+    private var keyPulseY: Float = 0f
+    private var keyPulseChar: String = ""
+    private var keyPulseStartMs: Long = 0L
+    private var keyPulseDurationMs: Long = 190L
+    private var keyPulseProgress: Float = 1f
+    private var keyPulseActive: Boolean = false
+
     private var vsyncScheduled: Boolean = false
     private val dp = resources.displayMetrics.density
 
@@ -145,6 +161,18 @@ class CursorOverlayView(context: Context) : View(context) {
                 }
             } else {
                 clickScale = 1f
+            }
+
+            if (touchTargetActive) {
+                val rawBox = ((now - touchTargetStartMs).toFloat() / touchTargetDurationMs.toFloat()).coerceIn(0f, 1f)
+                touchTargetProgress = rawBox
+                if (rawBox >= 1f) touchTargetActive = false else keepRunning = true
+            }
+
+            if (keyPulseActive) {
+                val rawKp = ((now - keyPulseStartMs).toFloat() / keyPulseDurationMs.toFloat()).coerceIn(0f, 1f)
+                keyPulseProgress = rawKp
+                if (rawKp >= 1f) keyPulseActive = false else keepRunning = true
             }
 
             invalidate()
@@ -242,6 +270,26 @@ class CursorOverlayView(context: Context) : View(context) {
         scheduleVsync()
     }
 
+    fun triggerTouchTargetBox(left: Float, top: Float, right: Float, bottom: Float, label: String = "") {
+        val pad = 4f * dp
+        touchTargetRect.set(left - pad, top - pad, right + pad, bottom + pad)
+        touchTargetLabel = label.take(26)
+        touchTargetStartMs = SystemClock.uptimeMillis()
+        touchTargetProgress = 0f
+        touchTargetActive = true
+        scheduleVsync()
+    }
+
+    fun triggerTouchKeystroke(x: Float, y: Float, ch: String = "") {
+        keyPulseX = x
+        keyPulseY = y
+        keyPulseChar = ch.take(2)
+        keyPulseStartMs = SystemClock.uptimeMillis()
+        keyPulseProgress = 0f
+        keyPulseActive = true
+        scheduleVsync()
+    }
+
     private fun providerFrameAccent(): Int = when (provider) {
         // Matches PC cursor-overlay.html: Gemini=Blue, OpenAI=Crisp White, Claude=Orange, OpenRouter=Indigo
         ProviderId.GEMINI -> 0xFF3B82F6.toInt()
@@ -264,7 +312,34 @@ class CursorOverlayView(context: Context) : View(context) {
             drawTopControlBanner(canvas, w, accent)
         }
 
-        // 2. Target inspection reticle ("checking" before clicking)
+        // 2. Live Touch Screen Target Highlight Box (shows exact button / input Brief is clicking)
+        if (touchTargetActive && !chromeHiddenForCapture && touchTargetRect.width() > 6f && touchTargetRect.height() > 6f) {
+            val fade = (1f - touchTargetProgress * 0.78f).coerceIn(0f, 1f)
+            val fillA = (fade * 46f).toInt().coerceIn(0, 255)
+            val strokeA = (fade * 238f).toInt().coerceIn(0, 255)
+            val rx = 10f * dp
+            fillPaint.color = (accent and 0x00FFFFFF) or (fillA shl 24)
+            canvas.drawRoundRect(touchTargetRect, rx, rx, fillPaint)
+            strokePaint.color = (accent and 0x00FFFFFF) or (strokeA shl 24)
+            strokePaint.strokeWidth = (if (isTabletDevice) 2.6f else 2.1f) * dp
+            canvas.drawRoundRect(touchTargetRect, rx, rx, strokePaint)
+        }
+
+        // 2b. Live Touch Screen Keystroke Pulse (flashes touched key / caret as Brief types)
+        if (keyPulseActive && !chromeHiddenForCapture) {
+            val fade = (1f - keyPulseProgress).coerceIn(0f, 1f)
+            val kr = ((if (isTabletDevice) 18f else 14f) * dp) * (0.72f + 0.45f * keyPulseProgress)
+            fillPaint.color = (accent and 0x00FFFFFF) or ((fade * 92f).toInt().coerceIn(0, 255) shl 24)
+            canvas.drawCircle(keyPulseX, keyPulseY, kr, fillPaint)
+            rippleStrokePaint.color = (accent and 0x00FFFFFF) or ((fade * 245f).toInt().coerceIn(0, 255) shl 24)
+            canvas.drawCircle(keyPulseX, keyPulseY, kr, rippleStrokePaint)
+            if (keyPulseChar.isNotEmpty()) {
+                val tw = cursorLabelPaint.measureText(keyPulseChar)
+                canvas.drawText(keyPulseChar, keyPulseX - tw * 0.5f, keyPulseY - kr - 4f * dp, cursorLabelPaint)
+            }
+        }
+
+        // 2c. Target inspection reticle ("checking" before clicking)
         if (checkActive) {
             val baseR = (if (isTabletDevice) 16f else 12f) * dp
             val pulseR = baseR * (1.30f - 0.30f * checkProgress)

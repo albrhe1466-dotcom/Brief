@@ -63,6 +63,9 @@ class BriefAccessibilityService : AccessibilityService() {
         @Volatile
         var configuredCursorSpeedMs: Long = 560L
 
+        @Volatile
+        var configuredTouchTypingMode: String = "touch"
+
         fun isEnabled(context: Context): Boolean {
             if (instance != null) return true
             val enabled = Settings.Secure.getString(
@@ -455,10 +458,51 @@ class BriefAccessibilityService : AccessibilityService() {
         val px = DisplayUtils.normToPx(nx, w).coerceIn(4f, (w - 4).toFloat())
         val py = DisplayUtils.normToPx(ny, h).coerceIn(4f, (h - 4).toFloat())
 
+        if (!configuredTouchTypingMode.equals("keyboard", ignoreCase = true)) {
+            val hitRect = findTouchTargetBoundsAt(activeAppRoot(), px.toInt(), py.toInt(), 0)
+            if (hitRect != null && hitRect.width() in 8..(w * 9 / 10) && hitRect.height() in 8..(h / 2)) {
+                mainHandler.post {
+                    overlayView?.triggerTouchTargetBox(
+                        hitRect.left.toFloat(),
+                        hitRect.top.toFloat(),
+                        hitRect.right.toFloat(),
+                        hitRect.bottom.toFloat(),
+                        "Touch"
+                    )
+                }
+            }
+        }
+
         glideCheckAndClickVisual(px, py)
 
         val p = Path().apply { moveTo(px, py) }
         return dispatchPath(p, if (longPress) 720L else 60L)
+    }
+
+    private fun findTouchTargetBoundsAt(
+        node: AccessibilityNodeInfo?,
+        px: Int,
+        py: Int,
+        depth: Int
+    ): Rect? {
+        if (node == null || depth > 22 || !node.isVisibleToUser) return null
+        var best: Rect? = null
+        val r = Rect()
+        node.getBoundsInScreen(r)
+        if (r.contains(px, py) && (node.isClickable || node.isEditable || node.isFocusable)) {
+            best = Rect(r)
+        }
+        val count = node.childCount
+        for (i in 0 until count) {
+            val child = node.getChild(i) ?: continue
+            val sub = findTouchTargetBoundsAt(child, px, py, depth + 1)
+            if (sub != null) {
+                if (best == null || (sub.width().toLong() * sub.height().toLong()) <= (best.width().toLong() * best.height().toLong())) {
+                    best = sub
+                }
+            }
+        }
+        return best
     }
 
     suspend fun doubleTapNormalized(nx: Double, ny: Double): Boolean {
@@ -521,33 +565,68 @@ class BriefAccessibilityService : AccessibilityService() {
             return false to "No editable text box visible on screen. Tap the Search icon or input box first, then call type_text."
         }
 
+        val useTouchTyping = !configuredTouchTypingMode.equals("keyboard", ignoreCase = true)
         val rect = Rect()
         target.getBoundsInScreen(rect)
         if (rect.width() > 4 && rect.height() > 4) {
+            if (useTouchTyping) {
+                mainHandler.post {
+                    overlayView?.triggerTouchTargetBox(
+                        rect.left.toFloat(),
+                        rect.top.toFloat(),
+                        rect.right.toFloat(),
+                        rect.bottom.toFloat(),
+                        "Touch Input"
+                    )
+                }
+            }
             glideCheckAndClickVisual(rect.exactCenterX(), rect.exactCenterY())
+            if (useTouchTyping) {
+                dispatchPath(Path().apply { moveTo(rect.exactCenterX(), rect.exactCenterY()) }, 50L)
+            }
         }
         target.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
         target.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        delay(80L)
+        delay(if (useTouchTyping) 150L else 70L)
 
-        // Animate live character-by-character typing inside the PC-style cursor pill!
-        val previewLen = text.length.coerceAtMost(24)
-        if (previewLen > 0) {
-            val stepChars = (previewLen / 5).coerceAtLeast(1)
-            var idx = stepChars
-            while (idx <= previewLen) {
+        var setOk = false
+        if (useTouchTyping && text.isNotEmpty()) {
+            // Touch Screen Typing (Recommended): visibly types letter-by-letter on the touch screen & pulses touched IME keys!
+            val keyMap = collectSoftKeyboardKeys()
+            val step = if (text.length > 36) 2 else 1
+            var idx = step
+            while (idx <= text.length) {
                 val slice = text.substring(0, idx)
-                mainHandler.post { overlayView?.setTypingPreview(slice) }
-                delay(28L)
-                idx += stepChars
+                val lastCh = slice.last().toString()
+                val keyPt = keyMap[lastCh.lowercase()]
+                val caretSpan = (rect.width() - 28).coerceAtLeast(24)
+                val fallbackX = (rect.left + 14 + ((idx * 11) % caretSpan)).toFloat()
+                val kx = keyPt?.first ?: fallbackX
+                val ky = keyPt?.second ?: rect.exactCenterY()
+                mainHandler.post {
+                    overlayView?.setTypingPreview(slice)
+                    overlayView?.triggerTouchKeystroke(kx, ky, lastCh)
+                }
+                val partialArgs = Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, slice)
+                }
+                setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, partialArgs) || setOk
+                delay(52L)
+                idx += step
             }
+            val finalArgs = Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+            }
+            setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, finalArgs) || setOk
             mainHandler.post { overlayView?.setTypingPreview(text) }
+        } else {
+            // Direct Keyboard Method (Windows-Style): instant keyboard text injection
+            mainHandler.post { overlayView?.setTypingPreview(text) }
+            val args = Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+            }
+            setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
         }
-
-        val args = Bundle().apply {
-            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
-        }
-        val setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
 
         val idHint = "${target.viewIdResourceName.orEmpty()} ${target.hintText?.toString().orEmpty()} ${target.contentDescription?.toString().orEmpty()}".lowercase()
         val isSearchField = idHint.contains("search") || idHint.contains("query") || idHint.contains("url") || idHint.contains("بحث")
@@ -571,6 +650,17 @@ class BriefAccessibilityService : AccessibilityService() {
                     val sr = Rect()
                     suggestion.getBoundsInScreen(sr)
                     if (sr.width() > 4 && sr.height() > 4) {
+                        if (useTouchTyping) {
+                            mainHandler.post {
+                                overlayView?.triggerTouchTargetBox(
+                                    sr.left.toFloat(),
+                                    sr.top.toFloat(),
+                                    sr.right.toFloat(),
+                                    sr.bottom.toFloat(),
+                                    "Touch"
+                                )
+                            }
+                        }
                         glideCheckAndClickVisual(sr.exactCenterX(), sr.exactCenterY())
                         val clickedSug = clickNodeOrAncestor(suggestion)
                         if (!clickedSug) {
@@ -582,16 +672,61 @@ class BriefAccessibilityService : AccessibilityService() {
                     val (w, h) = DisplayUtils.getRealScreenSize(this)
                     val enterX = w * 0.915f
                     val enterY = h * 0.925f
+                    if (useTouchTyping) {
+                        mainHandler.post { overlayView?.triggerTouchKeystroke(enterX, enterY, "⏎") }
+                    }
                     dispatchPath(Path().apply { moveTo(enterX, enterY) }, 55L)
                 }
             }
         }
 
         return setOk to (if (setOk) {
-            if (shouldSubmit) "Typed \"$text\" and submitted search." else "Typed \"$text\" cleanly."
+            if (shouldSubmit) "Typed \"$text\" (${if (useTouchTyping) "Touch Screen" else "Keyboard"}) and submitted search."
+            else "Typed \"$text\" (${if (useTouchTyping) "Touch Screen" else "Keyboard"}) cleanly."
         } else {
             "Input field rejected SET_TEXT; try tapping the input bar first."
         })
+    }
+
+    private fun collectSoftKeyboardKeys(): Map<String, Pair<Float, Float>> {
+        val out = HashMap<String, Pair<Float, Float>>()
+        val winList = runCatching { windows }.getOrNull() ?: return out
+        for (win in winList) {
+            val isIme = win.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD
+            val root = win.root ?: continue
+            val pkg = root.packageName?.toString()?.lowercase().orEmpty()
+            if (isIme || pkg.contains("inputmethod") || pkg.contains("keyboard") || pkg.contains("honeyboard") || pkg.contains("latin")) {
+                scanImeKeysRecursive(root, out, 0)
+            }
+        }
+        return out
+    }
+
+    private fun scanImeKeysRecursive(
+        node: AccessibilityNodeInfo?,
+        out: MutableMap<String, Pair<Float, Float>>,
+        depth: Int
+    ) {
+        if (node == null || depth > 14 || !node.isVisibleToUser) return
+        val rawLbl = (node.text?.toString()?.takeIf { it.isNotBlank() } ?: node.contentDescription?.toString()).orEmpty().trim()
+        if (rawLbl.isNotEmpty()) {
+            val r = Rect()
+            node.getBoundsInScreen(r)
+            if (r.width() > 4 && r.height() > 4) {
+                val key = when {
+                    rawLbl.length == 1 -> rawLbl.lowercase()
+                    rawLbl.equals("space", true) || rawLbl.contains("space", true) || rawLbl.contains("مسافة") -> " "
+                    else -> rawLbl.take(1).lowercase()
+                }
+                if (!out.containsKey(key)) {
+                    out[key] = r.exactCenterX() to r.exactCenterY()
+                }
+            }
+        }
+        val count = node.childCount
+        for (i in 0 until count) {
+            scanImeKeysRecursive(node.getChild(i), out, depth + 1)
+        }
     }
 
     private fun clickNodeOrAncestor(node: AccessibilityNodeInfo?): Boolean {

@@ -1,36 +1,36 @@
 {
-  "version": "2.0.9-beta",
+  "version": "2.1.0-beta",
   "releasedAt": "2026-11-26",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
-  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.0.9-beta.apk",
+  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.0-beta.apk",
   "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
   "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
-  "headline": "Brief v2.0.9-beta — Gemini 4 Carbon & 3.8 Flash Fix, 48 Claude Greetings, Extra High, GPT-6 Work Suite & Live </> Code Card",
+  "headline": "Brief v2.1.0-beta — Authentic Claude #d9693f Animations & Official Brief Code Mascot, New Brief^Ai White-on-Black Logo & Live Touch Screen Typing",
   "bullets": [
-    "Gemini 4 Carbon + Fast Gemini 3.8 Flash Fix: Replaced Gemini 4 Argon with Gemini 4 Carbon, fixed Gemini 3.8 Flash streaming & thinking config handoff, and eliminated false 100% usage lockouts.",
-    "Centered Extra High Thinking & 48 Rotating Claude Greetings: Renamed Extra to Extra High centered below Low / Medium / High, and added 48 dynamic weekday & conversational Claude greetings that rotate every time.",
-    "OpenAI Chat vs. Full GPT-6 Work Suite: Auto + GPT-6.1 Terra in Chat mode, and full GPT-6 Luna, GPT-6.1 Terra, GPT-6.2 Sol & GPT-6.2 Astra selection in Work mode.",
-    "Universal Live </> Code Execution Card (Work & Chat): Sleek syntax-highlighted </> HTML / JS / CSS / PY code cards with line-wrap, live streaming ring & 1-click ▶ Execute preview across Claude, ChatGPT, Gemini & OpenRouter."
+    "Authentic Claude 4-State #d9693f Animations & Official Brief Code Logo: Exact 8-frame hand-drawn Claude starburst for Starting/Checking, untouched 200x200 3D Orbiting Dots for Thinking, crisp solid bouncing & pulsing circles for Creating/Finding files, and Anthropic's official Claude Code pixel mascot on Brief Code.",
+    "New White-on-Black brief^Ai Brand Logo Everywhere: Crisp white brief^Ai lettering on pure black fitted cleanly across Windows, Linux, Android phones & tablets, website navbar, and GitHub.",
+    "Live Touch Screen Typing (Recommended) vs. Keyboard Method: Highlights what Brief clicks on screen and types visibly letter-by-letter on Android tablets & phones, with a 1-tap option to switch to direct Windows-style keyboard input.",
+    "Gemini 4 Carbon, 3.8 Flash Fix & Universal </> Live Code Card: Fast reliable Gemini 3.8 Flash & 4 Carbon routing, centered Extra High thinking, 48 dynamic Claude greetings, OpenAI GPT-6 Work suite, and live </> code execution cards."
   ],
   "photos": [
     {
+      "src": "assets/brief-wordmark.png",
+      "tag": "New Identity · v2.1.0-beta",
+      "title": "New White-on-Black brief^Ai Brand & Official Brief Code Emblem",
+      "caption": "Brief v2.1.0-beta introduces the crisp white-on-black brief^Ai logo across PC, Android & Web alongside authentic #d9693f Claude animations."
+    },
+    {
       "src": "assets/news-v200-android.png",
-      "tag": "Android Phones & Tablets · v2.0.9-beta",
-      "title": "Gemini 4 Carbon, 3.8 Flash Fix & Clean Phone Control",
-      "caption": "Brief v2.0.9-beta — fast reliable Gemini 3.8 Flash & 4 Carbon, 48 Claude greetings, Extra High thinking, and 1-tap updates."
+      "tag": "Android Tablets & Phones · v2.1.0-beta",
+      "title": "Live Touch Screen Typing (Recommended) + Target Highlighting",
+      "caption": "See exactly what Brief touches and watch every character typed live on Honor MagicOS, Samsung One UI & all Android tablets/phones."
     },
     {
       "src": "assets/news-v200-linux.png",
-      "tag": "Windows & Linux · v2.0.9-beta",
-      "title": "Live </> Code Execution Card & GPT-6 Work Suite",
-      "caption": "Universal </> Live Code Card in Work & Chat, full GPT-6 Work family, Claude #d9693f animations & ✓ / ✕ +1 retry checklist."
-    },
-    {
-      "src": "assets/news-v107-themes.png",
-      "tag": "Provider Workspaces · v2.0.9-beta",
-      "title": "Claude Brief Code (</>), OpenAI GPT-6 & Gemini Task",
-      "caption": "Native provider workspaces, Google Sans, OpenAI Sans & Claude serif themes."
+      "tag": "Windows & Linux · v2.1.0-beta",
+      "title": "Authentic Claude #d9693f 4-State Animations & </> Live Code Card",
+      "caption": "Exact 200x200 3D Orbiting Dots, 8-frame Tenor starburst, official Brief Code mascot, Gemini 4 Carbon & GPT-6 Work suite."
     }
   ]
 }

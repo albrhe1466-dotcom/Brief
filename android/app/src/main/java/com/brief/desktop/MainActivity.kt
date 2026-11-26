@@ -217,6 +217,7 @@ class MainActivity : AppCompatActivity() {
         obj.put("thinkingLevel", vault.getThinkingLevel().wire)
         val isLargeTablet = OemCompatibilityHelper.isTablet(this) && resources.configuration.smallestScreenWidthDp >= 720
         if (!obj.has("permissionMode")) obj.put("permissionMode", "full")
+        if (!obj.has("touchTypingMode")) obj.put("touchTypingMode", "touch")
         if (!obj.has("sidebarCollapsed")) obj.put("sidebarCollapsed", !isLargeTablet)
         return obj
     }
@@ -281,7 +282,7 @@ class MainActivity : AppCompatActivity() {
 
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.0.9-beta")
+            put("version", "2.1.0-beta")
             put("firstRunRequested", false)
             put(
                 "os",
@@ -535,6 +536,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             val settingsNow = buildSettingsObject()
+            val touchTypingMode = payload.optString(
+                "touchTypingMode",
+                settingsNow.optString("touchTypingMode", "touch")
+            )
             val rawSpeed = settingsNow.optLong("cursorSpeedMs", 580L)
             val profile = settingsNow.optString("cursorSpeedProfile", "balanced").lowercase()
             val effectiveSpeedMs = when {
@@ -553,6 +558,7 @@ class MainActivity : AppCompatActivity() {
                         workMode = true,
                         workVisualMode = workVisualMode,
                         cursorSpeedMs = effectiveSpeedMs,
+                        touchTypingMode = touchTypingMode,
                         onStep = { stepTxt ->
                             emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "work").put("stepText", stepTxt))
                         },

@@ -97,12 +97,15 @@ class PhoneAgentRunner(
         workMode: Boolean,
         workVisualMode: String = "photos",
         cursorSpeedMs: Long = 560L,
+        touchTypingMode: String = "touch",
         onStep: (String) -> Unit,
         onStepItem: ((JSONObject) -> Unit)? = null,
         onPlan: ((JSONObject) -> Unit)? = null
     ): String {
         stopped = false
         BriefAccessibilityService.configuredCursorSpeedMs = cursorSpeedMs.coerceIn(220L, 1400L)
+        BriefAccessibilityService.configuredTouchTypingMode =
+            if (touchTypingMode.equals("keyboard", ignoreCase = true)) "keyboard" else "touch"
 
         val isBgVisual = workVisualMode.equals("background", ignoreCase = true)
         val provider = vault.getActiveProvider()

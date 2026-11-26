@@ -448,8 +448,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(38, 38, 38, 0.9));
-      border: 1px solid var(--border-default);
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
       margin-bottom: 6px;
       transition: transform 0.2s var(--ease-out), border-color 0.2s ease, box-shadow 0.2s ease;
     }
@@ -461,8 +462,8 @@
     }
 
     .rail-brand img {
-      width: 22px;
-      height: 22px;
+      width: 31px;
+      height: 31px;
       object-fit: contain;
     }
 
@@ -1414,21 +1415,23 @@
     }
 
     .onb-hero-ring {
-      width: 82px;
-      height: 82px;
-      border-radius: 22px;
+      width: 148px;
+      height: 70px;
+      border-radius: 18px;
+      padding: 8px 14px;
       margin: 4px auto 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, rgba(15, 23, 42, 0.05) 75%);
-      border: 1px solid rgba(96, 165, 250, 0.35);
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.24);
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 24px rgba(59, 130, 246, 0.18);
+      overflow: hidden;
     }
 
     .onb-hero-ring img {
-      width: 52px;
-      height: 52px;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
       animation: briefFloat 3s ease-in-out infinite;
     }
@@ -2456,14 +2459,14 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      width: 26px;
-      height: 26px;
-      filter: drop-shadow(0 0 3.5px rgba(217, 105, 63, 0.36));
+      width: 34px;
+      height: 34px;
+      filter: none;
     }
 
     .claude-live-anim.is-chat {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
     }
 
     .claude-live-anim svg {
@@ -2477,8 +2480,28 @@
       fill: #d9693f;
     }
 
-    .claude-live-anim line {
-      stroke: #d9693f;
+    .claude-tenor-box {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .claude-tenor-strip {
+      display: block;
+      width: 800%;
+      height: 100%;
+      max-width: none;
+      pointer-events: none;
+      user-select: none;
+      transform: translateX(0%);
+      animation: claudeTenorSteps 0.72s steps(8, end) infinite;
+    }
+
+    @keyframes claudeTenorSteps {
+      from { transform: translateX(0%); }
+      to { transform: translateX(-100%); }
     }
 
     .openai-side-moon-wrap {
@@ -5680,10 +5703,10 @@
     }
     body[data-provider="anthropic"][data-mode="work"] #brief-code-emblem {
       display: inline-flex !important;
-      width: 36px;
-      height: 36px;
-      color: #d97757;
-      filter: drop-shadow(0 0 12px rgba(217, 119, 87, 0.35));
+      width: 38px;
+      height: 38px;
+      color: #d9693f;
+      filter: none;
     }
     body[data-provider="anthropic"] .welcome-heading {
       font-family: "Newsreader", Georgia, "Times New Roman", serif !important;
@@ -6393,7 +6416,7 @@
     <aside id="sidebar" aria-label="Chats and Projects">
       <div class="sidebar-top">
         <button class="brand-switcher" id="brand-menu-btn" title="Brief Command Palette &amp; Settings">
-          <span>Brief</span>
+          <img src="assets/brief-wordmark-white.png" alt="Brief" style="height:19px;width:auto;max-width:88px;object-fit:contain;display:block;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
@@ -6602,7 +6625,7 @@
             <span id="header-update-label">Update</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.0.9-beta">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.0-beta">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -6639,7 +6662,7 @@
                 <div class="onb-slide active" id="onb-slide-0">
                   <div class="gate-header" style="margin-bottom:12px;">
                     <div class="onb-hero-ring">
-                      <img src="assets/icon.png" alt="Brief Logo">
+                      <img src="assets/brief-wordmark.png" alt="Brief Logo">
                     </div>
                     <h1 class="gate-title" style="font-size:24px;">Welcome to Brief</h1>
                     <p class="gate-subtitle" style="line-height:1.5;">
@@ -6660,8 +6683,8 @@
                 <!-- SLIDE 1: USER NAME -->
                 <div class="onb-slide" id="onb-slide-1">
                   <div class="gate-header" style="margin-bottom:16px;">
-                    <div class="onb-hero-ring" style="width:68px;height:68px;">
-                      <img src="assets/icon.png" alt="Brief Logo" style="width:42px;height:42px;">
+                    <div class="onb-hero-ring" style="width:128px;height:60px;">
+                      <img src="assets/brief-wordmark.png" alt="Brief Logo">
                     </div>
                     <h1 class="gate-title">What's your name?</h1>
                     <p class="gate-subtitle">
@@ -6749,11 +6772,9 @@
               <div id="welcome-title-code-echo" aria-hidden="true"></div>
               <div class="welcome-starburst anim-logo-reveal" id="welcome-starburst">
                 <img src="assets/gemini-logo.png" id="welcome-provider-logo" alt="Provider Logo">
-                <!-- Replicated Brief Code / Brief Work Pixel-Terminal Starburst Emblem -->
-                <svg id="brief-code-emblem" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-                  <rect x="3" y="4" width="30" height="28" rx="7" fill="#2b221e" stroke="#d97757" stroke-width="1.6"/>
-                  <path d="M18 9v18M10.2 13.5l15.6 9M25.8 13.5l-15.6 9M12.5 10.2l11 15.6M23.5 10.2l-11 15.6" stroke="#d97757" stroke-width="2.1" stroke-linecap="square"/>
-                  <circle cx="18" cy="18" r="3.1" fill="#2b221e" stroke="#f09a7d" stroke-width="1.6"/>
+                <!-- Official Anthropic Claude Code / Brief Code Mascot Emblem -->
+                <svg id="brief-code-emblem" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path fill="#d9693f" fill-rule="evenodd" clip-rule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z"/>
                 </svg>
               </div>
               <h1 class="welcome-heading" id="welcome-heading">Where should we begin?</h1>
@@ -6914,6 +6935,25 @@
               <div>
                 <div class="perm-option-title">Mode 3 · Chat only</div>
                 <div class="perm-option-desc">Pure conversation. Never touches your mouse, keyboard, files, or terminal.</div>
+              </div>
+            </button>
+
+            <div style="margin:8px 0 6px;border-top:1px solid var(--border-subtle);"></div>
+            <div class="pop-section-label">Touch Screen &amp; Typing Method</div>
+
+            <button class="touch-typing-option perm-option active" type="button" data-touch-typing="touch">
+              <span class="selector-dot full" style="margin-top: 6px; background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5);"></span>
+              <div>
+                <div class="perm-option-title">👆 Touch Screen Typing <span style="font-size:10.5px;padding:1px 6px;border-radius:999px;background:rgba(16,185,129,0.18);color:#6ee7b7;margin-left:4px;">Recommended</span></div>
+                <div class="perm-option-desc">Highlights what Brief clicks on screen &amp; types visibly letter-by-letter using touch-screen input on tablets &amp; phones.</div>
+              </div>
+            </button>
+
+            <button class="touch-typing-option perm-option" type="button" data-touch-typing="keyboard">
+              <span class="selector-dot ask" style="margin-top: 6px;"></span>
+              <div>
+                <div class="perm-option-title">⌨️ Keyboard Method (Windows-Style)</div>
+                <div class="perm-option-desc">Direct instant keyboard text injection without per-character touch-screen taps.</div>
               </div>
             </button>
           </div>
@@ -7382,6 +7422,13 @@
                   </select>
                 </div>
                 <div class="field-group">
+                  <label class="field-label" for="opt-touch-typing-mode">Touch Screen vs. Keyboard Typing</label>
+                  <select class="select-input" id="opt-touch-typing-mode">
+                    <option value="touch">👆 Touch Screen Typing (Recommended — Live Touch &amp; Letters)</option>
+                    <option value="keyboard">⌨️ Keyboard Method (Direct Windows-Style Input)</option>
+                  </select>
+                </div>
+                <div class="field-group">
                   <label class="field-label" for="opt-cursor-speed">Base Glide Timing (ms)</label>
                   <input class="text-input mono" id="opt-cursor-speed" type="number" min="0" max="1500">
                 </div>
@@ -7559,9 +7606,9 @@
     <div class="modal-box news-modal" id="modal-whats-new" role="dialog" aria-modal="true" aria-labelledby="whats-new-title">
       <div class="modal-head">
         <div class="modal-title" id="whats-new-title">
-          <img src="assets/logo.png" alt="" style="width: 22px; height: 22px;">
+          <img src="assets/logo.png" alt="" style="width: 24px; height: 24px; border-radius: 5px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill" id="news-live-version-pill">News · v2.0.9-beta</span>
+          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.0-beta</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -7569,10 +7616,10 @@
         <div class="news-hero-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:220px;">
             <div id="news-live-headline" style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.0.9-beta — Gemini 4 Carbon &amp; 3.8 Flash Fix, 48 Claude Greetings, Extra High &amp; OpenAI GPT-6 Work Suite
+              Brief v2.1.0-beta — Authentic Claude #d9693f Animations &amp; Official Brief Code Emblem, New Brief^Ai Logo &amp; Live Touch Screen Typing
             </div>
             <div id="news-update-status" style="font-size: 12px; color: var(--text-secondary);">
-              You are on <strong>v2.0.9-beta</strong> · Live global update &amp; news sync active for Android (Samsung &amp; Honor) &amp; PC.
+              You are on <strong>v2.1.0-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Samsung &amp; Honor).
             </div>
           </div>
           <div id="news-update-strip" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -7611,13 +7658,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span id="news-col-ver-label">What’s New in v2.0.9-beta</span>
+              <span id="news-col-ver-label">What’s New in v2.1.0-beta</span>
             </div>
             <ul class="news-list" id="news-live-bullets">
-              <li><strong>Gemini 4 Carbon + Fast Gemini 3.8 Flash Fix:</strong> Replaced Gemini 4 Argon with <strong>Gemini 4 Carbon</strong>, fixed Gemini 3.8 Flash streaming &amp; thinking config handoff, and eliminated false 100% usage lockouts on free-tier Pro endpoints.</li>
-              <li><strong>Centered Extra High Thinking &amp; 48 Rotating Claude Greetings:</strong> Renamed Extra to <strong>Extra High</strong> centered below Low / Medium / High, and added 48 dynamic weekday &amp; conversational Claude greetings that rotate every time.</li>
-              <li><strong>OpenAI Chat vs. Full GPT-6 Work Suite:</strong> Streamlined <code class="mono">Auto</code> + <code class="mono">GPT-6.1 Terra</code> in Chat mode, and full <code class="mono">GPT-6 Luna</code>, <code class="mono">GPT-6.1 Terra</code>, <code class="mono">GPT-6.2 Sol</code> &amp; <code class="mono">GPT-6.2 Astra</code> selection in Work mode.</li>
-              <li><strong>Provider Live Animations &amp; 4–5 Step Auto-Retry Checklist:</strong> Claude 4-state <code class="mono">#d9693f</code> animations, OpenAI side moon, Gemini/OpenRouter shimmer, and <strong>✓</strong> / <strong>✕</strong> +1 retry step checklist.</li>
+              <li><strong>Authentic Claude 4-State <code class="mono">#d9693f</code> Animations &amp; Official Brief Code Mascot:</strong> Exact 8-frame hand-drawn Claude starburst for Starting/Checking, untouched <code class="mono">200×200</code> 3D Orbiting Dots for Thinking, crisp solid bouncing &amp; pulsing circles for Creating/Finding files, and Anthropic’s official Claude Code pixel mascot on Brief Code.</li>
+              <li><strong>New White-on-Black <code class="mono">brief^Ai</code> Brand Identity:</strong> Crisp white <code class="mono">brief^Ai</code> lettering on pure black fitted across Windows, Linux, Android phones &amp; tablets, website navbar, and GitHub.</li>
+              <li><strong>Live Touch Screen Typing (Recommended) vs. Keyboard Method:</strong> Highlights what Brief clicks on screen and types visibly letter-by-letter on Android tablets &amp; phones, or switch to direct Windows-style keyboard input anytime.</li>
+              <li><strong>Gemini 4 Carbon, 3.8 Flash Fix &amp; Universal <code class="mono">&lt;/&gt;</code> Live Code Card:</strong> Fast reliable Gemini 3.8 Flash &amp; 4 Carbon routing, centered Extra High thinking, 48 rotating Claude greetings, OpenAI GPT-6 Work suite, and live <code class="mono">&lt;/&gt;</code> code execution cards.</li>
             </ul>
           </div>
 
@@ -7852,6 +7899,7 @@
           screenshotMaxWidth: 3840,
           displayTarget: 'primary',
           typingDelayMs: 42,
+          touchTypingMode: 'touch',
           cursorSpeedMs: 200,
           cursorSpeedProfile: 'adaptive',
           alignCursorBack: true,
@@ -8787,10 +8835,8 @@
             }
           });
           workRow.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M5 7h14M6 4h12"></path>' +
-            '<rect x="3" y="10" width="18" height="10" rx="2.2"></rect>' +
-            '<path d="M9.5 14.5h5"></path>' +
+            '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+            '<path fill="#d9693f" fill-rule="evenodd" clip-rule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z"></path>' +
             '</svg>' +
             '<span>Brief Work</span>';
           DOM.pinnedList.appendChild(workRow);
@@ -9893,8 +9939,12 @@
           DOM.permTriggerLabel.textContent = 'Ask for permission';
         }
 
-        document.querySelectorAll('.perm-option').forEach((btn) => {
+        document.querySelectorAll('.perm-option[data-perm]').forEach((btn) => {
           btn.classList.toggle('active', btn.dataset.perm === perm);
+        });
+        const curTouchMode = (State.settings && State.settings.touchTypingMode === 'keyboard') ? 'keyboard' : 'touch';
+        document.querySelectorAll('.touch-typing-option').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.touchTyping === curTouchMode);
         });
 
         if (State.provider === 'anthropic' && !isChat) {
@@ -10506,31 +10556,32 @@
 
       function buildClaudeAnimSvgHtml(animKind) {
         if (animKind === 'start') {
-          let lines = '';
-          for (let k = 0; k < 12; k++) {
-            lines += '<line class="claude-petal" data-petal="' + k + '" x1="50" y1="41" x2="50" y2="16" stroke="#d9693f" stroke-width="6.8" stroke-linecap="round"/>';
-          }
-          return '<svg viewBox="0 0 100 100" role="img" aria-label="Starting and checking"><g class="claude-petal-group">' + lines + '</g></svg>';
+          // Exact 8-frame organic hand-drawn Claude starburst from Tenor GIF in pure #d9693f
+          return '<span class="claude-tenor-box" role="img" aria-label="Starting and checking">' +
+            '<img class="claude-tenor-strip" src="assets/claude-starburst-sprite.png" alt="">' +
+            '</span>';
         }
         if (animKind === 'file-create') {
-          return '<svg viewBox="0 0 120 64" role="img" aria-label="Creating file">' +
-            '<circle class="claude-wave-dot" data-dot="0" cx="28" cy="32" r="8.2" fill="#d9693f"/>' +
-            '<circle class="claude-wave-dot" data-dot="1" cx="60" cy="32" r="8.2" fill="#d9693f"/>' +
-            '<circle class="claude-wave-dot" data-dot="2" cx="92" cy="32" r="8.2" fill="#d9693f"/>' +
+          // Exact Vecteezy 61736284: 3 bold solid #d9693f circles bouncing in a vertical wave
+          return '<svg viewBox="0 0 200 100" role="img" aria-label="Creating file">' +
+            '<circle class="claude-wave-dot" cx="42" cy="50" r="17.5" fill="#d9693f"/>' +
+            '<circle class="claude-wave-dot" cx="100" cy="50" r="17.5" fill="#d9693f"/>' +
+            '<circle class="claude-wave-dot" cx="158" cy="50" r="17.5" fill="#d9693f"/>' +
             '</svg>';
         }
         if (animKind === 'file-find') {
-          return '<svg viewBox="0 0 120 64" role="img" aria-label="Finding file or validating">' +
-            '<circle class="claude-pulse-dot" data-dot="0" cx="28" cy="32" r="7" fill="#d9693f"/>' +
-            '<circle class="claude-pulse-dot" data-dot="1" cx="60" cy="32" r="7" fill="#d9693f"/>' +
-            '<circle class="claude-pulse-dot" data-dot="2" cx="92" cy="32" r="7" fill="#d9693f"/>' +
+          // Exact Vecteezy 61736285: 3 bold solid #d9693f circles shrinking & expanding in a wave
+          return '<svg viewBox="0 0 200 100" role="img" aria-label="Finding file or validating">' +
+            '<circle class="claude-pulse-dot" cx="42" cy="50" r="14" fill="#d9693f"/>' +
+            '<circle class="claude-pulse-dot" cx="100" cy="50" r="14" fill="#d9693f"/>' +
+            '<circle class="claude-pulse-dot" cx="158" cy="50" r="14" fill="#d9693f"/>' +
             '</svg>';
         }
-        // Default 'orbit': Exact 3D Orbiting Dots HTML/SVG formula in #d9693f
-        return '<svg viewBox="16 16 168 168" role="img" aria-label="Thinking">' +
-          '<circle class="claude-orbit-dot" data-dot="0" cx="100" cy="100" r="8" fill="#d9693f"/>' +
-          '<circle class="claude-orbit-dot" data-dot="1" cx="100" cy="100" r="8" fill="#d9693f"/>' +
-          '<circle class="claude-orbit-dot" data-dot="2" cx="100" cy="100" r="8" fill="#d9693f"/>' +
+        // Exact untouched user sample: <svg viewBox="0 0 200 200" role="img" aria-label="Loading"> with 3 r="8" #d9693f dots
+        return '<svg viewBox="0 0 200 200" role="img" aria-label="Loading">' +
+          '<circle class="claude-orbit-dot" r="8"/>' +
+          '<circle class="claude-orbit-dot" r="8"/>' +
+          '<circle class="claude-orbit-dot" r="8"/>' +
           '</svg>';
       }
 
@@ -10551,7 +10602,7 @@
           return;
         }
 
-        // 1. Animate Claude 4-state #d9693f SVGs
+        // 1. Animate Claude 4-state #d9693f indicators
         const a = 70, b = 26, cx = 100, cy = 100;
         const base = [-30, 30, 90], drift = [11, -8, 13], speeds = [1.5, 1.1, 1.9];
         for (let eIdx = 0; eIdx < claudeEls.length; eIdx++) {
@@ -10573,41 +10624,20 @@
               d.setAttribute('r', (5.5 + depth * 4.5).toFixed(2));
               d.setAttribute('opacity', (0.55 + depth * 0.45).toFixed(2));
             }
-          } else if (kind === 'start') {
-            const grp = el.querySelector('.claude-petal-group');
-            if (grp) {
-              const spinDeg = (ms * 0.072) % 360;
-              grp.setAttribute('transform', 'rotate(' + spinDeg.toFixed(1) + ' 50 50)');
-            }
-            const petals = el.querySelectorAll('.claude-petal');
-            for (let k = 0; k < petals.length; k++) {
-              const ang = (k * 30) * Math.PI / 180;
-              const wave = (Math.sin(ms / 1000 * CLAUDE_PETAL_SPEEDS[k % 12] + CLAUDE_PETAL_PHASES[k % 12]) + 1) / 2;
-              const rIn = 8.5;
-              const rOut = 21 + wave * 18.5;
-              const sinA = Math.sin(ang);
-              const cosA = -Math.cos(ang);
-              const p = petals[k];
-              p.setAttribute('x1', (50 + sinA * rIn).toFixed(2));
-              p.setAttribute('y1', (50 + cosA * rIn).toFixed(2));
-              p.setAttribute('x2', (50 + sinA * rOut).toFixed(2));
-              p.setAttribute('y2', (50 + cosA * rOut).toFixed(2));
-              p.setAttribute('opacity', (0.72 + wave * 0.28).toFixed(2));
-            }
           } else if (kind === 'file-create') {
             const wDots = el.querySelectorAll('.claude-wave-dot');
             for (let i = 0; i < wDots.length; i++) {
-              const ph = ms / 1000 * 5.4 - i * 0.95;
-              const wy = 33 - Math.sin(ph) * 13.5;
+              const ph = ms / 1000 * 5.2 - i * 0.95;
+              const wy = 50 - Math.sin(ph) * 19;
               wDots[i].setAttribute('cy', wy.toFixed(2));
-              wDots[i].setAttribute('opacity', (0.78 + 0.22 * ((Math.sin(ph) + 1) / 2)).toFixed(2));
+              wDots[i].setAttribute('opacity', '1');
             }
           } else if (kind === 'file-find') {
             const pDots = el.querySelectorAll('.claude-pulse-dot');
             for (let i = 0; i < pDots.length; i++) {
               const wave = (Math.sin(ms / 1000 * 4.6 - i * 1.05) + 1) / 2;
-              pDots[i].setAttribute('r', (3.8 + wave * 6.4).toFixed(2));
-              pDots[i].setAttribute('opacity', (0.45 + wave * 0.55).toFixed(2));
+              pDots[i].setAttribute('r', (8.0 + wave * 12.5).toFixed(2));
+              pDots[i].setAttribute('opacity', (0.72 + wave * 0.28).toFixed(2));
             }
           }
         }
@@ -11724,7 +11754,8 @@
               attachments,
               webSearch,
               screenShare: activeShare,
-              workVisualMode: (State.settings && State.settings.briefWorkVisualMode) || 'photos'
+              workVisualMode: (State.settings && State.settings.briefWorkVisualMode) || 'photos',
+              touchTypingMode: (State.settings && State.settings.touchTypingMode) || 'touch'
             });
             const finalTxt = String(res.text || '');
             assistantMsg.model = res.model || assistantMsg.model;
@@ -12739,6 +12770,7 @@
         $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 0;
         $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 25;
         $('opt-cursor-speed-profile').value = State.settings.cursorSpeedProfile || 'adaptive';
+        $('opt-touch-typing-mode').value = State.settings.touchTypingMode || 'touch';
         $('opt-cursor-speed').value = State.settings.cursorSpeedMs !== undefined ? State.settings.cursorSpeedMs : 200;
         $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 120;
 
@@ -12960,7 +12992,7 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.0.9-beta';
+      const BRIEF_NEWS_VERSION = '2.1.0-beta';
       let latestRemoteRelease = null;
 
       function parseBriefSemver(vStr) {
@@ -13975,8 +14007,37 @@
         document.querySelectorAll('.thinking-tier-btn').forEach((btn) => {
           btn.addEventListener('click', () => setThinkingLevel(btn.dataset.thinking));
         });
+        function syncTouchTypingModeUI() {
+          const curMode = (State.settings && State.settings.touchTypingMode === 'keyboard') ? 'keyboard' : 'touch';
+          document.querySelectorAll('.touch-typing-option').forEach((b) => {
+            b.classList.toggle('active', b.dataset.touchTyping === curMode);
+          });
+          const sel = $('opt-touch-typing-mode');
+          if (sel) sel.value = curMode;
+        }
+        syncTouchTypingModeUI();
+
+        async function setTouchTypingMode(mode) {
+          const clean = mode === 'keyboard' ? 'keyboard' : 'touch';
+          State.settings.touchTypingMode = clean;
+          syncTouchTypingModeUI();
+          if (api && api.updateSettings) await api.updateSettings({ touchTypingMode: clean }).catch(() => {});
+          showToast(
+            clean === 'touch'
+              ? '👆 Touch Screen Typing active — highlights clicks & types letter-by-letter live'
+              : '⌨️ Direct Keyboard Method active — instant Windows-style text input',
+            'ok'
+          );
+        }
+
         document.querySelectorAll('.perm-option').forEach((btn) => {
-          btn.addEventListener('click', () => requestPermissionChange(btn.dataset.perm));
+          btn.addEventListener('click', () => {
+            if (btn.dataset.touchTyping) {
+              setTouchTypingMode(btn.dataset.touchTyping);
+            } else if (btn.dataset.perm) {
+              requestPermissionChange(btn.dataset.perm);
+            }
+          });
         });
 
         // Action Log Drawer
@@ -14171,6 +14232,15 @@
         $('opt-cursor-speed-profile').addEventListener('change', async (e) => {
           State.settings.cursorSpeedProfile = e.target.value;
           if (api && api.updateSettings) await api.updateSettings({ cursorSpeedProfile: e.target.value }).catch(() => {});
+        });
+
+        $('opt-touch-typing-mode').addEventListener('change', async (e) => {
+          const clean = e.target.value === 'keyboard' ? 'keyboard' : 'touch';
+          State.settings.touchTypingMode = clean;
+          document.querySelectorAll('.touch-typing-option').forEach((b) => {
+            b.classList.toggle('active', b.dataset.touchTyping === clean);
+          });
+          if (api && api.updateSettings) await api.updateSettings({ touchTypingMode: clean }).catch(() => {});
         });
 
         $('opt-display-target').addEventListener('change', async (e) => {
