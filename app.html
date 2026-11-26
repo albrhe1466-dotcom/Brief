@@ -6929,33 +6929,6 @@
                 <div class="perm-option-desc">Acts without asking on every step. Requires red warning confirmation first. Permanent deletion ALWAYS asks.</div>
               </div>
             </button>
-
-            <button class="perm-option" type="button" data-perm="chat">
-              <span class="selector-dot chat" style="margin-top: 6px;"></span>
-              <div>
-                <div class="perm-option-title">Mode 3 · Chat only</div>
-                <div class="perm-option-desc">Pure conversation. Never touches your mouse, keyboard, files, or terminal.</div>
-              </div>
-            </button>
-
-            <div style="margin:8px 0 6px;border-top:1px solid var(--border-subtle);"></div>
-            <div class="pop-section-label">Touch Screen &amp; Typing Method</div>
-
-            <button class="touch-typing-option perm-option active" type="button" data-touch-typing="touch">
-              <span class="selector-dot full" style="margin-top: 6px; background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5);"></span>
-              <div>
-                <div class="perm-option-title">👆 Touch Screen Typing <span style="font-size:10.5px;padding:1px 6px;border-radius:999px;background:rgba(16,185,129,0.18);color:#6ee7b7;margin-left:4px;">Recommended</span></div>
-                <div class="perm-option-desc">Highlights what Brief clicks on screen &amp; types visibly letter-by-letter using touch-screen input on tablets &amp; phones.</div>
-              </div>
-            </button>
-
-            <button class="touch-typing-option perm-option" type="button" data-touch-typing="keyboard">
-              <span class="selector-dot ask" style="margin-top: 6px;"></span>
-              <div>
-                <div class="perm-option-title">⌨️ Keyboard Method (Windows-Style)</div>
-                <div class="perm-option-desc">Direct instant keyboard text injection without per-character touch-screen taps.</div>
-              </div>
-            </button>
           </div>
 
           <button type="button" id="android-perm-banner">
@@ -7419,13 +7392,6 @@
                     <option value="slow">Slow (High-precision careful glide)</option>
                     <option value="medium">Medium (Balanced steady glide)</option>
                     <option value="fast">Fast (Quick responsive travel)</option>
-                  </select>
-                </div>
-                <div class="field-group">
-                  <label class="field-label" for="opt-touch-typing-mode">Touch Screen vs. Keyboard Typing</label>
-                  <select class="select-input" id="opt-touch-typing-mode">
-                    <option value="touch">👆 Touch Screen Typing (Recommended — Live Touch &amp; Letters)</option>
-                    <option value="keyboard">⌨️ Keyboard Method (Direct Windows-Style Input)</option>
                   </select>
                 </div>
                 <div class="field-group">
@@ -9942,10 +9908,6 @@
         document.querySelectorAll('.perm-option[data-perm]').forEach((btn) => {
           btn.classList.toggle('active', btn.dataset.perm === perm);
         });
-        const curTouchMode = (State.settings && State.settings.touchTypingMode === 'keyboard') ? 'keyboard' : 'touch';
-        document.querySelectorAll('.touch-typing-option').forEach((btn) => {
-          btn.classList.toggle('active', btn.dataset.touchTyping === curTouchMode);
-        });
 
         if (State.provider === 'anthropic' && !isChat) {
           DOM.welcomeModeSub.textContent = 'Brief Code (Brief Work) is active — choose whether Brief works silently behind the background or sends live photos of what it is doing right now.';
@@ -11755,7 +11717,7 @@
               webSearch,
               screenShare: activeShare,
               workVisualMode: (State.settings && State.settings.briefWorkVisualMode) || 'photos',
-              touchTypingMode: (State.settings && State.settings.touchTypingMode) || 'touch'
+              touchTypingMode: 'touch'
             });
             const finalTxt = String(res.text || '');
             assistantMsg.model = res.model || assistantMsg.model;
@@ -12770,7 +12732,6 @@
         $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 0;
         $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 25;
         $('opt-cursor-speed-profile').value = State.settings.cursorSpeedProfile || 'adaptive';
-        $('opt-touch-typing-mode').value = State.settings.touchTypingMode || 'touch';
         $('opt-cursor-speed').value = State.settings.cursorSpeedMs !== undefined ? State.settings.cursorSpeedMs : 200;
         $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 120;
 
@@ -14007,37 +13968,9 @@
         document.querySelectorAll('.thinking-tier-btn').forEach((btn) => {
           btn.addEventListener('click', () => setThinkingLevel(btn.dataset.thinking));
         });
-        function syncTouchTypingModeUI() {
-          const curMode = (State.settings && State.settings.touchTypingMode === 'keyboard') ? 'keyboard' : 'touch';
-          document.querySelectorAll('.touch-typing-option').forEach((b) => {
-            b.classList.toggle('active', b.dataset.touchTyping === curMode);
-          });
-          const sel = $('opt-touch-typing-mode');
-          if (sel) sel.value = curMode;
-        }
-        syncTouchTypingModeUI();
-
-        async function setTouchTypingMode(mode) {
-          const clean = mode === 'keyboard' ? 'keyboard' : 'touch';
-          State.settings.touchTypingMode = clean;
-          syncTouchTypingModeUI();
-          if (api && api.updateSettings) await api.updateSettings({ touchTypingMode: clean }).catch(() => {});
-          showToast(
-            clean === 'touch'
-              ? '👆 Touch Screen Typing active — highlights clicks & types letter-by-letter live'
-              : '⌨️ Direct Keyboard Method active — instant Windows-style text input',
-            'ok'
-          );
-        }
-
-        document.querySelectorAll('.perm-option').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            if (btn.dataset.touchTyping) {
-              setTouchTypingMode(btn.dataset.touchTyping);
-            } else if (btn.dataset.perm) {
-              requestPermissionChange(btn.dataset.perm);
-            }
-          });
+        // Touch Screen Typing is built in and always automatic (no selector shown to the user).
+        document.querySelectorAll('.perm-option[data-perm]').forEach((btn) => {
+          btn.addEventListener('click', () => requestPermissionChange(btn.dataset.perm));
         });
 
         // Action Log Drawer
@@ -14232,15 +14165,6 @@
         $('opt-cursor-speed-profile').addEventListener('change', async (e) => {
           State.settings.cursorSpeedProfile = e.target.value;
           if (api && api.updateSettings) await api.updateSettings({ cursorSpeedProfile: e.target.value }).catch(() => {});
-        });
-
-        $('opt-touch-typing-mode').addEventListener('change', async (e) => {
-          const clean = e.target.value === 'keyboard' ? 'keyboard' : 'touch';
-          State.settings.touchTypingMode = clean;
-          document.querySelectorAll('.touch-typing-option').forEach((b) => {
-            b.classList.toggle('active', b.dataset.touchTyping === clean);
-          });
-          if (api && api.updateSettings) await api.updateSettings({ touchTypingMode: clean }).catch(() => {});
         });
 
         $('opt-display-target').addEventListener('change', async (e) => {
