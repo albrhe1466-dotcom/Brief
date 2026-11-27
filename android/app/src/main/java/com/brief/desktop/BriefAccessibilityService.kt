@@ -921,7 +921,7 @@ class BriefAccessibilityService : AccessibilityService() {
             val r = Rect()
             node.getBoundsInScreen(r)
             val resId = node.viewIdResourceName?.substringAfterLast('/')?.lowercase().orEmpty()
-            val desc = "${node.text.orEmpty()} ${node.contentDescription.orEmpty()}".lowercase()
+            val desc = "${node.text?.toString().orEmpty()} ${node.contentDescription?.toString().orEmpty()}".lowercase()
             val isHideOrSwitch = desc.contains("hide") || desc.contains("switch") || desc.contains("language") ||
                 desc.contains("delete") || desc.contains("backspace") || resId.contains("backspace") || resId.contains("delete")
             if (!isHideOrSwitch &&

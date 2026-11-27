@@ -69,6 +69,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = Color.parseColor("#090A0D")
         window.navigationBarColor = Color.parseColor("#090A0D")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
 
         vault = ApiKeyVault(this)
         uiPrefs = getSharedPreferences("brief_ui_state_v201", Context.MODE_PRIVATE)
