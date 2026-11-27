@@ -1,6 +1,7 @@
 {
   "version": "2.1.1-beta",
-  "releasedAt": "2026-11-26",
+  "build": 216,
+  "releasedAt": "2026-11-27",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
   "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.1-beta.apk",

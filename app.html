@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="only dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://appassets.androidplatform.net; img-src 'self' https://appassets.androidplatform.net data: blob:; style-src 'self' 'unsafe-inline' https://appassets.androidplatform.net https://fonts.googleapis.com; font-src 'self' data: https://appassets.androidplatform.net https://fonts.gstatic.com; connect-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://appassets.androidplatform.net;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://appassets.androidplatform.net; img-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://raw.githubusercontent.com data: blob:; style-src 'self' 'unsafe-inline' https://appassets.androidplatform.net https://fonts.googleapis.com; font-src 'self' data: https://appassets.androidplatform.net https://fonts.gstatic.com; connect-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://raw.githubusercontent.com https://api.github.com https://github.com https://objects.githubusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://appassets.androidplatform.net;">
   <title>Brief</title>
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -7841,6 +7841,7 @@
           saveChatsData: async (data) => { window.BriefAndroidBridge.saveChatsJson(JSON.stringify(data || {})); return { ok: true }; },
           getDiagnostics: async () => JSON.parse(window.BriefAndroidBridge.getDiagnosticsJson()),
           openPhoneSetup: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true }; },
+          checkRemoteUpdate: () => callAndroidAsync('checkRemoteUpdateAsync', {}),
           startAndroidUpdate: async (apkUrl, ver) => JSON.parse(window.BriefAndroidBridge.startAndroidApkUpdateJson(String(apkUrl || ''), String(ver || ''))),
           testAutomation: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true, detail: 'Opened Zero-Root Phone Control Setup.' }; },
           testOverlay: async () => { window.BriefAndroidBridge.openPhoneSetupDialog(); return { ok: true, detail: 'Opened Floating Provider Cursor Setup.' }; },
@@ -7874,7 +7875,8 @@
           onSettingsChanged: (fn) => subAndroid('settings:changed', fn),
           onModelsUpdated: (fn) => subAndroid('models:updated', fn),
           onMcpUpdated: (fn) => subAndroid('mcp:updated', fn),
-          onCursorEvent: (fn) => subAndroid('cursor:event', fn)
+          onCursorEvent: (fn) => subAndroid('cursor:event', fn),
+          onUpdateProgress: (fn) => subAndroid('update:progress', fn)
         };
       }
 
@@ -13043,7 +13045,30 @@
       ==================================================================== */
 
       const BRIEF_NEWS_VERSION = '2.1.1-beta';
+      const BRIEF_BUILD_NUMBER = 216;
       let latestRemoteRelease = null;
+
+      if (api && api.onUpdateProgress) {
+        api.onUpdateProgress((prog) => {
+          const stEl = $('news-update-status');
+          if (!stEl || !prog) return;
+          const pct = Number(prog.percent) || 0;
+          const ver = String(prog.version || BRIEF_NEWS_VERSION);
+          if (prog.done) {
+            stEl.innerHTML = '✅ <strong>Brief v' + escapeHtml(ver) + ' downloaded!</strong> Tap <strong>Update</strong> on the Android system prompt.';
+          } else {
+            stEl.innerHTML = '⬇️ Downloading <strong>Brief v' + escapeHtml(ver) + '</strong>… <strong>' + pct + '%</strong>';
+          }
+        });
+      }
+
+      function getInstalledBriefVersion() {
+        return String(State.installedVersion || BRIEF_NEWS_VERSION).trim().replace(/^v/i, '');
+      }
+
+      function getInstalledBriefBuild() {
+        return Number(State.installedBuild) || BRIEF_BUILD_NUMBER;
+      }
 
       function parseBriefSemver(vStr) {
         const raw = String(vStr || '').trim().replace(/^v/i, '');
@@ -13102,13 +13127,13 @@
           (State.os && State.os.platform === 'android');
         const isLinux = !isAndroid && State.os && State.os.platform === 'linux';
 
-        const apkUrl = rel.apkUrl || 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk';
+        const apkUrl = rel.apkUrl || ('https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v' + targetVer + '.apk');
         const winUrl = rel.winUrl || 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe';
         const linuxUrl = rel.linuxDebUrl || 'https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb';
 
         const statusEl = $('news-update-status');
         if (isAndroid) {
-          if (statusEl) statusEl.textContent = 'Downloading Brief v' + targetVer + ' APK… Tap "Update" when Android prompts!';
+          if (statusEl) statusEl.textContent = 'Downloading Brief v' + targetVer + ' APK… Android will open the Update prompt automatically!';
           if (api && api.startAndroidUpdate) {
             await api.startAndroidUpdate(apkUrl, targetVer).catch(() => {});
           } else if (api && api.openExternal) {
@@ -13153,17 +13178,33 @@
         }
         try {
           let feed = null;
-          for (const feedUrl of [
-            'https://albrhe1466-dotcom.github.io/Brief/news.json?t=' + Date.now(),
-            'https://raw.githubusercontent.com/albrhe1466-dotcom/Brief/main/news.json?t=' + Date.now()
-          ]) {
+          // 1. Prefer native OS HTTP check (bypasses all WebView/browser caches & CSP)
+          if (api && api.checkRemoteUpdate) {
             try {
-              const resp = await fetch(feedUrl, { cache: 'no-store' });
-              if (resp.ok) {
-                feed = await resp.json();
-                if (feed && feed.version) break;
+              const nativeFeed = await api.checkRemoteUpdate();
+              if (nativeFeed && nativeFeed.version) {
+                feed = nativeFeed;
               }
-            } catch (_) { /* try next feed source */ }
+            } catch (_) { /* fall back to direct fetch */ }
+          }
+
+          // 2. Direct uncached fetch across raw GitHub, GitHub Pages, and GitHub Releases API
+          if (!feed || !feed.version) {
+            for (const feedUrl of [
+              'https://raw.githubusercontent.com/albrhe1466-dotcom/Brief/main/news.json?t=' + Date.now(),
+              'https://albrhe1466-dotcom.github.io/Brief/news.json?t=' + Date.now()
+            ]) {
+              try {
+                const resp = await fetch(feedUrl, { cache: 'no-store' });
+                if (resp.ok) {
+                  const parsed = await resp.json();
+                  if (parsed && parsed.version) {
+                    feed = parsed;
+                    break;
+                  }
+                }
+              } catch (_) { /* try next feed source */ }
+            }
           }
 
           try {
@@ -13197,12 +13238,15 @@
           } catch (_) { /* offline */ }
 
           if (!feed || !feed.version) {
-            if (manualCheck) showToast('Could not reach update server — check internet connection.', 'warn');
+            if (manualCheck) showToast('Could not reach GitHub update server — check internet connection.', 'warn');
             return;
           }
 
+          const localVer = getInstalledBriefVersion();
+          const localBuild = getInstalledBriefBuild();
           const remoteVer = String(feed.version).replace(/^v/i, '');
-          const newer = isRemoteVersionNewer(remoteVer, BRIEF_NEWS_VERSION);
+          const remoteBuild = Number(feed.build) || 0;
+          const newer = isRemoteVersionNewer(remoteVer, localVer) || (remoteVer === localVer && remoteBuild > localBuild);
           const isAndroid = document.documentElement.getAttribute('data-platform') === 'android' ||
             (State.os && State.os.platform === 'android');
 
@@ -13231,18 +13275,16 @@
             const stEl = $('news-update-status');
             if (stEl) {
               stEl.innerHTML = isAndroid
-                ? '<strong style="color:#6ee7b7;">Update Required for Samsung, Honor &amp; Android:</strong> New version <strong>v' + escapeHtml(remoteVer) + '</strong> is ready — tap Update Now to install straight over v' + escapeHtml(BRIEF_NEWS_VERSION) + '!'
+                ? '<strong style="color:#6ee7b7;">Update Required for Samsung, Honor &amp; Android:</strong> New version <strong>v' + escapeHtml(remoteVer) + '</strong> is ready — tap Update Now to install straight over v' + escapeHtml(localVer) + '!'
                 : '<strong style="color:#6ee7b7;">New Update Available:</strong> Brief <strong>v' + escapeHtml(remoteVer) + '</strong> is ready to download and install!';
             }
             const closeX = $('whats-new-close-x');
             if (closeX) closeX.style.display = '';
-            if (State.ui.activeView !== 'key-gate') {
-              openWhatsNewModal();
-            }
+            openWhatsNewModal();
           } else if (manualCheck) {
             const stEl = $('news-update-status');
-            if (stEl) stEl.innerHTML = '✅ You are running the latest version (<strong>v' + escapeHtml(BRIEF_NEWS_VERSION) + '</strong>).';
-            showToast('Brief v' + BRIEF_NEWS_VERSION + ' is up to date!', 'ok');
+            if (stEl) stEl.innerHTML = '✅ You are running the latest version (<strong>v' + escapeHtml(localVer) + '</strong>).';
+            showToast('Brief v' + localVer + ' is up to date!', 'ok');
           }
         } catch (_) {
           /* offline or sandboxed */
@@ -13253,8 +13295,11 @@
           }
         }
       }
-      setTimeout(() => checkGlobalNewsFeed(false), 2000);
-      setInterval(() => checkGlobalNewsFeed(false), 10 * 60 * 1000);
+      setTimeout(() => checkGlobalNewsFeed(false), 900);
+      setInterval(() => checkGlobalNewsFeed(false), 5 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkGlobalNewsFeed(false);
+      });
 
       function openModal(id) {
         State.ui.activeModal = id;
@@ -14694,6 +14739,8 @@
         try {
           const data = await api.bootstrap();
           State.bootstrapped = true;
+          if (data.version) State.installedVersion = String(data.version);
+          if (data.buildNumber) State.installedBuild = Number(data.buildNumber);
           State.os = data.os || State.os;
           State.displays = data.displays || [];
           State.diagnostics = data.diagnostics || null;

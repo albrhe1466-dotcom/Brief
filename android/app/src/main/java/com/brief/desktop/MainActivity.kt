@@ -9,6 +9,7 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.webkit.JavascriptInterface
@@ -22,6 +23,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
@@ -29,8 +31,13 @@ import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
+import java.util.concurrent.TimeUnit
 
 /**
  * Hosts the full Brief v2.0.1 HTML/CSS/JS UI via AndroidX `WebViewAssetLoader`
@@ -46,6 +53,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var uiPrefs: android.content.SharedPreferences
     private var setupDialog: AlertDialog? = null
+    private var pendingInstallApkFile: File? = null
+    private val updateHttp: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .build()
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=210")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=216")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -136,6 +150,47 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         refreshSetupDialogUi()
         emitJsEvent("models:updated", buildBundleObject())
+        pendingInstallApkFile?.let { apkFile ->
+            if (apkFile.exists() && (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || packageManager.canRequestPackageInstalls())) {
+                pendingInstallApkFile = null
+                launchApkPackageInstaller(apkFile)
+            }
+        }
+    }
+
+    private fun launchApkPackageInstaller(apkFile: File) {
+        if (!apkFile.exists() || apkFile.length() < 100_000L) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+            pendingInstallApkFile = apkFile
+            android.widget.Toast.makeText(
+                this,
+                "Allow 'Install unknown apps' once — Brief will launch the update right away!",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            try {
+                startActivity(
+                    Intent(
+                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+                return
+            } catch (_: Exception) {}
+        }
+        try {
+            val apkUri = FileProvider.getUriForFile(this, "$packageName.fileprovider", apkFile)
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(installIntent)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(
+                this,
+                "Opening browser download fallback: ${e.message}",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun emitJsEvent(channel: String, payload: JSONObject) {
@@ -280,9 +335,18 @@ class MainActivity : AppCompatActivity() {
             if (chatsRaw != null) JSONObject(chatsRaw) else JSONObject().put("chats", JSONArray()).put("projects", JSONArray())
         }.getOrElse { JSONObject().put("chats", JSONArray()).put("projects", JSONArray()) }
 
+        val pkgInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
+        val actualVersionName = pkgInfo?.versionName ?: "2.1.1-beta"
+        val actualBuildCode = if (pkgInfo != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            pkgInfo.longVersionCode.toInt()
+        } else {
+            @Suppress("DEPRECATION")
+            pkgInfo?.versionCode ?: 216
+        }
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
-            put("version", "2.1.1-beta")
+            put("version", actualVersionName)
+            put("buildNumber", actualBuildCode)
             put("firstRunRequested", false)
             put(
                 "os",
@@ -400,46 +464,153 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun startAndroidApkUpdateJson(apkUrl: String, versionTag: String): String {
-            val cleanUrl = apkUrl.trim().ifEmpty {
-                "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk"
-            }
-            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").ifEmpty { "latest" }
-            return try {
-                val dm = getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
-                val req = android.app.DownloadManager.Request(Uri.parse(cleanUrl)).apply {
-                    setTitle("Brief Update v$safeVer")
-                    setDescription("Downloading Brief v$safeVer for Android — tap when complete to install update.")
-                    setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                    setMimeType("application/vnd.android.package-archive")
-                    setAllowedOverMetered(true)
-                    setAllowedOverRoaming(true)
-                    setDestinationInExternalPublicDir(
-                        android.os.Environment.DIRECTORY_DOWNLOADS,
-                        "Brief-Android-$safeVer.apk"
+        fun checkRemoteUpdateAsync(callId: String, argJson: String) {
+            lifecycleScope.launch {
+                val resObj = withContext(Dispatchers.IO) {
+                    var feed: JSONObject? = null
+                    val ts = System.currentTimeMillis()
+                    val feedUrls = listOf(
+                        "https://raw.githubusercontent.com/albrhe1466-dotcom/Brief/main/news.json?t=$ts",
+                        "https://albrhe1466-dotcom.github.io/Brief/news.json?t=$ts"
                     )
-                }
-                val downloadId = dm.enqueue(req)
-                // Also open the direct APK URL in browser so Samsung/Honor browsers offer immediate 1-tap Update!
-                runOnUiThread {
-                    android.widget.Toast.makeText(
-                        this@MainActivity,
-                        "Downloading Brief v$safeVer update… Tap 'Update' when prompted!",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
+                    for (u in feedUrls) {
+                        try {
+                            val req = Request.Builder()
+                                .url(u)
+                                .header("Cache-Control", "no-cache, no-store")
+                                .header("Pragma", "no-cache")
+                                .build()
+                            updateHttp.newCall(req).execute().use { resp ->
+                                if (resp.isSuccessful) {
+                                    val body = resp.body?.string().orEmpty()
+                                    val parsed = JSONObject(body)
+                                    if (parsed.optString("version").isNotBlank()) {
+                                        feed = parsed
+                                    }
+                                }
+                            }
+                            if (feed != null) break
+                        } catch (_: Exception) {}
+                    }
+
                     try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl)))
+                        val ghReq = Request.Builder()
+                            .url("https://api.github.com/repos/albrhe1466-dotcom/Brief/releases/latest")
+                            .header("Accept", "application/vnd.github+json")
+                            .header("Cache-Control", "no-cache")
+                            .build()
+                        updateHttp.newCall(ghReq).execute().use { resp ->
+                            if (resp.isSuccessful) {
+                                val gh = JSONObject(resp.body?.string().orEmpty())
+                                val ghVer = gh.optString("tag_name").removePrefix("v").removePrefix("V")
+                                val assets = gh.optJSONArray("assets") ?: JSONArray()
+                                var apkHit = ""
+                                var winHit = ""
+                                var debHit = ""
+                                for (i in 0 until assets.length()) {
+                                    val a = assets.optJSONObject(i) ?: continue
+                                    val name = a.optString("name")
+                                    val dl = a.optString("browser_download_url")
+                                    if (name.startsWith("Brief-Android-v", ignoreCase = true) && name.endsWith(".apk", ignoreCase = true)) {
+                                        apkHit = dl
+                                    } else if (apkHit.isEmpty() && name.equals("Brief-Android.apk", ignoreCase = true)) {
+                                        apkHit = dl
+                                    } else if (name.equals("Brief-Setup.exe", ignoreCase = true)) {
+                                        winHit = dl
+                                    } else if (name.equals("Brief-Linux-x64.deb", ignoreCase = true)) {
+                                        debHit = dl
+                                    }
+                                }
+                                val merged = feed ?: JSONObject()
+                                if (merged.optString("version").isBlank() && ghVer.isNotBlank()) {
+                                    merged.put("version", ghVer)
+                                }
+                                if (apkHit.isNotBlank()) merged.put("apkUrl", apkHit)
+                                if (winHit.isNotBlank()) merged.put("winUrl", winHit)
+                                if (debHit.isNotBlank()) merged.put("linuxDebUrl", debHit)
+                                if (!merged.has("mandatoryAndroid")) merged.put("mandatoryAndroid", true)
+                                feed = merged
+                            }
+                        }
                     } catch (_: Exception) {}
+
+                    feed ?: JSONObject().put("ok", false)
                 }
-                JSONObject().put("ok", true).put("downloadId", downloadId).put("url", cleanUrl).toString()
-            } catch (e: Exception) {
-                runOnUiThread {
-                    try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl)))
-                    } catch (_: Exception) {}
-                }
-                JSONObject().put("ok", true).put("fallbackBrowser", true).put("url", cleanUrl).toString()
+                resolveJsCall(callId, resObj)
             }
+        }
+
+        @JavascriptInterface
+        fun startAndroidApkUpdateJson(apkUrl: String, versionTag: String): String {
+            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.1-beta" }
+            val cleanUrl = apkUrl.trim().ifEmpty {
+                "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v$safeVer.apk"
+            }
+            runOnUiThread {
+                android.widget.Toast.makeText(
+                    this@MainActivity,
+                    "Downloading Brief v$safeVer… The Android Update prompt will open automatically!",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val updatesDir = File(externalCacheDir ?: cacheDir, "updates").apply { mkdirs() }
+                    updatesDir.listFiles()?.forEach { old ->
+                        if (old.isFile && old.name.endsWith(".apk", ignoreCase = true)) {
+                            runCatching { old.delete() }
+                        }
+                    }
+                    val targetApk = File(updatesDir, "Brief-Android-v$safeVer.apk")
+                    val req = Request.Builder()
+                        .url(cleanUrl)
+                        .header("Cache-Control", "no-cache")
+                        .build()
+                    updateHttp.newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
+                        val body = resp.body ?: throw IllegalStateException("Empty APK response")
+                        val total = body.contentLength()
+                        var written = 0L
+                        var lastPct = -1
+                        body.byteStream().use { input ->
+                            FileOutputStream(targetApk).use { output ->
+                                val buf = ByteArray(32 * 1024)
+                                while (true) {
+                                    val n = input.read(buf)
+                                    if (n <= 0) break
+                                    output.write(buf, 0, n)
+                                    written += n
+                                    if (total > 0) {
+                                        val pct = ((written * 100L) / total).toInt().coerceIn(0, 100)
+                                        if (pct >= lastPct + 10 || pct == 100) {
+                                            lastPct = pct
+                                            emitJsEvent(
+                                                "update:progress",
+                                                JSONObject().put("percent", pct).put("version", safeVer)
+                                            )
+                                        }
+                                    }
+                                }
+                                output.flush()
+                            }
+                        }
+                    }
+                    if (!targetApk.exists() || targetApk.length() < 500_000L) {
+                        throw IllegalStateException("Incomplete APK download")
+                    }
+                    emitJsEvent("update:progress", JSONObject().put("percent", 100).put("done", true).put("version", safeVer))
+                    runOnUiThread {
+                        launchApkPackageInstaller(targetApk)
+                    }
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl)))
+                        } catch (_: Exception) {}
+                    }
+                }
+            }
+            return JSONObject().put("ok", true).put("mode", "direct_installer").put("url", cleanUrl).toString()
         }
 
         @JavascriptInterface

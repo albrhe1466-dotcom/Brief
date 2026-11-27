@@ -753,6 +753,47 @@ function setupIpc() {
     };
   });
 
+  ipcMain.handle('app:check-update', async () => {
+    const ts = Date.now();
+    let feed = null;
+    for (const u of [
+      'https://raw.githubusercontent.com/albrhe1466-dotcom/Brief/main/news.json?t=' + ts,
+      'https://albrhe1466-dotcom.github.io/Brief/news.json?t=' + ts
+    ]) {
+      try {
+        const r = await fetch(u, { headers: { 'Cache-Control': 'no-cache, no-store', 'Pragma': 'no-cache' } });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.version) { feed = j; break; }
+        }
+      } catch (_) { /* try next */ }
+    }
+    try {
+      const gr = await fetch('https://api.github.com/repos/albrhe1466-dotcom/Brief/releases/latest', {
+        headers: { 'Accept': 'application/vnd.github+json', 'Cache-Control': 'no-cache' }
+      });
+      if (gr.ok) {
+        const gh = await gr.json();
+        const ghVer = String(gh.tag_name || '').replace(/^v/i, '');
+        const assets = Array.isArray(gh.assets) ? gh.assets : [];
+        const findAsset = (re) => {
+          const a = assets.find((x) => x && re.test(String(x.name || '')));
+          return a ? a.browser_download_url : '';
+        };
+        const apkHit = findAsset(/^Brief-Android-v.*\.apk$/i) || findAsset(/^Brief-Android\.apk$/i);
+        const winHit = findAsset(/^Brief-Setup\.exe$/i);
+        const debHit = findAsset(/^Brief-Linux-x64\.deb$/i);
+        feed = Object.assign({}, feed || {}, {
+          version: (feed && feed.version) || ghVer,
+          apkUrl: apkHit || (feed && feed.apkUrl),
+          winUrl: winHit || (feed && feed.winUrl),
+          linuxDebUrl: debHit || (feed && feed.linuxDebUrl)
+        });
+      }
+    } catch (_) { /* offline */ }
+    return feed || { ok: false };
+  });
+
   ipcMain.handle('app:install-update', async (_e, rawUrl) => {
     const cleanUrl = String(rawUrl || '').trim() ||
       (process.platform === 'linux'
@@ -763,7 +804,7 @@ function setupIpc() {
       return { ok: true, mode: 'browser' };
     }
     try {
-      const destPath = path.join(os.tmpdir(), 'Brief-Setup-Update.exe');
+      const destPath = path.join(os.tmpdir(), 'Brief-Setup-Update-' + Date.now() + '.exe');
       const resp = await fetch(cleanUrl, { redirect: 'follow' });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const buf = Buffer.from(await resp.arrayBuffer());
