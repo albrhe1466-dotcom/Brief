@@ -168,7 +168,7 @@ jobs:
           gradle -p android assembleRelease --no-daemon
           mkdir -p download-site/public/downloads
           cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
-          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.1.1-beta.apk
+          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.1.2-beta.apk
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
@@ -192,12 +192,12 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Publish to GitHub Release v2.1.1-beta
+      - name: Publish to GitHub Release v2.1.2-beta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v2.1.1-beta"
-          NOTES="Brief v2.1.1-beta Multi-Platform Release (Windows · Linux · Android Phones & Tablets · Samsung · Honor MagicOS): adds exact transparent Clawd pixel-art mascot GIFs in Brief Code (Clawd coding on his laptop & Clawd playing soccer with daily/random rotation), hides Ask/Full-Access permission controls in regular Chat across all 4 AIs while keeping strictly Ask for permission or Full access in Work / Brief Code / Task, runs Touch Screen Typing automatically under the hood without cluttering UI menus, and ships ultra-HD 1024x1024 white-on-black brief^Ai icons + mandatory global update notification from v2.1.0-beta."
+          TAG="v2.1.2-beta"
+          NOTES="Brief v2.1.2-beta Multi-Platform Release (Windows · Linux · Android Phones & Tablets · Samsung One UI · Honor MagicOS · ColorOS): fixes Android top notch crowding & bottom chin with native WindowInsets and centered portrait/landscape layout on phones & tablets, adds automatic 3-stage smart hybrid typing + live multi-OEM Enter/Search/Go/Send button detection across One UI, ColorOS, MagicOS & Gboard, fixes multi-step turn-alternation across all 4 AIs (Gemini, OpenAI, Claude & OpenRouter — fastest & flagship models), and ships global 1-tap updates over v2.1.1-beta and earlier."
           if ! gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release create "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest=false
           fi

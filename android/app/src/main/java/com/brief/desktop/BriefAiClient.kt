@@ -151,6 +151,20 @@ class BriefAiClient {
         toolDefs: JSONArray
     ): AiTurnResult {
         val contents = JSONArray()
+        fun appendGeminiUserParts(newParts: JSONArray) {
+            if (newParts.length() == 0) return
+            val lastIdx = contents.length() - 1
+            val lastObj = if (lastIdx >= 0) contents.optJSONObject(lastIdx) else null
+            if (lastObj != null && lastObj.optString("role") == "user") {
+                val existing = lastObj.optJSONArray("parts") ?: JSONArray().also { lastObj.put("parts", it) }
+                for (i in 0 until newParts.length()) {
+                    existing.put(newParts.get(i))
+                }
+            } else {
+                contents.put(JSONObject().put("role", "user").put("parts", newParts))
+            }
+        }
+
         for (turn in history) {
             when (turn.role) {
                 "user" -> {
@@ -164,7 +178,7 @@ class BriefAiClient {
                             )
                         )
                     }
-                    contents.put(JSONObject().put("role", "user").put("parts", parts))
+                    appendGeminiUserParts(parts)
                 }
                 "model" -> {
                     val parts = turn.modelPartsJson ?: JSONArray().apply {
@@ -185,7 +199,7 @@ class BriefAiClient {
                             )
                         )
                     }
-                    contents.put(JSONObject().put("role", "user").put("parts", parts))
+                    appendGeminiUserParts(parts)
                 }
             }
         }
@@ -410,33 +424,46 @@ class BriefAiClient {
             }
         }
 
-        val rb = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $apiKey")
-            .post(body.toString().toRequestBody(jsonMedia))
-        if (isOpenRouter) {
-            rb.addHeader("HTTP-Referer", "https://locally.app").addHeader("X-Title", "LOCALLY")
+        fun sendOaiPayload(payloadObj: JSONObject): String {
+            val rb = Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .post(payloadObj.toString().toRequestBody(jsonMedia))
+            if (isOpenRouter) {
+                rb.addHeader("HTTP-Referer", "https://locally.app").addHeader("X-Title", "LOCALLY")
+            }
+            http.newCall(rb.build()).execute().use { resp ->
+                val raw = resp.body?.string().orEmpty()
+                if (!resp.isSuccessful) {
+                    val msg = runCatching { JSONObject(raw).optJSONObject("error")?.optString("message") }.getOrNull()
+                    throw HttpStatusException(resp.code, msg ?: "HTTP ${resp.code}: ${raw.take(180)}")
+                }
+                return raw
+            }
         }
 
-        http.newCall(rb.build()).execute().use { resp ->
-            val raw = resp.body?.string().orEmpty()
-            if (!resp.isSuccessful) {
-                val msg = runCatching { JSONObject(raw).optJSONObject("error")?.optString("message") }.getOrNull()
-                throw HttpStatusException(resp.code, msg ?: "HTTP ${resp.code}: ${raw.take(180)}")
+        val raw = try {
+            sendOaiPayload(body)
+        } catch (e: HttpStatusException) {
+            if (e.code == 400 && body.has("reasoning")) {
+                body.remove("reasoning")
+                sendOaiPayload(body)
+            } else {
+                throw e
             }
-            val json = JSONObject(raw)
-            val m = json.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message") ?: JSONObject()
-            val txt = if (m.isNull("content")) "" else m.optString("content", "")
-            val calls = mutableListOf<ToolCallSpec>()
-            val tcs = m.optJSONArray("tool_calls") ?: JSONArray()
-            for (i in 0 until tcs.length()) {
-                val tc = tcs.optJSONObject(i) ?: continue
-                val fn = tc.optJSONObject("function") ?: continue
-                val args = runCatching { JSONObject(fn.optString("arguments", "{}")) }.getOrElse { JSONObject() }
-                calls.add(ToolCallSpec(tc.optString("id", "tc_$i"), fn.optString("name"), args))
-            }
-            return AiTurnResult(txt.trim(), calls)
         }
+        val json = JSONObject(raw)
+        val m = json.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message") ?: JSONObject()
+        val txt = if (m.isNull("content")) "" else m.optString("content", "")
+        val calls = mutableListOf<ToolCallSpec>()
+        val tcs = m.optJSONArray("tool_calls") ?: JSONArray()
+        for (i in 0 until tcs.length()) {
+            val tc = tcs.optJSONObject(i) ?: continue
+            val fn = tc.optJSONObject("function") ?: continue
+            val args = runCatching { JSONObject(fn.optString("arguments", "{}")) }.getOrElse { JSONObject() }
+            calls.add(ToolCallSpec(tc.optString("id", "tc_$i"), fn.optString("name"), args))
+        }
+        return AiTurnResult(txt.trim(), calls)
     }
 
     private fun callAnthropic(
@@ -448,6 +475,20 @@ class BriefAiClient {
         toolDefs: JSONArray
     ): AiTurnResult {
         val msgs = JSONArray()
+        fun appendAnthropicUserBlocks(blocks: JSONArray) {
+            if (blocks.length() == 0) return
+            val lastIdx = msgs.length() - 1
+            val lastObj = if (lastIdx >= 0) msgs.optJSONObject(lastIdx) else null
+            if (lastObj != null && lastObj.optString("role") == "user") {
+                val existing = lastObj.optJSONArray("content") ?: JSONArray().also { lastObj.put("content", it) }
+                for (i in 0 until blocks.length()) {
+                    existing.put(blocks.get(i))
+                }
+            } else {
+                msgs.put(JSONObject().put("role", "user").put("content", blocks))
+            }
+        }
+
         for (turn in history) {
             when (turn.role) {
                 "user" -> {
@@ -461,7 +502,7 @@ class BriefAiClient {
                         )
                     }
                     if (turn.text.isNotEmpty()) content.put(JSONObject().put("type", "text").put("text", turn.text))
-                    msgs.put(JSONObject().put("role", "user").put("content", content))
+                    appendAnthropicUserBlocks(content)
                 }
                 "model" -> {
                     val content = JSONArray()
@@ -476,7 +517,9 @@ class BriefAiClient {
                             }
                         )
                     }
-                    msgs.put(JSONObject().put("role", "assistant").put("content", content))
+                    if (content.length() > 0) {
+                        msgs.put(JSONObject().put("role", "assistant").put("content", content))
+                    }
                 }
                 "tool_results" -> {
                     val content = JSONArray()
@@ -489,7 +532,7 @@ class BriefAiClient {
                             }
                         )
                     }
-                    msgs.put(JSONObject().put("role", "user").put("content", content))
+                    appendAnthropicUserBlocks(content)
                 }
             }
         }

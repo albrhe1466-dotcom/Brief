@@ -2,7 +2,7 @@
   <img src="assets/brief-wordmark.png" alt="Brief AI Logo" width="320">
 </p>
 
-<h1 align="center">Brief AI · v2.1.1-beta</h1>
+<h1 align="center">Brief AI · v2.1.2-beta</h1>
 
 <p align="center">
   <strong>Private Multi-Platform AI Assistant &amp; Live Screen Agent for Windows, Linux &amp; Android Phones/Tablets</strong><br>
@@ -11,22 +11,22 @@
 
 ---
 
-## Download & Install (`v2.1.1-beta`)
+## Download & Install (`v2.1.2-beta`)
 
 - **Official Website (GitHub Pages):** https://albrhe1466-dotcom.github.io/Brief/
 - **Windows 10 / 11 Setup Wizard:** [Brief-Setup.exe](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe)
 - **Windows Full Portable Bundle:** [brief-package.zip](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip)
-- **Android Phones & Tablets APK (Samsung, Honor MagicOS, Pixel, Xiaomi):** [Brief-Android-v2.1.1-beta.apk](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.1-beta.apk)
+- **Android Phones & Tablets APK (Samsung One UI, Honor MagicOS, ColorOS, Pixel, Xiaomi):** [Brief-Android-v2.1.2-beta.apk](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.2-beta.apk)
 - **Linux Desktop Packages (x64 & ARM64):**
   - [Brief-Linux-x64.deb](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb) · [Brief-Linux-x64.AppImage](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.AppImage) · [Brief-Linux-x64.tar.gz](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.tar.gz)
   - [Brief-Linux-arm64.deb](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.deb) · [Brief-Linux-arm64.tar.gz](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.tar.gz)
 
-## What's New in `v2.1.1-beta`
+## What's New in `v2.1.2-beta`
 
-- **Clawd Pixel Mascot Animations in Brief Code:** Exact pixel-art GIFs of **Clawd** (pulling out his laptop to code & playing soccer with his ball) perched seamlessly on Brief Code's input bar with daily/random rotation and 1-tap switching.
-- **Clean Work-Only Permission Controls Across All 4 AIs:** Regular Chat mode hides permission controls completely across Gemini, OpenAI, Claude & OpenRouter; Work / Brief Code / Task shows strictly **Ask for permission** or **Full access**.
-- **Automatic Touch Screen Typing & Ultra-HD `brief^Ai` Brand Identity:** Automatic touch-target highlighting & live letter-by-letter typing under the hood alongside crisp `1024×1024` white-on-black `brief^Ai` icons.
-- **Authentic Claude 4-State `#d9693f` Animations & Official Emblem:** Exact 8-frame organic hand-drawn Claude starburst, untouched `200×200` 3D Orbiting Dots, solid wave/pulse circles, and official Claude Code pixel emblem.
+- **Centered Portrait & Landscape Android UI (Zero Notch Crowding & Zero Bottom Chin):** Native `WindowInsets` cutout/system-bar handling keeps Brief clear of camera notches, removes the bottom chin, and centers Welcome & Onboarding cleanly in both portrait and landscape on phones & tablets.
+- **Smart Hybrid Typing & Live OEM Enter / Search Detection:** Automatically combines fresh-node text input, physical touch-keyboard key tapping, and paste fallback while inspecting the live keyboard window to locate the exact **Search / Enter / Go / Send** button across **Samsung One UI, Oppo/Realme ColorOS, Honor MagicOS & Gboard**.
+- **Full Multi-Step Vision Across All 4 AIs (Fastest & Strongest Models):** Seamless turn-alternation & `[KEYBOARD_ENTER_KEY]` UI mapping across **Gemini, OpenAI, Claude & OpenRouter**.
+- **Clawd Pixel Mascot GIFs & Direct In-App Updates:** Seamless Clawd coding & soccer GIFs in Brief Code plus 1-tap direct Android `FileProvider` updates.
 
 ## Supported AI Providers (Bring Your Own Key)
 

@@ -52,8 +52,8 @@ using Microsoft.Win32;
 [assembly: AssemblyCompany("Brief Open Source AI")]
 [assembly: AssemblyProduct("Brief AI Assistant")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Brief Desktop")]
-[assembly: AssemblyVersion("2.1.1.0")]
-[assembly: AssemblyFileVersion("2.1.1.0")]
+[assembly: AssemblyVersion("2.1.2.0")]
+[assembly: AssemblyFileVersion("2.1.2.0")]
 
 namespace BriefSetupWizard
 {

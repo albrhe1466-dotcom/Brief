@@ -415,7 +415,10 @@ class CursorOverlayView(context: Context) : View(context) {
         val pw = (tw + dotSpace + padH * 2f).coerceAtMost(w * 0.82f)
         val ph = (if (isTabletDevice) 24f else 20f) * dp
         val px = (w - pw) * 0.5f
-        val py = (if (isTabletDevice) 28f else 32f) * dp
+        val cutoutTop = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            (rootWindowInsets?.displayCutout?.safeInsetTop ?: 0).toFloat()
+        } else 0f
+        val py = maxOf(cutoutTop + 10f * dp, (if (isTabletDevice) 36f else 48f) * dp)
 
         canvas.drawRoundRect(px, py, px + pw, py + ph, ph / 2f, ph / 2f, pillBgPaint)
         strokePaint.color = (accent and 0x00FFFFFF) or (0xDC shl 24)

@@ -1,37 +1,37 @@
 {
-  "version": "2.1.1-beta",
-  "build": 216,
+  "version": "2.1.2-beta",
+  "build": 217,
   "releasedAt": "2026-11-27",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
-  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.1-beta.apk",
+  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.2-beta.apk",
   "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
   "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
-  "headline": "Brief v2.1.1-beta — Clawd Mascot Animations in Brief Code, Clean Work-Only Permissions & Automatic Touch Typing",
+  "headline": "Brief v2.1.2-beta — Centered Portrait & Landscape Android UI (Zero Notch / Zero Chin), Smart Hybrid Typing & Live One UI / ColorOS / MagicOS Enter Detection",
   "bullets": [
-    "Clawd Pixel Mascot GIFs in Brief Code: Added exact pixel-art GIFs of Clawd (pulling out his laptop to code & playing soccer with his ball) perched seamlessly on Brief Code's input bar with daily/random rotation and 1-tap switching.",
-    "Clean Work-Only Permission Controls Across All 4 AIs: Regular Chat mode hides Ask for permission / Full access completely across Gemini, OpenAI, Claude & OpenRouter; Work / Brief Code / Task shows strictly Ask for permission or Full access.",
-    "Automatic Touch Screen Typing & Ultra-HD brief^Ai Icons: Touch-target highlighting & live letter-by-letter typing run automatically under the hood alongside crisp 1024x1024 white-on-black brief^Ai icons across Windows, Linux & Android.",
-    "Global Mandatory Upgrade from v2.1.0-beta: Automatically notifies all Android phones/tablets (Samsung, Honor MagicOS, Pixel), Windows PCs, and Linux desktops to update cleanly to v2.1.1-beta."
+    "Centered Portrait & Landscape Android UI (Zero Notch Crowding & Zero Bottom Chin): Native WindowInsets cutout/system-bar handling keeps Brief clear of camera notches, eliminates the bottom chin, and centers Welcome & Onboarding cleanly in both portrait and landscape on phones & tablets.",
+    "Smart Hybrid Typing + Live OEM Enter / Search Detection: Automatically combines fresh-node input, physical on-screen keyboard tapping, and paste fallback while scanning the live keyboard window to locate and tap the exact Search / Enter / Go / Send button across Samsung One UI, Oppo/Realme ColorOS, Honor MagicOS & Gboard.",
+    "Full Multi-Step Vision Across All 4 AIs (Fastest & Strongest Models): Fixed strict turn-alternation merging on Claude, Gemini, OpenAI & OpenRouter and exposed live [KEYBOARD_ENTER_KEY] coordinates + press_enter tool to every model.",
+    "Global 1-Tap Update to v2.1.2-beta: Automatically notifies all Windows, Linux, and Android phones/tablets to update straight over v2.1.1-beta and earlier."
   ],
   "photos": [
     {
       "src": "assets/brief-wordmark.png",
-      "tag": "New Identity · v2.1.1-beta",
-      "title": "Ultra-HD White-on-Black brief^Ai + Clawd in Brief Code",
-      "caption": "Brief v2.1.1-beta brings Clawd coding & soccer pixel-art GIFs to Brief Code alongside crisp 1024x1024 white-on-black brief^Ai icons."
+      "tag": "New Release · v2.1.2-beta",
+      "title": "Centered Android Phones & Tablets + Smart OEM Enter Detection",
+      "caption": "Brief v2.1.2-beta centers portrait & landscape layouts cleanly away from the notch and detects Enter/Search keys live across One UI, ColorOS & MagicOS."
     },
     {
       "src": "assets/news-v200-android.png",
-      "tag": "Android Tablets & Phones · v2.1.1-beta",
-      "title": "Clean Chat vs. Work UI & Automatic Touch Typing",
-      "caption": "Zero permission clutter in Chat mode, strictly Ask or Full Access in Work mode, and automatic live touch-screen typing."
+      "tag": "Android Phones & Tablets · v2.1.2-beta",
+      "title": "One UI, ColorOS & MagicOS Smart Hybrid Typing",
+      "caption": "Works seamlessly across fast & flagship models on Gemini, OpenAI, Claude & OpenRouter with live 150f vision."
     },
     {
       "src": "assets/news-v200-linux.png",
-      "tag": "Windows & Linux · v2.1.1-beta",
-      "title": "Authentic Claude #d9693f Animations & </> Live Code Card",
-      "caption": "Exact 200x200 3D Orbiting Dots, 8-frame Tenor starburst, official Brief Code emblem & Clawd mascot."
+      "tag": "Windows & Linux · v2.1.2-beta",
+      "title": "Clawd in Brief Code, Authentic #d9693f Animations & </> Live Code",
+      "caption": "Seamless Clawd coding & soccer GIFs, 200x200 3D Orbiting Dots, and 1-click desktop/APK updates."
     }
   ]
 }

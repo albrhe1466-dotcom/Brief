@@ -3,6 +3,8 @@ package com.brief.desktop
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -22,6 +24,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.TextView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -555,147 +558,432 @@ class BriefAccessibilityService : AccessibilityService() {
         return fallback
     }
 
-    suspend fun typeTextIntoFocused(text: String, submit: Boolean = true): Pair<Boolean, String> {
-        val root = activeAppRoot() ?: return false to "No active window visible."
-        var target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-        if (target == null || !target.isEditable) {
-            target = findFirstEditable(root, 0)
-        }
-        if (target == null) {
-            return false to "No editable text box visible on screen. Tap the Search icon or input box first, then call type_text."
-        }
+    private fun findFocusedOrFirstEditable(): AccessibilityNodeInfo? {
+        val root = activeAppRoot() ?: return null
+        val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        if (focused != null && focused.isEditable) return focused
+        return findFirstEditable(root, 0)
+    }
 
-        val useTouchTyping = !configuredTouchTypingMode.equals("keyboard", ignoreCase = true)
+    suspend fun typeTextIntoFocused(text: String, submit: Boolean = true): Pair<Boolean, String> {
+        if (text.isEmpty()) {
+            return if (submit) pressEnterSmart() else (false to "Text to type was empty.")
+        }
+        var target = findFocusedOrFirstEditable()
+            ?: return false to "No editable text box visible on screen. Tap the Search icon or input box first, then call type_text."
+
         val rect = Rect()
         target.getBoundsInScreen(rect)
         if (rect.width() > 4 && rect.height() > 4) {
-            if (useTouchTyping) {
-                mainHandler.post {
-                    overlayView?.triggerTouchTargetBox(
-                        rect.left.toFloat(),
-                        rect.top.toFloat(),
-                        rect.right.toFloat(),
-                        rect.bottom.toFloat(),
-                        "Touch Input"
-                    )
-                }
+            mainHandler.post {
+                overlayView?.triggerTouchTargetBox(
+                    rect.left.toFloat(),
+                    rect.top.toFloat(),
+                    rect.right.toFloat(),
+                    rect.bottom.toFloat(),
+                    "Input"
+                )
             }
             glideCheckAndClickVisual(rect.exactCenterX(), rect.exactCenterY())
-            if (useTouchTyping) {
-                dispatchPath(Path().apply { moveTo(rect.exactCenterX(), rect.exactCenterY()) }, 50L)
-            }
+            dispatchPath(Path().apply { moveTo(rect.exactCenterX(), rect.exactCenterY()) }, 50L)
         }
         target.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
         target.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        delay(if (useTouchTyping) 150L else 70L)
+        // Wait for One UI / ColorOS / MagicOS / Gboard keyboard & fresh swapped EditText (YouTube/Chrome swap Search TextView -> EditText on tap!)
+        delay(240L)
 
-        var setOk = false
-        if (useTouchTyping && text.isNotEmpty()) {
-            // Touch Screen Typing (Recommended): visibly types letter-by-letter on the touch screen & pulses touched IME keys!
-            val keyMap = collectSoftKeyboardKeys()
-            val step = if (text.length > 36) 2 else 1
-            var idx = step
-            while (idx <= text.length) {
-                val slice = text.substring(0, idx)
-                val lastCh = slice.last().toString()
-                val keyPt = keyMap[lastCh.lowercase()]
-                val caretSpan = (rect.width() - 28).coerceAtLeast(24)
-                val fallbackX = (rect.left + 14 + ((idx * 11) % caretSpan)).toFloat()
-                val kx = keyPt?.first ?: fallbackX
-                val ky = keyPt?.second ?: rect.exactCenterY()
-                mainHandler.post {
-                    overlayView?.setTypingPreview(slice)
-                    overlayView?.triggerTouchKeystroke(kx, ky, lastCh)
+        target = findFocusedOrFirstEditable() ?: target
+        target.getBoundsInScreen(rect)
+
+        val keyMap = collectSoftKeyboardKeys()
+
+        // Smooth visual live typing feedback across the real visible keyboard keys (or input bar) WITHOUT firing 25 stale SET_TEXT events!
+        val previewLimit = text.length.coerceAtMost(24)
+        val visStep = if (previewLimit > 12) 2 else 1
+        var vIdx = visStep
+        while (vIdx <= previewLimit) {
+            val slice = text.substring(0, vIdx)
+            val ch = slice.last().toString()
+            val kp = keyMap[ch.lowercase()]
+            val caretSpan = (rect.width() - 28).coerceAtLeast(24)
+            val kx = kp?.first ?: (rect.left + 14 + ((vIdx * 12) % caretSpan)).toFloat()
+            val ky = kp?.second ?: rect.exactCenterY()
+            mainHandler.post {
+                overlayView?.setTypingPreview(slice)
+                overlayView?.triggerTouchKeystroke(kx, ky, ch)
+            }
+            delay(34L)
+            vIdx += visStep
+        }
+        mainHandler.post { overlayView?.setTypingPreview(text) }
+
+        // Method 1: Single clean atomic ACTION_SET_TEXT on the fresh focused EditText
+        val setArgs = Bundle().apply {
+            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+        }
+        var typedOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, setArgs)
+        delay(90L)
+
+        // Verify whether the text actually landed inside the field (catches WebViews, Compose inputs & custom OEM bars!)
+        val checkNode = findFocusedOrFirstEditable() ?: target
+        val actualNow = checkNode.text?.toString().orEmpty()
+        val textLanded = typedOk && (actualNow.contains(text.take(minOf(4, text.length)), ignoreCase = true) || !checkNode.isEditable)
+
+        if (!textLanded) {
+            // Method 2 (Automatic Physical On-Screen Keyboard Touch Tapping): tap real visible keys right in front of Brief!
+            val canTapAllKeys = keyMap.isNotEmpty() && text.length <= 42 && text.all { c ->
+                keyMap.containsKey(c.lowercase()) || (c == ' ' && keyMap.containsKey(" "))
+            }
+            if (canTapAllKeys) {
+                var allTapped = true
+                for (c in text) {
+                    val lookup = if (c == ' ') " " else c.lowercase()
+                    val pt = keyMap[lookup]
+                    if (pt == null) {
+                        allTapped = false
+                        break
+                    }
+                    if (c.isUpperCase()) {
+                        keyMap["shift"]?.let { sh ->
+                            dispatchPath(Path().apply { moveTo(sh.first, sh.second) }, 42L)
+                            delay(45L)
+                        }
+                    }
+                    mainHandler.post { overlayView?.triggerTouchKeystroke(pt.first, pt.second, c.toString()) }
+                    dispatchPath(Path().apply { moveTo(pt.first, pt.second) }, 45L)
+                    delay(55L)
                 }
-                val partialArgs = Bundle().apply {
-                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, slice)
+                if (allTapped) typedOk = true
+            }
+
+            // Method 3 (Automatic Clipboard Paste Fallback for Unicode / non-keyboard symbols / WebViews):
+            if (!typedOk) {
+                runCatching {
+                    val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    cm.setPrimaryClip(ClipData.newPlainText("brief_input", text))
                 }
-                setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, partialArgs) || setOk
-                delay(52L)
-                idx += step
+                delay(40L)
+                val pasteNode = findFocusedOrFirstEditable() ?: target
+                typedOk = pasteNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
             }
-            val finalArgs = Bundle().apply {
-                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
-            }
-            setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, finalArgs) || setOk
-            mainHandler.post { overlayView?.setTypingPreview(text) }
-        } else {
-            // Direct Keyboard Method (Windows-Style): instant keyboard text injection
-            mainHandler.post { overlayView?.setTypingPreview(text) }
-            val args = Bundle().apply {
-                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
-            }
-            setOk = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
         }
 
-        val idHint = "${target.viewIdResourceName.orEmpty()} ${target.hintText?.toString().orEmpty()} ${target.contentDescription?.toString().orEmpty()}".lowercase()
+        val freshAfterType = findFocusedOrFirstEditable() ?: target
+        val idHint = "${freshAfterType.viewIdResourceName.orEmpty()} ${freshAfterType.hintText?.toString().orEmpty()} ${freshAfterType.contentDescription?.toString().orEmpty()}".lowercase()
         val isSearchField = idHint.contains("search") || idHint.contains("query") || idHint.contains("url") || idHint.contains("بحث")
         val shouldSubmit = submit || isSearchField
 
-        if (setOk && shouldSubmit) {
-            delay(140L)
-            var imeDone = false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                imeDone = target.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
+        if (typedOk && shouldSubmit) {
+            val (_, enterDetail) = pressEnterOrSubmitActiveInput(text, rect.bottom)
+            return true to "Typed \"$text\" cleanly ($enterDetail)."
+        }
+
+        return typedOk to (if (typedOk) {
+            "Typed \"$text\" cleanly."
+        } else {
+            "Input field did not accept text; tap directly on the text area or visible keyboard keys."
+        })
+    }
+
+    suspend fun pressEnterSmart(): Pair<Boolean, String> {
+        val cur = findFocusedOrFirstEditable()
+        val r = Rect()
+        cur?.getBoundsInScreen(r)
+        val q = cur?.text?.toString().orEmpty()
+        return pressEnterOrSubmitActiveInput(q, if (r.bottom > 0) r.bottom else 220)
+    }
+
+    private data class ActionTarget(
+        val node: AccessibilityNodeInfo?,
+        val x: Float,
+        val y: Float,
+        val rect: Rect?,
+        val label: String
+    )
+
+    private suspend fun pressEnterOrSubmitActiveInput(queryHint: String, inputBottomPx: Int): Pair<Boolean, String> {
+        delay(120L)
+        val beforeSig = quickTreeSignature(activeAppRoot())
+        val editBefore = findFocusedOrFirstEditable()
+
+        // 1. Try standard Android R+ ACTION_IME_ENTER on the fresh focused input node first
+        var imeSent = false
+        if (editBefore != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            imeSent = editBefore.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
+        }
+        if (imeSent) {
+            delay(280L)
+            val afterSig = quickTreeSignature(activeAppRoot())
+            val stillFocusedEditable = activeAppRoot()?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.isEditable == true
+            if (!stillFocusedEditable && afterSig != beforeSig) {
+                return true to "submitted via IME Enter"
+            }
+        }
+
+        // 2. Inspect the LIVE on-screen keyboard window (One UI HoneyBoard, ColorOS, MagicOS, HyperOS, Gboard, SwiftKey) & app bar!
+        val enterBtn = findLiveEnterOrSearchButton(inputBottomPx)
+        if (enterBtn != null) {
+            enterBtn.rect?.let { er ->
+                if (er.width() > 4 && er.height() > 4) {
+                    mainHandler.post {
+                        overlayView?.triggerTouchTargetBox(
+                            er.left.toFloat(),
+                            er.top.toFloat(),
+                            er.right.toFloat(),
+                            er.bottom.toFloat(),
+                            enterBtn.label
+                        )
+                    }
+                }
+            }
+            glideCheckAndClickVisual(enterBtn.x, enterBtn.y)
+            mainHandler.post { overlayView?.triggerTouchKeystroke(enterBtn.x, enterBtn.y, "⏎") }
+            val clickedNode = if (enterBtn.node != null) clickNodeOrAncestor(enterBtn.node) else false
+            if (!clickedNode) {
+                dispatchPath(Path().apply { moveTo(enterBtn.x, enterBtn.y) }, 55L)
             }
             delay(320L)
-            // Verify whether search actually submitted or if the search box is still open waiting for Enter/suggestion tap!
-            val afterRoot = activeAppRoot()
-            val stillEditing = afterRoot?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.isEditable == true
-            if (!imeDone || stillEditing) {
-                // Look for a matching search suggestion row below the input box first
-                val qLower = text.trim().lowercase()
-                val suggestion = findSearchSuggestionNode(afterRoot, qLower, rect.bottom, 0)
-                if (suggestion != null) {
-                    val sr = Rect()
-                    suggestion.getBoundsInScreen(sr)
-                    if (sr.width() > 4 && sr.height() > 4) {
-                        if (useTouchTyping) {
-                            mainHandler.post {
-                                overlayView?.triggerTouchTargetBox(
-                                    sr.left.toFloat(),
-                                    sr.top.toFloat(),
-                                    sr.right.toFloat(),
-                                    sr.bottom.toFloat(),
-                                    "Touch"
-                                )
-                            }
-                        }
-                        glideCheckAndClickVisual(sr.exactCenterX(), sr.exactCenterY())
-                        val clickedSug = clickNodeOrAncestor(suggestion)
-                        if (!clickedSug) {
-                            dispatchPath(Path().apply { moveTo(sr.exactCenterX(), sr.exactCenterY()) }, 55L)
-                        }
+            val stillEditingAfterBtn = activeAppRoot()?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.isEditable == true
+            if (!stillEditingAfterBtn) {
+                return true to "tapped live '${enterBtn.label}' button"
+            }
+        }
+
+        // 3. Check if a live autocomplete/search suggestion row matching queryHint is waiting right below the input bar
+        val qLower = queryHint.trim().lowercase()
+        if (qLower.isNotEmpty()) {
+            val suggestion = findSearchSuggestionNode(activeAppRoot(), qLower, inputBottomPx, 0)
+            if (suggestion != null) {
+                val sr = Rect()
+                suggestion.getBoundsInScreen(sr)
+                if (sr.width() > 4 && sr.height() > 4) {
+                    mainHandler.post {
+                        overlayView?.triggerTouchTargetBox(
+                            sr.left.toFloat(),
+                            sr.top.toFloat(),
+                            sr.right.toFloat(),
+                            sr.bottom.toFloat(),
+                            "Search"
+                        )
                     }
-                } else {
-                    // Fallback: tap bottom-right keyboard IME Search/Enter action button
-                    val (w, h) = DisplayUtils.getRealScreenSize(this)
-                    val enterX = w * 0.915f
-                    val enterY = h * 0.925f
-                    if (useTouchTyping) {
-                        mainHandler.post { overlayView?.triggerTouchKeystroke(enterX, enterY, "⏎") }
+                    glideCheckAndClickVisual(sr.exactCenterX(), sr.exactCenterY())
+                    if (!clickNodeOrAncestor(suggestion)) {
+                        dispatchPath(Path().apply { moveTo(sr.exactCenterX(), sr.exactCenterY()) }, 55L)
                     }
-                    dispatchPath(Path().apply { moveTo(enterX, enterY) }, 55L)
+                    return true to "tapped matching search suggestion"
                 }
             }
         }
 
-        return setOk to (if (setOk) {
-            if (shouldSubmit) "Typed \"$text\" (${if (useTouchTyping) "Touch Screen" else "Keyboard"}) and submitted search."
-            else "Typed \"$text\" (${if (useTouchTyping) "Touch Screen" else "Keyboard"}) cleanly."
-        } else {
-            "Input field rejected SET_TEXT; try tapping the input bar first."
-        })
+        return (imeSent || enterBtn != null) to "submitted Enter/Search"
+    }
+
+    private fun isImeWindow(win: AccessibilityWindowInfo, root: AccessibilityNodeInfo): Boolean {
+        if (win.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD) return true
+        val pkg = root.packageName?.toString()?.lowercase().orEmpty()
+        return pkg.contains("inputmethod") ||
+            pkg.contains("keyboard") ||
+            pkg.contains("honeyboard") || // Samsung One UI
+            pkg.contains("swiftkey") ||   // Honor MagicOS / Microsoft SwiftKey
+            pkg.contains("baidu") ||      // Huawei / Honor / Vivo OEM IME
+            pkg.contains("sohu") ||
+            pkg.contains("iflytek") ||
+            pkg.contains("oplus") ||      // Oppo / Realme / OnePlus ColorOS IME
+            pkg.contains("coloros") ||
+            pkg.contains("latin")         // Gboard / AOSP
+    }
+
+    private fun findLiveEnterOrSearchButton(inputBottomPx: Int): ActionTarget? {
+        val (screenW, screenH) = DisplayUtils.getRealScreenSize(this)
+        val winList = runCatching { windows }.getOrNull().orEmpty()
+
+        // Pass A: Look inside all visible IME keyboard windows (One UI, ColorOS, MagicOS, Gboard, SwiftKey)
+        var imeBoundsFallback: Rect? = null
+        var bestBottomRightKey: ActionTarget? = null
+
+        for (win in winList) {
+            val root = win.root ?: continue
+            if (!isImeWindow(win, root)) continue
+            val wb = Rect()
+            win.getBoundsInScreen(wb)
+            if (wb.width() > screenW / 3 && wb.height() > (48 * resources.displayMetrics.density).toInt()) {
+                imeBoundsFallback = wb
+            }
+            val labeled = scanForEnterActionNode(root, wb, isIme = true, depth = 0)
+            if (labeled != null) return labeled
+
+            // Also track the bottom-most, right-most clickable key inside the keyboard body (excluding bottom nav switcher strip!)
+            val cornerKey = findBottomRightImeKeyNode(root, wb, screenH, 0)
+            if (cornerKey != null) bestBottomRightKey = cornerKey
+        }
+
+        // Pass B: Look in the foreground app window for an adjacent Search / Go / Send button near the input bar!
+        activeAppRoot()?.let { appRoot ->
+            val appAction = scanForInAppSendOrSearchButton(appRoot, inputBottomPx, 0)
+            if (appAction != null) return appAction
+        }
+
+        if (bestBottomRightKey != null) return bestBottomRightKey
+
+        // Pass C: Geometry derived from the ACTUAL live IME window rectangle (adapts automatically to One UI nav bar, MagicOS split/tablet bar, ColorOS & landscape!)
+        if (imeBoundsFallback != null) {
+            val b = imeBoundsFallback
+            // Exclude bottom ~42dp keyboard-switcher / gesture bar if keyboard touches bottom of screen
+            val navTrim = if (b.bottom >= screenH - (8 * resources.displayMetrics.density).toInt()) {
+                (40f * resources.displayMetrics.density)
+            } else 0f
+            val usableBottom = (b.bottom.toFloat() - navTrim).coerceAtLeast(b.top + b.height() * 0.65f)
+            val ex = (b.right - b.width() * 0.075f).coerceIn(12f, screenW - 12f)
+            val ey = (usableBottom - (b.height() * 0.11f)).coerceIn(b.top + 12f, screenH - 12f)
+            return ActionTarget(null, ex, ey, null, "Keyboard Enter")
+        }
+
+        return null
+    }
+
+    private fun scanForEnterActionNode(
+        node: AccessibilityNodeInfo?,
+        imeRect: Rect,
+        isIme: Boolean,
+        depth: Int
+    ): ActionTarget? {
+        if (node == null || depth > 18 || !node.isVisibleToUser) return null
+        val txt = node.text?.toString()?.trim().orEmpty()
+        val desc = node.contentDescription?.toString()?.trim().orEmpty()
+        val resId = node.viewIdResourceName?.substringAfterLast('/')?.lowercase().orEmpty()
+        val combined = "$txt $desc".lowercase()
+
+        val idMatch = resId == "key_pos_ime_action" ||
+            resId == "ime_action" ||
+            resId == "key_enter" ||
+            resId == "enter" ||
+            resId == "enter_key" ||
+            resId == "action_key" ||
+            resId == "btn_enter" ||
+            resId.contains("ime_action") ||
+            resId.endsWith("_enter")
+
+        val exactWords = setOf(
+            "search", "enter", "go", "send", "done", "next", "submit", "return",
+            "بحث", "إدخال", "ادخال", "إرسال", "ارسال", "تم", "ذهاب", "التالي",
+            "↵", "⏎", "🔍"
+        )
+        val labelMatch = exactWords.any { w ->
+            txt.equals(w, ignoreCase = true) ||
+                desc.equals(w, ignoreCase = true) ||
+                combined.split(Regex("[\\s,;:()]+")).any { tok -> tok == w }
+        } || desc.contains("search", ignoreCase = true) ||
+            desc.contains("enter", ignoreCase = true) ||
+            desc.contains("send", ignoreCase = true) ||
+            desc.contains("go", ignoreCase = true) ||
+            desc.contains("بحث") ||
+            desc.contains("إرسال") ||
+            desc.contains("إدخال")
+
+        if (idMatch || (isIme && labelMatch)) {
+            val r = Rect()
+            node.getBoundsInScreen(r)
+            if (r.width() > 8 && r.height() > 8) {
+                // Make sure we didn't match a voice/mic or emoji search button on the top toolbar of the keyboard!
+                val notMicOrEmoji = !combined.contains("voice") &&
+                    !combined.contains("emoji") &&
+                    !combined.contains("gif") &&
+                    !combined.contains("sticker") &&
+                    !resId.contains("voice") &&
+                    !resId.contains("mic") &&
+                    !resId.contains("emoji") &&
+                    (imeRect.height() <= 0 || r.centerY() >= imeRect.top + imeRect.height() * 0.25f)
+                if (notMicOrEmoji) {
+                    val nice = txt.ifEmpty { desc.ifEmpty { "Enter" } }.take(18)
+                    return ActionTarget(node, r.exactCenterX(), r.exactCenterY(), r, nice)
+                }
+            }
+        }
+
+        for (i in 0 until node.childCount) {
+            val hit = scanForEnterActionNode(node.getChild(i), imeRect, isIme, depth + 1)
+            if (hit != null) return hit
+        }
+        return null
+    }
+
+    private fun findBottomRightImeKeyNode(
+        node: AccessibilityNodeInfo?,
+        imeRect: Rect,
+        screenH: Int,
+        depth: Int
+    ): ActionTarget? {
+        if (node == null || depth > 16 || !node.isVisibleToUser) return null
+        var best: ActionTarget? = null
+        val dp = resources.displayMetrics.density
+        val navCutoffY = screenH - (34f * dp).toInt()
+        if (node.isClickable) {
+            val r = Rect()
+            node.getBoundsInScreen(r)
+            val resId = node.viewIdResourceName?.substringAfterLast('/')?.lowercase().orEmpty()
+            val desc = "${node.text.orEmpty()} ${node.contentDescription.orEmpty()}".lowercase()
+            val isHideOrSwitch = desc.contains("hide") || desc.contains("switch") || desc.contains("language") ||
+                desc.contains("delete") || desc.contains("backspace") || resId.contains("backspace") || resId.contains("delete")
+            if (!isHideOrSwitch &&
+                r.width() in (24 * dp).toInt()..(180 * dp).toInt() &&
+                r.height() in (24 * dp).toInt()..(110 * dp).toInt() &&
+                r.right >= imeRect.right - (imeRect.width() * 0.24f).toInt() &&
+                r.bottom <= navCutoffY &&
+                r.centerY() >= imeRect.top + (imeRect.height() * 0.45f).toInt()
+            ) {
+                best = ActionTarget(node, r.exactCenterX(), r.exactCenterY(), r, "Enter")
+            }
+        }
+        for (i in 0 until node.childCount) {
+            val sub = findBottomRightImeKeyNode(node.getChild(i), imeRect, screenH, depth + 1)
+            if (sub != null) {
+                if (best == null || (sub.x + sub.y * 1.4f) > (best.x + best.y * 1.4f)) {
+                    best = sub
+                }
+            }
+        }
+        return best
+    }
+
+    private fun scanForInAppSendOrSearchButton(
+        node: AccessibilityNodeInfo?,
+        inputBottomPx: Int,
+        depth: Int
+    ): ActionTarget? {
+        if (node == null || depth > 22 || !node.isVisibleToUser) return null
+        if (node.isClickable && !node.isEditable) {
+            val txt = node.text?.toString()?.trim().orEmpty()
+            val desc = node.contentDescription?.toString()?.trim().orEmpty()
+            val resId = node.viewIdResourceName?.substringAfterLast('/')?.lowercase().orEmpty()
+            val isSubmitBtn = desc.equals("send", true) ||
+                desc.equals("go", true) ||
+                desc.equals("submit", true) ||
+                desc.equals("إرسال", true) ||
+                txt.equals("send", true) ||
+                txt.equals("go", true) ||
+                resId == "send_button" ||
+                resId == "search_go_btn"
+            if (isSubmitBtn) {
+                val r = Rect()
+                node.getBoundsInScreen(r)
+                if (r.width() > 8 && r.height() > 8 && abs(r.centerY() - inputBottomPx) < (140 * resources.displayMetrics.density)) {
+                    return ActionTarget(node, r.exactCenterX(), r.exactCenterY(), r, desc.ifEmpty { txt.ifEmpty { "Send" } })
+                }
+            }
+        }
+        for (i in 0 until node.childCount) {
+            val hit = scanForInAppSendOrSearchButton(node.getChild(i), inputBottomPx, depth + 1)
+            if (hit != null) return hit
+        }
+        return null
     }
 
     private fun collectSoftKeyboardKeys(): Map<String, Pair<Float, Float>> {
         val out = HashMap<String, Pair<Float, Float>>()
         val winList = runCatching { windows }.getOrNull() ?: return out
         for (win in winList) {
-            val isIme = win.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD
             val root = win.root ?: continue
-            val pkg = root.packageName?.toString()?.lowercase().orEmpty()
-            if (isIme || pkg.contains("inputmethod") || pkg.contains("keyboard") || pkg.contains("honeyboard") || pkg.contains("latin")) {
+            if (isImeWindow(win, root)) {
                 scanImeKeysRecursive(root, out, 0)
             }
         }
@@ -707,16 +995,18 @@ class BriefAccessibilityService : AccessibilityService() {
         out: MutableMap<String, Pair<Float, Float>>,
         depth: Int
     ) {
-        if (node == null || depth > 14 || !node.isVisibleToUser) return
+        if (node == null || depth > 16 || !node.isVisibleToUser) return
         val rawLbl = (node.text?.toString()?.takeIf { it.isNotBlank() } ?: node.contentDescription?.toString()).orEmpty().trim()
         if (rawLbl.isNotEmpty()) {
             val r = Rect()
             node.getBoundsInScreen(r)
             if (r.width() > 4 && r.height() > 4) {
+                val lower = rawLbl.lowercase()
                 val key = when {
-                    rawLbl.length == 1 -> rawLbl.lowercase()
-                    rawLbl.equals("space", true) || rawLbl.contains("space", true) || rawLbl.contains("مسافة") -> " "
-                    else -> rawLbl.take(1).lowercase()
+                    rawLbl.length == 1 -> lower
+                    lower == "space" || lower.contains("space bar") || lower.contains("مسافة") -> " "
+                    lower.contains("shift") || lower.contains("caps") || lower.contains("عالي") -> "shift"
+                    else -> lower.take(1)
                 }
                 if (!out.containsKey(key)) {
                     out[key] = r.exactCenterX() to r.exactCenterY()
@@ -766,10 +1056,33 @@ class BriefAccessibilityService : AccessibilityService() {
     suspend fun tapElementByLabel(query: String): Pair<Boolean, String> {
         val q = query.trim().lowercase()
         if (q.isEmpty()) return false to "Element label cannot be empty."
+        // If AI specifically asks to tap Enter / Search / Go / Send while an input or IME keyboard is active, check live IME action button too!
+        if (q in setOf("enter", "return", "go", "submit", "إدخال", "ذهاب") ||
+            ((q == "search" || q == "بحث" || q == "send" || q == "إرسال") && findFocusedOrFirstEditable() != null)
+        ) {
+            val imeHit = findLiveEnterOrSearchButton(220)
+            if (imeHit != null && (q != "search" || imeHit.label.contains("search", true) || imeHit.label.contains("بحث") || imeHit.label.contains("enter", true))) {
+                glideCheckAndClickVisual(imeHit.x, imeHit.y)
+                val okNode = if (imeHit.node != null) clickNodeOrAncestor(imeHit.node) else false
+                if (!okNode) dispatchPath(Path().apply { moveTo(imeHit.x, imeHit.y) }, 55L)
+                return true to "Checked and tapped keyboard '${imeHit.label}' button cleanly."
+            }
+        }
         val root = activeAppRoot() ?: return false to "No active screen window."
-        val match = findNodeByLabel(root, q, exact = true, depth = 0)
+        var match = findNodeByLabel(root, q, exact = true, depth = 0)
             ?: findNodeByLabel(root, q, exact = false, depth = 0)
-            ?: return false to "No visible element matching \"$query\" found on screen."
+        if (match == null) {
+            val winList = runCatching { windows }.getOrNull().orEmpty()
+            for (win in winList) {
+                val r = win.root ?: continue
+                if (isImeWindow(win, r)) {
+                    match = findNodeByLabel(r, q, exact = true, depth = 0)
+                        ?: findNodeByLabel(r, q, exact = false, depth = 0)
+                    if (match != null) break
+                }
+            }
+        }
+        if (match == null) return false to "No visible element matching \"$query\" found on screen."
 
         val rect = Rect()
         match.getBoundsInScreen(rect)
@@ -833,7 +1146,21 @@ class BriefAccessibilityService : AccessibilityService() {
         val rawItems = mutableListOf<JSONObject>()
         val pkg = root?.packageName?.toString().orEmpty()
         if (root != null && pkg != packageName) {
-            collectNodes(root, w.coerceAtLeast(1), h.coerceAtLeast(1), rawItems, maxElements, 0)
+            collectNodes(root, w.coerceAtLeast(1), h.coerceAtLeast(1), rawItems, maxElements - 4, 0)
+        }
+        // Also surface the live on-screen keyboard's Enter / Search / Go / Send button (One UI, ColorOS, MagicOS, Gboard) in the UI map so ALL 4 AIs see its exact (x, y)!
+        val imeEnter = findLiveEnterOrSearchButton(220)
+        if (imeEnter != null && w > 0 && h > 0) {
+            val ex = ((imeEnter.x / w.toFloat()) * 1000.0).toInt().coerceIn(0, 1000)
+            val ey = ((imeEnter.y / h.toFloat()) * 1000.0).toInt().coerceIn(0, 1000)
+            rawItems.add(
+                JSONObject().apply {
+                    put("label", "[KEYBOARD_ENTER_KEY] ${imeEnter.label}")
+                    put("x", ex)
+                    put("y", ey)
+                    put("clickable", true)
+                }
+            )
         }
         rawItems.sortWith(compareBy({ it.optInt("y", 0) }, { it.optInt("x", 0) }))
         val arr = JSONArray()

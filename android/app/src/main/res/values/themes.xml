@@ -8,6 +8,7 @@
         <item name="android:windowBackground">@color/bg_void</item>
         <item name="android:statusBarColor">@color/bg_void</item>
         <item name="android:navigationBarColor">@color/bg_void</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>

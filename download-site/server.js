@@ -58,7 +58,7 @@ function getReleaseInfo() {
   if (!cachedReleaseInfo || now - cachedReleaseAt > 5000) {
     cachedReleaseInfo = {
       name: 'Brief',
-      version: '2.1.1-beta',
+      version: '2.1.2-beta',
       platform: 'Windows, Linux (X11) & Android Phones/Tablets (Zero Root)',
       installer: Object.assign({ filename: 'Brief-Setup.exe', url: '/download/Brief-Setup.exe' }, fileMeta('Brief-Setup.exe')),
       archive: Object.assign({ filename: 'brief-package.zip', url: '/download/brief-package.zip' }, fileMeta('brief-package.zip')),

@@ -24,6 +24,9 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
@@ -117,8 +120,19 @@ class MainActivity : AppCompatActivity() {
             addJavascriptInterface(BriefJsBridge(), "BriefAndroidBridge")
         }
         setContentView(webView)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { v, windowInsets ->
+            val barsAndCutout = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            val bottomInset = maxOf(barsAndCutout.bottom, ime.bottom)
+            v.setPadding(barsAndCutout.left, barsAndCutout.top, barsAndCutout.right, bottomInset)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.requestApplyInsets(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=216")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=217")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -336,12 +350,12 @@ class MainActivity : AppCompatActivity() {
         }.getOrElse { JSONObject().put("chats", JSONArray()).put("projects", JSONArray()) }
 
         val pkgInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
-        val actualVersionName = pkgInfo?.versionName ?: "2.1.1-beta"
+        val actualVersionName = pkgInfo?.versionName ?: "2.1.2-beta"
         val actualBuildCode = if (pkgInfo != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             pkgInfo.longVersionCode.toInt()
         } else {
             @Suppress("DEPRECATION")
-            pkgInfo?.versionCode ?: 216
+            pkgInfo?.versionCode ?: 217
         }
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
@@ -542,7 +556,7 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startAndroidApkUpdateJson(apkUrl: String, versionTag: String): String {
-            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.1-beta" }
+            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.2-beta" }
             val cleanUrl = apkUrl.trim().ifEmpty {
                 "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v$safeVer.apk"
             }

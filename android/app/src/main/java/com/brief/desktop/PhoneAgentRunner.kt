@@ -269,7 +269,7 @@ class PhoneAgentRunner(
                         executeTool(tc, provider)
                     }
 
-                    if (tc.name in setOf("open_app", "open_url", "tap", "tap_element", "double_tap", "type_text", "swipe")) {
+                    if (tc.name in setOf("open_app", "open_url", "tap", "tap_element", "double_tap", "type_text", "press_enter", "swipe")) {
                         executedActionCount++
                     }
                     if (tc.name == "open_app" || tc.name == "open_url") {
@@ -342,6 +342,7 @@ class PhoneAgentRunner(
             "tap_element" -> "Checking & tapping \"${a.optString("label")}\""
             "tap" -> "Moving cursor & tapping (${a.optInt("x")}, ${a.optInt("y")})"
             "type_text" -> "Typing \"${a.optString("text").take(28)}\""
+            "press_enter" -> "Looking for & pressing Enter / Search"
             "swipe" -> "Scrolling screen (${a.optInt("y1")} → ${a.optInt("y2")})"
             "press_back" -> "Pressing Back"
             "press_home" -> "Going Home"
@@ -417,6 +418,13 @@ class PhoneAgentRunner(
                 delay(320L)
                 JSONObject().put("ok", ok).put("detail", msg).toString()
             }
+            "press_enter" -> {
+                val acc = BriefAccessibilityService.instance
+                    ?: return JSONObject().put("error", "Accessibility Service is off.").toString()
+                val (ok, msg) = acc.pressEnterSmart()
+                delay(320L)
+                JSONObject().put("ok", ok).put("detail", msg).toString()
+            }
             "press_back" -> {
                 val ok = BriefAccessibilityService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK) == true
                 delay(300L)
@@ -461,9 +469,12 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
    - Step C: Call `type_text({"text": "MrBeast", "submit": true})` so the search actually executes!
    - Step D: Inspect the search results carefully! Look for the official channel row / circular Beast avatar icon (e.g. `@MrBeast` / channel header, NOT an ad or random clip) and tap it to open the channel page.
    - Step E: On the channel page, tap the `Videos` or `Shorts` tab chip, inspect the newest upload (check relative timestamps like "hours ago" / "days ago" and skip older pinned items if needed), and tap it so it plays on screen (or report its exact title & details as asked).
-2. PREFER PRECISION: Use the `[Live 150-Node Interactive UI Map]` coordinates or `tap_element` whenever a button/tab/channel has a clear label, and use the calibrated `0..1000` screenshot grid for visual icons/thumbnails/avatars.
-3. IF SOMETHING IS OFF-SCREEN: Use `swipe` (`x1=500, y1=760, x2=500, y2=260`) to scroll down smoothly and inspect new items.
-4. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
+2. SMART TYPING & FINDING THE ENTER / SEARCH BUTTON ACROSS ALL ANDROID SKINS (Samsung One UI, Oppo/Realme ColorOS, Honor MagicOS, Xiaomi HyperOS, Gboard):
+   - Always tap the input/search box first so it focuses and opens the keyboard, then call `type_text({"text": "...", "submit": true})`.
+   - Every Android OS skin places its Enter / Search / Go / Send key in a different spot! ALWAYS LOOK at the live 150f screenshot AND check `[KEYBOARD_ENTER_KEY]` in `[Live 150-Node Interactive UI Map]`! If after `type_text` the keyboard is still open and search hasn't submitted yet, immediately call `press_enter({})` OR `tap` on the exact visible magnifying-glass / arrow / Search / Enter key shown on the keyboard or matching suggestion row!
+3. PREFER PRECISION: Use the `[Live 150-Node Interactive UI Map]` coordinates or `tap_element` whenever a button/tab/channel has a clear label, and use the calibrated `0..1000` screenshot grid for visual icons/thumbnails/avatars.
+4. IF SOMETHING IS OFF-SCREEN: Use `swipe` (`x1=500, y1=760, x2=500, y2=260`) to scroll down smoothly and inspect new items.
+5. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
         }
     }
 
@@ -524,11 +535,16 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
             )
             addTool(
                 "type_text",
-                "Type text into the focused/visible input or search bar. Set submit=true (default) to press Search/Enter automatically!",
+                "Type text into the focused/visible input or search bar (automatically uses smart hybrid keyboard/touch input). Set submit=true (default) to locate and press the OS Search/Enter button automatically!",
                 JSONObject()
                     .put("text", JSONObject().put("type", "string"))
                     .put("submit", JSONObject().put("type", "boolean").put("description", "True to press Search/Enter after typing")),
                 listOf("text")
+            )
+            addTool(
+                "press_enter",
+                "Inspect the live keyboard (One UI, ColorOS, MagicOS, Gboard, SwiftKey) and search bar to locate and tap the real Enter / Search / Go / Send button.",
+                JSONObject()
             )
             addTool("press_back", "Press the Android system Back button.", JSONObject())
             addTool("press_home", "Press the Android system Home button.", JSONObject())
