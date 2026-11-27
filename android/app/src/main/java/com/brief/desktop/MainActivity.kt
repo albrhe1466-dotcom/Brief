@@ -4,15 +4,20 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.view.LayoutInflater
 import android.view.View
 import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -23,6 +28,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -57,6 +63,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var uiPrefs: android.content.SharedPreferences
     private var setupDialog: AlertDialog? = null
     private var pendingInstallApkFile: File? = null
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var pendingWebAudioRequest: PermissionRequest? = null
     private val updateHttp: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
@@ -107,7 +115,26 @@ class MainActivity : AppCompatActivity() {
                     WebSettingsCompat.setAlgorithmicDarkeningAllowed(this, false)
                 }
             }
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+                override fun onPermissionRequest(request: PermissionRequest) {
+                    runOnUiThread {
+                        if (request.resources.contains(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) {
+                            if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                                request.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE))
+                            } else {
+                                pendingWebAudioRequest = request
+                                androidx.core.app.ActivityCompat.requestPermissions(
+                                    this@MainActivity,
+                                    arrayOf(android.Manifest.permission.RECORD_AUDIO),
+                                    1002
+                                )
+                            }
+                        } else {
+                            request.deny()
+                        }
+                    }
+                }
+            }
             webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(
                     view: WebView,
@@ -137,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=217")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=218")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -161,8 +188,22 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 1002) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            pendingWebAudioRequest?.let { req ->
+                pendingWebAudioRequest = null
+                if (granted) req.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) else req.deny()
+            }
+            emitJsEvent("voice:permission", JSONObject().put("granted", granted))
+        }
         refreshSetupDialogUi()
         emitJsEvent("models:updated", buildBundleObject())
+    }
+
+    override fun onDestroy() {
+        runCatching { speechRecognizer?.destroy() }
+        speechRecognizer = null
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -355,12 +396,12 @@ class MainActivity : AppCompatActivity() {
         }.getOrElse { JSONObject().put("chats", JSONArray()).put("projects", JSONArray()) }
 
         val pkgInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
-        val actualVersionName = pkgInfo?.versionName ?: "2.1.2-beta"
+        val actualVersionName = pkgInfo?.versionName ?: "2.1.3-beta"
         val actualBuildCode = if (pkgInfo != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             pkgInfo.longVersionCode.toInt()
         } else {
             @Suppress("DEPRECATION")
-            pkgInfo?.versionCode ?: 217
+            pkgInfo?.versionCode ?: 218
         }
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
@@ -561,7 +602,7 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startAndroidApkUpdateJson(apkUrl: String, versionTag: String): String {
-            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.2-beta" }
+            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.3-beta" }
             val cleanUrl = apkUrl.trim().ifEmpty {
                 "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v$safeVer.apk"
             }
@@ -684,19 +725,130 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun transcribeVoiceAsync(callId: String, payloadJson: String) {
+            val payload = runCatching { JSONObject(payloadJson) }.getOrElse { JSONObject() }
+            val wavB64 = payload.optString("wavBase64")
+            lifecycleScope.launch {
+                val (ok, resTxt) = withContext(Dispatchers.IO) {
+                    aiClient.transcribeAudioWav(wavB64, vault)
+                }
+                resolveJsCall(
+                    callId,
+                    JSONObject().apply {
+                        put("ok", ok)
+                        if (ok) put("text", resTxt) else put("error", resTxt)
+                    }
+                )
+            }
+        }
+
+        @JavascriptInterface
+        fun startNativeVoiceMemoJson(): String {
+            val hasAudio = ContextCompat.checkSelfPermission(
+                this@MainActivity,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasAudio) {
+                runOnUiThread {
+                    androidx.core.app.ActivityCompat.requestPermissions(
+                        this@MainActivity,
+                        arrayOf(android.Manifest.permission.RECORD_AUDIO),
+                        1002
+                    )
+                }
+                return JSONObject().put("ok", false).put("needsPermission", true).toString()
+            }
+            if (!SpeechRecognizer.isRecognitionAvailable(this@MainActivity)) {
+                return JSONObject().put("ok", false).put("unavailable", true).toString()
+            }
+            runOnUiThread {
+                try {
+                    speechRecognizer?.destroy()
+                    val rec = SpeechRecognizer.createSpeechRecognizer(this@MainActivity)
+                    speechRecognizer = rec
+                    rec.setRecognitionListener(object : RecognitionListener {
+                        override fun onReadyForSpeech(params: Bundle?) {
+                            emitJsEvent("voice:state", JSONObject().put("state", "listening"))
+                        }
+                        override fun onBeginningOfSpeech() {}
+                        override fun onRmsChanged(rmsdB: Float) {
+                            val norm = ((rmsdB + 2f) / 12f).coerceIn(0.05f, 1.0f)
+                            emitJsEvent("voice:rms", JSONObject().put("level", norm.toDouble()))
+                        }
+                        override fun onBufferReceived(buffer: ByteArray?) {}
+                        override fun onEndOfSpeech() {}
+                        override fun onError(error: Int) {
+                            emitJsEvent("voice:result", JSONObject().put("ok", false).put("errorCode", error))
+                        }
+                        override fun onPartialResults(partialResults: Bundle?) {
+                            val list = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                            val txt = list?.firstOrNull().orEmpty().trim()
+                            if (txt.isNotEmpty()) {
+                                emitJsEvent("voice:partial", JSONObject().put("text", txt))
+                            }
+                        }
+                        override fun onResults(results: Bundle?) {
+                            val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                            val txt = list?.firstOrNull().orEmpty().trim()
+                            emitJsEvent("voice:result", JSONObject().put("ok", txt.isNotEmpty()).put("text", txt))
+                        }
+                        override fun onEvent(eventType: Int, params: Bundle?) {}
+                    })
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+                    }
+                    rec.startListening(intent)
+                } catch (e: Exception) {
+                    emitJsEvent("voice:result", JSONObject().put("ok", false).put("error", e.message ?: "Recognizer error"))
+                }
+            }
+            return JSONObject().put("ok", true).toString()
+        }
+
+        @JavascriptInterface
+        fun stopNativeVoiceMemoJson(cancel: Boolean): String {
+            runOnUiThread {
+                try {
+                    if (cancel) {
+                        speechRecognizer?.cancel()
+                        speechRecognizer?.destroy()
+                        speechRecognizer = null
+                    } else {
+                        speechRecognizer?.stopListening()
+                    }
+                } catch (_: Exception) {}
+            }
+            return JSONObject().put("ok", true).toString()
+        }
+
+        @JavascriptInterface
         fun runChatAsync(callId: String, payloadJson: String) {
             val payload = runCatching { JSONObject(payloadJson) }.getOrElse { JSONObject() }
+            val chatId = payload.optString("chatId")
             val msgs = payload.optJSONArray("messages") ?: JSONArray()
             val lastPrompt = if (msgs.length() > 0) msgs.optJSONObject(msgs.length() - 1)?.optString("text").orEmpty() else ""
             val prov = vault.getActiveProvider()
             val model = vault.getActiveModel(prov)
+            val webSearches = JSONArray()
 
             emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "chat").put("stepText", "Thinking…"))
             lifecycleScope.launch {
                 val reply = withContext(Dispatchers.IO) {
-                    agent.runUserMessage(lastPrompt, workMode = false, onStep = { stepTxt ->
-                        emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "chat").put("stepText", stepTxt))
-                    })
+                    agent.runUserMessage(
+                        prompt = lastPrompt,
+                        workMode = false,
+                        priorMessages = msgs,
+                        onStep = { stepTxt ->
+                            emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "chat").put("stepText", stepTxt))
+                        },
+                        onWebSources = { wsObj ->
+                            wsObj.put("chatId", chatId).put("mode", "chat")
+                            if (wsObj.optString("phase") == "done") webSearches.put(wsObj)
+                            emitJsEvent("agent:web-sources", wsObj)
+                        }
+                    )
                 }
                 emitJsEvent("agent:status", JSONObject().put("running", false).put("mode", "chat").put("stepText", "Ready"))
                 resolveJsCall(
@@ -704,6 +856,7 @@ class MainActivity : AppCompatActivity() {
                     JSONObject().apply {
                         put("text", reply)
                         put("model", model)
+                        put("webSearches", webSearches)
                     }
                 )
             }
@@ -714,12 +867,13 @@ class MainActivity : AppCompatActivity() {
             val payload = runCatching { JSONObject(payloadJson) }.getOrElse { JSONObject() }
             val chatId = payload.optString("chatId")
             val workVisualMode = payload.optString("workVisualMode", "photos")
+            val msgs = payload.optJSONArray("messages") ?: JSONArray()
             val task = payload.optString("task").ifEmpty {
-                val msgs = payload.optJSONArray("messages") ?: JSONArray()
                 if (msgs.length() > 0) msgs.optJSONObject(msgs.length() - 1)?.optString("text").orEmpty() else ""
             }
             val prov = vault.getActiveProvider()
             val model = vault.getActiveModel(prov)
+            val webSearches = JSONArray()
 
             if (!BriefAccessibilityService.isEnabled(this@MainActivity)) {
                 runOnUiThread { showNativePhoneSetupDialog() }
@@ -749,6 +903,7 @@ class MainActivity : AppCompatActivity() {
                         workVisualMode = workVisualMode,
                         cursorSpeedMs = effectiveSpeedMs,
                         touchTypingMode = touchTypingMode,
+                        priorMessages = msgs,
                         onStep = { stepTxt ->
                             emitJsEvent("agent:status", JSONObject().put("running", true).put("mode", "work").put("stepText", stepTxt))
                         },
@@ -767,6 +922,11 @@ class MainActivity : AppCompatActivity() {
                                     .put("plan", planObj.optString("plan"))
                                     .put("planSteps", planObj.optJSONArray("planSteps"))
                             )
+                        },
+                        onWebSources = { wsObj ->
+                            wsObj.put("chatId", chatId).put("mode", "work")
+                            if (wsObj.optString("phase") == "done") webSearches.put(wsObj)
+                            emitJsEvent("agent:web-sources", wsObj)
                         }
                     )
                 }
@@ -777,6 +937,7 @@ class MainActivity : AppCompatActivity() {
                         put("text", reply)
                         put("model", model)
                         put("steps", collectedSteps)
+                        put("webSearches", webSearches)
                     }
                 )
             }

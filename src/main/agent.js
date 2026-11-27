@@ -18,6 +18,30 @@ const { sanitizeModelIdValue } = require('./store');
 const { TOOLS, CU_ACTIONS, declarations, getTool, pointsOf, isPermanentDeleteCommand, runLiveWebSearch, stopAllTerminalSessions } = require('./tools');
 const { buildChatSystemPrompt, buildWorkSystemPrompt, classifyModelTier } = require('./systemPrompt');
 
+function extractDomainSafe(rawUrl) {
+  try {
+    return new URL(String(rawUrl || '')).hostname.toLowerCase().replace(/^www\./, '');
+  } catch (_) {
+    return '';
+  }
+}
+
+function buildRedirectMemoryReminder(messages) {
+  if (!Array.isArray(messages) || messages.length < 2) return '';
+  const corrections = [];
+  for (const m of messages.slice(-8)) {
+    if (!m || m.role !== 'user' || !m.text) continue;
+    const t = String(m.text).replace(/\s+/g, ' ').trim();
+    if (/\b(?:no[,\s]+(?:not|don'?t|do\s+not|open|use|go|click|pick|choose|try|we\s+would)|instead\s+of|not\s+that\s+(?:one|tab|app|link|video|channel|file)|wrong\s+(?:one|tab|app|link|file|path)|don'?t\s+open\s+.+\s+open)\b/i.test(t)) {
+      corrections.push(t.slice(0, 220));
+    }
+  }
+  if (!corrections.length) return '';
+  return '\n\n[USER REDIRECT & CORRECTION MEMORY — REMEMBER & FOLLOW CALMLY WITHOUT CONFUSION]:\n' +
+    corrections.map((c, i) => `${i + 1}. User redirected: "${c}"`).join('\n') +
+    '\nFollow the latest target directly, never drift back to the rejected option, and stay calm and decisive.';
+}
+
 /** Plain-English 1-sentence explanation of what Brief just did for the step photo caption. */
 function summarizeStepForUser(name, args, ok, res) {
   if (!ok) {
@@ -619,6 +643,8 @@ class AgentRunner extends EventEmitter {
         } catch (_) { shareShot = null; }
       }
       let searchContextText = '';
+      const collectedWebSearches = [];
+      const redirectMemoryText = buildRedirectMemoryReminder(messages);
       const rawPrompt = String(lastMsg.text || '').trim();
       const priorUserTexts = messages
         .slice(0, -1)
@@ -637,12 +663,22 @@ class AgentRunner extends EventEmitter {
         /\b(search|look up|latest|news|yesterday|today|tonight|recent|happened|event|riyadh|saudi|city|country|world|weather|price|cost|release|2025|2026|who|what|when|where|why|how|compare|vs\.?|best\b|review|docs|documentation|error|version|update|download|current|live|fact|research|explain)\b/i.test(effectiveSearchQuery)
       );
       if (useSearch && effectiveSearchQuery.length > 2 && !mentionsBrief2026Models && (isExtraLevel || needsNormalWebSearch)) {
+        const searchQ = effectiveSearchQuery.slice(0, 160);
         this.setStatus({
           running: true,
           state: 'thinking',
           mode: 'chat',
           model: modelInfo.id,
           stepText: isExtraLevel ? 'Doing extra web research…' : 'Searching the web…'
+        });
+        this.emit('web-sources', {
+          runId,
+          chatId,
+          mode: 'chat',
+          phase: 'searching',
+          query: searchQ,
+          engine: 'duckduckgo.com',
+          sources: []
         });
         let hits = [];
         if (isExtraLevel) {
@@ -665,11 +701,34 @@ class AgentRunner extends EventEmitter {
         } else {
           const searchBudgetMs = isFastModel ? 1600 : 2200;
           hits = await Promise.race([
-            runLiveWebSearch(effectiveSearchQuery.slice(0, 160), 5),
+            runLiveWebSearch(searchQ, 5),
             sleep(searchBudgetMs).then(() => [])
           ]).catch(() => []);
         }
         if (Array.isArray(hits) && hits.length) {
+          const normSources = hits.map((h) => ({
+            title: h.title || h.url,
+            url: h.url,
+            domain: h.domain || extractDomainSafe(h.url),
+            engine: h.engine || 'duckduckgo.com',
+            snippet: h.snippet || '',
+            visited: false
+          }));
+          const searchEntry = {
+            query: searchQ,
+            engine: (normSources[0] && normSources[0].engine) || 'duckduckgo.com',
+            sources: normSources
+          };
+          collectedWebSearches.push(searchEntry);
+          this.emit('web-sources', {
+            runId,
+            chatId,
+            mode: 'chat',
+            phase: 'done',
+            query: searchQ,
+            engine: searchEntry.engine,
+            sources: normSources
+          });
           const header = isExtraLevel
             ? `[EXTRA Live Web Search Results for "${effectiveSearchQuery.slice(0, 90)}" — synthesize these real facts thoroughly]:`
             : `[Live Web Search Results for "${effectiveSearchQuery.slice(0, 90)}" — answer directly using these real facts]:`;
@@ -683,7 +742,8 @@ class AgentRunner extends EventEmitter {
         const msg = messages[i];
         const parts = [];
         if (msg.text) {
-          const txt = (i === messages.length - 1 && searchContextText) ? (msg.text + searchContextText) : msg.text;
+          const extraTail = i === messages.length - 1 ? ((searchContextText || '') + (redirectMemoryText || '')) : '';
+          const txt = extraTail ? (msg.text + extraTail) : msg.text;
           parts.push({ text: txt });
         }
         if (i === messages.length - 1 && shareShot && shareShot.base64) {
@@ -811,12 +871,46 @@ class AgentRunner extends EventEmitter {
         for (const wc of webCalls) {
           const fc = wc.functionCall;
           const tool = getTool(fc.name);
+          const wcQuery = (fc.args && (fc.args.query || fc.args.url)) || '';
           this.setStatus({ running: true, state: 'thinking', mode: 'chat', model: activeChatModel, stepText: fc.name === 'web_search' ? `Searching web: "${(fc.args && fc.args.query) || ''}"…` : 'Reading web page…' });
+          this.emit('web-sources', {
+            runId,
+            chatId,
+            mode: 'chat',
+            phase: 'searching',
+            query: wcQuery,
+            engine: fc.name === 'fetch_url' ? (extractDomainSafe(wcQuery) || 'duckduckgo.com') : 'duckduckgo.com',
+            sources: []
+          });
           let out = { ok: false, error: 'Tool unavailable' };
           try {
             if (tool) out = await tool.run(fc.args || {}, this.makeToolContext({ chatId, step: webRound + 1 }));
           } catch (e) {
             out = { ok: false, error: e.message };
+          }
+          if (fc.name === 'web_search' && out && Array.isArray(out.results) && out.results.length) {
+            const normSources = out.results.map((h) => ({
+              title: h.title || h.url,
+              url: h.url,
+              domain: h.domain || extractDomainSafe(h.url),
+              engine: h.engine || out.engine || 'duckduckgo.com',
+              snippet: h.snippet || '',
+              visited: false
+            }));
+            const entry = { query: out.query || wcQuery, engine: out.engine || 'duckduckgo.com', sources: normSources };
+            collectedWebSearches.push(entry);
+            this.emit('web-sources', { runId, chatId, mode: 'chat', phase: 'done', query: entry.query, engine: entry.engine, sources: normSources });
+          } else if (fc.name === 'fetch_url' && out && out.url) {
+            const visitedSrc = [{
+              title: out.title || out.url,
+              url: out.url,
+              domain: out.domain || extractDomainSafe(out.url),
+              engine: extractDomainSafe(out.url),
+              snippet: String(out.content || '').slice(0, 160),
+              visited: true
+            }];
+            collectedWebSearches.push({ query: out.title || out.url, engine: extractDomainSafe(out.url), visited: true, sources: visitedSrc });
+            this.emit('web-sources', { runId, chatId, mode: 'chat', phase: 'done', query: out.title || out.url, engine: extractDomainSafe(out.url), sources: visitedSrc });
           }
           fnResponses.push({
             functionResponse: Object.assign(fc.id ? { id: fc.id } : {}, { name: fc.name, response: out })
@@ -832,7 +926,7 @@ class AgentRunner extends EventEmitter {
         detail: 'Completed (' + ((res.usage && res.usage.totalTokenCount) || 0) + ' tokens)'
       });
       this.setStatus({ running: false, state: 'idle', stepText: 'Ready' });
-      return { text: fullText || res.text, thought: thoughtText, model: activeChatModel, usage: res.usage };
+      return { text: fullText || res.text, thought: thoughtText, model: activeChatModel, usage: res.usage, webSearches: collectedWebSearches };
     } catch (e) {
       if (this.stopped || e.kind === 'aborted' || e.name === 'AbortError') {
         this.emitLog({ kind: 'chat', status: 'stopped', model: modelInfo.id, tool: 'chat_stream', detail: 'Cancelled by user.' });
@@ -1160,6 +1254,8 @@ class AgentRunner extends EventEmitter {
     const cuAvailable = screenModel.isComputerUse && screenModel.id !== agentModel.id;
     let usingDirectCu = agentModel.isComputerUse;
     const stepLog = [];
+    const workWebSearches = [];
+    const workRedirectMemory = buildRedirectMemoryReminder(messages);
     let finalAnswer = '';
     let errorNote = null;
     let maxSteps = configuredMax;
@@ -1287,6 +1383,19 @@ class AgentRunner extends EventEmitter {
             sleep(isExtraWork ? 2400 : 900).then(() => [])
           ]).catch(() => [])
         : [];
+      if (Array.isArray(initialWebHits) && initialWebHits.length) {
+        const initSources = initialWebHits.map((h) => ({
+          title: h.title || h.url,
+          url: h.url,
+          domain: h.domain || extractDomainSafe(h.url),
+          engine: h.engine || 'duckduckgo.com',
+          snippet: h.snippet || '',
+          visited: false
+        }));
+        const initEntry = { query: String(task).trim().slice(0, 160), engine: (initSources[0] && initSources[0].engine) || 'duckduckgo.com', sources: initSources };
+        workWebSearches.push(initEntry);
+        this.emit('web-sources', { runId, chatId, mode: 'work', phase: 'done', query: initEntry.query, engine: initEntry.engine, sources: initSources });
+      }
       if (!anyPointerMoved && this.getSettings().showOverlay !== false) {
         try {
           const startMap = this.screen.mapPoint(520, 420, { scale: 1000 });
@@ -1304,6 +1413,10 @@ class AgentRunner extends EventEmitter {
       for (const m of prior) {
         if (!m.text) continue;
         contents.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.text }] });
+      }
+      if (workRedirectMemory) {
+        contents.push({ role: 'user', parts: [{ text: workRedirectMemory.trim() }] });
+        contents.push({ role: 'model', parts: [{ text: 'Understood. I will follow your latest redirect directly and will not repeat the rejected option.' }] });
       }
 
       const [initVisionShot, initUiMap] = await Promise.all([
@@ -1964,6 +2077,18 @@ class AgentRunner extends EventEmitter {
             this.emitLog({ kind: 'action', status: 'error', model: stepModelLabel, tool: name, detail: resultObj.error });
           } else {
             this.setStatus({ running: true, state: 'acting', mode: 'work', model: stepModelLabel, step, maxSteps, stepText: desc });
+            if (name === 'web_search' || name === 'fetch_url' || name === 'open_url' || name === 'navigate') {
+              const liveQ = String((args && (args.query || args.url)) || '');
+              this.emit('web-sources', {
+                runId,
+                chatId,
+                mode: 'work',
+                phase: 'searching',
+                query: liveQ,
+                engine: name === 'web_search' ? 'duckduckgo.com' : (extractDomainSafe(liveQ) || 'duckduckgo.com'),
+                sources: []
+              });
+            }
             this.emit('work-step', {
               runId,
               chatId,
@@ -2119,6 +2244,36 @@ class AgentRunner extends EventEmitter {
           };
           stepLog.push(stepItem);
           this.emit('work-step', { runId, chatId, item: stepItem });
+          if (stepOk && resultObj && typeof resultObj === 'object') {
+            if (name === 'web_search' && Array.isArray(resultObj.results) && resultObj.results.length) {
+              const stepSources = resultObj.results.map((h) => ({
+                title: h.title || h.url,
+                url: h.url,
+                domain: h.domain || extractDomainSafe(h.url),
+                engine: h.engine || resultObj.engine || 'duckduckgo.com',
+                snippet: h.snippet || '',
+                visited: false
+              }));
+              const entry = { query: resultObj.query || (args && args.query) || '', engine: resultObj.engine || 'duckduckgo.com', sources: stepSources };
+              workWebSearches.push(entry);
+              this.emit('web-sources', { runId, chatId, mode: 'work', phase: 'done', query: entry.query, engine: entry.engine, sources: stepSources });
+            } else if ((name === 'fetch_url' || name === 'open_url' || name === 'navigate') && (resultObj.url || resultObj.opened || (args && args.url))) {
+              const vUrl = String(resultObj.url || resultObj.opened || (args && args.url) || '');
+              if (/^https?:/i.test(vUrl)) {
+                const vDom = resultObj.domain || extractDomainSafe(vUrl);
+                const vSrc = [{
+                  title: resultObj.title || resultObj.foreground || vDom || vUrl,
+                  url: vUrl,
+                  domain: vDom,
+                  engine: vDom,
+                  snippet: String(resultObj.content || '').slice(0, 150),
+                  visited: true
+                }];
+                workWebSearches.push({ query: resultObj.title || vDom || vUrl, engine: vDom, visited: true, sources: vSrc });
+                this.emit('web-sources', { runId, chatId, mode: 'work', phase: 'done', query: resultObj.title || vDom || vUrl, engine: vDom, sources: vSrc });
+              }
+            }
+          }
 
           // Stuck-loop protection: track identical repeated tool calls and consecutive failures so Brief never loops forever
           const callSig = name + ':' + JSON.stringify(args || {}).slice(0, 200);
@@ -2237,6 +2392,7 @@ class AgentRunner extends EventEmitter {
       return {
         text: finalAnswer,
         steps: stepLog,
+        webSearches: workWebSearches,
         elapsedMs: finalElapsedMs,
         elapsedLabel: finalElapsedLabel,
         mutatingCount: finalMutCount,

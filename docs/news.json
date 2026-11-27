@@ -1,37 +1,37 @@
 {
-  "version": "2.1.2-beta",
-  "build": 217,
+  "version": "2.1.3-beta",
+  "build": 218,
   "releasedAt": "2026-11-27",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
-  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.2-beta.apk",
+  "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.3-beta.apk",
   "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
   "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
-  "headline": "Brief v2.1.2-beta — Centered Portrait & Landscape Android UI (Zero Notch / Zero Chin), Smart Hybrid Typing & Live One UI / ColorOS / MagicOS Enter Detection",
+  "headline": "Brief v2.1.3-beta — Voice Memo Waveform & Speech-to-Text (All 4 LLMs), Live Web Search Website Logos + ▾ Sources Drawer & 4-Stage Claude Motion",
   "bullets": [
-    "Centered Portrait & Landscape Android UI (Zero Notch Crowding & Zero Bottom Chin): Native WindowInsets cutout/system-bar handling keeps Brief clear of camera notches, eliminates the bottom chin, and centers Welcome & Onboarding cleanly in both portrait and landscape on phones & tablets.",
-    "Smart Hybrid Typing + Live OEM Enter / Search Detection: Automatically combines fresh-node input, physical on-screen keyboard tapping, and paste fallback while scanning the live keyboard window to locate and tap the exact Search / Enter / Go / Send button across Samsung One UI, Oppo/Realme ColorOS, Honor MagicOS & Gboard.",
-    "Full Multi-Step Vision Across All 4 AIs (Fastest & Strongest Models): Fixed strict turn-alternation merging on Claude, Gemini, OpenAI & OpenRouter and exposed live [KEYBOARD_ENTER_KEY] coordinates + press_enter tool to every model.",
-    "Global 1-Tap Update to v2.1.2-beta: Automatically notifies all Windows, Linux, and Android phones/tablets to update straight over v2.1.1-beta and earlier."
+    "Voice Memo Waveform & Speech-to-Text Across All 4 LLMs + PC Mic Selector: Tap the Microphone button right beside Send to turn your message bar into a live waveform memo and convert your voice into exact text on Gemini, OpenAI, Claude & OpenRouter; on PC & laptops, click the arrow inside the mic circle to switch inserted Headphones, 3.5mm Aux, USB, or built-in mics (hidden on phones & tablets).",
+    "Live Web Search Website Logos & Expandable ▾ Sources Drawer: Shows real website favicons on the right whenever Brief searches the web, expanding below to display what was searched, visited links, and a crisp blue Open button for every website.",
+    "4-Stage Claude #d9693f Motion (1.2× Faster) & Main-Menu Clawd: Starburst petals smoothly spawn 3 pure orbiting balls (1.2× faster, zero rings), align into soft wave pulse & jumping loading dots, and display Clawd strictly on the Brief Work main menu.",
+    "Fixed Model-Switch Status & Added Calm Redirect Memory: Eliminated stuck Checking… / Ready indicators when switching providers and upgraded multi-turn redirect memory ('No, open X instead of Y') across Windows, Linux & Android."
   ],
   "photos": [
     {
-      "src": "assets/brief-wordmark.png",
-      "tag": "New Release · v2.1.2-beta",
-      "title": "Centered Android Phones & Tablets + Smart OEM Enter Detection",
-      "caption": "Brief v2.1.2-beta centers portrait & landscape layouts cleanly away from the notch and detects Enter/Search keys live across One UI, ColorOS & MagicOS."
+      "src": "assets/news-v213-voice-memo.svg",
+      "tag": "All 4 LLMs · v2.1.3-beta",
+      "title": "Voice Memo Waveform & Speech-to-Text",
+      "caption": "Tap the Microphone next to Send to record a live waveform voice memo and convert your spoken words into exact text across Gemini, OpenAI, Claude & OpenRouter."
     },
     {
-      "src": "assets/news-v200-android.png",
-      "tag": "Android Phones & Tablets · v2.1.2-beta",
-      "title": "One UI, ColorOS & MagicOS Smart Hybrid Typing",
-      "caption": "Works seamlessly across fast & flagship models on Gemini, OpenAI, Claude & OpenRouter with live 150f vision."
+      "src": "assets/news-v213-web-search.svg",
+      "tag": "Live Search · v2.1.3-beta",
+      "title": "Web Search Website Logos & ▾ Visited Links",
+      "caption": "See real website favicons on the right when Brief searches the web, expand the ▾ drawer to inspect queries & visited pages, and open any link with the blue button."
     },
     {
-      "src": "assets/news-v200-linux.png",
-      "tag": "Windows & Linux · v2.1.2-beta",
-      "title": "Clawd in Brief Code, Authentic #d9693f Animations & </> Live Code",
-      "caption": "Seamless Clawd coding & soccer GIFs, 200x200 3D Orbiting Dots, and 1-click desktop/APK updates."
+      "src": "assets/news-v213-claude-motion.svg",
+      "tag": "Motion & Memory · v2.1.3-beta",
+      "title": "4-Stage #d9693f Motion (1.2× Faster) & Clean Status",
+      "caption": "Smooth starburst-to-3-balls orbit (1.2× faster, no rings) -> wave pulse -> jumping wave, Brief Work main-menu Clawd, and calm redirect memory."
     }
   ]
 }

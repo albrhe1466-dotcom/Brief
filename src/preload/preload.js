@@ -57,11 +57,13 @@ contextBridge.exposeInMainWorld('locallyAPI', {
   listShareSources: () => ipcRenderer.invoke('screenshare:list'),
   captureSharePreview: (source) => ipcRenderer.invoke('screenshare:preview', source),
 
-  // Chat / Work agent execution
+  // Chat / Work agent execution & Voice Memo Speech-to-Text
   runChat: (payload) => ipcRenderer.invoke('agent:chat', payload),
   runWork: (payload) => ipcRenderer.invoke('agent:work', payload),
   stopAgent: (reason) => ipcRenderer.invoke('agent:stop', reason),
   resolveApproval: (decision) => ipcRenderer.invoke('agent:approval', decision),
+  transcribeVoice: (payload) => ipcRenderer.invoke('voice:transcribe', payload),
+  listMics: () => ipcRenderer.invoke('voice:list-mics'),
 
   // MCP Servers
   mcpList: () => ipcRenderer.invoke('mcp:list'),
@@ -88,5 +90,6 @@ contextBridge.exposeInMainWorld('locallyAPI', {
   onSettingsChanged: (fn) => subscribe('settings:changed', fn),
   onModelsUpdated: (fn) => subscribe('models:updated', fn),
   onMcpUpdated: (fn) => subscribe('mcp:updated', fn),
-  onCursorEvent: (fn) => subscribe('cursor:event', fn)
+  onCursorEvent: (fn) => subscribe('cursor:event', fn),
+  onWebSources: (fn) => subscribe('agent:web-sources', fn)
 });

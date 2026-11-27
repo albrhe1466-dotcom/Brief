@@ -16,6 +16,7 @@ const {
   ipcMain,
   globalShortcut,
   screen,
+  session,
   shell,
   dialog,
   systemPreferences,
@@ -360,6 +361,7 @@ agent.on('approval-required', (req) => {
   broadcast('agent:approval-required', req);
 });
 agent.on('approval-resolved', (p) => broadcast('agent:approval-resolved', p));
+agent.on('web-sources', (p) => broadcast('agent:web-sources', p));
 agent.on('set-watch-live', (watch) => {
   const next = settingsStore.set({ showOverlay: !!watch });
   if (!watch) {
@@ -422,6 +424,17 @@ function createMainWindow() {
       spellcheck: true
     }
   });
+
+  try {
+    const allowedMediaPerms = new Set(['media', 'audioCapture', 'microphone']);
+    session.defaultSession.setPermissionCheckHandler((_wc, permission) => {
+      if (allowedMediaPerms.has(permission)) return true;
+      return false;
+    });
+    session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+      callback(allowedMediaPerms.has(permission));
+    });
+  } catch (_) { /* ignore */ }
 
   mainWindow.loadFile(path.join(ROOT, 'app.html'));
   mainWindow.on('closed', () => {
@@ -1284,6 +1297,161 @@ function setupIpc() {
 
   ipcMain.handle('agent:stop', (_e, reason) => agent.stop(reason || 'Stopped by user.'));
   ipcMain.handle('agent:approval', (_e, decision) => agent.resolveApproval(decision));
+
+  ipcMain.handle('voice:list-mics', async () => {
+    const { execFile } = require('child_process');
+    if (process.platform === 'win32') {
+      const psCmd = "[Console]::OutputEncoding=[Text.Encoding]::UTF8; $eps = @(Get-PnpDevice -Class AudioEndpoint -Status OK -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match 'Mic|Headset|Headphone|Line|Aux|Jack|Array|USB|Hands-Free|Input|Yeti|Fifine|HyperX|Rode|Shure|Elgato|Blue|Realtek' -and $_.FriendlyName -notmatch 'Speakers|Output|Monitor|HDMI|DisplayPort|Digital Output' } | Select-Object -ExpandProperty FriendlyName); $eps | ConvertTo-Json -Compress";
+      const out = await new Promise((resolve) => {
+        execFile('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', psCmd], { windowsHide: true, timeout: 3000 }, (err, stdout) => {
+          resolve(err ? '' : String(stdout || '').trim());
+        });
+      });
+      let devices = [];
+      if (out) {
+        try {
+          const parsed = JSON.parse(out);
+          devices = (Array.isArray(parsed) ? parsed : [parsed]).filter(Boolean).map((n) => ({ label: String(n).trim() }));
+        } catch (_) {}
+      }
+      return { platform: 'win32', devices };
+    }
+    if (process.platform === 'linux') {
+      const out = await new Promise((resolve) => {
+        execFile('sh', ['-c', 'pactl list sources 2>/dev/null | grep -E "Name:|Description:" || arecord -l 2>/dev/null || true'], { timeout: 2500 }, (err, stdout) => {
+          resolve(err ? '' : String(stdout || '').trim());
+        });
+      });
+      const devices = [];
+      for (const line of String(out || '').split(/\r?\n/)) {
+        const m = /^\s*Description:\s*(.+)$/i.exec(line);
+        if (m && m[1] && !/monitor of/i.test(m[1])) {
+          devices.push({ label: m[1].trim() });
+        }
+      }
+      return { platform: 'linux', devices };
+    }
+    return { platform: process.platform, devices: [] };
+  });
+
+  ipcMain.handle('voice:transcribe', async (_e, payload) => {
+    await keyStore.init();
+    const wavB64 = String((payload && payload.wavBase64) || '').trim();
+    if (!wavB64 || wavB64.length < 120) {
+      return { ok: false, error: 'Voice memo was too short or silent.' };
+    }
+    const wavBuf = Buffer.from(wavB64, 'base64');
+    const activeProv = String(settingsStore.get().provider || 'gemini').toLowerCase();
+    const order = [activeProv, 'openai', 'gemini', 'openrouter'].filter((v, idx, arr) => arr.indexOf(v) === idx);
+    const cleanTranscript = (raw) => String(raw || '')
+      .replace(/^```[a-z]*\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .replace(/^["'“”]+|["'“”]+$/g, '')
+      .trim();
+
+    for (const prov of order) {
+      const apiKey = await keyStore.getAsync(prov);
+      if (!apiKey) continue;
+      if (prov === 'openai') {
+        for (const sttModel of ['gpt-4o-mini-transcribe', 'whisper-1']) {
+          try {
+            const fd = new FormData();
+            fd.append('file', new Blob([wavBuf], { type: 'audio/wav' }), 'memo.wav');
+            fd.append('model', sttModel);
+            const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + apiKey },
+              body: fd
+            });
+            if (r.ok) {
+              const j = await r.json();
+              const t = cleanTranscript(j && j.text);
+              if (t) return { ok: true, text: t, engine: 'openai:' + sttModel };
+            }
+          } catch (_) { /* try next */ }
+        }
+      } else if (prov === 'gemini') {
+        for (const gModel of ['gemini-2.5-flash', 'gemini-2.0-flash']) {
+          try {
+            const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + gModel + ':generateContent?key=' + encodeURIComponent(apiKey), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  role: 'user',
+                  parts: [
+                    { text: 'Listen carefully to this voice memo and transcribe the exact spoken words verbatim with accurate spelling and punctuation. Output ONLY the exact spoken words — no commentary, no labels, no quotes. If completely silent, output nothing.' },
+                    { inlineData: { mimeType: 'audio/wav', data: wavB64 } }
+                  ]
+                }],
+                generationConfig: { temperature: 0 }
+              })
+            });
+            if (r.ok) {
+              const j = await r.json();
+              const parts = (((j && j.candidates) || [])[0] || {}).content;
+              const t = cleanTranscript(((parts && parts.parts) || []).filter((p) => !p.thought && p.text).map((p) => p.text).join(' '));
+              if (t) return { ok: true, text: t, engine: 'gemini:' + gModel };
+            }
+          } catch (_) { /* try next */ }
+        }
+      } else if (prov === 'openrouter') {
+        for (const orModel of ['google/gemini-2.5-flash', 'openai/gpt-4o-audio-preview']) {
+          try {
+            const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + apiKey,
+                'HTTP-Referer': 'https://locally.app',
+                'X-Title': 'Brief'
+              },
+              body: JSON.stringify({
+                model: orModel,
+                temperature: 0,
+                messages: [{
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: 'Transcribe the exact spoken words in this audio verbatim with accurate punctuation. Output ONLY the spoken transcript, nothing else.' },
+                    { type: 'input_audio', input_audio: { data: wavB64, format: 'wav' } }
+                  ]
+                }]
+              })
+            });
+            if (r.ok) {
+              const j = await r.json();
+              const msg = (((j && j.choices) || [])[0] || {}).message || {};
+              const t = cleanTranscript(msg.content);
+              if (t) return { ok: true, text: t, engine: 'openrouter:' + orModel };
+            }
+          } catch (_) { /* try next */ }
+        }
+      }
+    }
+
+    // Native Windows offline speech recognition fallback (works even with Claude-only API key!)
+    if (process.platform === 'win32') {
+      const tmpWav = path.join(os.tmpdir(), 'brief-memo-' + Date.now() + '.wav');
+      try {
+        await fsp.writeFile(tmpWav, wavBuf);
+        const { execFile } = require('child_process');
+        const psText = await new Promise((resolve) => {
+          const psCmd = `[Console]::OutputEncoding=[Text.Encoding]::UTF8; Add-Type -AssemblyName System.Speech; $rec = New-Object System.Speech.Recognition.SpeechRecognitionEngine; $rec.LoadGrammar((New-Object System.Speech.Recognition.DictationGrammar)); $rec.SetInputToWaveFile('${tmpWav.replace(/'/g, "''")}'); $out = @(); while ($true) { $r = $rec.Recognize(); if (-not $r) { break }; if ($r.Text) { $out += $r.Text } }; $rec.Dispose(); ($out -join ' ')`;
+          execFile('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', psCmd], { windowsHide: true, timeout: 14000 }, (err, stdout) => {
+            resolve(err ? '' : String(stdout || '').trim());
+          });
+        });
+        const t = cleanTranscript(psText);
+        if (t) return { ok: true, text: t, engine: 'windows-speech' };
+      } catch (_) {
+        /* ignore */
+      } finally {
+        fsp.unlink(tmpWav).catch(() => {});
+      }
+    }
+
+    return { ok: false, error: 'Could not hear clear speech in the memo. Speak clearly near your microphone and try again.' };
+  });
 
   ipcMain.handle('mcp:list', () => mcpManager.list());
   ipcMain.handle('mcp:detect-apps', () => mcpManager.detectRunningApps());

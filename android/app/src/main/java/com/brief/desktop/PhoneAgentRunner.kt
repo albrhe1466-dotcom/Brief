@@ -98,14 +98,45 @@ class PhoneAgentRunner(
         workVisualMode: String = "photos",
         cursorSpeedMs: Long = 560L,
         touchTypingMode: String = "touch",
+        priorMessages: JSONArray? = null,
         onStep: (String) -> Unit,
         onStepItem: ((JSONObject) -> Unit)? = null,
-        onPlan: ((JSONObject) -> Unit)? = null
+        onPlan: ((JSONObject) -> Unit)? = null,
+        onWebSources: ((JSONObject) -> Unit)? = null
     ): String {
         stopped = false
         BriefAccessibilityService.configuredCursorSpeedMs = cursorSpeedMs.coerceIn(220L, 1400L)
         BriefAccessibilityService.configuredTouchTypingMode =
             if (touchTypingMode.equals("keyboard", ignoreCase = true)) "keyboard" else "touch"
+
+        // Sync multi-turn conversation memory cleanly for this chat (including "no, open X instead of Y" redirects!)
+        val redirectHints = mutableListOf<String>()
+        if (priorMessages != null) {
+            history.clear()
+            val priorCount = (priorMessages.length() - 1).coerceAtLeast(0)
+            val startIdx = (priorCount - 10).coerceAtLeast(0)
+            for (i in startIdx until priorCount) {
+                val m = priorMessages.optJSONObject(i) ?: continue
+                val roleRaw = m.optString("role")
+                val txt = m.optString("text").trim()
+                if (txt.isEmpty()) continue
+                history.add(
+                    ConversationTurn(
+                        role = if (roleRaw == "assistant" || roleRaw == "model") "model" else "user",
+                        text = txt.take(6000)
+                    )
+                )
+                if (roleRaw == "user" && Regex("\\b(no[,\\s]+(?:not|don'?t|open|use|go|click|pick|choose)|instead\\s+of|not\\s+that|wrong\\s+(?:one|tab|app|link|video|channel))\\b", RegexOption.IGNORE_CASE).containsMatchIn(txt)) {
+                    redirectHints.add(txt.take(200))
+                }
+            }
+        }
+        if (Regex("\\b(no[,\\s]+(?:not|don'?t|open|use|go|click|pick|choose)|instead\\s+of|not\\s+that|wrong\\s+(?:one|tab|app|link|video|channel))\\b", RegexOption.IGNORE_CASE).containsMatchIn(prompt)) {
+            redirectHints.add(prompt.take(200))
+        }
+        val redirectMemorySuffix = if (redirectHints.isNotEmpty()) {
+            "\n[USER REDIRECT MEMORY — FOLLOW CALMLY & NEVER REPEAT REJECTED OPTION]: " + redirectHints.takeLast(3).joinToString(" | ")
+        } else ""
 
         val isBgVisual = workVisualMode.equals("background", ignoreCase = true)
         val provider = vault.getActiveProvider()
@@ -160,10 +191,10 @@ class PhoneAgentRunner(
         }
 
         val enrichedPrompt = if (workMode) {
-            prompt + formatUiSnapshotForAi(initialUi) +
+            prompt + redirectMemorySuffix + formatUiSnapshotForAi(initialUi) +
                 "\n[Calibrated 0..1000 HD screenshot attached. Execute the user's FULL multi-step goal step-by-step until completely finished on screen!]"
         } else {
-            prompt
+            prompt + redirectMemorySuffix
         }
 
         history.add(
@@ -248,6 +279,16 @@ class PhoneAgentRunner(
 
                     val humanDesc = describeToolCall(tc)
                     onStep("Step $step — $humanDesc")
+                    if (tc.name in setOf("web_search", "fetch_url", "open_url")) {
+                        val liveQ = tc.args.optString("query").ifEmpty { tc.args.optString("url") }
+                        onWebSources?.invoke(
+                            JSONObject()
+                                .put("phase", "searching")
+                                .put("query", liveQ)
+                                .put("engine", "duckduckgo.com")
+                                .put("sources", JSONArray())
+                        )
+                    }
                     val callId = tc.id.ifEmpty { "step_${step}_${tc.name}" }
                     onStepItem?.invoke(
                         JSONObject().apply {
@@ -267,6 +308,45 @@ class PhoneAgentRunner(
                         JSONObject().put("error", "Repeated identical action 4 times; try a different coordinate, tap_element, or swipe to scroll.").toString()
                     } else {
                         executeTool(tc, provider)
+                    }
+
+                    if (tc.name in setOf("web_search", "fetch_url", "open_url")) {
+                        runCatching {
+                            val parsed = JSONObject(out)
+                            if (tc.name == "web_search") {
+                                val resArr = parsed.optJSONArray("results") ?: JSONArray()
+                                if (resArr.length() > 0) {
+                                    onWebSources?.invoke(
+                                        JSONObject()
+                                            .put("phase", "done")
+                                            .put("query", parsed.optString("query", tc.args.optString("query")))
+                                            .put("engine", parsed.optString("engine", "duckduckgo.com"))
+                                            .put("sources", resArr)
+                                    )
+                                }
+                            } else {
+                                val vUrl = parsed.optString("url").ifEmpty { tc.args.optString("url") }
+                                if (vUrl.startsWith("http")) {
+                                    val dom = android.net.Uri.parse(vUrl).host?.lowercase()?.removePrefix("www.").orEmpty()
+                                    val vArr = JSONArray().put(
+                                        JSONObject()
+                                            .put("title", parsed.optString("title").ifEmpty { dom.ifEmpty { vUrl } })
+                                            .put("url", vUrl)
+                                            .put("domain", dom)
+                                            .put("engine", dom)
+                                            .put("visited", true)
+                                    )
+                                    onWebSources?.invoke(
+                                        JSONObject()
+                                            .put("phase", "done")
+                                            .put("query", parsed.optString("title").ifEmpty { dom.ifEmpty { vUrl } })
+                                            .put("engine", dom)
+                                            .put("visited", true)
+                                            .put("sources", vArr)
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     if (tc.name in setOf("open_app", "open_url", "tap", "tap_element", "double_tap", "type_text", "press_enter", "swipe")) {
@@ -457,7 +537,7 @@ class PhoneAgentRunner(
             "\nThinking Level is EXTRA: double-check every visual detail, verify timestamps/labels on screen, and deliver a thorough result."
         } else ""
         return if (!workMode) {
-            "You are Brief on Android (Chat Mode). Answer clearly, quickly, and accurately. Use web_search and fetch_url whenever current or live web research helps.$extraHint"
+            "You are Brief on Android (Chat Mode). Answer clearly, quickly, and accurately. Use web_search and fetch_url whenever current or live web research helps. CALM REDIRECT MEMORY: Whenever the user says 'no, open/do X instead of Y' or corrects your path, remember BOTH what NOT to repeat (Y) and the new target (X), stay calm without confusion, and follow X directly.$extraHint"
         } else {
             """You are Brief on Android (Work Mode — Smart 150-Frame Vision Phone & Tablet Agent).
 You have LIVE calibrated HD screenshots (0..1000 x 0..1000 coordinate ruler on top/left edges, where 0,0 is top-left and 1000,1000 is bottom-right) PLUS a 150-node interactive UI element map on EVERY step.
@@ -474,7 +554,8 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
    - Every Android OS skin places its Enter / Search / Go / Send key in a different spot! ALWAYS LOOK at the live 150f screenshot AND check `[KEYBOARD_ENTER_KEY]` in `[Live 150-Node Interactive UI Map]`! If after `type_text` the keyboard is still open and search hasn't submitted yet, immediately call `press_enter({})` OR `tap` on the exact visible magnifying-glass / arrow / Search / Enter key shown on the keyboard or matching suggestion row!
 3. PREFER PRECISION: Use the `[Live 150-Node Interactive UI Map]` coordinates or `tap_element` whenever a button/tab/channel has a clear label, and use the calibrated `0..1000` screenshot grid for visual icons/thumbnails/avatars.
 4. IF SOMETHING IS OFF-SCREEN: Use `swipe` (`x1=500, y1=760, x2=500, y2=260`) to scroll down smoothly and inspect new items.
-5. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
+5. CALM USER REDIRECT & CONTEXT MEMORY ("NO, OPEN X INSTEAD OF Y"): Remember user corrections across the entire chat! Whenever the user says "no, open X instead of Y" or redirects you, remember NOT to open/repeat Y, never get confused or flustered, and pivot straight to X!
+6. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
         }
     }
 

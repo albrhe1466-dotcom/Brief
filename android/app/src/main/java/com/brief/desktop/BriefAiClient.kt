@@ -1,11 +1,15 @@
 package com.brief.desktop
 
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import android.net.Uri
+import android.util.Base64
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
@@ -592,6 +596,135 @@ class BriefAiClient {
         }
     }
 
+    private fun extractHostDomain(rawUrl: String): String {
+        return runCatching {
+            Uri.parse(rawUrl).host?.lowercase()?.removePrefix("www.").orEmpty()
+        }.getOrDefault("")
+    }
+
+    fun transcribeAudioWav(wavBase64: String, vault: ApiKeyVault): Pair<Boolean, String> {
+        val cleanB64 = wavBase64.trim()
+        if (cleanB64.length < 120) return false to "Voice memo was too short."
+        val wavBytes = runCatching { Base64.decode(cleanB64, Base64.DEFAULT) }.getOrNull()
+            ?: return false to "Invalid audio data."
+
+        val active = vault.getActiveProvider()
+        val order = listOf(active, ProviderId.OPENAI, ProviderId.GEMINI, ProviderId.OPENROUTER).distinct()
+        fun cleanOut(s: String): String = s
+            .replace(Regex("^```[a-zA-Z]*\\s*"), "")
+            .replace(Regex("\\s*```$"), "")
+            .trim()
+            .trim('"', '\'', '“', '”')
+            .trim()
+
+        for (prov in order) {
+            val key = vault.getKey(prov)?.trim().orEmpty()
+            if (key.isEmpty()) continue
+            when (prov) {
+                ProviderId.OPENAI -> {
+                    for (m in listOf("gpt-4o-mini-transcribe", "whisper-1")) {
+                        try {
+                            val multi = MultipartBody.Builder()
+                                .setType(MultipartBody.FORM)
+                                .addFormDataPart("model", m)
+                                .addFormDataPart(
+                                    "file",
+                                    "memo.wav",
+                                    wavBytes.toRequestBody("audio/wav".toMediaType())
+                                )
+                                .build()
+                            val req = Request.Builder()
+                                .url("https://api.openai.com/v1/audio/transcriptions")
+                                .addHeader("Authorization", "Bearer $key")
+                                .post(multi)
+                                .build()
+                            http.newCall(req).execute().use { resp ->
+                                if (resp.isSuccessful) {
+                                    val txt = cleanOut(JSONObject(resp.body?.string().orEmpty()).optString("text"))
+                                    if (txt.isNotEmpty()) return true to txt
+                                }
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+                ProviderId.GEMINI -> {
+                    for (m in listOf("gemini-2.5-flash", "gemini-2.0-flash")) {
+                        try {
+                            val payload = JSONObject().apply {
+                                put(
+                                    "contents",
+                                    JSONArray().put(
+                                        JSONObject().put("role", "user").put(
+                                            "parts",
+                                            JSONArray()
+                                                .put(JSONObject().put("text", "Listen carefully to this voice memo and transcribe the exact spoken words verbatim with accurate spelling and punctuation. Output ONLY the exact spoken words — no commentary, no labels, no quotes. If completely silent, output nothing."))
+                                                .put(JSONObject().put("inlineData", JSONObject().put("mimeType", "audio/wav").put("data", cleanB64)))
+                                        )
+                                    )
+                                )
+                                put("generationConfig", JSONObject().put("temperature", 0))
+                            }
+                            val req = Request.Builder()
+                                .url("https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=${URLEncoder.encode(key, "UTF-8")}")
+                                .post(payload.toString().toRequestBody(jsonMedia))
+                                .build()
+                            http.newCall(req).execute().use { resp ->
+                                if (resp.isSuccessful) {
+                                    val j = JSONObject(resp.body?.string().orEmpty())
+                                    val parts = j.optJSONArray("candidates")?.optJSONObject(0)?.optJSONObject("content")?.optJSONArray("parts") ?: JSONArray()
+                                    val sb = StringBuilder()
+                                    for (i in 0 until parts.length()) {
+                                        val p = parts.optJSONObject(i) ?: continue
+                                        if (!p.optBoolean("thought", false)) sb.append(p.optString("text"))
+                                    }
+                                    val txt = cleanOut(sb.toString())
+                                    if (txt.isNotEmpty()) return true to txt
+                                }
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+                ProviderId.OPENROUTER -> {
+                    for (m in listOf("google/gemini-2.5-flash", "openai/gpt-4o-audio-preview")) {
+                        try {
+                            val payload = JSONObject().apply {
+                                put("model", m)
+                                put("temperature", 0)
+                                put(
+                                    "messages",
+                                    JSONArray().put(
+                                        JSONObject().put("role", "user").put(
+                                            "content",
+                                            JSONArray()
+                                                .put(JSONObject().put("type", "text").put("text", "Transcribe the exact spoken words in this audio verbatim with accurate punctuation. Output ONLY the spoken transcript, nothing else."))
+                                                .put(JSONObject().put("type", "input_audio").put("input_audio", JSONObject().put("data", cleanB64).put("format", "wav")))
+                                        )
+                                    )
+                                )
+                            }
+                            val req = Request.Builder()
+                                .url("https://openrouter.ai/api/v1/chat/completions")
+                                .addHeader("Authorization", "Bearer $key")
+                                .addHeader("HTTP-Referer", "https://locally.app")
+                                .addHeader("X-Title", "Brief")
+                                .post(payload.toString().toRequestBody(jsonMedia))
+                                .build()
+                            http.newCall(req).execute().use { resp ->
+                                if (resp.isSuccessful) {
+                                    val j = JSONObject(resp.body?.string().orEmpty())
+                                    val txt = cleanOut(j.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content").orEmpty())
+                                    if (txt.isNotEmpty()) return true to txt
+                                }
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+                ProviderId.ANTHROPIC -> Unit
+            }
+        }
+        return false to "No speech transcription engine available."
+    }
+
     fun webSearch(query: String): String {
         val url = "https://html.duckduckgo.com/html/?q=" + URLEncoder.encode(query, "UTF-8")
         val req = Request.Builder()
@@ -610,11 +743,32 @@ class BriefAiClient {
                 for (i in titles.indices) {
                     val m = titles[i]
                     val cleanTitle = m.groupValues[2].replace(Regex("<[^>]+>"), "").trim()
-                    val cleanUrl = m.groupValues[1]
+                    var cleanUrl = m.groupValues[1].replace("&amp;", "&")
+                    val uddgMatch = Regex("[?&]uddg=([^&]+)").find(cleanUrl)
+                    if (uddgMatch != null) {
+                        cleanUrl = runCatching { URLDecoder.decode(uddgMatch.groupValues[1], "UTF-8") }.getOrDefault(cleanUrl)
+                    } else if (cleanUrl.startsWith("//")) {
+                        cleanUrl = "https:$cleanUrl"
+                    }
+                    val domain = extractHostDomain(cleanUrl)
                     val cleanSnip = snips.getOrNull(i)?.groupValues?.getOrNull(1)?.replace(Regex("<[^>]+>"), "")?.trim().orEmpty()
-                    results.put(JSONObject().put("title", cleanTitle).put("url", cleanUrl).put("snippet", cleanSnip))
+                    if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+                        results.put(
+                            JSONObject()
+                                .put("title", cleanTitle)
+                                .put("url", cleanUrl)
+                                .put("domain", domain)
+                                .put("engine", "duckduckgo.com")
+                                .put("snippet", cleanSnip)
+                        )
+                    }
                 }
-                JSONObject().put("query", query).put("results", results).toString()
+                JSONObject()
+                    .put("query", query)
+                    .put("engine", "duckduckgo.com")
+                    .put("count", results.length())
+                    .put("results", results)
+                    .toString()
             }
         } catch (e: Exception) {
             JSONObject().put("error", e.message ?: "Search failed").toString()
@@ -631,6 +785,8 @@ class BriefAiClient {
         return try {
             http.newCall(req).execute().use { resp ->
                 val body = resp.body?.string().orEmpty()
+                val titleMatch = Regex("(?is)<title[^>]*>(.*?)</title>").find(body)
+                val pageTitle = titleMatch?.groupValues?.getOrNull(1)?.replace(Regex("\\s+"), " ")?.trim()?.takeIf { it.isNotEmpty() } ?: url
                 val text = body
                     .replace(Regex("(?is)<script[^>]*>.*?</script>"), " ")
                     .replace(Regex("(?is)<style[^>]*>.*?</style>"), " ")
@@ -638,7 +794,14 @@ class BriefAiClient {
                     .replace(Regex("\\s+"), " ")
                     .trim()
                     .take(5500)
-                JSONObject().put("url", url).put("status", resp.code).put("content", text).toString()
+                JSONObject()
+                    .put("url", url)
+                    .put("title", pageTitle)
+                    .put("domain", extractHostDomain(url))
+                    .put("visited", true)
+                    .put("status", resp.code)
+                    .put("content", text)
+                    .toString()
             }
         } catch (e: Exception) {
             JSONObject().put("error", e.message ?: "Fetch failed").toString()

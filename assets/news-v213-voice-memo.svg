@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="1280" height="760">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0d13"/>
+      <stop offset="55%" stop-color="#11131b"/>
+      <stop offset="100%" stop-color="#090a0f"/>
+    </linearGradient>
+    <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="35%" stop-color="#ffffff"/>
+      <stop offset="68%" stop-color="#d9693f"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <linearGradient id="cardGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#191d29"/>
+      <stop offset="100%" stop-color="#12141c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="760" fill="url(#bg)"/>
+  <circle cx="220" cy="130" r="240" fill="#3b82f6" opacity="0.07"/>
+  <circle cx="1050" cy="620" r="270" fill="#d9693f" opacity="0.08"/>
+
+  <!-- Header Strip -->
+  <text x="64" y="66" fill="#ffffff" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="28" font-weight="800">Voice Memo Waveform &amp; Instant Speech-to-Text</text>
+  <text x="64" y="98" fill="#9ca3af" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="16" font-weight="500">Brief v2.1.3-beta · Crystal-clear zero-mistake voice memo input next to Send across all 4 LLMs</text>
+
+  <!-- 4 LLM Provider Pills -->
+  <g transform="translate(64, 120)" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13.5" font-weight="700">
+    <rect x="0" y="0" width="136" height="34" rx="17" fill="#172554" stroke="#3b82f6" stroke-width="1.5"/>
+    <circle cx="22" cy="17" r="5" fill="#60a5fa"/>
+    <text x="36" y="22" fill="#dbeafe">Gemini 4</text>
+
+    <rect x="150" y="0" width="136" height="34" rx="17" fill="#1f2024" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="172" cy="17" r="5" fill="#ffffff"/>
+    <text x="186" y="22" fill="#ffffff">OpenAI GPT-6</text>
+
+    <rect x="300" y="0" width="142" height="34" rx="17" fill="#2b1912" stroke="#d9693f" stroke-width="1.5"/>
+    <circle cx="322" cy="17" r="5" fill="#d9693f"/>
+    <text x="336" y="22" fill="#fed7aa">Claude 5.5</text>
+
+    <rect x="456" y="0" width="154" height="34" rx="17" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+    <circle cx="478" cy="17" r="5" fill="#818cf8"/>
+    <text x="492" y="22" fill="#e0e7ff">OpenRouter</text>
+  </g>
+
+  <!-- STEP 1: LIVE RECORDING MEMO BAR -->
+  <g transform="translate(64, 184)">
+    <text x="4" y="20" fill="#93c5fd" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" letter-spacing="0.8">1 · TAP MICROPHONE NEXT TO SEND → COMPOSER TRANSFORMS INTO LIVE VOICE MEMO</text>
+    <rect x="0" y="34" width="1152" height="196" rx="26" fill="url(#cardGlow)" stroke="#3b82f6" stroke-opacity="0.55" stroke-width="2"/>
+
+    <!-- Live Memo Waveform Strip inside Composer -->
+    <rect x="28" y="58" width="1096" height="72" rx="18" fill="#0d1018" stroke="#283147" stroke-width="1.4"/>
+
+    <!-- Recording Dot & Timer -->
+    <circle cx="58" cy="94" r="9" fill="#ef4444" opacity="0.28"/>
+    <circle cx="58" cy="94" r="5.5" fill="#ef4444"/>
+    <text x="76" y="99" fill="#ffffff" font-family="JetBrains Mono, Consolas, monospace" font-size="16" font-weight="700">Memo · 0:07</text>
+    <text x="192" y="99" fill="#93c5fd" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600">Listening clearly…</text>
+
+    <!-- 28 Multi-Bar Voice Waveform -->
+    <g transform="translate(362, 94)" fill="url(#waveGrad)">
+      <rect x="0" y="-8" width="6" height="16" rx="3"/>
+      <rect x="16" y="-16" width="6" height="32" rx="3"/>
+      <rect x="32" y="-24" width="6" height="48" rx="3"/>
+      <rect x="48" y="-13" width="6" height="26" rx="3"/>
+      <rect x="64" y="-27" width="6" height="54" rx="3"/>
+      <rect x="80" y="-20" width="6" height="40" rx="3"/>
+      <rect x="96" y="-9" width="6" height="18" rx="3"/>
+      <rect x="112" y="-22" width="6" height="44" rx="3"/>
+      <rect x="128" y="-29" width="6" height="58" rx="3"/>
+      <rect x="144" y="-17" width="6" height="34" rx="3"/>
+      <rect x="160" y="-11" width="6" height="22" rx="3"/>
+      <rect x="176" y="-25" width="6" height="50" rx="3"/>
+      <rect x="192" y="-19" width="6" height="38" rx="3"/>
+      <rect x="208" y="-8" width="6" height="16" rx="3"/>
+      <rect x="224" y="-21" width="6" height="42" rx="3"/>
+      <rect x="240" y="-28" width="6" height="56" rx="3"/>
+      <rect x="256" y="-15" width="6" height="30" rx="3"/>
+      <rect x="272" y="-23" width="6" height="46" rx="3"/>
+      <rect x="288" y="-12" width="6" height="24" rx="3"/>
+      <rect x="304" y="-26" width="6" height="52" rx="3"/>
+      <rect x="320" y="-18" width="6" height="36" rx="3"/>
+      <rect x="336" y="-10" width="6" height="20" rx="3"/>
+      <rect x="352" y="-22" width="6" height="44" rx="3"/>
+      <rect x="368" y="-14" width="6" height="28" rx="3"/>
+      <rect x="384" y="-20" width="6" height="40" rx="3"/>
+      <rect x="400" y="-11" width="6" height="22" rx="3"/>
+      <rect x="416" y="-16" width="6" height="32" rx="3"/>
+      <rect x="432" y="-8" width="6" height="16" rx="3"/>
+    </g>
+
+    <!-- Cancel & Convert Buttons inside Memo Bar -->
+    <rect x="854" y="74" width="96" height="40" rx="20" fill="#1f2433" stroke="#374151" stroke-width="1.2"/>
+    <text x="902" y="99" text-anchor="middle" fill="#d1d5db" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13.5" font-weight="600">✕ Cancel</text>
+
+    <rect x="962" y="74" width="142" height="40" rx="20" fill="#2563eb" stroke="#60a5fa" stroke-width="1.2"/>
+    <text x="1033" y="99" text-anchor="middle" fill="#ffffff" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13.5" font-weight="700">✓ Convert Text</text>
+
+    <!-- Bottom Controls Row -->
+    <rect x="28" y="150" width="38" height="38" rx="12" fill="#1f2432" stroke="#333b4f"/>
+    <text x="47" y="175" text-anchor="middle" fill="#cbd5e1" font-family="Inter, sans-serif" font-size="20">+</text>
+
+    <rect x="78" y="152" width="320" height="34" rx="17" fill="#1b202e" stroke="#30394f"/>
+    <text x="238" y="174" text-anchor="middle" fill="#e2e8f0" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13" font-weight="600">All 4 LLMs · PC Mic Input Selector (Headphones / Aux / USB)</text>
+
+    <!-- Glowing Active Mic Pill with Input Selector Arrow inside Circle right beside Send Button -->
+    <g transform="translate(996, 147)">
+      <rect x="0" y="0" width="70" height="44" rx="22" fill="#dc2626" stroke="#fca5a5" stroke-width="1.5"/>
+      <rect x="17" y="11" width="7" height="13" rx="3.5" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <path d="M12.5 19a8 8 0 0 0 16 0" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="20.5" y1="27" x2="20.5" y2="32" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="40" y1="12" x2="40" y2="32" stroke="#fca5a5" stroke-opacity="0.55" stroke-width="1.4"/>
+      <polyline points="48,25 54,19 60,25" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g transform="translate(1076, 147)">
+      <circle cx="22" cy="22" r="19" fill="#3b82f6"/>
+      <path d="M22 29V15M16 21l6-6 6 6" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- STEP 2: CONVERTED SPEECH-TO-TEXT RESULT -->
+  <g transform="translate(64, 456)">
+    <text x="4" y="20" fill="#86efac" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" letter-spacing="0.8">2 · AUTOMATICALLY CONVERTS SPEECH TO EXACT TEXT IN YOUR MESSAGE BAR</text>
+    <rect x="0" y="34" width="1152" height="190" rx="26" fill="url(#cardGlow)" stroke="#22c55e" stroke-opacity="0.45" stroke-width="1.8"/>
+
+    <text x="34" y="84" fill="#ffffff" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="20" font-weight="500">“Search the latest 2026 renewable energy breakthroughs and summarize the key links clearly.”</text>
+    <rect x="928" y="65" width="2.5" height="24" fill="#60a5fa"/>
+
+    <!-- Bottom Controls Row -->
+    <rect x="28" y="144" width="38" height="38" rx="12" fill="#1f2432" stroke="#333b4f"/>
+    <text x="47" y="169" text-anchor="middle" fill="#cbd5e1" font-family="Inter, sans-serif" font-size="20">+</text>
+
+    <rect x="78" y="146" width="256" height="34" rx="17" fill="#11261d" stroke="#22c55e" stroke-opacity="0.5"/>
+    <text x="206" y="168" text-anchor="middle" fill="#86efac" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="13" font-weight="600">✓ Transcribed cleanly · 0 mistakes</text>
+
+    <!-- Idle Mic Pill with Integrated Selector Arrow inside Circle right beside Send Button -->
+    <g transform="translate(996, 141)">
+      <rect x="0" y="0" width="70" height="44" rx="22" fill="#1e2433" stroke="#475569" stroke-width="1.5"/>
+      <rect x="17" y="11" width="7" height="13" rx="3.5" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+      <path d="M12.5 19a8 8 0 0 0 16 0" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+      <line x1="20.5" y1="27" x2="20.5" y2="32" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+      <line x1="40" y1="12" x2="40" y2="32" stroke="#475569" stroke-width="1.4"/>
+      <polyline points="48,25 54,19 60,25" fill="none" stroke="#cbd5e1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(1076, 141)">
+      <circle cx="22" cy="22" r="19" fill="#ffffff"/>
+      <path d="M22 29V15M16 21l6-6 6 6" fill="none" stroke="#0b0d13" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

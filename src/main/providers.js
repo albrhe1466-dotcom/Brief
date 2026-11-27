@@ -645,9 +645,8 @@ class OpenAIClient {
 
     for (;;) {
       const { done, value } = await readWithTimeout();
-      if (done) break;
       if (value) totalBytes += value.byteLength || 0;
-      buf += decoder.decode(value, { stream: true });
+      buf += done ? (decoder.decode() + '\n') : decoder.decode(value, { stream: true });
       let idx;
       while ((idx = buf.indexOf('\n')) >= 0) {
         const line = buf.slice(0, idx).trim();
@@ -676,6 +675,9 @@ class OpenAIClient {
         if (typeof delta.content === 'string' && delta.content) {
           full += delta.content;
           if (onText) onText(delta.content, full);
+        } else if (!full && ch.message && typeof ch.message.content === 'string' && ch.message.content) {
+          full += ch.message.content;
+          if (onText) onText(ch.message.content, full);
         }
         if (Array.isArray(delta.tool_calls)) {
           for (const tc of delta.tool_calls) {
@@ -689,6 +691,7 @@ class OpenAIClient {
         }
       }
       if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: toolMap.size, thoughtChars: thoughtFull.length, textChars: full.length });
+      if (done) break;
     }
 
     const parts = [];
@@ -1086,9 +1089,8 @@ class AnthropicClient {
 
     for (;;) {
       const { done, value } = await readWithTimeout();
-      if (done) break;
       if (value) totalBytes += value.byteLength || 0;
-      buf += decoder.decode(value, { stream: true });
+      buf += done ? (decoder.decode() + '\n') : decoder.decode(value, { stream: true });
       let idx;
       while ((idx = buf.indexOf('\n')) >= 0) {
         const line = buf.slice(0, idx).trim();
@@ -1099,14 +1101,24 @@ class AnthropicClient {
         if (obj.type === 'message_start' && obj.message && obj.message.usage) {
           inTokens = obj.message.usage.input_tokens || 0;
         } else if (obj.type === 'content_block_start' && obj.content_block) {
+          const initTxt = (obj.content_block.type === 'text' && typeof obj.content_block.text === 'string') ? obj.content_block.text : '';
+          const initThink = (obj.content_block.type === 'thinking' && typeof obj.content_block.thinking === 'string') ? obj.content_block.thinking : '';
           blocks.set(obj.index, {
             type: obj.content_block.type,
             id: obj.content_block.id || '',
             name: obj.content_block.name || '',
-            text: obj.content_block.text || '',
-            thinking: obj.content_block.thinking || '',
+            text: initTxt,
+            thinking: initThink,
             inputJson: ''
           });
+          if (initThink) {
+            thoughtFull += initThink;
+            if (onThought) onThought(initThink, thoughtFull);
+          }
+          if (initTxt) {
+            full += initTxt;
+            if (onText) onText(initTxt, full);
+          }
         } else if (obj.type === 'content_block_delta' && obj.delta) {
           const blk = blocks.get(obj.index);
           if (obj.delta.type === 'thinking_delta' && obj.delta.thinking) {
@@ -1126,6 +1138,7 @@ class AnthropicClient {
         }
       }
       if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: blocks.size, thoughtChars: thoughtFull.length, textChars: full.length });
+      if (done) break;
     }
 
     const parts = [];
@@ -1468,9 +1481,8 @@ class OpenRouterClient {
 
     for (;;) {
       const { done, value } = await readWithTimeout();
-      if (done) break;
       if (value) totalBytes += value.byteLength || 0;
-      buf += decoder.decode(value, { stream: true });
+      buf += done ? (decoder.decode() + '\n') : decoder.decode(value, { stream: true });
       let idx;
       while ((idx = buf.indexOf('\n')) >= 0) {
         const line = buf.slice(0, idx).trim(); buf = buf.slice(idx + 1);
@@ -1487,6 +1499,7 @@ class OpenRouterClient {
         const rDelta = typeof delta.reasoning_content === 'string' ? delta.reasoning_content : (typeof delta.reasoning === 'string' ? delta.reasoning : '');
         if (rDelta) { thoughtFull += rDelta; if (onThought) onThought(rDelta, thoughtFull); }
         if (typeof delta.content === 'string' && delta.content) { full += delta.content; if (onText) onText(delta.content, full); }
+        else if (!full && ch.message && typeof ch.message.content === 'string' && ch.message.content) { full += ch.message.content; if (onText) onText(ch.message.content, full); }
         if (Array.isArray(delta.tool_calls)) {
           for (const tc of delta.tool_calls) {
             const keyIdx = tc.index !== undefined ? tc.index : 0;
@@ -1499,6 +1512,7 @@ class OpenRouterClient {
         }
       }
       if (onActivity && totalBytes > 0) onActivity({ bytes: totalBytes, parts: toolMap.size, thoughtChars: thoughtFull.length, textChars: full.length });
+      if (done) break;
     }
     const parts = [];
     if (thoughtFull) parts.push({ text: thoughtFull, thought: true });

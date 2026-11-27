@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="only dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://appassets.androidplatform.net; img-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://raw.githubusercontent.com data: blob:; style-src 'self' 'unsafe-inline' https://appassets.androidplatform.net https://fonts.googleapis.com; font-src 'self' data: https://appassets.androidplatform.net https://fonts.gstatic.com; connect-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://raw.githubusercontent.com https://api.github.com https://github.com https://objects.githubusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://appassets.androidplatform.net;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://appassets.androidplatform.net; img-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://raw.githubusercontent.com https://www.google.com https://icons.duckduckgo.com https://*.gstatic.com data: blob:; style-src 'self' 'unsafe-inline' https://appassets.androidplatform.net https://fonts.googleapis.com; font-src 'self' data: https://appassets.androidplatform.net https://fonts.gstatic.com; connect-src 'self' https://appassets.androidplatform.net https://albrhe1466-dotcom.github.io https://raw.githubusercontent.com https://api.github.com https://github.com https://objects.githubusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://appassets.androidplatform.net;">
   <title>Brief</title>
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2461,6 +2461,7 @@
       flex-shrink: 0;
       width: 34px;
       height: 34px;
+      position: relative;
       filter: none;
     }
 
@@ -2485,7 +2486,540 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      position: relative;
+      position: absolute;
+      inset: 0;
+      transform-origin: center center;
+      will-change: opacity, transform;
+    }
+
+    .claude-morph-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Live Web Search Website Favicon Logos + Expandable Visited Links Drawer */
+    .web-search-sources-wrap {
+      margin: 6px 0 8px;
+      border-radius: 13px;
+      background: rgba(16, 20, 30, 0.88);
+      border: 1px solid rgba(59, 130, 246, 0.28);
+      overflow: hidden;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+    body[data-provider="anthropic"] .web-search-sources-wrap {
+      background: rgba(29, 27, 25, 0.92);
+      border-color: rgba(217, 105, 63, 0.28);
+    }
+    body[data-provider="openai"] .web-search-sources-wrap {
+      background: rgba(24, 24, 26, 0.92);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+    .web-search-bar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 11px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .web-search-bar-row:hover {
+      background: rgba(255, 255, 255, 0.035);
+    }
+    .web-search-bar-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+    .web-search-bar-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .web-search-bar-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .web-favicon-stack {
+      display: inline-flex;
+      align-items: center;
+      padding-left: 4px;
+    }
+    .web-favicon-chip {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #181c26;
+      border: 1.5px solid #0b0e15;
+      margin-left: -5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    }
+    .web-favicon-chip:first-child {
+      margin-left: 0;
+    }
+    .web-favicon-chip img,
+    .web-source-favicon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .web-sources-count-lbl {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+    .web-expand-arrow-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.16);
+      color: #93c5fd;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, background 0.16s ease;
+    }
+    .web-search-sources-wrap.expanded .web-expand-arrow-btn {
+      transform: rotate(180deg);
+      background: rgba(59, 130, 246, 0.28);
+    }
+    .web-search-drawer {
+      display: none;
+      padding: 8px 11px 11px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(10, 12, 18, 0.65);
+      flex-direction: column;
+      gap: 8px;
+    }
+    .web-search-sources-wrap.expanded .web-search-drawer {
+      display: flex;
+    }
+    .web-queries-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .web-query-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 11.5px;
+      color: #cbd5e1;
+      max-width: 100%;
+    }
+    .web-query-chip span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .web-sources-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .web-source-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.075);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .web-source-item:hover {
+      background: rgba(59, 130, 246, 0.08);
+      border-color: rgba(59, 130, 246, 0.35);
+    }
+    .web-source-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .web-source-favicon {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: #181c26;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .web-source-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      gap: 1px;
+    }
+    .web-source-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .web-source-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #f3f4f6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .web-visited-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      color: #6ee7b7;
+      flex-shrink: 0;
+    }
+    .web-source-url {
+      font-size: 11px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .web-open-blue-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border: 1px solid #60a5fa;
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+      transition: filter 0.15s ease, transform 0.12s ease;
+    }
+    .web-open-blue-btn:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+
+    /* Voice Microphone Pill/Circle + PC Input Selector Arrow + Live Composer Memo Waveform */
+    .voice-mic-group {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 0 3px;
+      gap: 1px;
+      flex-shrink: 0;
+      transition: all 0.18s ease;
+    }
+    .voice-mic-group:hover {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+    .voice-mic-group.recording {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      border-color: #fca5a5 !important;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.22), 0 4px 14px rgba(220, 38, 38, 0.45);
+      animation: voiceMicPulse 1.3s ease-in-out infinite;
+    }
+    .voice-mic-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+    .voice-mic-btn:hover:not(:disabled) {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .voice-mic-btn.recording {
+      color: #ffffff !important;
+    }
+    .voice-mic-divider {
+      width: 1px;
+      height: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+    .voice-mic-arrow-btn {
+      width: 20px;
+      height: 28px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+    .voice-mic-arrow-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .voice-mic-group.popover-open .voice-mic-arrow-btn svg {
+      transform: rotate(180deg);
+    }
+    /* Android Phones & Tablets use built-in device mic cleanly — hide PC mic selector arrow */
+    html[data-platform="android"] .voice-mic-divider,
+    html[data-platform="android"] .voice-mic-arrow-btn,
+    body.is-mobile-device .voice-mic-divider,
+    body.is-mobile-device .voice-mic-arrow-btn {
+      display: none !important;
+    }
+    html[data-platform="android"] body .voice-mic-group,
+    body.is-mobile-device .voice-mic-group {
+      width: 30px !important;
+      height: 30px !important;
+      padding: 0 !important;
+      justify-content: center;
+    }
+    html[data-platform="android"] body .voice-mic-btn,
+    body.is-mobile-device .voice-mic-btn {
+      width: 28px !important;
+      height: 28px !important;
+    }
+    #voice-mic-popover {
+      right: 0;
+      left: auto;
+      width: min(360px, calc(100vw - 28px));
+      padding: 11px;
+    }
+    .mic-device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 240px;
+      overflow-y: auto;
+      margin-top: 6px;
+    }
+    .mic-device-btn {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: #f3f4f6;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .mic-device-btn:hover {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(96, 165, 250, 0.45);
+    }
+    .mic-device-btn.active {
+      background: rgba(37, 99, 235, 0.18);
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25);
+    }
+    .mic-device-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .mic-device-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      color: #93c5fd;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mic-device-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      gap: 1px;
+    }
+    .mic-device-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mic-device-kind {
+      font-size: 10.8px;
+      color: #94a3b8;
+    }
+    .mic-device-check {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6ee7b7;
+      flex-shrink: 0;
+    }
+    @keyframes voiceMicPulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22), 0 4px 12px rgba(220, 38, 38, 0.4); }
+      50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.34), 0 4px 18px rgba(220, 38, 38, 0.6); }
+    }
+    .composer-capsule.is-recording-memo #composer-input {
+      display: none !important;
+    }
+    .composer-voice-memo {
+      display: none;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(15, 19, 30, 0.92);
+      border: 1px solid rgba(96, 165, 250, 0.36);
+      min-height: 44px;
+    }
+    body[data-provider="anthropic"] .composer-voice-memo {
+      background: rgba(28, 25, 23, 0.95);
+      border-color: rgba(217, 105, 63, 0.45);
+    }
+    body[data-provider="openai"] .composer-voice-memo {
+      background: rgba(22, 22, 24, 0.95);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+    .composer-capsule.is-recording-memo .composer-voice-memo {
+      display: flex;
+    }
+    .voice-memo-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .voice-memo-rec-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: voiceDotBlink 1s ease-in-out infinite;
+    }
+    @keyframes voiceDotBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.84); }
+    }
+    .voice-memo-timer {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .voice-memo-status {
+      font-size: 12px;
+      font-weight: 600;
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+    body[data-provider="anthropic"] .voice-memo-status {
+      color: #fdba74;
+    }
+    .voice-memo-wave {
+      flex: 1 1 auto;
+      min-width: 70px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      overflow: hidden;
+    }
+    .voice-wave-bar {
+      width: 3.5px;
+      height: 6px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, #60a5fa, #3b82f6);
+      transition: height 0.06s linear;
+      flex-shrink: 0;
+    }
+    body[data-provider="anthropic"] .voice-wave-bar {
+      background: linear-gradient(180deg, #fdba74, #d9693f);
+    }
+    body[data-provider="openai"] .voice-wave-bar {
+      background: linear-gradient(180deg, #ffffff, #cbd5e1);
+    }
+    body[data-provider="openrouter"] .voice-wave-bar {
+      background: linear-gradient(180deg, #a5b4fc, #818cf8);
+    }
+    .voice-memo-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .voice-memo-act-btn {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.07);
+      color: #e5e7eb;
+    }
+    .voice-memo-act-btn.confirm {
+      background: #2563eb;
+      border-color: #60a5fa;
+      color: #ffffff;
+    }
+    body[data-provider="anthropic"] .voice-memo-act-btn.confirm {
+      background: #d9693f;
+      border-color: #fdba74;
+    }
+    @media (max-width: 600px) {
+      .voice-memo-status { display: none; }
     }
 
     .claude-tenor-strip {
@@ -5828,12 +6362,12 @@
       position: relative;
       z-index: 2;
     }
-    /* Brief Code Clawd mascot (exact pixel-art GIFs on 100% transparent background perched on the Brief Code input bar) */
-    body[data-provider="anthropic"][data-mode="work"] #composer-capsule {
+    /* Brief Code Clawd mascot (perched ONLY on Brief Work main menu — hides immediately when asking or working) */
+    body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #composer-capsule {
       position: relative;
       margin-top: 52px;
     }
-    html[data-platform="android"] body[data-provider="anthropic"][data-mode="work"] #composer-capsule {
+    html[data-platform="android"] body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #composer-capsule {
       margin-top: 40px;
     }
     #brief-code-clawd {
@@ -5852,8 +6386,12 @@
       pointer-events: auto;
       -webkit-tap-highlight-color: transparent;
     }
-    body[data-provider="anthropic"][data-mode="work"] #brief-code-clawd {
+    body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #brief-code-clawd {
       display: block;
+    }
+    body:not(.is-welcome) #brief-code-clawd,
+    body.is-running #brief-code-clawd {
+      display: none !important;
     }
     #brief-code-clawd img {
       display: block;
@@ -6752,7 +7290,7 @@
             <span id="header-update-label">Update</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.2-beta">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.3-beta">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -7058,6 +7596,17 @@
             </button>
           </div>
 
+          <!-- PC / Laptop Inserted Microphone Input Popover (Headphones, Aux 3.5mm, USB, Laptop Array) -->
+          <div class="popover-panel" id="voice-mic-popover" role="dialog" aria-label="Select Inserted Microphone">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div class="pop-section-label" style="margin:0;">Inserted Microphone Input</div>
+              <button class="btn-secondary" id="voice-mic-refresh-btn" type="button" style="padding:3px 9px;font-size:11px;">Refresh</button>
+            </div>
+            <div class="mic-device-list" id="voice-mic-device-list">
+              <div class="field-hint" style="margin:4px 0;">Scanning inserted microphones…</div>
+            </div>
+          </div>
+
           <button type="button" id="android-perm-banner">
             <span>🛡️ Grant Android Control Permissions &amp; Un-Gray Switch →</span>
           </button>
@@ -7071,6 +7620,18 @@
 
             <div class="composer-input-row">
               <textarea id="composer-input" rows="1" placeholder="Ask Brief…"></textarea>
+              <div class="composer-voice-memo" id="composer-voice-memo" aria-live="polite">
+                <div class="voice-memo-left">
+                  <span class="voice-memo-rec-dot"></span>
+                  <span class="voice-memo-timer" id="voice-memo-timer">0:00</span>
+                  <span class="voice-memo-status" id="voice-memo-status">Listening clearly…</span>
+                </div>
+                <div class="voice-memo-wave" id="voice-memo-wave" aria-hidden="true"></div>
+                <div class="voice-memo-actions">
+                  <button class="voice-memo-act-btn" id="voice-memo-cancel" type="button" title="Cancel voice memo">✕</button>
+                  <button class="voice-memo-act-btn confirm" id="voice-memo-done" type="button" title="Convert speech to text">✓ Text</button>
+                </div>
+              </div>
             </div>
 
             <div class="composer-bottom-bar">
@@ -7112,6 +7673,23 @@
                   <span>■ STOP</span>
                   <span class="stop-btn-kbd" id="hotkey-chip">Ctrl+Alt+Q</span>
                 </button>
+
+                <div class="voice-mic-group" id="voice-mic-group">
+                  <button class="voice-mic-btn" id="voice-mic-btn" type="button" title="Voice Memo — Speak clearly to convert speech to text" aria-label="Voice Memo Microphone">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                      <path d="M5 10a7 7 0 0 0 14 0"></path>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                    </svg>
+                  </button>
+                  <span class="voice-mic-divider" id="voice-mic-divider" aria-hidden="true"></span>
+                  <button class="voice-mic-arrow-btn" id="voice-mic-arrow-btn" type="button" title="Select inserted microphone (Headphones, Aux, USB, Built-in)" aria-label="Choose Microphone Input">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                  </button>
+                </div>
 
                 <button class="send-btn" id="send-btn" type="button" title="Send (Enter)">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -7704,7 +8282,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 24px; height: 24px; border-radius: 5px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.2-beta</span>
+          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.3-beta</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -7712,10 +8290,10 @@
         <div class="news-hero-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:220px;">
             <div id="news-live-headline" style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.1.2-beta — Zero-Notch Centered Android UI (Portrait &amp; Landscape), Smart Hybrid Typing &amp; Live One UI / ColorOS / MagicOS Enter Detection
+              Brief v2.1.3-beta — Voice Memo Waveform &amp; Speech-to-Text Across All 4 LLMs, Live Web Search Website Logos + ▾ Sources Drawer &amp; 4-Stage Claude Motion
             </div>
             <div id="news-update-status" style="font-size: 12px; color: var(--text-secondary);">
-              You are on <strong>v2.1.2-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Samsung, Honor &amp; ColorOS).
+              You are on <strong>v2.1.3-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Samsung, Honor &amp; ColorOS).
             </div>
           </div>
           <div id="news-update-strip" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -7725,27 +8303,27 @@
         </div>
 
         <div class="news-gallery-grid" id="whats-new-gallery">
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v200-android.png" data-news-caption="Brief v2.0.0 for All Android Phones (Samsung Galaxy One UI, Google Pixel, LG, Infinix, Oppo, Vivo, Xiaomi) — Zero Root, Live Floating Cursors &amp; Phone Control">
-            <img class="news-photo-thumb" src="assets/news-v200-android.png" alt="Brief v2.0.0 on Android Phones (Samsung, Pixel, LG, Infinix, Oppo, Vivo)">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-voice-memo.svg" data-news-caption="Brief v2.1.3-beta Voice Memo &amp; Instant Speech-to-Text Across All 4 LLMs (Gemini, OpenAI, Claude &amp; OpenRouter) — Tap Mic next to Send for live waveform memo &amp; crystal-clear text conversion">
+            <img class="news-photo-thumb" src="assets/news-v213-voice-memo.svg" alt="Brief v2.1.3-beta Voice Memo Waveform and Speech-to-Text across all 4 LLMs">
             <div class="news-photo-caption">
-              <div class="news-photo-title">All Android Phones (Zero Root)</div>
-              <div class="news-photo-sub">Works on Samsung One UI, Pixel, LG, Infinix, Oppo, Vivo &amp; Xiaomi with floating provider cursors and Accessibility touch control.</div>
+              <div class="news-photo-title">Voice Memo &amp; Speech-to-Text (All 4 LLMs)</div>
+              <div class="news-photo-sub">Tap the Microphone next to Send to transform your message bar into a live waveform memo and convert your voice to exact text across Gemini, OpenAI, Claude &amp; OpenRouter.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v200-linux.png" data-news-caption="Brief v2.0.0 for All Linux Computers — Kali Linux, Raspberry Pi OS (ARM64), Ubuntu, Debian, Linux Mint, Arch &amp; Fedora (.deb x64/arm64, .AppImage, .tar.gz)">
-            <img class="news-photo-thumb" src="assets/news-v200-linux.png" alt="Brief v2.0.0 on All Linux Distros (Kali, Raspberry Pi, Ubuntu, Arch)">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-web-search.svg" data-news-caption="Brief v2.1.3-beta Live Web Search Website Favicon Logos &amp; Expandable Visited Links Drawer (▾) — See where Brief searches, inspect every link, and click the blue Open button">
+            <img class="news-photo-thumb" src="assets/news-v213-web-search.svg" alt="Brief v2.1.3-beta Live Web Search Website Logos and Expandable Sources">
             <div class="news-photo-caption">
-              <div class="news-photo-title">All Linux (Kali · Raspberry Pi · Ubuntu)</div>
-              <div class="news-photo-sub">Native x64 &amp; ARM64 packages (.deb, .AppImage, .tar.gz) for Kali Linux, Raspberry Pi 4/5, Ubuntu, Debian &amp; Arch with custom cursors.</div>
+              <div class="news-photo-title">Web Search Logos &amp; ▾ Visited Links</div>
+              <div class="news-photo-sub">Shows real website logos on the right while searching the web, with an expandable ▾ drawer of queries, visited websites, and a blue Open Link button.</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v107-themes.png" data-news-caption="Brief v2.0.0 Native Provider Themes, New Cursors (Zero Particles) &amp; Real Fonts — Gemini, OpenAI, Claude &amp; OpenRouter">
-            <img class="news-photo-thumb" src="assets/news-v107-themes.png" alt="Brief v2.0.0 Native Provider Themes and Cursors">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-claude-motion.svg" data-news-caption="Brief v2.1.3-beta 4-Stage Claude #d9693f Motion (Starburst → 1.2× Faster 3-Ball Orbit → Aligned Pulse → Jumping Wave), Welcome-Only Clawd &amp; Calm Redirect Memory">
+            <img class="news-photo-thumb" src="assets/news-v213-claude-motion.svg" alt="Brief v2.1.3-beta Claude 4-Stage Motion and Brief Work Welcome Clawd">
             <div class="news-photo-caption">
-              <div class="news-photo-title">New Cursors &amp; Provider Themes</div>
-              <div class="news-photo-sub">Particle-free Gemini, Claude &amp; OpenRouter cursors, white OR emblem, Google Sans, OpenAI Sans &amp; Claude serif themes.</div>
+              <div class="news-photo-title">4-Stage #d9693f Motion &amp; Clean Status</div>
+              <div class="news-photo-sub">Starburst morphs into 1.2× faster 3-ball orbit (no rings), aligns into soft pulse &amp; jumping wave, hides Clawd while working, and fixes model-switch status.</div>
             </div>
           </button>
         </div>
@@ -7754,13 +8332,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span id="news-col-ver-label">What’s New in v2.1.2-beta</span>
+              <span id="news-col-ver-label">What’s New in v2.1.3-beta</span>
             </div>
             <ul class="news-list" id="news-live-bullets">
-              <li><strong>Centered Portrait &amp; Landscape Android Layout (Zero Notch Crowding &amp; Zero Bottom Chin):</strong> Native <code class="mono">WindowInsetsCompat</code> cutout/system-bar insets keep headers clear of camera notches, remove the bottom chin, and center Brief cleanly in both portrait and landscape on phones &amp; tablets.</li>
-              <li><strong>Smart Hybrid Typing + Live One UI / ColorOS / MagicOS Enter Detection:</strong> Automatically combines fresh-node text input, physical touch-keyboard key tapping, and clipboard fallback, while inspecting the live keyboard window to locate the exact <strong>Search / Enter / Go / Send</strong> button on every Android OS across all 4 AIs.</li>
-              <li><strong>Multi-Step Vision Fix for Claude, Gemini, OpenAI &amp; OpenRouter:</strong> Merged consecutive tool-result &amp; live-vision turns cleanly so every fast and flagship model across all 4 providers completes multi-step search/tap/watch tasks without turn-alternation errors.</li>
-              <li><strong>Clawd Mascot GIFs &amp; Direct In-App APK Updater:</strong> Seamless pixel-art Clawd coding &amp; soccer animations in Brief Code plus 1-tap direct Android <code class="mono">FileProvider</code> updates.</li>
+              <li><strong>Voice Memo Waveform &amp; Speech-to-Text Across All 4 LLMs + PC Mic Selector:</strong> Tap the Microphone button beside Send to turn your message bar into a live audio waveform memo and convert voice to exact text across Gemini, OpenAI, Claude &amp; OpenRouter; on PC &amp; laptops, click the integrated arrow inside the mic pill to see and pick inserted Headphones, 3.5mm Aux, USB, or built-in mics (automatically hidden on phones &amp; tablets).</li>
+              <li><strong>Live Web Search Website Logos &amp; Expandable <code class="mono">▾</code> Sources Drawer:</strong> Displays real website favicons on the right whenever Brief searches the web, expanding to show exact search queries, visited links, and a crisp blue <strong>Open</strong> button for every website.</li>
+              <li><strong>4-Stage Claude <code class="mono">#d9693f</code> Motion (<code class="mono">1.2×</code> Faster) &amp; Main-Menu Clawd:</strong> Morphs smoothly from starburst petals into 3 pure orbiting balls (<code class="mono">1.2×</code> faster, zero rings), aligns into wave pulse &amp; jumping loading dots, and shows Clawd strictly on the Brief Work main menu.</li>
+              <li><strong>Fixed Model-Switch Status &amp; Added Calm Redirect Memory:</strong> Fixed stuck <code class="mono">Checking…</code> / <code class="mono">Ready</code> indicators when switching providers and upgraded multi-turn redirect memory (<code class="mono">“No, open X instead of Y”</code>) across all 4 AIs.</li>
             </ul>
           </div>
 
@@ -7922,6 +8500,9 @@
           captureSharePreview: async () => ({ base64: '' }),
           runChat: (payload) => callAndroidAsync('runChatAsync', payload),
           runWork: (payload) => callAndroidAsync('runWorkAsync', payload),
+          transcribeVoice: (payload) => callAndroidAsync('transcribeVoiceAsync', payload),
+          startNativeVoiceMemo: async () => JSON.parse(window.BriefAndroidBridge.startNativeVoiceMemoJson()),
+          stopNativeVoiceMemo: async (cancel) => JSON.parse(window.BriefAndroidBridge.stopNativeVoiceMemoJson(!!cancel)),
           stopAgent: async () => { window.BriefAndroidBridge.stopAgent(); return { ok: true }; },
           resolveApproval: async () => ({ ok: true }),
           mcpList: async () => ({ servers: [] }),
@@ -7947,6 +8528,10 @@
           onModelsUpdated: (fn) => subAndroid('models:updated', fn),
           onMcpUpdated: (fn) => subAndroid('mcp:updated', fn),
           onCursorEvent: (fn) => subAndroid('cursor:event', fn),
+          onWebSources: (fn) => subAndroid('agent:web-sources', fn),
+          onVoiceRms: (fn) => subAndroid('voice:rms', fn),
+          onVoicePartial: (fn) => subAndroid('voice:partial', fn),
+          onVoiceResult: (fn) => subAndroid('voice:result', fn),
           onUpdateProgress: (fn) => subAndroid('update:progress', fn)
         };
       }
@@ -8008,6 +8593,8 @@
           logPanelOpen: false,
           sendWithEnter: true,
           soundChime: false,
+          selectedMicDeviceId: '',
+          selectedMicLabel: '',
           userName: '',
           seenNewsVersion: '',
           provider: 'gemini',
@@ -8765,10 +9352,32 @@
          3. LOCAL CHATS & PROJECTS PERSISTENCE
       ==================================================================== */
 
+      function clearStaleMessageStreaming(activeMsgId) {
+        if (!Array.isArray(State.chats)) return false;
+        let changed = false;
+        for (const c of State.chats) {
+          if (!c || !Array.isArray(c.messages)) continue;
+          for (const m of c.messages) {
+            if (!m || m.role !== 'assistant') continue;
+            if (m.streaming && (!State.running || (activeMsgId && m.id !== activeMsgId) || (m.text && !State.running))) {
+              m.streaming = false;
+              if (/^(Checking|Ready)/i.test(String(m.liveStatus || ''))) m.liveStatus = '';
+              changed = true;
+            }
+          }
+        }
+        return changed;
+      }
+
       function saveChatsNow() {
         if (!api || !api.saveChatsData) return;
+        const cleanChats = (State.chats || []).map((c) => Object.assign({}, c, {
+          messages: Array.isArray(c.messages)
+            ? c.messages.map((m) => (m && m.streaming) ? Object.assign({}, m, { streaming: false }) : m)
+            : []
+        }));
         api.saveChatsData({
-          chats: State.chats,
+          chats: cleanChats,
           projects: State.projects
         }).catch(() => {});
       }
@@ -10004,6 +10613,10 @@
           if (isCurrentModeWork()) State.settings.openaiWorkModel = clean;
           else State.settings.openaiChatModel = clean;
         }
+        if (!State.running) {
+          clearStaleMessageStreaming();
+          renderThread();
+        }
         renderModelSelector();
         closePopovers();
         if (api && api.updateSettings) {
@@ -10166,6 +10779,10 @@
         if (DOM.attachPopover) DOM.attachPopover.classList.remove('open');
         DOM.modelPopover.classList.remove('open');
         DOM.permPopover.classList.remove('open');
+        const vmPop = $('voice-mic-popover');
+        if (vmPop) vmPop.classList.remove('open');
+        const vmGrp = $('voice-mic-group');
+        if (vmGrp) vmGrp.classList.remove('popover-open');
       }
 
       /* ===================================================================
@@ -10312,10 +10929,18 @@
           col.appendChild(det);
         }
 
+        const webSourcesEl = buildWebSearchSourcesEl(msg);
+        if (webSourcesEl) {
+          col.appendChild(webSourcesEl);
+        }
+
         const prose = createElement('div', { className: 'msg-prose' });
         if (msg.streaming && !msg.text) {
           if (msg.mode !== 'work') {
-            prose.appendChild(renderProviderLiveIndicatorEl(msg, msg.liveStatus || 'Thinking', { isChat: true }));
+            const safeWaitLabel = /^(Ready|Idle|Stopped)$/i.test(String(msg.liveStatus || '').trim())
+              ? 'Thinking…'
+              : (msg.liveStatus || 'Thinking…');
+            prose.appendChild(renderProviderLiveIndicatorEl(msg, safeWaitLabel, { isChat: true }));
             ensureProviderAnimLoop();
           }
         } else if (msg.error) {
@@ -10678,34 +11303,275 @@
         return 'orbit';
       }
 
+      function parseCleanDomain(rawUrlOrDomain) {
+        const s = String(rawUrlOrDomain || '').trim();
+        if (!s) return '';
+        try {
+          if (/^https?:/i.test(s)) {
+            return new URL(s).hostname.toLowerCase().replace(/^www\./, '');
+          }
+        } catch (_) { /* ignore */ }
+        return s.toLowerCase().replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
+      }
+
+      function createSiteFaviconNode(domainOrUrl, className) {
+        const dom = parseCleanDomain(domainOrUrl);
+        const box = createElement('span', { className: className || 'web-favicon-chip', title: dom || 'Web' });
+        const fallbackSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+        if (!dom || dom.indexOf('.') < 0) {
+          box.innerHTML = fallbackSvg;
+          return box;
+        }
+        const img = document.createElement('img');
+        img.alt = dom;
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer';
+        img.src = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(dom) + '&sz=64';
+        img.onerror = function () {
+          if (!img.dataset.triedDdg) {
+            img.dataset.triedDdg = '1';
+            img.src = 'https://icons.duckduckgo.com/ip3/' + encodeURIComponent(dom) + '.ico';
+          } else {
+            box.innerHTML = fallbackSvg;
+          }
+        };
+        box.appendChild(img);
+        return box;
+      }
+
+      function openExternalLinkSafe(url) {
+        const clean = String(url || '').trim();
+        if (!/^https?:/i.test(clean)) return;
+        if (api && api.openExternal) {
+          api.openExternal(clean).catch(() => { try { window.open(clean, '_blank', 'noopener'); } catch (_) {} });
+        } else {
+          try { window.open(clean, '_blank', 'noopener'); } catch (_) {}
+        }
+      }
+
+      function collectMsgWebActivity(msg) {
+        if (!msg) return null;
+        const queries = [];
+        const seenQuery = new Set();
+        const links = [];
+        const seenUrl = new Map();
+        const domains = [];
+        const pushDomain = (d) => {
+          const clean = parseCleanDomain(d);
+          if (clean && clean.indexOf('.') > 0 && !domains.includes(clean)) domains.push(clean);
+        };
+        const pushLink = (raw, visitedOverride) => {
+          if (!raw || !raw.url || !/^https?:/i.test(String(raw.url))) return;
+          const u = String(raw.url).trim();
+          const dom = parseCleanDomain(raw.domain || u);
+          pushDomain(dom);
+          if (seenUrl.has(u)) {
+            if (visitedOverride || raw.visited) seenUrl.get(u).visited = true;
+            return;
+          }
+          const item = {
+            title: String(raw.title || dom || u).trim(),
+            url: u,
+            domain: dom,
+            visited: !!(visitedOverride || raw.visited)
+          };
+          seenUrl.set(u, item);
+          links.push(item);
+        };
+
+        if (Array.isArray(msg.webSearches)) {
+          for (const ws of msg.webSearches) {
+            if (!ws) continue;
+            if (ws.engine) pushDomain(ws.engine);
+            if (ws.query && !ws.visited) {
+              const qk = String(ws.query).trim().toLowerCase();
+              if (qk && !seenQuery.has(qk)) {
+                seenQuery.add(qk);
+                queries.push({ query: String(ws.query).trim(), engine: parseCleanDomain(ws.engine || 'duckduckgo.com') });
+              }
+            }
+            if (Array.isArray(ws.sources)) {
+              for (const s of ws.sources) pushLink(s, ws.visited);
+            }
+          }
+        }
+
+        if (Array.isArray(msg.steps)) {
+          for (const st of msg.steps) {
+            if (!st) continue;
+            const t = String(st.tool || '');
+            if (t === 'web_search') {
+              const q = (st.args && st.args.query) || (st.result && st.result.query) || '';
+              const eng = parseCleanDomain((st.result && st.result.engine) || 'duckduckgo.com');
+              pushDomain(eng);
+              if (q) {
+                const qk = String(q).trim().toLowerCase();
+                if (qk && !seenQuery.has(qk)) {
+                  seenQuery.add(qk);
+                  queries.push({ query: String(q).trim(), engine: eng });
+                }
+              }
+              if (st.result && Array.isArray(st.result.results)) {
+                for (const r of st.result.results) pushLink(r, false);
+              }
+            } else if (t === 'fetch_url' || t === 'open_url' || t === 'navigate') {
+              const u = (st.result && (st.result.url || st.result.opened)) || (st.args && st.args.url) || '';
+              if (/^https?:/i.test(String(u))) {
+                pushLink({
+                  url: u,
+                  title: (st.result && (st.result.title || st.result.foreground)) || parseCleanDomain(u),
+                  visited: true
+                }, true);
+              }
+            }
+          }
+        }
+
+        const isActivelySearching = !!(msg.streaming && (msg._liveWebSearching || /Searching (?:the )?web|Reading web page|extra web research/i.test(String(msg.liveStatus || ''))));
+        if (isActivelySearching && msg._liveWebEngine) pushDomain(msg._liveWebEngine);
+        if (isActivelySearching && !domains.length) pushDomain('duckduckgo.com');
+
+        if (!isActivelySearching && !queries.length && !links.length) return null;
+        return { isActivelySearching, liveQuery: msg._liveWebQuery || '', queries, links, domains };
+      }
+
+      function buildWebSearchSourcesEl(msg) {
+        const info = collectMsgWebActivity(msg);
+        if (!info) return null;
+        const wrap = createElement('div', {
+          className: 'web-search-sources-wrap' + (msg._webDrawerOpen ? ' expanded' : ''),
+          dataset: { webWrapFor: msg.id || '' }
+        });
+
+        const bar = createElement('div', {
+          className: 'web-search-bar-row',
+          title: 'Click to inspect what Brief searched and which websites & links were visited',
+          onClick: () => {
+            msg._webDrawerOpen = !msg._webDrawerOpen;
+            wrap.classList.toggle('expanded', !!msg._webDrawerOpen);
+          }
+        });
+
+        const left = createElement('div', { className: 'web-search-bar-left' });
+        const lastQ = info.liveQuery || (info.queries.length ? info.queries[info.queries.length - 1].query : '');
+        const summaryLabel = info.isActivelySearching
+          ? ('Searching the web' + (lastQ ? (': "' + clipWorkLabel(lastQ, 42) + '"') : '…'))
+          : (info.links.length
+              ? ('Searched the web · ' + info.links.length + ' ' + (info.links.length === 1 ? 'website' : 'websites') + (lastQ ? (' for "' + clipWorkLabel(lastQ, 32) + '"') : ''))
+              : ('Searched: "' + clipWorkLabel(lastQ || 'web', 40) + '"'));
+        left.appendChild(createElement('span', {
+          className: 'web-search-bar-text' + (info.isActivelySearching ? ' trace-head-shimmer' : ''),
+          text: summaryLabel
+        }));
+        bar.appendChild(left);
+
+        const right = createElement('div', { className: 'web-search-bar-right' });
+        const stack = createElement('span', { className: 'web-favicon-stack' });
+        const siteDomains = (info.links.length ? info.links.map((l) => l.domain) : info.domains)
+          .filter((d, idx, arr) => d && arr.indexOf(d) === idx)
+          .slice(0, 5);
+        if (!siteDomains.length) siteDomains.push('duckduckgo.com');
+        for (const dom of siteDomains) {
+          stack.appendChild(createSiteFaviconNode(dom, 'web-favicon-chip'));
+        }
+        right.appendChild(stack);
+        if (info.links.length) {
+          right.appendChild(createElement('span', {
+            className: 'web-sources-count-lbl',
+            text: String(info.links.length)
+          }));
+        }
+        right.appendChild(createElement('span', {
+          className: 'web-expand-arrow-btn',
+          html: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+        }));
+        bar.appendChild(right);
+        wrap.appendChild(bar);
+
+        const drawer = createElement('div', { className: 'web-search-drawer' });
+        if (info.queries.length) {
+          const qStrip = createElement('div', { className: 'web-queries-strip' });
+          for (const qObj of info.queries) {
+            const chip = createElement('div', { className: 'web-query-chip', title: 'Searched via ' + (qObj.engine || 'web') + ': ' + qObj.query });
+            chip.appendChild(createSiteFaviconNode(qObj.engine || 'duckduckgo.com', 'web-favicon-chip'));
+            chip.appendChild(createElement('span', { text: 'Searched: "' + qObj.query + '"' }));
+            qStrip.appendChild(chip);
+          }
+          drawer.appendChild(qStrip);
+        }
+
+        if (info.links.length) {
+          const list = createElement('div', { className: 'web-sources-list' });
+          for (const lk of info.links) {
+            const row = createElement('div', { className: 'web-source-item' });
+            const lft = createElement('div', { className: 'web-source-left' });
+            lft.appendChild(createSiteFaviconNode(lk.domain || lk.url, 'web-source-favicon'));
+            const meta = createElement('div', { className: 'web-source-meta' });
+            const tRow = createElement('div', { className: 'web-source-title-row' });
+            tRow.appendChild(createElement('span', { className: 'web-source-title', text: lk.title || lk.domain || lk.url, title: lk.title || lk.url }));
+            if (lk.visited) {
+              tRow.appendChild(createElement('span', { className: 'web-visited-pill', text: 'Visited' }));
+            }
+            meta.appendChild(tRow);
+            meta.appendChild(createElement('span', { className: 'web-source-url', text: (lk.domain ? (lk.domain + ' · ') : '') + lk.url, title: lk.url }));
+            lft.appendChild(meta);
+            row.appendChild(lft);
+
+            const openBtn = createElement('button', {
+              className: 'web-open-blue-btn',
+              type: 'button',
+              title: 'Open ' + lk.url,
+              html: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Open</span>',
+              onClick: (ev) => {
+                ev.stopPropagation();
+                openExternalLinkSafe(lk.url);
+              }
+            });
+            row.appendChild(openBtn);
+            list.appendChild(row);
+          }
+          drawer.appendChild(list);
+        } else if (info.isActivelySearching) {
+          drawer.appendChild(createElement('div', {
+            style: 'font-size:12px;color:#94a3b8;padding:2px 0;',
+            text: 'Fetching live websites and links…'
+          }));
+        }
+
+        wrap.appendChild(drawer);
+        return wrap;
+      }
+
+      function syncWebSearchSourcesInRow(msg) {
+        if (!msg) return;
+        const row = document.querySelector('[data-msg-id="' + msg.id + '"]');
+        if (!row) return;
+        const col = row.querySelector('.msg-assistant-col');
+        if (!col) return;
+        const existing = col.querySelector('.web-search-sources-wrap');
+        const next = buildWebSearchSourcesEl(msg);
+        if (existing && next) {
+          col.replaceChild(next, existing);
+        } else if (existing && !next) {
+          existing.remove();
+        } else if (!existing && next) {
+          const prose = col.querySelector('.msg-prose');
+          if (prose) col.insertBefore(next, prose);
+          else col.appendChild(next);
+        }
+      }
+
       function buildClaudeAnimSvgHtml(animKind) {
-        if (animKind === 'start') {
-          // Exact 8-frame organic hand-drawn Claude starburst from Tenor GIF in pure #d9693f
-          return '<span class="claude-tenor-box" role="img" aria-label="Starting and checking">' +
-            '<img class="claude-tenor-strip" src="assets/claude-starburst-sprite.png" alt="">' +
-            '</span>';
-        }
-        if (animKind === 'file-create') {
-          // Exact Vecteezy 61736284: 3 bold solid #d9693f circles bouncing in a vertical wave
-          return '<svg viewBox="0 0 200 100" role="img" aria-label="Creating file">' +
-            '<circle class="claude-wave-dot" cx="42" cy="50" r="17.5" fill="#d9693f"/>' +
-            '<circle class="claude-wave-dot" cx="100" cy="50" r="17.5" fill="#d9693f"/>' +
-            '<circle class="claude-wave-dot" cx="158" cy="50" r="17.5" fill="#d9693f"/>' +
-            '</svg>';
-        }
-        if (animKind === 'file-find') {
-          // Exact Vecteezy 61736285: 3 bold solid #d9693f circles shrinking & expanding in a wave
-          return '<svg viewBox="0 0 200 100" role="img" aria-label="Finding file or validating">' +
-            '<circle class="claude-pulse-dot" cx="42" cy="50" r="14" fill="#d9693f"/>' +
-            '<circle class="claude-pulse-dot" cx="100" cy="50" r="14" fill="#d9693f"/>' +
-            '<circle class="claude-pulse-dot" cx="158" cy="50" r="14" fill="#d9693f"/>' +
-            '</svg>';
-        }
-        // Exact untouched user sample: <svg viewBox="0 0 200 200" role="img" aria-label="Loading"> with 3 r="8" #d9693f dots
-        return '<svg viewBox="0 0 200 200" role="img" aria-label="Loading">' +
-          '<circle class="claude-orbit-dot" r="8"/>' +
-          '<circle class="claude-orbit-dot" r="8"/>' +
-          '<circle class="claude-orbit-dot" r="8"/>' +
+        void animKind;
+        // Unified 4-Stage #d9693f Choreography:
+        // Stage 1 (Starburst) -> Morph petals into 3 pure #d9693f balls -> Stage 2 (1.2x Faster 3D Orbit, ZERO rings/atom) -> Stage 3 (Aligned Big/Small Wave Pulse) -> Stage 4 (Jumping Wave Dots)
+        return '<span class="claude-tenor-box" aria-hidden="true">' +
+          '<img class="claude-tenor-strip" src="assets/claude-starburst-sprite.png" alt="">' +
+          '</span>' +
+          '<svg class="claude-morph-svg" viewBox="0 0 200 200" role="img" aria-label="Working">' +
+          '<circle class="claude-morph-dot" cx="100" cy="100" r="8" opacity="0"/>' +
+          '<circle class="claude-morph-dot" cx="100" cy="100" r="8" opacity="0"/>' +
+          '<circle class="claude-morph-dot" cx="100" cy="100" r="8" opacity="0"/>' +
           '</svg>';
       }
 
@@ -10718,6 +11584,15 @@
           '</svg>';
       }
 
+      function smoothStep01(t) {
+        const c = Math.max(0, Math.min(1, t));
+        return c * c * (3 - 2 * c);
+      }
+
+      function lerpNum(a, b, t) {
+        return a + (b - a) * t;
+      }
+
       function tickProviderAnims(ms) {
         const claudeEls = document.querySelectorAll('.claude-live-anim');
         const moonEls = document.querySelectorAll('.openai-moon-svg');
@@ -10726,43 +11601,139 @@
           return;
         }
 
-        // 1. Animate Claude 4-state #d9693f indicators
+        // 1. Animate Claude 4-stage #d9693f smooth choreography (1.2x faster 3D orbiting balls, zero Saturn/atom rings!)
         const a = 70, b = 26, cx = 100, cy = 100;
-        const base = [-30, 30, 90], drift = [11, -8, 13], speeds = [1.5, 1.1, 1.9];
+        const base = [-30, 30, 90];
+        const drift = [13.2, -9.6, 15.6]; // 1.2x faster orbital drift
+        const speeds = [1.80, 1.32, 2.28]; // 1.2x faster 3-ball orbital speed
+        const alignXs = [44, 100, 156];
+        const petalAngles = [-Math.PI / 6, Math.PI / 2, (7 * Math.PI) / 6];
+
         for (let eIdx = 0; eIdx < claudeEls.length; eIdx++) {
           const el = claudeEls[eIdx];
-          const kind = el.getAttribute('data-claude-anim') || 'orbit';
-          if (kind === 'orbit') {
-            const dots = el.querySelectorAll('.claude-orbit-dot');
-            for (let i = 0; i < dots.length && i < 3; i++) {
-              const deg = base[i] + ms / 1000 * drift[i];
-              const tilt = deg * Math.PI / 180;
-              const ph = ms / 1000 * speeds[i] + i * 2.1;
-              const x = a * Math.cos(ph), y = b * Math.sin(ph);
-              const rx = x * Math.cos(tilt) - y * Math.sin(tilt);
-              const ry = x * Math.sin(tilt) + y * Math.cos(tilt);
-              const depth = (Math.sin(ph) + 1) / 2;
-              const d = dots[i];
-              d.setAttribute('cx', (cx + rx).toFixed(2));
-              d.setAttribute('cy', (cy + ry).toFixed(2));
-              d.setAttribute('r', (5.5 + depth * 4.5).toFixed(2));
-              d.setAttribute('opacity', (0.55 + depth * 0.45).toFixed(2));
+          if (!el.dataset.claudeBorn) {
+            el.dataset.claudeBorn = String(ms);
+          }
+          const bornMs = Number(el.dataset.claudeBorn) || ms;
+          const ageSec = Math.max(0, (ms - bornMs) / 1000);
+          const hintKind = el.getAttribute('data-claude-anim') || 'orbit';
+          const tenorBox = el.querySelector('.claude-tenor-box');
+          const dots = el.querySelectorAll('.claude-morph-dot');
+
+          // Stage 1 (0..0.90s): Starburst spark -> (0.90..1.38s): Petals spawn the 3 #d9693f balls into 3D orbit (never stays stuck on starburst!)
+          let starOpacity = 0;
+          let starScale = 1;
+          let dotsAppear = 1;
+          let petalToOrbit = 1;
+
+          if (ageSec < 0.90 && hintKind !== 'file-create' && hintKind !== 'file-find') {
+            starOpacity = 1;
+            starScale = 1;
+            dotsAppear = 0;
+            petalToOrbit = 0;
+          } else if (ageSec < 1.38 && hintKind !== 'file-create' && hintKind !== 'file-find') {
+            const k = smoothStep01((ageSec - 0.90) / 0.48);
+            starOpacity = 1 - k;
+            starScale = 1 - 0.34 * k;
+            dotsAppear = smoothStep01((ageSec - 0.90) / 0.24);
+            petalToOrbit = k;
+          }
+
+          if (tenorBox) {
+            tenorBox.style.opacity = starOpacity.toFixed(3);
+            tenorBox.style.transform = 'scale(' + starScale.toFixed(3) + ')';
+          }
+
+          // Determine weights between Orbit (Stage 2), Aligned Pulse Big<->Small (Stage 3), and Jumping Wave (Stage 4)
+          let modeBlend = 0; // 0 = Orbit, 1 = Aligned Pulse, 2 = Aligned Jump
+          if (hintKind === 'file-find') {
+            modeBlend = 1;
+          } else if (hintKind === 'file-create') {
+            modeBlend = 2;
+          } else if (ageSec >= 1.38) {
+            const cyc = (ageSec - 1.38) % 8.4;
+            if (cyc < 3.1) {
+              modeBlend = 0; // 3 balls moving in 3D angles (1.2x speed)
+            } else if (cyc < 3.7) {
+              modeBlend = smoothStep01((cyc - 3.1) / 0.6); // Smoothly align together into pulse
+            } else if (cyc < 5.8) {
+              modeBlend = 1; // Make themselves bigger & smaller in a wave
+            } else if (cyc < 6.3) {
+              modeBlend = 1 + smoothStep01((cyc - 5.8) / 0.5); // Smoothly turn from big-to-small into jumping wave
+            } else if (cyc < 7.9) {
+              modeBlend = 2; // Jumping / bouncing loading wave
+            } else {
+              modeBlend = 2 * (1 - smoothStep01((cyc - 7.9) / 0.5)); // Smoothly return to 3D orbit
             }
-          } else if (kind === 'file-create') {
-            const wDots = el.querySelectorAll('.claude-wave-dot');
-            for (let i = 0; i < wDots.length; i++) {
-              const ph = ms / 1000 * 5.2 - i * 0.95;
-              const wy = 50 - Math.sin(ph) * 19;
-              wDots[i].setAttribute('cy', wy.toFixed(2));
-              wDots[i].setAttribute('opacity', '1');
+          }
+
+          for (let i = 0; i < dots.length && i < 3; i++) {
+            const d = dots[i];
+            if (dotsAppear <= 0.005) {
+              d.setAttribute('opacity', '0');
+              continue;
             }
-          } else if (kind === 'file-find') {
-            const pDots = el.querySelectorAll('.claude-pulse-dot');
-            for (let i = 0; i < pDots.length; i++) {
-              const wave = (Math.sin(ms / 1000 * 4.6 - i * 1.05) + 1) / 2;
-              pDots[i].setAttribute('r', (8.0 + wave * 12.5).toFixed(2));
-              pDots[i].setAttribute('opacity', (0.72 + wave * 0.28).toFixed(2));
+
+            // Petal origin point (pulling out of the starburst petals)
+            const px = cx + 28 * Math.cos(petalAngles[i]);
+            const py = cy + 28 * Math.sin(petalAngles[i]);
+
+            // Stage 2: Pure 3-ball 3D Orbit (1.2x faster, NO rings/Saturn/atom)
+            const deg = base[i] + (ms / 1000) * drift[i];
+            const tilt = (deg * Math.PI) / 180;
+            const ph = (ms / 1000) * speeds[i] + i * 2.1;
+            const ox = a * Math.cos(ph);
+            const oy = b * Math.sin(ph);
+            const orbX = cx + ox * Math.cos(tilt) - oy * Math.sin(tilt);
+            const orbY = cy + ox * Math.sin(tilt) + oy * Math.cos(tilt);
+            const depth = (Math.sin(ph) + 1) / 2;
+            const orbR = 5.5 + depth * 4.5;
+            const orbOp = 0.55 + depth * 0.45;
+
+            const s2X = lerpNum(px, orbX, petalToOrbit);
+            const s2Y = lerpNum(py, orbY, petalToOrbit);
+            const s2R = lerpNum(6.5, orbR, petalToOrbit);
+            const s2Op = lerpNum(0.85, orbOp, petalToOrbit);
+
+            // Stage 3: Aligned horizontal row pulsing bigger & smaller in a wave
+            const pWave = (Math.sin((ms / 1000) * 5.0 - i * 1.05) + 1) / 2;
+            const s3X = alignXs[i];
+            const s3Y = 100;
+            const s3R = 8.5 + pWave * 12.5;
+            const s3Op = 0.72 + pWave * 0.28;
+
+            // Stage 4: Aligned horizontal row jumping / bouncing in a wave
+            const jPh = (ms / 1000) * 5.6 - i * 0.95;
+            const s4X = alignXs[i];
+            const s4Y = 100 - Math.sin(jPh) * 32;
+            const s4R = 16.5;
+            const s4Op = 1.0;
+
+            let fx, fy, fr, fop;
+            if (modeBlend <= 1) {
+              fx = lerpNum(s2X, s3X, modeBlend);
+              fy = lerpNum(s2Y, s3Y, modeBlend);
+              fr = lerpNum(s2R, s3R, modeBlend);
+              fop = lerpNum(s2Op, s3Op, modeBlend);
+            } else if (ageSec >= 1.38 && ((ageSec - 1.38) % 8.4) >= 7.9 && hintKind !== 'file-create') {
+              // Returning smoothly from Jump (s4) -> Orbit (s2)
+              const backT = smoothStep01((((ageSec - 1.38) % 8.4) - 7.9) / 0.5);
+              fx = lerpNum(s4X, s2X, backT);
+              fy = lerpNum(s4Y, s2Y, backT);
+              fr = lerpNum(s4R, s2R, backT);
+              fop = lerpNum(s4Op, s2Op, backT);
+            } else {
+              const t34 = modeBlend - 1;
+              fx = lerpNum(s3X, s4X, t34);
+              fy = lerpNum(s3Y, s4Y, t34);
+              fr = lerpNum(s3R, s4R, t34);
+              fop = lerpNum(s3Op, s4Op, t34);
             }
+
+            d.setAttribute('cx', fx.toFixed(2));
+            d.setAttribute('cy', fy.toFixed(2));
+            d.setAttribute('r', fr.toFixed(2));
+            d.setAttribute('opacity', (fop * dotsAppear).toFixed(2));
           }
         }
 
@@ -10846,7 +11817,8 @@
       }
 
       function syncProviderLiveIndicatorInRow(row, msg, statusText) {
-        if (!row || !msg) return;
+        if (!row || !msg || !msg.streaming) return;
+        const cleanStatus = /^(Ready|Idle|Stopped)$/i.test(String(statusText || '').trim()) ? '' : String(statusText || '').trim();
         const prov = getActiveUiProvider();
         if (prov === 'anthropic') {
           const nextKind = detectClaudeAnimState(msg);
@@ -10854,12 +11826,11 @@
           animBoxes.forEach((box) => {
             if (box.getAttribute('data-claude-anim') !== nextKind) {
               box.setAttribute('data-claude-anim', nextKind);
-              box.innerHTML = buildClaudeAnimSvgHtml(nextKind);
             }
           });
-          if (statusText) {
+          if (cleanStatus) {
             row.querySelectorAll('.work-trace-head .provider-live-label, .msg-prose .provider-live-label').forEach((lbl) => {
-              if (lbl.textContent !== statusText) lbl.textContent = statusText;
+              if (lbl.textContent !== cleanStatus) lbl.textContent = cleanStatus;
             });
           }
           if (msg._claudeHoldUntil && Date.now() < msg._claudeHoldUntil) {
@@ -10872,17 +11843,17 @@
           return;
         }
         if (prov === 'openai') {
-          if (statusText) {
+          if (cleanStatus) {
             row.querySelectorAll('.work-trace-head .provider-live-label, .msg-prose .provider-live-label').forEach((lbl) => {
-              if (lbl.textContent !== statusText) lbl.textContent = statusText;
+              if (lbl.textContent !== cleanStatus) lbl.textContent = cleanStatus;
             });
           }
           ensureProviderAnimLoop();
           return;
         }
-        if (statusText) {
+        if (cleanStatus) {
           const shimmerHead = row.querySelector('.work-trace-head .trace-head-shimmer');
-          if (shimmerHead && shimmerHead.textContent !== statusText) shimmerHead.textContent = statusText;
+          if (shimmerHead && shimmerHead.textContent !== cleanStatus) shimmerHead.textContent = cleanStatus;
         }
       }
 
@@ -11184,6 +12155,24 @@
             className: 'step-desc' + (st.running ? ' trace-head-shimmer' : ''),
             text: st.description || st.tool
           }));
+          if (['web_search', 'fetch_url', 'open_url', 'navigate'].includes(String(st.tool || ''))) {
+            const stepFavStack = createElement('span', { className: 'web-favicon-stack', style: 'margin-left:auto;margin-right:4px;' });
+            const stepDoms = [];
+            if (st.result && Array.isArray(st.result.results)) {
+              for (const r of st.result.results) {
+                const d = parseCleanDomain(r && (r.domain || r.url));
+                if (d && !stepDoms.includes(d)) stepDoms.push(d);
+              }
+            } else if (st.args && st.args.url) {
+              const d = parseCleanDomain(st.args.url);
+              if (d) stepDoms.push(d);
+            }
+            if (!stepDoms.length) stepDoms.push('duckduckgo.com');
+            for (const d of stepDoms.slice(0, 4)) {
+              stepFavStack.appendChild(createSiteFaviconNode(d, 'web-favicon-chip'));
+            }
+            top.appendChild(stepFavStack);
+          }
           top.appendChild(createElement('span', {
             className: 'step-status-pill ' + stClass,
             text: st.running ? (st.toolCallId === 'observe-init' ? 'Observing…' : 'Working…') : (st.denied ? '✕ Denied' : (st.ok ? '✓ Done (' + formatDuration(st.ms) + ')' : '✕ Failed'))
@@ -11816,8 +12805,8 @@
         if (!assistantMsg.taskPrompt && promptText) assistantMsg.taskPrompt = promptText;
         if (!assistantMsg._startedMs) assistantMsg._startedMs = Date.now();
         setRunningState(true);
-        // Smoothly transition Claude from initial spinning/breathing petals ('start') to 3D orbiting dots ('orbit') after initial check
-        setTimeout(() => {
+        // Smoothly transition status label from initial Checking… to Thinking… after 1.1s while streaming
+        const claudeTransitionTimer = setTimeout(() => {
           if (assistantMsg && assistantMsg.streaming && !assistantMsg.text) {
             if (assistantMsg.mode !== 'work' && /^Checking/i.test(String(assistantMsg.liveStatus || ''))) {
               assistantMsg.liveStatus = 'Thinking…';
@@ -11825,7 +12814,7 @@
             const activeRow = document.querySelector('[data-msg-id="' + assistantMsg.id + '"]');
             if (activeRow) syncProviderLiveIndicatorInRow(activeRow, assistantMsg, assistantMsg.liveStatus);
           }
-        }, 1680);
+        }, 1100);
         if (mode === 'work') {
           State.liveWork = { chatId: chat.id, msgId: assistantMsg.id, plan: '', thoughts: [], notes: [], steps: [] };
         } else {
@@ -11850,6 +12839,10 @@
             const finalChatTxt = (res && res.text) ? String(res.text) : (assistantMsg.text || '');
             assistantMsg.thought = (res && res.thought) ? res.thought : (assistantMsg.thought || '');
             assistantMsg.model = (res && res.model) || assistantMsg.model;
+            assistantMsg._liveWebSearching = false;
+            if (res && Array.isArray(res.webSearches) && res.webSearches.length) {
+              assistantMsg.webSearches = res.webSearches;
+            }
             if (typeof State._cancelStreamTyping === 'function') State._cancelStreamTyping();
             // Smoothly finish typing any remaining characters so it never dumps all at once or cuts off!
             let curLen = assistantMsg.text ? assistantMsg.text.length : 0;
@@ -11883,9 +12876,13 @@
             });
             const finalTxt = String(res.text || '');
             assistantMsg.model = res.model || assistantMsg.model;
+            assistantMsg._liveWebSearching = false;
             if (res.elapsedLabel) assistantMsg.elapsedLabel = res.elapsedLabel;
             if (Array.isArray(res.crew)) assistantMsg.crew = res.crew;
             if (Array.isArray(res.steps)) assistantMsg.steps = res.steps;
+            if (Array.isArray(res.webSearches) && res.webSearches.length) {
+              assistantMsg.webSearches = res.webSearches;
+            }
             if (finalTxt && (!assistantMsg.text || assistantMsg.text.length < finalTxt.length * 0.7)) {
               let curLen = assistantMsg.text ? assistantMsg.text.length : 0;
               renderThread();
@@ -11913,8 +12910,13 @@
           const firstLine = cleanErr.split('\n')[0].slice(0, 120);
           showToast(firstLine, 'error');
         } finally {
+          clearTimeout(claudeTransitionTimer);
           if (typeof State._cancelStreamTyping === 'function') State._cancelStreamTyping();
           assistantMsg.streaming = false;
+          assistantMsg._liveWebSearching = false;
+          if (/^(Checking|Ready)/i.test(String(assistantMsg.liveStatus || ''))) {
+            assistantMsg.liveStatus = '';
+          }
           registerUsageAfterTask(assistantMsg);
           if (Array.isArray(assistantMsg.steps)) {
             assistantMsg.steps = assistantMsg.steps.filter((s) => s.toolCallId !== 'observe-init');
@@ -12212,8 +13214,11 @@
 
       function setRunningState(isRunning, labelText) {
         State.running = !!isRunning;
+        document.body.classList.toggle('is-running', !!isRunning);
         DOM.sendBtn.disabled = !!isRunning;
         DOM.sendBtn.style.display = isRunning ? 'none' : 'inline-flex';
+        const micGrp = $('voice-mic-group');
+        if (micGrp) micGrp.style.display = isRunning ? 'none' : 'inline-flex';
         DOM.emergencyStopBtn.classList.toggle('armed', !!isRunning);
         const taskPill = $('task-running-pill');
         const taskTxt = $('task-running-text');
@@ -12479,119 +13484,6 @@
                   inp.placeholder = 'Paste ' + d.name + ' API key (' + d.prefix + ')…';
                   inp.focus();
                 }
-              }
-            });
-            const tabLabel = createElement('span', { style: 'display:inline-flex;align-items:center;gap:6px;font-weight:700;' });
-            if (d.logo) {
-              tabLabel.appendChild(createElement('img', { src: d.logo, alt: '', style: 'width:15px;height:15px;object-fit:contain;display:block;' }));
-            }
-            tabLabel.appendChild(document.createTextNode(d.name));
-            btn.appendChild(tabLabel);
-            const dot = createElement('span', {
-              className: 'prov-status-dot' + (info.has ? ' saved' : ''),
-              title: info.has ? ('Key saved: ' + (shortMask(info.masked) || '')) : 'No key saved'
-            });
-            btn.appendChild(dot);
-            el.appendChild(btn);
-          }
-        }
-        const maskedEl = $('settings-key-masked');
-        if (maskedEl) {
-          maskedEl.textContent = State.hasKey
-            ? (providerVisual(State.provider).name + ' · ' + shortMask(State.keyMasked))
-            : 'None saved';
-        }
-      }
-
-      function renderAndroidControlBanner() {
-        const banner = $('android-perm-banner');
-        if (!banner) return;
-        const isAndroid = document.documentElement.getAttribute('data-platform') === 'android' ||
-          (State.os && State.os.platform === 'android');
-        if (!isAndroid) {
-          banner.classList.remove('needs-perms');
-          return;
-        }
-        const accOk = !!(State.diagnostics && State.diagnostics.accessibilityEnabled);
-        banner.classList.toggle('needs-perms', !accOk);
-      }
-
-      function applyKeyValidationBundle(res) {
-        if (!res) return;
-        if (res.diagnostics) State.diagnostics = res.diagnostics;
-        if (res.key) {
-          State.hasKey = !!res.key.has;
-          State.keyMasked = res.key.masked || '';
-          State.keyBackend = res.key.backend || State.keyBackend;
-          if (res.key.slots) State.keySlots = res.key.slots;
-        }
-        if (res.slots) State.keySlots = res.slots;
-        if (res.provider) State.provider = res.provider;
-        if (res.providerInfo) State.providerInfo = res.providerInfo;
-        if (Array.isArray(res.presets)) State.presets = res.presets;
-        if (Array.isArray(res.models)) State.models = res.models;
-        if (res.match) State.match = res.match;
-        if (res.settings) State.settings = Object.assign({}, State.settings, res.settings);
-        if (!res.provider && State.settings && State.settings.provider) {
-          State.provider = State.settings.provider;
-        }
-        applyProviderTheme(State.provider);
-        renderKeyHeaderIndicator();
-        renderKeySlots();
-        renderModelSelector();
-        renderWelcomeView({ triggerLogoAnim: false });
-        renderSettingsTab();
-        renderAndroidControlBanner();
-      }
-
-      function renderKeyHeaderIndicator() {
-        const dot = DOM.headerKeyDot;
-        if (!State.hasKey) {
-          dot.className = 'key-status-dot invalid';
-          DOM.settingsOpenBtn.title = 'No API key saved';
-          return;
-        }
-        const lv = State.settings.lastValidation;
-        if (!lv || lv.status === 'valid') {
-          dot.className = 'key-status-dot valid';
-        } else if (lv.status === 'rate' || lv.status === 'network') {
-          dot.className = 'key-status-dot warn';
-        } else {
-          dot.className = 'key-status-dot invalid';
-        }
-      }
-
-      function renderUsageIndicators() {
-        const u = State.usage && State.usage.session ? State.usage.session : { total: 0, requests: 0 };
-        DOM.usagePillText.textContent = formatNumber(u.total) + ' tokens this session';
-
-        const sumEl = $('settings-usage-summary');
-        if (sumEl) {
-          sumEl.innerHTML =
-            '<strong>Requests:</strong> ' + formatNumber(u.requests) +
-            ' &nbsp;·&nbsp; <strong>Prompt:</strong> ' + formatNumber(u.prompt) +
-            ' &nbsp;·&nbsp; <strong>Output:</strong> ' + formatNumber(u.output) +
-            (u.thoughts ? ' &nbsp;·&nbsp; <strong>Thinking:</strong> ' + formatNumber(u.thoughts) : '') +
-            ' &nbsp;·&nbsp; <strong>Total this session:</strong> ' + formatNumber(u.total) + ' tokens';
-        }
-
-        const modalBody = $('usage-modal-body');
-        if (modalBody) {
-          modalBody.innerHTML = '';
-          modalBody.appendChild(createElement('div', {
-            className: 'settings-card',
-            html:
-              '<div class="settings-card-title">Session Totals</div>' +
-              '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;">' +
-              '<div><div class="field-hint">Total Tokens</div><strong style="font-size:18px;">' + formatNumber(u.total) + '</strong></div>' +
-              '<div><div class="field-hint">Prompt Tokens</div><strong style="font-size:18px;">' + formatNumber(u.prompt) + '</strong></div>' +
-              '<div><div class="field-hint">Output + Thinking</div><strong style="font-size:18px;">' + formatNumber((u.output || 0) + (u.thoughts || 0)) + '</strong></div>' +
-              '</div>'
-          }));
-
-          const byModel = State.usage && State.usage.byModel ? Object.entries(State.usage.byModel) : [];
-          if (byModel.length) {
-            const tbl = createElement('table', { className: 'models-table' });
             tbl.innerHTML = '<thead><tr><th>Model</th><th>Requests</th><th>Prompt</th><th>Output</th><th>Total</th></tr></thead>';
             const tb = createElement('tbody');
             for (const [mid, mu] of byModel) {
@@ -13115,8 +14007,8 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.1.2-beta';
-      const BRIEF_BUILD_NUMBER = 217;
+      const BRIEF_NEWS_VERSION = '2.1.3-beta';
+      const BRIEF_BUILD_NUMBER = 218;
       let latestRemoteRelease = null;
 
       if (api && api.onUpdateProgress) {
@@ -13328,6 +14220,28 @@
             if (feed.headline && $('news-live-headline')) $('news-live-headline').textContent = feed.headline;
             if (Array.isArray(feed.bullets) && feed.bullets.length && $('news-live-bullets')) {
               $('news-live-bullets').innerHTML = feed.bullets.map((b) => '<li>' + escapeHtml(String(b)) + '</li>').join('');
+            }
+            if (Array.isArray(feed.photos) && feed.photos.length && $('whats-new-gallery')) {
+              const gal = $('whats-new-gallery');
+              gal.innerHTML = '';
+              for (const ph of feed.photos.slice(0, 3)) {
+                if (!ph || !ph.src) continue;
+                const rawSrc = /^https?:/i.test(String(ph.src))
+                  ? String(ph.src)
+                  : ('https://raw.githubusercontent.com/albrhe1466-dotcom/Brief/main/' + String(ph.src).replace(/^\/+/, ''));
+                const card = createElement('button', {
+                  className: 'news-photo-card',
+                  type: 'button',
+                  dataset: { newsSrc: rawSrc, newsCaption: ph.caption || ph.title || 'What’s New Preview' },
+                  onClick: () => openLightbox(rawSrc, ph.caption || ph.title || 'What’s New Preview', 'modal-whats-new')
+                });
+                card.appendChild(createElement('img', { className: 'news-photo-thumb', src: rawSrc, alt: ph.title || '' }));
+                const cap = createElement('div', { className: 'news-photo-caption' });
+                cap.appendChild(createElement('div', { className: 'news-photo-title', text: ph.title || 'New Feature' }));
+                cap.appendChild(createElement('div', { className: 'news-photo-sub', text: ph.caption || '' }));
+                card.appendChild(cap);
+                gal.appendChild(card);
+              }
             }
 
             const mandatoryLock = !!(isAndroid && feed.mandatoryAndroid !== false);
@@ -14168,6 +15082,7 @@
         });
         DOM.sendBtn.addEventListener('click', () => sendCurrentMessage());
         DOM.emergencyStopBtn.addEventListener('click', () => triggerEmergencyStop());
+        bindVoiceMemoFeature();
 
         // Model & Permission Popovers
         DOM.modelTriggerBtn.addEventListener('click', (e) => {
@@ -14450,6 +15365,13 @@
           if (!path.includes(DOM.permPopover) && !DOM.permPopover.contains(e.target) && !DOM.permTriggerBtn.contains(e.target)) {
             DOM.permPopover.classList.remove('open');
           }
+          const vmPop = $('voice-mic-popover');
+          const vmArr = $('voice-mic-arrow-btn');
+          if (vmPop && !path.includes(vmPop) && !vmPop.contains(e.target) && (!vmArr || !vmArr.contains(e.target))) {
+            vmPop.classList.remove('open');
+            const vmGrp = $('voice-mic-group');
+            if (vmGrp) vmGrp.classList.remove('popover-open');
+          }
         });
 
         document.addEventListener('keydown', (e) => {
@@ -14473,8 +15395,659 @@
         });
       }
 
+      /* ===================================================================
+         LIVE VOICE MEMO WAVEFORM & HIGH-ACCURACY SPEECH-TO-TEXT (ALL 4 LLMS)
+      ==================================================================== */
+      const VoiceMemoState = {
+        active: false,
+        converting: false,
+        startedMs: 0,
+        timerId: null,
+        rafId: 0,
+        audioCtx: null,
+        mediaStream: null,
+        sourceNode: null,
+        analyser: null,
+        processor: null,
+        pcmChunks: [],
+        sampleRate: 16000,
+        webSpeechRec: null,
+        webSpeechFinal: '',
+        webSpeechInterim: '',
+        usingAndroidNative: false,
+        androidRmsLevel: 0.08
+      };
+
+      function encodeFloat32ToWavBase64(chunks, inputSampleRate) {
+        let totalLen = 0;
+        for (let i = 0; i < chunks.length; i++) totalLen += chunks[i].length;
+        if (!totalLen) return '';
+        const merged = new Float32Array(totalLen);
+        let offset = 0;
+        for (let i = 0; i < chunks.length; i++) {
+          merged.set(chunks[i], offset);
+          offset += chunks[i].length;
+        }
+        const targetRate = 16000;
+        const ratio = inputSampleRate > targetRate ? (inputSampleRate / targetRate) : 1;
+        const outLen = Math.max(1, Math.floor(merged.length / ratio));
+        const pcm16 = new Int16Array(outLen);
+        for (let i = 0; i < outLen; i++) {
+          const start = Math.floor(i * ratio);
+          const end = Math.min(merged.length, Math.ceil((i + 1) * ratio));
+          let sum = 0;
+          let count = 0;
+          for (let j = start; j < end; j++) {
+            sum += merged[j];
+            count++;
+          }
+          const sample = count > 0 ? (sum / count) : merged[start] || 0;
+          const clamped = Math.max(-1, Math.min(1, sample));
+          pcm16[i] = clamped < 0 ? Math.round(clamped * 0x8000) : Math.round(clamped * 0x7FFF);
+        }
+
+        const wavBytes = new ArrayBuffer(44 + pcm16.length * 2);
+        const view = new DataView(wavBytes);
+        const writeAscii = (pos, str) => {
+          for (let i = 0; i < str.length; i++) view.setUint8(pos + i, str.charCodeAt(i));
+        };
+        const outRate = ratio === 1 ? Math.round(inputSampleRate) : targetRate;
+        writeAscii(0, 'RIFF');
+        view.setUint32(4, 36 + pcm16.length * 2, true);
+        writeAscii(8, 'WAVE');
+        writeAscii(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, 1, true); // Mono
+        view.setUint32(24, outRate, true);
+        view.setUint32(28, outRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeAscii(36, 'data');
+        view.setUint32(40, pcm16.length * 2, true);
+        let p = 44;
+        for (let i = 0; i < pcm16.length; i++, p += 2) {
+          view.setInt16(p, pcm16[i], true);
+        }
+
+        const u8 = new Uint8Array(wavBytes);
+        let bin = '';
+        const chunkSz = 0x8000;
+        for (let i = 0; i < u8.length; i += chunkSz) {
+          bin += String.fromCharCode.apply(null, u8.subarray(i, i + chunkSz));
+        }
+        return btoa(bin);
+      }
+
+      function initVoiceWaveBars() {
+        const wave = $('voice-memo-wave');
+        if (!wave || wave.children.length) return;
+        for (let i = 0; i < 28; i++) {
+          wave.appendChild(createElement('span', { className: 'voice-wave-bar' }));
+        }
+      }
+
+      function formatMemoTimer(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return m + ':' + (s < 10 ? ('0' + s) : String(s));
+      }
+
+      function insertTranscribedVoiceText(rawText) {
+        const clean = String(rawText || '').replace(/\s+/g, ' ').trim();
+        if (!clean) return false;
+        const inp = DOM.composerInput;
+        if (!inp) return false;
+        const cur = String(inp.value || '');
+        const sep = cur && !/\s$/.test(cur) ? ' ' : '';
+        inp.value = cur + sep + clean;
+        autoResizeComposer();
+        inp.focus();
+        return true;
+      }
+
+      function teardownVoiceMemoAudio() {
+        if (VoiceMemoState.timerId) {
+          clearInterval(VoiceMemoState.timerId);
+          VoiceMemoState.timerId = null;
+        }
+        if (VoiceMemoState.rafId) {
+          cancelAnimationFrame(VoiceMemoState.rafId);
+          VoiceMemoState.rafId = 0;
+        }
+        if (VoiceMemoState.webSpeechRec) {
+          try { VoiceMemoState.webSpeechRec.onend = null; VoiceMemoState.webSpeechRec.stop(); } catch (_) {}
+          VoiceMemoState.webSpeechRec = null;
+        }
+        if (VoiceMemoState.processor) {
+          try { VoiceMemoState.processor.disconnect(); } catch (_) {}
+          VoiceMemoState.processor = null;
+        }
+        if (VoiceMemoState.sourceNode) {
+          try { VoiceMemoState.sourceNode.disconnect(); } catch (_) {}
+          VoiceMemoState.sourceNode = null;
+        }
+        if (VoiceMemoState.mediaStream) {
+          try { VoiceMemoState.mediaStream.getTracks().forEach((t) => t.stop()); } catch (_) {}
+          VoiceMemoState.mediaStream = null;
+        }
+        if (VoiceMemoState.audioCtx) {
+          try { VoiceMemoState.audioCtx.close(); } catch (_) {}
+          VoiceMemoState.audioCtx = null;
+        }
+        VoiceMemoState.analyser = null;
+      }
+
+      function closeVoiceMemoUi() {
+        VoiceMemoState.active = false;
+        VoiceMemoState.converting = false;
+        VoiceMemoState.usingAndroidNative = false;
+        if (DOM.composerCapsule) DOM.composerCapsule.classList.remove('is-recording-memo');
+        const micGrp = $('voice-mic-group');
+        if (micGrp) micGrp.classList.remove('recording');
+        const micBtn = $('voice-mic-btn');
+        if (micBtn) micBtn.classList.remove('recording');
+        const doneBtn = $('voice-memo-done');
+        if (doneBtn) {
+          doneBtn.disabled = false;
+          doneBtn.textContent = '✓ Text';
+        }
+      }
+
+      function animateVoiceWaveLoop() {
+        if (!VoiceMemoState.active) return;
+        const wave = $('voice-memo-wave');
+        const bars = wave ? wave.querySelectorAll('.voice-wave-bar') : [];
+        if (bars.length) {
+          if (VoiceMemoState.analyser && !VoiceMemoState.converting) {
+            const freq = new Uint8Array(VoiceMemoState.analyser.frequencyBinCount);
+            VoiceMemoState.analyser.getByteFrequencyData(freq);
+            const step = Math.max(1, Math.floor(freq.length / bars.length));
+            for (let i = 0; i < bars.length; i++) {
+              const v = (freq[Math.min(freq.length - 1, i * step)] || 0) / 255;
+              const boost = Math.min(1, v * 1.45);
+              const h = Math.round(5 + boost * 22);
+              bars[i].style.height = h + 'px';
+            }
+          } else {
+            const t = performance.now() / 1000;
+            const lvl = VoiceMemoState.converting ? 0.38 : Math.max(0.14, VoiceMemoState.androidRmsLevel || 0.22);
+            for (let i = 0; i < bars.length; i++) {
+              const w = (Math.sin(t * 7.2 + i * 0.55) + 1) * 0.5;
+              const h = Math.round(5 + lvl * (7 + w * 18));
+              bars[i].style.height = h + 'px';
+            }
+          }
+        }
+        VoiceMemoState.rafId = requestAnimationFrame(animateVoiceWaveLoop);
+      }
+
+      async function startVoiceMemoRecording() {
+        if (State.running || VoiceMemoState.active || VoiceMemoState.converting) return;
+        initVoiceWaveBars();
+        VoiceMemoState.pcmChunks = [];
+        VoiceMemoState.webSpeechFinal = '';
+        VoiceMemoState.webSpeechInterim = '';
+        VoiceMemoState.usingAndroidNative = false;
+        VoiceMemoState.androidRmsLevel = 0.16;
+
+        const isAndroidApp = document.documentElement.getAttribute('data-platform') === 'android' ||
+          (State.os && State.os.platform === 'android');
+
+        // Start optional simultaneous Web Speech API recognition if browser supports it cleanly
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec && !isAndroidApp) {
+          try {
+            const rec = new SpeechRec();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.onresult = (ev) => {
+              let fin = '';
+              let inter = '';
+              for (let i = 0; i < ev.results.length; i++) {
+                const tr = ev.results[i][0] && ev.results[i][0].transcript ? ev.results[i][0].transcript : '';
+                if (ev.results[i].isFinal) fin += tr + ' ';
+                else inter += tr;
+              }
+              if (fin.trim()) VoiceMemoState.webSpeechFinal = fin.trim();
+              VoiceMemoState.webSpeechInterim = inter.trim();
+            };
+            rec.onerror = () => {};
+            rec.start();
+            VoiceMemoState.webSpeechRec = rec;
+          } catch (_) { VoiceMemoState.webSpeechRec = null; }
+        }
+
+        const preferredMicId = (!isAndroidApp && State.settings && State.settings.selectedMicDeviceId)
+          ? String(State.settings.selectedMicDeviceId)
+          : '';
+        const makeAudioConstraints = (useExactId) => Object.assign({
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1
+        }, useExactId ? { deviceId: { exact: useExactId } } : {});
+
+        let gotWebAudio = false;
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          let stream = null;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: makeAudioConstraints(preferredMicId) });
+          } catch (_) {
+            if (preferredMicId) {
+              // If selected USB/Aux mic was unplugged, fall back cleanly to system default mic
+              stream = await navigator.mediaDevices.getUserMedia({ audio: makeAudioConstraints('') }).catch(() => null);
+            }
+          }
+          if (stream) {
+            try {
+              const activeTrack = stream.getAudioTracks && stream.getAudioTracks()[0];
+              if (activeTrack && activeTrack.label && !isAndroidApp) {
+                State.settings.selectedMicLabel = activeTrack.label;
+                updateMicArrowTooltip();
+              }
+              const AC = window.AudioContext || window.webkitAudioContext;
+              const ctx = new AC();
+              if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
+              const src = ctx.createMediaStreamSource(stream);
+              const analyser = ctx.createAnalyser();
+              analyser.fftSize = 128;
+              analyser.smoothingTimeConstant = 0.72;
+              const proc = ctx.createScriptProcessor(4096, 1, 1);
+              proc.onaudioprocess = (e) => {
+                if (!VoiceMemoState.active || VoiceMemoState.converting) return;
+                const chan = e.inputBuffer.getChannelData(0);
+                VoiceMemoState.pcmChunks.push(new Float32Array(chan));
+              };
+              src.connect(analyser);
+              analyser.connect(proc);
+              proc.connect(ctx.destination);
+
+              VoiceMemoState.mediaStream = stream;
+              VoiceMemoState.audioCtx = ctx;
+              VoiceMemoState.sourceNode = src;
+              VoiceMemoState.analyser = analyser;
+              VoiceMemoState.processor = proc;
+              VoiceMemoState.sampleRate = ctx.sampleRate || 48000;
+              gotWebAudio = true;
+            } catch (_) {
+              try { stream.getTracks().forEach((t) => t.stop()); } catch (__) {}
+              gotWebAudio = false;
+            }
+          }
+        }
+
+        if (!gotWebAudio && isAndroidApp && api && api.startNativeVoiceMemo) {
+          const nat = await api.startNativeVoiceMemo().catch(() => ({ ok: false }));
+          if (nat && nat.needsPermission) {
+            showToast('Allow Microphone permission once, then tap the Mic button again!', 'ok');
+            return;
+          }
+          if (nat && nat.ok) {
+            VoiceMemoState.usingAndroidNative = true;
+          }
+        }
+
+        if (!gotWebAudio && !VoiceMemoState.usingAndroidNative && !VoiceMemoState.webSpeechRec) {
+          showToast('Microphone access was blocked or no microphone was detected.', 'error');
+          return;
+        }
+
+        VoiceMemoState.active = true;
+        VoiceMemoState.converting = false;
+        VoiceMemoState.startedMs = Date.now();
+        if (DOM.composerCapsule) DOM.composerCapsule.classList.add('is-recording-memo');
+        const micGrp = $('voice-mic-group');
+        if (micGrp) micGrp.classList.add('recording');
+        const micBtn = $('voice-mic-btn');
+        if (micBtn) micBtn.classList.add('recording');
+        if ($('voice-memo-timer')) $('voice-memo-timer').textContent = '0:00';
+        const activeMicShort = (!isAndroidApp && State.settings && State.settings.selectedMicLabel)
+          ? clipWorkLabel(State.settings.selectedMicLabel, 24)
+          : '';
+        if ($('voice-memo-status')) {
+          $('voice-memo-status').textContent = activeMicShort ? ('Listening · ' + activeMicShort) : 'Listening clearly…';
+        }
+
+        VoiceMemoState.timerId = setInterval(() => {
+          const sec = Math.max(0, Math.floor((Date.now() - VoiceMemoState.startedMs) / 1000));
+          if ($('voice-memo-timer')) $('voice-memo-timer').textContent = formatMemoTimer(sec);
+        }, 250);
+        animateVoiceWaveLoop();
+      }
+
+      function cancelVoiceMemoRecording() {
+        if (VoiceMemoState.usingAndroidNative && api && api.stopNativeVoiceMemo) {
+          api.stopNativeVoiceMemo(true).catch(() => {});
+        }
+        teardownVoiceMemoAudio();
+        closeVoiceMemoUi();
+        if (DOM.composerInput) DOM.composerInput.focus();
+      }
+
+      async function finishAndConvertVoiceMemo() {
+        if (!VoiceMemoState.active || VoiceMemoState.converting) return;
+        VoiceMemoState.converting = true;
+        if ($('voice-memo-status')) $('voice-memo-status').textContent = 'Converting speech to text…';
+        const doneBtn = $('voice-memo-done');
+        if (doneBtn) {
+          doneBtn.disabled = true;
+          doneBtn.textContent = 'Converting…';
+        }
+
+        if (VoiceMemoState.usingAndroidNative && api && api.stopNativeVoiceMemo) {
+          await api.stopNativeVoiceMemo(false).catch(() => {});
+          // Wait briefly for Android SpeechRecognizer final onResults callback
+          await new Promise((r) => setTimeout(r, 650));
+          const spokenNat = (VoiceMemoState.webSpeechFinal || VoiceMemoState.webSpeechInterim || '').trim();
+          teardownVoiceMemoAudio();
+          closeVoiceMemoUi();
+          if (spokenNat) {
+            insertTranscribedVoiceText(spokenNat);
+          } else {
+            showToast('No clear speech detected — try speaking a little closer to the mic.', 'warn');
+          }
+          return;
+        }
+
+        const chunks = VoiceMemoState.pcmChunks.slice();
+        const sr = VoiceMemoState.sampleRate || 48000;
+        const browserSpeechFallback = (VoiceMemoState.webSpeechFinal || VoiceMemoState.webSpeechInterim || '').trim();
+        teardownVoiceMemoAudio();
+
+        let transcribed = '';
+        if (chunks.length && api && api.transcribeVoice) {
+          try {
+            const wavBase64 = encodeFloat32ToWavBase64(chunks, sr);
+            if (wavBase64) {
+              const res = await api.transcribeVoice({ wavBase64 });
+              if (res && res.ok && res.text) {
+                transcribed = String(res.text).trim();
+              }
+            }
+          } catch (_) { /* fall back to browser speech if available */ }
+        }
+        if (!transcribed && browserSpeechFallback) {
+          transcribed = browserSpeechFallback;
+        }
+
+        closeVoiceMemoUi();
+        if (transcribed) {
+          insertTranscribedVoiceText(transcribed);
+        } else {
+          showToast('Could not hear clear words. Please speak clearly and try again.', 'warn');
+          if (DOM.composerInput) DOM.composerInput.focus();
+        }
+      }
+
+      function classifyMicHardware(rawLabel, rawId) {
+        const lbl = String(rawLabel || '').trim();
+        const lower = lbl.toLowerCase();
+        if (rawId === 'default') {
+          return { kind: 'default', tag: 'System Default Input' };
+        }
+        if (/headset|headphone|earphone|earbud|airpod|hands-?free|\bhfp\b|wh-|wf-|jabra|razer|logitech\s*g|corsair|steelseries|cloud\s*ii|cloud\s*alpha/i.test(lower)) {
+          return { kind: 'headset', tag: 'Headphones / Headset Mic' };
+        }
+        if (/\busb\b|yeti|fifine|hyperx|solocast|quadcast|shure|rode|elgato|samson|maono|at2020|scarlett|focusrite|behri|podmic|snowball/i.test(lower)) {
+          return { kind: 'usb', tag: 'USB External Microphone' };
+        }
+        if (/jack|3\.5|aux\b|line[\s-]*in|rear\s*mic|front\s*mic|front\s*panel|pink\s*in|analog|realtek|conexant|ALC\d+/i.test(lower)) {
+          return { kind: 'aux', tag: 'Aux / 3.5mm Jack Mic' };
+        }
+        if (/array|internal|built-?in|laptop|integrated|intel.*smart\s*sound|digital\s*mic|sst\b|acp\b/i.test(lower)) {
+          return { kind: 'builtin', tag: 'Built-in PC / Laptop Mic' };
+        }
+        return { kind: 'mic', tag: 'External / Audio Input' };
+      }
+
+      function micHardwareSvg(kind) {
+        if (kind === 'headset') {
+          return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>';
+        }
+        if (kind === 'usb') {
+          return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7" r="1"/><circle cx="4" cy="20" r="1"/><circle cx="16" cy="20" r="1"/><path d="M10 17V7"/><path d="M10 12h6v7"/><path d="M10 15H4v4"/><polyline points="7 4 10 1 13 4"/></svg>';
+        }
+        if (kind === 'aux') {
+          return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-6 6"/><path d="M15 3l6 6-3 3-6-6z"/><path d="M11 11l-7 7"/><path d="M3 21l2-2"/><path d="M7 17l-2 2"/></svg>';
+        }
+        if (kind === 'builtin') {
+          return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>';
+        }
+        return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>';
+      }
+
+      function updateMicArrowTooltip() {
+        const arr = $('voice-mic-arrow-btn');
+        if (!arr) return;
+        const lbl = (State.settings && State.settings.selectedMicLabel) ? State.settings.selectedMicLabel : 'System Default Mic';
+        arr.title = 'Inserted Microphone: ' + lbl + ' (click to switch)';
+      }
+
+      async function refreshInsertedMicsList(opts) {
+        const listEl = $('voice-mic-device-list');
+        if (!listEl) return;
+        const options = opts || {};
+        listEl.innerHTML = '<div class="field-hint" style="margin:4px 0;">Scanning inserted microphones…</div>';
+
+        let webMics = [];
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          let allDevs = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+          webMics = allDevs.filter((d) => d && d.kind === 'audioinput');
+          const allBlank = webMics.length > 0 && webMics.every((d) => !String(d.label || '').trim());
+          if ((allBlank || webMics.length === 0) && options.promptPermission && navigator.mediaDevices.getUserMedia) {
+            try {
+              const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+              try { s.getTracks().forEach((t) => t.stop()); } catch (_) {}
+              allDevs = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+              webMics = allDevs.filter((d) => d && d.kind === 'audioinput');
+            } catch (_) { /* continue with OS fallback */ }
+          }
+        }
+
+        let osMics = [];
+        if (api && api.listMics) {
+          try {
+            const nat = await api.listMics();
+            if (nat && Array.isArray(nat.devices)) osMics = nat.devices;
+          } catch (_) {}
+        }
+
+        // Clean list combining Chromium exact audioinput deviceIds + OS friendly hardware names
+        const items = [];
+        const seenLabel = new Set();
+        const defaultEntry = webMics.find((d) => d.deviceId === 'default');
+        const realWebMics = webMics.filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications');
+
+        if (defaultEntry) {
+          const cleanDef = String(defaultEntry.label || '').replace(/^Default\s*-\s*/i, '').trim() ||
+            ((osMics[0] && osMics[0].label) || 'Active PC Microphone');
+          items.push({
+            deviceId: '',
+            label: 'System Default (' + cleanDef + ')',
+            kind: 'default',
+            tag: 'Auto-follows Windows / Linux default'
+          });
+        }
+
+        realWebMics.forEach((d, idx) => {
+          const rawLbl = String(d.label || '').trim() ||
+            (osMics[idx] && osMics[idx].label) ||
+            ('Microphone Input ' + (idx + 1));
+          const key = rawLbl.toLowerCase();
+          if (seenLabel.has(key)) return;
+          seenLabel.add(key);
+          const meta = classifyMicHardware(rawLbl, d.deviceId);
+          items.push({
+            deviceId: d.deviceId,
+            label: rawLbl,
+            kind: meta.kind,
+            tag: meta.tag
+          });
+        });
+
+        if (!realWebMics.length && osMics.length) {
+          osMics.forEach((o) => {
+            const rawLbl = String(o.label || '').trim();
+            if (!rawLbl || seenLabel.has(rawLbl.toLowerCase())) return;
+            seenLabel.add(rawLbl.toLowerCase());
+            const meta = classifyMicHardware(rawLbl, '');
+            items.push({ deviceId: '', label: rawLbl, kind: meta.kind, tag: meta.tag });
+          });
+        }
+
+        listEl.innerHTML = '';
+        if (!items.length) {
+          listEl.innerHTML = '<div class="field-hint" style="margin:4px 0;">No microphones found. Plug in Headphones, a 3.5mm Aux mic, or a USB mic and click Refresh.</div>';
+          return;
+        }
+
+        const activeId = String((State.settings && State.settings.selectedMicDeviceId) || '');
+        for (const mic of items) {
+          const isSelected = mic.deviceId === activeId;
+          const btn = createElement('button', {
+            className: 'mic-device-btn' + (isSelected ? ' active' : ''),
+            type: 'button',
+            onClick: async (ev) => {
+              ev.stopPropagation();
+              State.settings.selectedMicDeviceId = mic.deviceId;
+              State.settings.selectedMicLabel = mic.label;
+              updateMicArrowTooltip();
+              if (api && api.updateSettings) {
+                await api.updateSettings({
+                  selectedMicDeviceId: mic.deviceId,
+                  selectedMicLabel: mic.label
+                }).catch(() => {});
+              }
+              closePopovers();
+              showToast('Microphone set to: ' + mic.label, 'ok');
+            }
+          });
+          const left = createElement('div', { className: 'mic-device-left' });
+          left.appendChild(createElement('span', { className: 'mic-device-icon', html: micHardwareSvg(mic.kind) }));
+          const meta = createElement('div', { className: 'mic-device-meta' });
+          meta.appendChild(createElement('span', { className: 'mic-device-name', text: mic.label, title: mic.label }));
+          meta.appendChild(createElement('span', { className: 'mic-device-kind', text: mic.tag }));
+          left.appendChild(meta);
+          btn.appendChild(left);
+          if (isSelected) {
+            btn.appendChild(createElement('span', { className: 'mic-device-check', text: '✓ Active' }));
+          }
+          listEl.appendChild(btn);
+        }
+      }
+
+      function bindVoiceMemoFeature() {
+        initVoiceWaveBars();
+        const isMobile = document.documentElement.getAttribute('data-platform') === 'android' ||
+          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        if (isMobile) document.body.classList.add('is-mobile-device');
+        updateMicArrowTooltip();
+
+        const micBtn = $('voice-mic-btn');
+        const micArrowBtn = $('voice-mic-arrow-btn');
+        const micPop = $('voice-mic-popover');
+        const micRefreshBtn = $('voice-mic-refresh-btn');
+        const micGrp = $('voice-mic-group');
+        const cancelBtn = $('voice-memo-cancel');
+        const doneBtn = $('voice-memo-done');
+        if (micBtn) {
+          micBtn.addEventListener('click', () => {
+            closePopovers();
+            if (VoiceMemoState.active) finishAndConvertVoiceMemo();
+            else startVoiceMemoRecording();
+          });
+        }
+        if (micArrowBtn && micPop) {
+          micArrowBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const willOpen = !micPop.classList.contains('open');
+            togglePopover(micPop, willOpen);
+            if (micGrp) micGrp.classList.toggle('popover-open', willOpen);
+            if (willOpen) {
+              await refreshInsertedMicsList({ promptPermission: true });
+            }
+          });
+        }
+        if (micPop) {
+          micPop.addEventListener('click', (e) => e.stopPropagation());
+        }
+        if (micRefreshBtn) {
+          micRefreshBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            refreshInsertedMicsList({ promptPermission: true });
+          });
+        }
+        if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+          navigator.mediaDevices.addEventListener('devicechange', () => {
+            const vmPop = $('voice-mic-popover');
+            if (vmPop && vmPop.classList.contains('open')) {
+              refreshInsertedMicsList({ promptPermission: false });
+            }
+          });
+        }
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', () => cancelVoiceMemoRecording());
+        }
+        if (doneBtn) {
+          doneBtn.addEventListener('click', () => finishAndConvertVoiceMemo());
+        }
+        if (api && api.onVoiceRms) {
+          api.onVoiceRms((p) => {
+            if (p && typeof p.level === 'number') VoiceMemoState.androidRmsLevel = p.level;
+          });
+        }
+        if (api && api.onVoicePartial) {
+          api.onVoicePartial((p) => {
+            if (p && p.text) {
+              VoiceMemoState.webSpeechInterim = String(p.text);
+              if ($('voice-memo-status')) $('voice-memo-status').textContent = clipWorkLabel(p.text, 28);
+            }
+          });
+        }
+        if (api && api.onVoiceResult) {
+          api.onVoiceResult((p) => {
+            if (p && p.ok && p.text) {
+              VoiceMemoState.webSpeechFinal = String(p.text);
+              if (VoiceMemoState.active && VoiceMemoState.usingAndroidNative && !VoiceMemoState.converting) {
+                teardownVoiceMemoAudio();
+                closeVoiceMemoUi();
+                insertTranscribedVoiceText(p.text);
+              }
+            }
+          });
+        }
+      }
+
       function bindIpcSubscriptions() {
         if (!api) return;
+
+        if (api.onWebSources) {
+          api.onWebSources((ws) => {
+            if (!ws) return;
+            const chat = ws.chatId ? State.chats.find((c) => c.id === ws.chatId) : getActiveChat();
+            if (!chat || !chat.messages.length) return;
+            const msg = chat.messages[chat.messages.length - 1];
+            if (!msg || msg.role !== 'assistant') return;
+            if (ws.phase === 'searching') {
+              msg._liveWebSearching = true;
+              msg._liveWebQuery = ws.query || '';
+              msg._liveWebEngine = ws.engine || 'duckduckgo.com';
+            } else if (ws.phase === 'done') {
+              msg._liveWebSearching = false;
+              msg.webSearches = Array.isArray(msg.webSearches) ? msg.webSearches : [];
+              msg.webSearches.push({
+                query: ws.query || '',
+                engine: ws.engine || 'duckduckgo.com',
+                visited: !!ws.visited,
+                sources: Array.isArray(ws.sources) ? ws.sources : []
+              });
+            }
+            if (chat.id === State.activeChatId) {
+              syncWebSearchSourcesInRow(msg);
+            }
+          });
+        }
 
         api.onStatus((st) => {
           const prevRunning = State.running;
@@ -14489,7 +16062,8 @@
           }
           const chat = getActiveChat();
           const activeAssistant = chat && chat.messages[chat.messages.length - 1];
-          if (activeAssistant && activeAssistant.streaming && st) {
+          const isTerminalIdleStatus = !st || !st.running || /^(Ready|Idle|Stopped)$/i.test(String(st.stepText || '').trim());
+          if (activeAssistant && activeAssistant.streaming && st && !isTerminalIdleStatus) {
             if (st.state) activeAssistant._lastStatusState = st.state;
             if (st.stepText) activeAssistant.liveStatus = st.stepText;
             if (st.elapsedLabel) activeAssistant.elapsedLabel = st.elapsedLabel;
@@ -14497,6 +16071,7 @@
             const row = document.querySelector('[data-msg-id="' + activeAssistant.id + '"]');
             if (row) {
               syncProviderLiveIndicatorInRow(row, activeAssistant, st.stepText);
+              syncWebSearchSourcesInRow(activeAssistant);
               const rightPill = row.querySelector('.work-trace-head > .selector-subbadge');
               if (rightPill) {
                 const checklist = syncIdeaChecklistState(activeAssistant);
@@ -14511,7 +16086,8 @@
                 waitShimmer.textContent = st.stepText;
               }
               const prose = row.querySelector('.msg-prose');
-              if (prose && !activeAssistant.text && activeAssistant.mode !== 'work' && st.stepText) {
+              const alreadyStreamingText = !!(activeAssistant.text || (streamMsgId === activeAssistant.id && streamTarget));
+              if (prose && !alreadyStreamingText && activeAssistant.mode !== 'work' && st.stepText) {
                 const uiProvNow = getActiveUiProvider();
                 if (uiProvNow === 'anthropic' || uiProvNow === 'openai') {
                   if (!prose.querySelector('.provider-live-wrap')) {
@@ -14629,7 +16205,10 @@
               isRetry: !!s.isRetry
             }));
           }
-          if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
+          if (chat.id === State.activeChatId) {
+            syncWorkMessageInPlace(msg);
+            syncWebSearchSourcesInRow(msg);
+          }
         });
 
         let thoughtTimer = null;
@@ -14693,7 +16272,10 @@
           if (!msg) return;
           msg.notes = msg.notes || [];
           msg.notes.push({ step: p.step, text: p.text });
-          if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
+          if (chat.id === State.activeChatId) {
+            syncWorkMessageInPlace(msg);
+            syncWebSearchSourcesInRow(msg);
+          }
         });
 
         api.onWorkStep((p) => {
@@ -14714,7 +16296,10 @@
           } else {
             msg.steps.push(p.item);
           }
-          if (chat.id === State.activeChatId) syncWorkMessageInPlace(msg);
+          if (chat.id === State.activeChatId) {
+            syncWorkMessageInPlace(msg);
+            syncWebSearchSourcesInRow(msg);
+          }
         });
 
         if (api.onCommandOutput) {
@@ -14822,6 +16407,7 @@
           State.keySlots = data.slots || (data.key && data.key.slots) || {};
           State.settings = Object.assign({}, State.settings, data.settings || {});
           State.chats = (data.chatsData && Array.isArray(data.chatsData.chats)) ? data.chatsData.chats : [];
+          clearStaleMessageStreaming();
           State.projects = (data.chatsData && Array.isArray(data.chatsData.projects)) ? data.chatsData.projects : [];
           State.models = Array.isArray(data.models) ? data.models : [];
           State.mcpServers = Array.isArray(data.mcpServers) ? data.mcpServers : [];

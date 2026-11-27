@@ -2,7 +2,7 @@
   <img src="assets/brief-wordmark.png" alt="Brief AI Logo" width="320">
 </p>
 
-<h1 align="center">Brief AI · v2.1.2-beta</h1>
+<h1 align="center">Brief AI · v2.1.3-beta</h1>
 
 <p align="center">
   <strong>Private Multi-Platform AI Assistant &amp; Live Screen Agent for Windows, Linux &amp; Android Phones/Tablets</strong><br>
@@ -11,17 +11,17 @@
 
 ---
 
-## Download & Install (`v2.1.2-beta`)
+## Download & Install (`v2.1.3-beta`)
 
 - **Official Website (GitHub Pages):** https://albrhe1466-dotcom.github.io/Brief/
 - **Windows 10 / 11 Setup Wizard:** [Brief-Setup.exe](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe)
 - **Windows Full Portable Bundle:** [brief-package.zip](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip)
-- **Android Phones & Tablets APK (Samsung One UI, Honor MagicOS, ColorOS, Pixel, Xiaomi):** [Brief-Android-v2.1.2-beta.apk](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.2-beta.apk)
+- **Android Phones & Tablets APK (Samsung One UI, Honor MagicOS, ColorOS, Pixel, Xiaomi):** [Brief-Android-v2.1.3-beta.apk](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.3-beta.apk)
 - **Linux Desktop Packages (x64 & ARM64):**
   - [Brief-Linux-x64.deb](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb) · [Brief-Linux-x64.AppImage](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.AppImage) · [Brief-Linux-x64.tar.gz](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.tar.gz)
   - [Brief-Linux-arm64.deb](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.deb) · [Brief-Linux-arm64.tar.gz](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.tar.gz)
 
-## What's New in `v2.1.2-beta`
+## What's New in `v2.1.3-beta`
 
 - **Centered Portrait & Landscape Android UI (Zero Notch Crowding & Zero Bottom Chin):** Native `WindowInsets` cutout/system-bar handling keeps Brief clear of camera notches, removes the bottom chin, and centers Welcome & Onboarding cleanly in both portrait and landscape on phones & tablets.
 - **Smart Hybrid Typing & Live OEM Enter / Search Detection:** Automatically combines fresh-node text input, physical touch-keyboard key tapping, and paste fallback while inspecting the live keyboard window to locate the exact **Search / Enter / Go / Send** button across **Samsung One UI, Oppo/Realme ColorOS, Honor MagicOS & Gboard**.

@@ -2532,7 +2532,7 @@ const TOOLS = [
       await shell.openExternal(u);
       await sleep(1500);
       const fg = ctx && ctx.automation && ctx.automation.foreground ? await ctx.automation.foreground().catch(() => ({})) : {};
-      return { opened: u, foreground: fg.title || '' };
+      return { opened: u, url: u, domain: extractDomainFromUrl(u), visited: true, foreground: fg.title || '' };
     }
   },
   {
@@ -2563,7 +2563,8 @@ const TOOLS = [
         }
       }
       const results = await runLiveWebSearch(qStr, Math.max(1, Math.min(10, Number(a.max_results) || 6)));
-      return { query: qStr, count: results.length, results };
+      const engines = [...new Set(results.map((r) => r && r.engine).filter(Boolean))];
+      return { query: qStr, engine: engines[0] || 'duckduckgo.com', engines, count: results.length, results };
     }
   },
   {
@@ -2579,6 +2580,15 @@ const TOOLS = [
     }
   }
 ];
+
+function extractDomainFromUrl(rawUrl) {
+  try {
+    const h = new URL(String(rawUrl || '')).hostname.toLowerCase().replace(/^www\./, '');
+    return h || '';
+  } catch (_) {
+    return '';
+  }
+}
 
 async function runLiveWebSearch(query, maxResults = 6) {
   const q = String(query || '').trim();
@@ -2606,7 +2616,7 @@ async function runLiveWebSearch(query, maxResults = 6) {
         const title = strip(m[2]);
         const snippet = strip(m[3] || m[4] || '');
         if (title && /^https?:/i.test(href)) {
-          out.push({ title, url: href, snippet });
+          out.push({ title, url: href, snippet, domain: extractDomainFromUrl(href), engine: 'duckduckgo.com' });
         }
       }
     }
@@ -2622,10 +2632,13 @@ async function runLiveWebSearch(query, maxResults = 6) {
         for (const item of list) {
           if (out.length >= maxResults) break;
           const snippet = String(item.snippet || '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+          const wikiUrl = 'https://en.wikipedia.org/wiki/' + encodeURIComponent(String(item.title || '').replace(/ /g, '_'));
           out.push({
             title: item.title + ' (Wikipedia)',
-            url: 'https://en.wikipedia.org/wiki/' + encodeURIComponent(String(item.title || '').replace(/ /g, '_')),
-            snippet
+            url: wikiUrl,
+            snippet,
+            domain: 'en.wikipedia.org',
+            engine: 'wikipedia.org'
           });
         }
       }
@@ -2656,7 +2669,7 @@ async function fetchWebPageText(rawUrl, maxChars = 12000) {
     .replace(/&#39;|&#x27;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
-  return { url: u, title, length: clean.length, content: clean.slice(0, maxChars), truncated: clean.length > maxChars };
+  return { url: u, domain: extractDomainFromUrl(u), visited: true, title, length: clean.length, content: clean.slice(0, maxChars), truncated: clean.length > maxChars };
 }
 
 /* ------------------------------------------------------------------ */

@@ -188,6 +188,8 @@ const DEFAULT_SETTINGS = {
   logPanelOpen: false,
   sendWithEnter: true,
   soundChime: false,
+  selectedMicDeviceId: '',
+  selectedMicLabel: '',
   provider: 'gemini',
   userName: '',
   onboardingCompleted: false,
