@@ -1,6 +1,7 @@
 package com.brief.desktop
 
 import android.content.Context
+import android.os.PowerManager
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
@@ -11,6 +12,113 @@ class PhoneAgentRunner(
     private val vault: ApiKeyVault
 ) {
     private val history = mutableListOf<ConversationTurn>()
+
+    companion object {
+        // Strictly wholesome watching + snack emojis (zero inappropriate emojis)
+        private val WATCH_SNACK_EMOJIS = listOf(
+            "👀🍿", "👀🍕", "👀☕", "👀🍪", "👀🍩",
+            "👀🍔", "👀🍟", "👀🧃", "👀🥨", "👀🍵"
+        )
+        private val WATCH_LOADING_WORD_RE = Regex(
+            "\\b(loading|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\\s+wait|in\\s+progress|remaining|eta\\b|queued|preparing|thinking\\.\\.\\.|working\\.\\.\\.)\\b",
+            RegexOption.IGNORE_CASE
+        )
+        private val WATCH_ERROR_RE = Regex(
+            "\\b(error|failed|failure|denied|access\\s+denied|permission\\s+denied|rejected|unable\\s+to|could\\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|validation\\s+failed|something\\s+went\\s+wrong|corrupt(?:ed)?|not\\s+enough\\s+space|try\\s+again|retry|allow\\s+brief|allow\\s+access)\\b",
+            RegexOption.IGNORE_CASE
+        )
+        private val WATCH_DONE_RE = Regex(
+            "\\b(flash\\s+complete|completed?\\s+successfully|finished\\s+successfully|all\\s+done|100%\\s*(?:complete|done|finished)?|successfully\\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\\s+to\\s+download|video\\s+ready|export\\s+complete|done!)\\b",
+            RegexOption.IGNORE_CASE
+        )
+        private val WATCH_PCT_RE = Regex("\\b(\\d{1,3})(?:\\.\\d+)?\\s*%")
+    }
+
+    private fun pickWatchEmoji(tick: Int): String =
+        WATCH_SNACK_EMOJIS[(tick and 0x7FFFFFFF) % WATCH_SNACK_EMOJIS.size]
+
+    private fun formatWatchElapsed(ms: Long): String {
+        val totalSec = (ms / 1000L).coerceAtLeast(0L)
+        val hrs = totalSec / 3600L
+        val mins = (totalSec % 3600L) / 60L
+        val secs = totalSec % 60L
+        return when {
+            hrs > 0L -> "${hrs}h ${mins.toString().padStart(2, '0')}m"
+            mins > 0L -> "${mins}m ${secs.toString().padStart(2, '0')}s"
+            else -> "${secs}s"
+        }
+    }
+
+    private fun extractUiTextForWatch(uiObj: JSONObject?): String {
+        if (uiObj == null) return ""
+        val sb = StringBuilder()
+        val pkg = uiObj.optString("packageName")
+        if (pkg.isNotEmpty()) sb.append("APP:").append(pkg).append(" | ")
+        val arr = uiObj.optJSONArray("elements") ?: return sb.toString()
+        for (i in 0 until arr.length().coerceAtMost(130)) {
+            val lbl = arr.optJSONObject(i)?.optString("label").orEmpty().trim()
+            if (lbl.length >= 2) sb.append(lbl).append(" | ")
+        }
+        return sb.toString().take(8000)
+    }
+
+    private data class WatchSignal(
+        val isLoading: Boolean,
+        val loadingHit: String,
+        val hasError: Boolean,
+        val errorHit: String,
+        val isDone: Boolean,
+        val doneHit: String
+    )
+
+    private fun analyzeWatchText(raw: String, doneKws: List<String> = emptyList(), errorKws: List<String> = emptyList()): WatchSignal {
+        val txt = raw.replace(Regex("\\s+"), " ").trim()
+        val low = txt.lowercase()
+        val customErr = errorKws.firstOrNull { it.isNotBlank() && low.contains(it.lowercase()) }.orEmpty()
+        val errHit = customErr.ifEmpty { WATCH_ERROR_RE.find(txt)?.value.orEmpty() }
+        val customDone = doneKws.firstOrNull { it.isNotBlank() && low.contains(it.lowercase()) }.orEmpty()
+        val doneHit = customDone.ifEmpty { WATCH_DONE_RE.find(txt)?.value.orEmpty() }
+        var loadingHit = ""
+        for (m in WATCH_PCT_RE.findAll(txt)) {
+            val v = m.groupValues.getOrNull(1)?.toIntOrNull() ?: -1
+            if (v in 0..99) {
+                loadingHit = m.value
+                break
+            }
+        }
+        if (loadingHit.isEmpty()) {
+            loadingHit = WATCH_LOADING_WORD_RE.find(txt)?.value.orEmpty()
+        }
+        val stillActive = WATCH_LOADING_WORD_RE.containsMatchIn(txt)
+        val isDone = doneHit.isNotEmpty() && (!stillActive || (customDone.isNotEmpty() && !loadingHit.contains("validat", true) && !loadingHit.contains("flash", true)))
+        return WatchSignal(loadingHit.isNotEmpty(), loadingHit, errHit.isNotEmpty(), errHit, isDone, doneHit)
+    }
+
+    private fun pruneAndroidHistoryForLongRun() {
+        // Keep screenshots only on the last 2 turns so multi-hour runs never OOM or blow token limits
+        var keptImages = 0
+        for (i in history.lastIndex downTo 0) {
+            val t = history[i]
+            if (t.imageBase64 != null) {
+                keptImages++
+                if (keptImages > 2) {
+                    history[i] = t.copy(imageBase64 = null)
+                }
+            }
+        }
+        if (history.size > 40) {
+            val head = history.take(2)
+            var tailStart = (history.size - 28).coerceAtLeast(2)
+            while (tailStart < history.size - 4 && history[tailStart].role != "user") {
+                tailStart++
+            }
+            val tail = history.subList(tailStart, history.size).toList()
+            history.clear()
+            history.addAll(head)
+            history.add(ConversationTurn(role = "model", text = "[Earlier steps compacted cleanly for multi-hour endurance.]"))
+            history.addAll(tail)
+        }
+    }
 
     @Volatile
     var stopped: Boolean = false
@@ -207,18 +315,35 @@ class PhoneAgentRunner(
 
         val sysPrompt = buildSystemPrompt(workMode, thinking)
         val toolDefs = buildToolsJson(workMode)
-        val maxSteps = if (workMode) 40 else if (thinking == ThinkingLevel.EXTRA) 6 else 4
+        val maxSteps = if (workMode) 150 else if (thinking == ThinkingLevel.EXTRA) 6 else 4
+        val workStartMs = System.currentTimeMillis()
+        val maxWorkMs = 240L * 60L * 1000L // Up to 4 hours endurance (5m minimum ready -> 4h max)
         val requiresMultiStepCompletion = workMode &&
-            Regex("\\b(search|find|click|tap|channel|latest|video|short|shorts|watch|play|send|message|type)\\b", RegexOption.IGNORE_CASE).containsMatchIn(prompt)
+            Regex("\\b(search|find|click|tap|channel|latest|video|short|shorts|watch|play|send|message|type|generate|render|download|install|flash|verify)\\b", RegexOption.IGNORE_CASE).containsMatchIn(prompt)
 
         var executedActionCount = 0
         var prematureFinishNudges = 0
+        var stillLoadingNudges = 0
         var lastRepeatedSig = ""
         var sameSigStreak = 0
+
+        val wakeLock: PowerManager.WakeLock? = if (workMode) {
+            runCatching {
+                val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Brief:StayWatchWork")?.apply {
+                    setReferenceCounted(false)
+                    acquire(maxWorkMs)
+                }
+            }.getOrNull()
+        } else null
 
         try {
             for (step in 1..maxSteps) {
                 if (stopped) return "Stopped by user."
+                if (workMode && System.currentTimeMillis() - workStartMs >= maxWorkMs) {
+                    return "Reached maximum 4-hour endurance limit (${formatWatchElapsed(System.currentTimeMillis() - workStartMs)}). Please check screen state."
+                }
+                pruneAndroidHistoryForLongRun()
                 onStep(if (workMode) "Step $step — Thinking & checking…" else "Thinking…")
                 if (workMode && !isBgVisual) {
                     BriefAccessibilityService.instance?.updateOverlayState(provider, "Step $step · Thinking…")
@@ -244,6 +369,30 @@ class PhoneAgentRunner(
                 )
 
                 if (res.toolCalls.isEmpty()) {
+                    // Stay & Watch Guard: NEVER finish while the screen still shows active loading/generating/downloading/installing/flashing/validating progress!
+                    if (workMode && stillLoadingNudges < 18 && BriefAccessibilityService.instance != null) {
+                        val accNow = BriefAccessibilityService.instance!!
+                        val checkUiNow = accNow.readScreenElements(150)
+                        val uiSig = analyzeWatchText(extractUiTextForWatch(checkUiNow))
+                        if (uiSig.isLoading && !uiSig.isDone) {
+                            stillLoadingNudges++
+                            val wEmoji = pickWatchEmoji(stillLoadingNudges)
+                            val wMsg = "$wEmoji Still loading (${uiSig.loadingHit}) — staying to watch until finished or errored…"
+                            onStep(wMsg)
+                            if (!isBgVisual) accNow.updateOverlayState(provider, wMsg)
+                            val checkFrame = accNow.captureLiveVisionFrame(settleMaxMs = 700L)
+                            history.add(
+                                ConversationTurn(
+                                    role = "user",
+                                    text = "[STAY & WATCH GUARD — DO NOT STOP WHILE LOADING]: Screen still shows active progress (\"${uiSig.loadingHit}\"). " +
+                                        "You MUST NOT declare finished yet! Call `watch_and_wait({\"reason\": \"${uiSig.loadingHit}\", \"max_wait_minutes\": 15})` NOW to stay and watch until it completes or errors, then verify the final result!" +
+                                        formatUiSnapshotForAi(checkUiNow),
+                                    imageBase64 = checkFrame?.calibratedAiBase64
+                                )
+                            )
+                            continue
+                        }
+                    }
                     // Anti-premature-exit gate: never let the AI stop right after just opening an app when the user asked to search/click/watch!
                     if (requiresMultiStepCompletion && executedActionCount < 3 && prematureFinishNudges < 3 && BriefAccessibilityService.instance != null) {
                         prematureFinishNudges++
@@ -304,10 +453,11 @@ class PhoneAgentRunner(
                         BriefAccessibilityService.instance?.updateOverlayState(provider, humanDesc)
                     }
 
-                    val out = if (sameSigStreak >= 4) {
-                        JSONObject().put("error", "Repeated identical action 4 times; try a different coordinate, tap_element, or swipe to scroll.").toString()
+                    val sameLimit = if (tc.name == "watch_and_wait") 24 else 4
+                    val out = if (sameSigStreak >= sameLimit) {
+                        JSONObject().put("error", "Repeated identical action $sameLimit times; try a different coordinate, tap_element, or swipe to scroll.").toString()
                     } else {
-                        executeTool(tc, provider)
+                        executeTool(tc, provider, isBgVisual, onStep)
                     }
 
                     if (tc.name in setOf("web_search", "fetch_url", "open_url")) {
@@ -409,6 +559,7 @@ class PhoneAgentRunner(
         } catch (e: Exception) {
             return "Error: ${e.message ?: "Request failed"}"
         } finally {
+            runCatching { if (wakeLock?.isHeld == true) wakeLock.release() }
             if (workMode) {
                 BriefAccessibilityService.instance?.hideOverlay()
             }
@@ -427,6 +578,8 @@ class PhoneAgentRunner(
             "press_back" -> "Pressing Back"
             "press_home" -> "Going Home"
             "web_search" -> "Searching web: ${a.optString("query").take(28)}"
+            "watch_and_wait" -> "👀🍿 Watching: ${a.optString("reason", "progress").take(34)}"
+            "wait_ms" -> "👀☕ Waiting ${(a.optLong("ms", 1000L) / 1000L).coerceAtLeast(1L)}s"
             else -> tc.name
         }
     }
@@ -435,6 +588,7 @@ class PhoneAgentRunner(
         val obj = runCatching { JSONObject(raw) }.getOrNull() ?: return raw.take(64)
         if (obj.has("error")) return "Error: ${obj.optString("error").take(60)}"
         if (obj.has("detail")) return obj.optString("detail").take(72)
+        if (obj.has("outcome")) return "${obj.optString("outcome")} (${obj.optString("watched_duration")})"
         return if (obj.optBoolean("ok", true)) "OK" else "Retry needed"
     }
 
@@ -443,14 +597,142 @@ class PhoneAgentRunner(
         BriefAccessibilityService.instance?.showOverlay(provider, status)
     }
 
-    private suspend fun executeTool(tc: ToolCallSpec, provider: ProviderId): String {
+    private suspend fun executeTool(
+        tc: ToolCallSpec,
+        provider: ProviderId,
+        isBgVisual: Boolean = false,
+        onStep: ((String) -> Unit)? = null
+    ): String {
         val a = tc.args
         return when (tc.name) {
             "web_search" -> aiClient.webSearch(a.optString("query"))
             "fetch_url" -> aiClient.fetchUrlText(a.optString("url"))
             "wait_ms" -> {
-                delay(a.optLong("ms", 900L).coerceIn(150L, 4500L))
-                JSONObject().put("ok", true).toString()
+                val totalMs = a.optLong("ms", 1200L).coerceIn(150L, 60_000L)
+                val reason = a.optString("reason", "loading").take(28)
+                val started = System.currentTimeMillis()
+                val endAt = started + totalMs
+                var tick = 0
+                while (System.currentTimeMillis() < endAt) {
+                    if (stopped) return JSONObject().put("error", "Stopped by user.").toString()
+                    val elap = System.currentTimeMillis() - started
+                    if (elap >= 1500L && tick % 4 == 0) {
+                        val lbl = "${pickWatchEmoji(tick / 4)} Waiting ($reason)… ${formatWatchElapsed(elap)}"
+                        onStep?.invoke(lbl)
+                        if (!isBgVisual) BriefAccessibilityService.instance?.updateOverlayState(provider, lbl)
+                    }
+                    delay(250L)
+                    tick++
+                }
+                JSONObject().put("ok", true).put("waited_ms", totalMs).toString()
+            }
+            "watch_and_wait" -> {
+                val reason = a.optString("reason", "process").trim().take(34).ifEmpty { "process" }
+                val reqMin = a.optDouble("max_wait_minutes", 15.0).coerceIn(1.0, 240.0)
+                val cycleMs = minOf((reqMin * 60_000.0).toLong(), 10L * 60_000L)
+                val baseIntervalMs = (a.optDouble("check_interval_sec", 8.0).coerceIn(3.0, 45.0) * 1000.0).toLong()
+                val doneKws = buildList {
+                    val arr = a.optJSONArray("done_keywords")
+                    if (arr != null) for (i in 0 until arr.length()) add(arr.optString(i))
+                }
+                val errKws = buildList {
+                    val arr = a.optJSONArray("error_keywords")
+                    if (arr != null) for (i in 0 until arr.length()) add(arr.optString(i))
+                }
+                val started = System.currentTimeMillis()
+                val deadline = started + cycleMs
+                var emojiIdx = (started % WATCH_SNACK_EMOJIS.size).toInt()
+                var lastEmojiSwap = started
+                var checks = 0
+                var sawActivity = false
+                var settledSince = 0L
+                var lastUiText = ""
+                var lastLoadingHit = ""
+
+                fun paintWatch(extra: String) {
+                    val now = System.currentTimeMillis()
+                    if (now - lastEmojiSwap >= 14_000L) {
+                        emojiIdx = (emojiIdx + 1) % WATCH_SNACK_EMOJIS.size
+                        lastEmojiSwap = now
+                    }
+                    val emoji = pickWatchEmoji(emojiIdx)
+                    val elap = formatWatchElapsed(now - started)
+                    val lbl = "$emoji Watching $reason${if (extra.isNotEmpty()) " · $extra" else ""} ($elap)"
+                    onStep?.invoke(lbl)
+                    if (!isBgVisual) {
+                        BriefAccessibilityService.instance?.updateOverlayState(provider, lbl)
+                    }
+                }
+
+                paintWatch("live")
+                while (System.currentTimeMillis() < deadline) {
+                    if (stopped) return JSONObject().put("error", "Stopped by user.").toString()
+                    val elapsedNow = System.currentTimeMillis() - started
+                    val intervalMs = if (elapsedNow > 180_000L) minOf(24_000L, (baseIntervalMs * 1.5).toLong()) else baseIntervalMs
+                    val nextAt = minOf(deadline, System.currentTimeMillis() + intervalMs)
+                    while (System.currentTimeMillis() < nextAt) {
+                        if (stopped) return JSONObject().put("error", "Stopped by user.").toString()
+                        paintWatch(lastLoadingHit)
+                        delay(minOf(1000L, (nextAt - System.currentTimeMillis()).coerceAtLeast(200L)))
+                    }
+                    checks++
+                    val acc = BriefAccessibilityService.instance
+                    val uiObj = acc?.readScreenElements(150)
+                    val uiTxt = extractUiTextForWatch(uiObj)
+                    val changed = uiTxt.isNotEmpty() && uiTxt != lastUiText
+                    lastUiText = uiTxt
+                    val sig = analyzeWatchText(uiTxt, doneKws, errKws)
+                    if (changed || sig.isLoading) {
+                        sawActivity = true
+                        settledSince = 0L
+                    }
+                    lastLoadingHit = if (sig.isLoading) sig.loadingHit.take(16) else ""
+
+                    if (sig.hasError && !sig.isDone) {
+                        return JSONObject()
+                            .put("ok", false)
+                            .put("outcome", "alert_detected")
+                            .put("matched", sig.errorHit)
+                            .put("reason", reason)
+                            .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
+                            .put("checks", checks)
+                            .put("detail", "Alert/Error detected (\"${sig.errorHit}\") — inspect screen and fix or report!")
+                            .toString()
+                    }
+                    if (sig.isDone && !sig.isLoading && (System.currentTimeMillis() - started) >= 4000L) {
+                        return JSONObject()
+                            .put("ok", true)
+                            .put("outcome", "completed")
+                            .put("matched", sig.doneHit)
+                            .put("reason", reason)
+                            .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
+                            .put("checks", checks)
+                            .put("detail", "Finished (\"${sig.doneHit}\") — verify final output on screen now!")
+                            .toString()
+                    }
+                    if (!sig.isLoading && !changed) {
+                        if (settledSince == 0L) settledSince = System.currentTimeMillis()
+                        val stillMs = System.currentTimeMillis() - settledSince
+                        if (stillMs >= (if (sawActivity) 35_000L else 50_000L)) {
+                            return JSONObject()
+                                .put("ok", true)
+                                .put("outcome", "settled_verify")
+                                .put("reason", reason)
+                                .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
+                                .put("checks", checks)
+                                .put("detail", "Screen settled — inspect fresh screenshot and verify result (or call watch_and_wait again if still working).")
+                                .toString()
+                        }
+                    }
+                }
+                JSONObject()
+                    .put("ok", true)
+                    .put("outcome", "checkpoint")
+                    .put("reason", reason)
+                    .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
+                    .put("checks", checks)
+                    .put("detail", "Checkpoint reached — inspect screenshot and call watch_and_wait again if still in progress (up to 4 hours total).")
+                    .toString()
             }
             "read_screen_ui" -> {
                 val acc = BriefAccessibilityService.instance
@@ -555,7 +837,8 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
 3. PREFER PRECISION: Use the `[Live 150-Node Interactive UI Map]` coordinates or `tap_element` whenever a button/tab/channel has a clear label, and use the calibrated `0..1000` screenshot grid for visual icons/thumbnails/avatars.
 4. IF SOMETHING IS OFF-SCREEN: Use `swipe` (`x1=500, y1=760, x2=500, y2=260`) to scroll down smoothly and inspect new items.
 5. CALM USER REDIRECT & CONTEXT MEMORY ("NO, OPEN X INSTEAD OF Y"): Remember user corrections across the entire chat! Whenever the user says "no, open X instead of Y" or redirects you, remember NOT to open/repeat Y, never get confused or flustered, and pivot straight to X!
-6. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
+6. STAY, WATCH & VERIFY (5-MIN TO 4-HOUR LONG-TASK ENDURANCE — ALL 4 MODELS, BACKGROUND & VISIBLE): NEVER declare "Done" while an app, terminal, download, installer, flasher/validator, AI video generator, or another AI agent is still loading, rendering, or replying! Immediately call `watch_and_wait({"reason": "...", "max_wait_minutes": 15})` (up to 240 minutes = 4 hours via checkpoints, showing cute 👀🍿 / 👀🍕 / 👀☕ watching cursor status) so you watch for completion, denials, popups, or errors, and ALWAYS verify the final outcome before finishing!
+7. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
         }
     }
 
@@ -643,9 +926,22 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
             )
             addTool(
                 "wait_ms",
-                "Wait briefly (150..4500 ms) for video/page loading.",
-                JSONObject().put("ms", JSONObject().put("type", "integer")),
+                "Wait briefly (150..60000 ms) for quick page/UI loading. For anything longer or any loading/generating/downloading/AI agent process, use watch_and_wait instead.",
+                JSONObject()
+                    .put("ms", JSONObject().put("type", "integer"))
+                    .put("reason", JSONObject().put("type", "string")),
                 listOf("ms")
+            )
+            addTool(
+                "watch_and_wait",
+                "Stay and actively watch a loading app, download, installer, AI video generator, or another AI agent until it finishes, errors/denies, or hits a 10-min checkpoint (supports up to 240 minutes = 4 hours total with cute 👀🍿 / 👀🍕 / 👀☕ cursor watching status).",
+                JSONObject()
+                    .put("reason", JSONObject().put("type", "string").put("description", "What you are watching (e.g. 'AI video generation', 'download & install', 'other AI agent reply')"))
+                    .put("max_wait_minutes", JSONObject().put("type", "number").put("description", "Max minutes to watch (1..240, default 15)"))
+                    .put("check_interval_sec", JSONObject().put("type", "number").put("description", "Seconds between checks (3..45, default 8)"))
+                    .put("done_keywords", JSONObject().put("type", "array").put("items", JSONObject().put("type", "string")))
+                    .put("error_keywords", JSONObject().put("type", "array").put("items", JSONObject().put("type", "string"))),
+                listOf("reason")
             )
         }
         return arr

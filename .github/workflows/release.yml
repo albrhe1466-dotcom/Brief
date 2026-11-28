@@ -168,7 +168,7 @@ jobs:
           gradle -p android assembleRelease --no-daemon
           mkdir -p download-site/public/downloads
           cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android.apk
-          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.1.3-beta.apk
+          cp android/app/build/outputs/apk/release/app-release.apk download-site/public/downloads/Brief-Android-v2.1.4-beta.apk
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
@@ -192,12 +192,12 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Publish to GitHub Release v2.1.3-beta
+      - name: Publish to GitHub Release v2.1.4-beta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v2.1.3-beta"
-          NOTES="Brief v2.1.3-beta Multi-Platform Release (Windows · Linux · Android Phones & Tablets): adds Voice Memo live waveform & crystal-clear Speech-to-Text next to Send across all 4 LLMs (Gemini, OpenAI, Claude & OpenRouter), adds live Web Search real website favicon logos + expandable ▾ sources drawer with blue Open Link buttons, upgrades Claude's 4-stage #d9693f motion (starburst -> 1.2x faster 3-ball orbit with zero rings -> aligned wave pulse -> jumping wave) & keeps Clawd strictly on the Brief Work main menu, fixes model-switch Checking/Ready status bugs, and adds calm multi-turn redirect memory ('No, open X instead of Y')."
+          TAG="v2.1.4-beta"
+          NOTES="Brief v2.1.4-beta Multi-Platform Release (Windows · Linux · Android Phones & Tablets): introduces the Stay, Watch & Verify Endurance Engine (5 min ready up to 4 hours max) across Gemini, OpenAI, Claude & OpenRouter in BOTH Background and Live Visible modes — adds the active watch_and_wait tool & anti-premature-finish loading guard so Brief stays and watches terminals, OS flashers/validators, AI video generators, downloads, installs & other AI agents until completion or error, displays wholesome eye+snack watching cursor badges (👀🍿 / 👀🍕 / 👀☕ / 👀🍪), and verifies final outputs/drives before finishing."
           if ! gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release create "$TAG" --repo "${{ github.repository }}" --title "Brief $TAG (Windows · Linux · Android Phones & Tablets)" --notes "$NOTES" --latest=false
           fi

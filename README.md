@@ -2,31 +2,30 @@
   <img src="assets/brief-wordmark.png" alt="Brief AI Logo" width="320">
 </p>
 
-<h1 align="center">Brief AI · v2.1.3-beta</h1>
+<h1 align="center">Brief AI · v2.1.4-beta</h1>
 
 <p align="center">
   <strong>Private Multi-Platform AI Assistant &amp; Live Screen Agent for Windows, Linux &amp; Android Phones/Tablets</strong><br>
-  Sees, clicks, types, codes, and verifies across real apps with custom provider cursors, 150-frame live vision, Clawd in Brief Code, and encrypted local API keys.
+  Sees, clicks, types, codes, watches long tasks up to 4 hours, and verifies across real apps with custom provider cursors, 150-frame live vision, Clawd in Brief Code, and encrypted local API keys.
 </p>
 
 ---
 
-## Download & Install (`v2.1.3-beta`)
+## Download & Install (`v2.1.4-beta`)
 
 - **Official Website (GitHub Pages):** https://albrhe1466-dotcom.github.io/Brief/
 - **Windows 10 / 11 Setup Wizard:** [Brief-Setup.exe](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe)
 - **Windows Full Portable Bundle:** [brief-package.zip](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/brief-package.zip)
-- **Android Phones & Tablets APK (Samsung One UI, Honor MagicOS, ColorOS, Pixel, Xiaomi):** [Brief-Android-v2.1.3-beta.apk](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.3-beta.apk)
+- **Android Phones & Tablets APK (Samsung One UI, Honor MagicOS, ColorOS, Pixel, Xiaomi):** [Brief-Android-v2.1.4-beta.apk](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.4-beta.apk)
 - **Linux Desktop Packages (x64 & ARM64):**
   - [Brief-Linux-x64.deb](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb) · [Brief-Linux-x64.AppImage](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.AppImage) · [Brief-Linux-x64.tar.gz](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.tar.gz)
   - [Brief-Linux-arm64.deb](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.deb) · [Brief-Linux-arm64.tar.gz](https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-arm64.tar.gz)
 
-## What's New in `v2.1.3-beta`
+## What's New in `v2.1.4-beta`
 
-- **Centered Portrait & Landscape Android UI (Zero Notch Crowding & Zero Bottom Chin):** Native `WindowInsets` cutout/system-bar handling keeps Brief clear of camera notches, removes the bottom chin, and centers Welcome & Onboarding cleanly in both portrait and landscape on phones & tablets.
-- **Smart Hybrid Typing & Live OEM Enter / Search Detection:** Automatically combines fresh-node text input, physical touch-keyboard key tapping, and paste fallback while inspecting the live keyboard window to locate the exact **Search / Enter / Go / Send** button across **Samsung One UI, Oppo/Realme ColorOS, Honor MagicOS & Gboard**.
-- **Full Multi-Step Vision Across All 4 AIs (Fastest & Strongest Models):** Seamless turn-alternation & `[KEYBOARD_ENTER_KEY]` UI mapping across **Gemini, OpenAI, Claude & OpenRouter**.
-- **Clawd Pixel Mascot GIFs & Direct In-App Updates:** Seamless Clawd coding & soccer GIFs in Brief Code plus 1-tap direct Android `FileProvider` updates.
+- **Stay, Watch & Verify Engine (5 Min Ready → 4 Hours Max):** Brief never stops early while a terminal, OS flasher/validator, AI video generator, download, installer, or another AI agent is still loading — it stays patiently across Background & Live modes on Windows, Linux & Android for all 4 LLM providers, catches errors/denials immediately, and verifies final outputs & drives before saying Done.
+- **Wholesome Eye + Snack Watching Cursor (`👀🍿` / `👀🍕` / `👀☕` / `👀🍪`):** Rotating watching status pills with live elapsed timers right beside the floating cursor and status bar.
+- **Voice Memo Waveform & PC Mic Selector + Live Web Search Logos:** Voice-to-text across all 4 LLMs, real website favicons + `▾` sources drawer, and crisp `brief^Ai` adaptive icons across every platform.
 
 ## Supported AI Providers (Bring Your Own Key)
 

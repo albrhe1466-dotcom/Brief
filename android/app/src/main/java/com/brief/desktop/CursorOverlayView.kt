@@ -194,7 +194,7 @@ class CursorOverlayView(context: Context) : View(context) {
 
     fun setState(p: ProviderId, status: String) {
         provider = p
-        statusText = status.take(40)
+        statusText = status.take(48)
         if (!status.contains("Typ", ignoreCase = true)) {
             typingPreview = ""
         }
@@ -431,15 +431,17 @@ class CursorOverlayView(context: Context) : View(context) {
     }
 
     private fun drawFollowingCursorPill(canvas: Canvas, tipX: Float, tipY: Float, w: Float, h: Float, accent: Int) {
-        val baseLabel = statusText.ifEmpty { "Working…" }.take(28)
+        val baseLabel = statusText.ifEmpty { "Working…" }.take(46)
+        val isWatching = baseLabel.contains("👀") || baseLabel.contains("Watching", ignoreCase = true)
+        val pillAccent = if (isWatching) 0xFF34D399.toInt() else accent
         val labelW = cursorLabelPaint.measureText(baseLabel)
         val typingStr = if (typingPreview.isNotEmpty()) "  $typingPreview" else ""
         val typingW = if (typingStr.isNotEmpty()) typingTextPaint.measureText(typingStr) else 0f
 
         val dotSpace = 11f * dp
-        val padH = 8.5f * dp
-        val pillW = (dotSpace + labelW + typingW + padH * 2f).coerceAtMost(w * 0.72f)
-        val pillH = (if (isTabletDevice) 22f else 19f) * dp
+        val padH = 9f * dp
+        val pillW = (dotSpace + labelW + typingW + padH * 2f).coerceAtMost(w * 0.84f)
+        val pillH = (if (isTabletDevice) 23f else 20f) * dp
 
         val offset = (if (isTabletDevice) 16f else 13f) * dp
         var px = tipX + offset
@@ -452,11 +454,11 @@ class CursorOverlayView(context: Context) : View(context) {
         }
 
         canvas.drawRoundRect(px, py, px + pillW, py + pillH, pillH / 2f, pillH / 2f, pillBgPaint)
-        strokePaint.color = (accent and 0x00FFFFFF) or (0xE0 shl 24)
-        strokePaint.strokeWidth = 1.2f * dp
+        strokePaint.color = (pillAccent and 0x00FFFFFF) or (0xE8 shl 24)
+        strokePaint.strokeWidth = (if (isWatching) 1.5f else 1.2f) * dp
         canvas.drawRoundRect(px, py, px + pillW, py + pillH, pillH / 2f, pillH / 2f, strokePaint)
 
-        fillPaint.color = accent
+        fillPaint.color = pillAccent
         canvas.drawCircle(px + padH + 3f * dp, py + pillH * 0.5f, 3f * dp, fillPaint)
 
         val textY = py + pillH * 0.69f

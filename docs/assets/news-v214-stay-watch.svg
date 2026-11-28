@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" width="880" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0d14"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#09131c"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    <linearGradient id="prog" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="880" height="500" rx="22" fill="url(#bg)"/>
+  <rect x="14" y="14" width="852" height="472" rx="16" fill="none" stroke="rgba(52,211,153,0.45)" stroke-width="2"/>
+
+  <!-- Top control banner -->
+  <rect x="210" y="28" width="460" height="36" rx="18" fill="rgba(10,14,22,0.95)" stroke="#34d399" stroke-width="1.5"/>
+  <circle cx="232" cy="46" r="5" fill="#34d399"/>
+  <text x="248" y="51" fill="#f8fafc" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="700">Brief Watching · 👀🍿 Validating &amp; Checking Output (12m 40s)</text>
+
+  <!-- Left card: Live Process Window (Terminal / Flasher / Video Gen) -->
+  <rect x="44" y="92" width="470" height="250" rx="16" fill="#111827" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+  <rect x="44" y="92" width="470" height="38" rx="16" fill="#1e293b"/>
+  <circle cx="68" cy="111" r="5.5" fill="#ef4444"/>
+  <circle cx="86" cy="111" r="5.5" fill="#f59e0b"/>
+  <circle cx="104" cy="111" r="5.5" fill="#10b981"/>
+  <text x="124" y="116" fill="#cbd5e1" font-family="Consolas, monospace" font-size="12.5" font-weight="600">Long-Running Task · Live Watch &amp; Verify</text>
+
+  <text x="68" y="160" fill="#94a3b8" font-family="Consolas, monospace" font-size="12.5">&gt; Step 1: Launched task &amp; monitoring output…</text>
+  <text x="68" y="185" fill="#60a5fa" font-family="Consolas, monospace" font-size="12.5">&gt; Stage 1: Writing / Generating ………… 100%</text>
+  <text x="68" y="210" fill="#34d399" font-family="Consolas, monospace" font-size="12.5">&gt; Stage 2: Validating integrity ………… 84%</text>
+
+  <!-- Progress bar -->
+  <rect x="68" y="228" width="420" height="14" rx="7" fill="#1e293b"/>
+  <rect x="68" y="228" width="352" height="14" rx="7" fill="url(#prog)"/>
+  <text x="68" y="266" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="12.5">Stay-Watch Engine catches errors, denials, or crashes immediately</text>
+  <text x="68" y="288" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600">✓ Then verifies final files, exit code &amp; drive before saying Done!</text>
+
+  <!-- Floating cursor + watching snack pill -->
+  <g transform="translate(260, 294)">
+    <path d="M4 2 L28 13 L16 17 L12 30 Z" fill="#3882f8" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="26" y="14" width="290" height="34" rx="17" fill="#090d16" stroke="#34d399" stroke-width="1.8"/>
+    <circle cx="44" cy="31" r="4.5" fill="#34d399"/>
+    <text x="58" y="36" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">👀🍿 Watching validation… (12m 40s)</text>
+  </g>
+
+  <!-- Right card: Endurance & Coverage -->
+  <rect x="538" y="92" width="298" height="250" rx="16" fill="#111827" stroke="rgba(96,165,250,0.28)" stroke-width="1.5"/>
+  <text x="562" y="128" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700">5 Min → 4 Hours Max</text>
+  <text x="562" y="150" fill="#94a3b8" font-family="Segoe UI, Arial, sans-serif" font-size="12">Endurance across ALL 4 LLM Providers</text>
+
+  <rect x="562" y="168" width="250" height="32" rx="9" fill="rgba(52,211,153,0.12)" stroke="rgba(52,211,153,0.4)"/>
+  <text x="576" y="189" fill="#6ee7b7" font-family="Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600">👀🍕 👀☕ 👀🍪 Wholesome Watch Cursor</text>
+
+  <rect x="562" y="210" width="250" height="32" rx="9" fill="rgba(59,130,246,0.12)" stroke="rgba(59,130,246,0.4)"/>
+  <text x="576" y="231" fill="#93c5fd" font-family="Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600">⚡ Background &amp; Live Visible Modes</text>
+
+  <rect x="562" y="252" width="250" height="32" rx="9" fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.4)"/>
+  <text x="576" y="273" fill="#fdba74" font-family="Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600">🛡️ Zero Premature Exit While Loading</text>
+
+  <rect x="562" y="294" width="250" height="32" rx="9" fill="rgba(129,140,248,0.14)" stroke="rgba(129,140,248,0.42)"/>
+  <text x="576" y="315" fill="#c7d2fe" font-family="Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600">💻 Windows · Linux · Android Tablets</text>
+
+  <!-- Bottom summary bar -->
+  <rect x="44" y="372" width="792" height="86" rx="14" fill="rgba(15,23,42,0.85)" stroke="url(#glow)" stroke-width="1.4"/>
+  <text x="68" y="405" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">Brief v2.1.4-beta · Stay, Watch &amp; Verify Engine</text>
+  <text x="68" y="432" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="13">Stays patiently for terminals, OS flashers/validators, AI video generators &amp; other AI agents (5 min – 4 hours) across Gemini, OpenAI, Claude &amp; OpenRouter.</text>
+</svg>

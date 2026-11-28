@@ -171,6 +171,17 @@
     border-radius: 50%;
     background: #3b82f6;
     box-shadow: 0 0 8px #60a5fa;
+    flex-shrink: 0;
+  }
+  .cursor-pill.watching {
+    border-color: rgba(52, 211, 153, 0.92) !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65), 0 0 18px rgba(16, 185, 129, 0.34);
+    font-weight: 600;
+  }
+  .cursor-pill.watching .cursor-dot {
+    background: #34d399 !important;
+    box-shadow: 0 0 10px #34d399 !important;
+    animation: pulseBlueDot 1.35s ease-in-out infinite;
   }
   body[data-provider="openai"] .cursor-pill { border-color: rgba(255, 255, 255, 0.92); }
   body[data-provider="openai"] .cursor-dot { background: #ffffff; box-shadow: 0 0 8px #ffffff; }
@@ -377,16 +388,19 @@
       if (typeof s.nativeCursor === 'boolean') {
         wrap.classList.toggle('native-cursor', s.nativeCursor);
       }
+      const pillEl = document.getElementById('cursor-pill');
+      if (pillEl) pillEl.classList.toggle('watching', s.state === 'watching');
       if (isWorkActive && s.stepText) {
-        const nextBanner = 'Brief Working · ' + s.stepText.slice(0, 52) + ' · Ctrl+Alt+Q to Stop';
+        const nextBanner = (s.state === 'watching' ? 'Brief Watching · ' : 'Brief Working · ') + s.stepText.slice(0, 58) + ' · Ctrl+Alt+Q to Stop';
         if (layerText.textContent !== nextBanner) layerText.textContent = nextBanner;
-        const nextLbl = s.stepText.slice(0, 44);
+        const nextLbl = s.stepText.slice(0, 52);
         if (label.textContent !== nextLbl) label.textContent = nextLbl;
       }
       if (!s.running) {
         layer.classList.remove('controlling');
         wrap.classList.remove('visible');
         wrap.classList.remove('native-cursor');
+        if (pillEl) pillEl.classList.remove('watching');
       }
     });
 
@@ -408,11 +422,16 @@
         wrap.classList.toggle('native-cursor', evt.nativeCursor);
       }
       layer.classList.add('active');
-      if (['move', 'click', 'drag', 'type', 'scroll'].includes(evt.kind)) {
+      const pillEl = document.getElementById('cursor-pill');
+      if (pillEl) pillEl.classList.toggle('watching', evt.kind === 'watch');
+      if (['move', 'click', 'drag', 'type', 'scroll', 'watch'].includes(evt.kind)) {
         layer.classList.add('controlling');
       }
       wrap.classList.add('visible');
       if (evt.label) label.textContent = evt.label;
+      if (evt.kind === 'watch' && evt.label) {
+        layerText.textContent = 'Brief Watching · ' + String(evt.label).slice(0, 58) + ' · Ctrl+Alt+Q to Stop';
+      }
       if (typeof evt.x === 'number' && typeof evt.y === 'number') {
         if (evt.kind === 'move' || evt.kind === 'drag') {
           animateTo(evt.x, evt.y, evt.ms || 200);

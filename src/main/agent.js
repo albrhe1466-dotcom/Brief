@@ -15,7 +15,7 @@
 const { EventEmitter } = require('events');
 const { stripModelPrefix, buildThinkingConfig, abortError, sleep } = require('./gemini');
 const { sanitizeModelIdValue } = require('./store');
-const { TOOLS, CU_ACTIONS, declarations, getTool, pointsOf, isPermanentDeleteCommand, runLiveWebSearch, stopAllTerminalSessions } = require('./tools');
+const { TOOLS, CU_ACTIONS, declarations, getTool, pointsOf, isPermanentDeleteCommand, runLiveWebSearch, stopAllTerminalSessions, pickWatchEmoji, formatWatchElapsed, analyzeWatchText, getRunningTerminalSessions } = require('./tools');
 const { buildChatSystemPrompt, buildWorkSystemPrompt, classifyModelTier } = require('./systemPrompt');
 
 function extractDomainSafe(rawUrl) {
@@ -79,6 +79,8 @@ function summarizeStepForUser(name, args, ok, res) {
     case 'write_file': return 'Wrote ' + (a.path || 'file') + ' and opened it.';
     case 'edit_file': return 'Updated ' + (a.path || 'file') + ' cleanly.';
     case 'web_search': return 'Searched the live web for "' + (a.query || '') + '" (' + ((res && res.count) || 0) + ' results).';
+    case 'watch_and_wait': return '👀🍿 Watched "' + (a.reason || 'process') + '" for ' + ((res && res.watched_duration) || 'a moment') + ' → ' + ((res && res.outcome) || 'checked') + '.';
+    case 'wait': return '👀☕ Waited ' + (a.seconds || 1) + 's' + (a.reason ? ' (' + a.reason + ')' : '') + ' and refreshed screen.';
     default: return (res && res.note) ? String(res.note).slice(0, 140) : 'Completed "' + name + '" and took a fresh screen photo.';
   }
 }
@@ -191,7 +193,7 @@ async function describeForegroundElements(screen, automation, opts) {
 
 /** Tools that only observe or inspect without changing any app/file/timeline state. */
 const PASSIVE_OBSERVE_TOOLS = new Set([
-  'take_screenshot', 'read_screen_text', 'zoom_region', 'wait', 'list_windows',
+  'take_screenshot', 'read_screen_text', 'zoom_region', 'wait', 'watch_and_wait', 'list_windows',
   'list_directory', 'search_files', 'project_tree', 'grep_files', 'read_file',
   'path_info', 'get_system_info', 'web_search', 'fetch_url'
 ]);
@@ -205,8 +207,10 @@ const APP_NAV_TOOLS = new Set([
 function formatWorkedTime(ms) {
   const totalSec = Math.max(0, Math.round((Number(ms) || 0) / 1000));
   if (totalSec < 60) return totalSec + 's';
-  const mins = Math.floor(totalSec / 60);
+  const hrs = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
   const secs = totalSec % 60;
+  if (hrs > 0) return hrs + 'h ' + String(mins).padStart(2, '0') + 'm ' + String(secs).padStart(2, '0') + 's';
   return mins + 'm ' + String(secs).padStart(2, '0') + 's';
 }
 
@@ -220,7 +224,7 @@ function isTestEvidenceStep(item) {
   if (!item || !item.ok) return false;
   const t = String(item.tool || '');
   const a = item.args || {};
-  if (t === 'run_command' || t === 'terminal_open' || t === 'terminal_send' || t === 'terminal_read' || t === 'open_path' || t === 'open_url' || t === 'browser_tab') return true;
+  if (t === 'run_command' || t === 'terminal_open' || t === 'terminal_send' || t === 'terminal_read' || t === 'watch_and_wait' || t === 'open_path' || t === 'open_url' || t === 'browser_tab') return true;
   if (t === 'read_screen_text' || t === 'zoom_region') return true;
   if (/execute_luau|start_stop_play|test|verify|render|preview|play/i.test(t)) return true;
   if (t === 'press_keys') {
@@ -240,15 +244,17 @@ function detectDeepTaskProfile(task, _openWindows, settings, overrides) {
   const isRoblox = /\b(roblox|roblox\s*studio|obby|luau|startergui|proximityprompt|clickdetector)\b/i.test(text);
   const isAnimationOrCreative = /\b(capcut|blender|higgsfield|after\s*effects|premiere|photoshop|illustrator|adobe|keyframe|rig|timeline|unreal|unity|davinci)\b/i.test(text);
   const isQuickCheckOnly = /^\s*(?:what is on my screen|read (?:this|screen)|open [a-z0-9 ]{1,24}|search (?:google|youtube|web) for .{1,50}|take a screenshot|list windows)\s*[.!?]?\s*$/i.test(text);
-  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby)\b/i.test(text));
+  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby|flash|etcher|burn|install|download|render|generate)\b/i.test(text));
   const isDeepBuildTask = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative);
 
   const minMins = (overrides && typeof overrides.minWorkMs === 'number')
     ? null
     : Math.max(0, Number((settings && settings.deepWorkMinMinutes !== undefined) ? settings.deepWorkMinMinutes : 0));
+  // Minimum 5 minutes ready, up to 240 minutes (4 hours) maximum endurance across all 4 providers!
+  const rawMaxMins = Number((settings && settings.deepWorkMaxMinutes !== undefined) ? settings.deepWorkMaxMinutes : 240);
   const maxMins = (overrides && typeof overrides.maxWorkMs === 'number')
     ? null
-    : Math.max(5, Number((settings && settings.deepWorkMaxMinutes !== undefined) ? settings.deepWorkMaxMinutes : 25));
+    : Math.max(5, Math.min(240, isFinite(rawMaxMins) ? rawMaxMins : 240));
 
   const minWorkMs = (overrides && typeof overrides.minWorkMs === 'number')
     ? overrides.minWorkMs
@@ -342,6 +348,30 @@ function pruneHistoryScreenshots(contents, keepCount = 3) {
     }
   }
   return clone;
+}
+
+/**
+ * Keeps multi-hour (up to 4h) conversations lean so Gemini, OpenAI, Claude & OpenRouter never hit context limits:
+ * preserves the initial user goal + latest 30 turns, collapsing intermediate middle turns into a clean marker.
+ */
+function compactHistoryForLongRun(contents, maxTurns = 38) {
+  if (!Array.isArray(contents) || contents.length <= maxTurns) return contents;
+  const head = contents.slice(0, 3);
+  let tailStart = Math.max(3, contents.length - 30);
+  // Ensure tail starts on a clean 'user' turn (never orphaned functionResponse without its matching model functionCall!)
+  while (tailStart < contents.length - 4) {
+    const turn = contents[tailStart];
+    const isPlainUser = turn && turn.role === 'user' && Array.isArray(turn.parts) && !turn.parts.some((p) => p && p.functionResponse);
+    if (isPlainUser) break;
+    tailStart++;
+  }
+  const omitted = tailStart - head.length;
+  if (omitted <= 2) return contents;
+  return [
+    ...head,
+    { role: 'model', parts: [{ text: `[Long-running session note: ${omitted} earlier completed step turns compacted to keep context fast and crisp across multi-hour execution.]` }] },
+    ...contents.slice(tailStart)
+  ];
 }
 
 class AgentRunner extends EventEmitter {
@@ -1065,9 +1095,23 @@ class AgentRunner extends EventEmitter {
       automation: this.automation,
       settings: () => this.getSettings(),
       isStopped: () => this.stopped,
+      isBackground: !!m.isBackground,
       cursor: (evt) => this.cursorEmitter(evt),
+      setStatus: (patch) => this.setStatus(Object.assign({
+        running: true,
+        mode: 'work',
+        model: m.model || '',
+        step: m.step || 0,
+        maxSteps: m.maxSteps || 0
+      }, patch || {})),
+      emitNote: (text) => this.emit('work-note', {
+        runId: m.runId || this.runId,
+        chatId: m.chatId || '',
+        step: m.step || 0,
+        text: String(text || '')
+      }),
       beforeScreenAction: async () => {
-        if (this.getSettings().minimizeDuringAgent !== false) {
+        if (this.getSettings().minimizeDuringAgent !== false && !m.isBackground) {
           this.emit('before-screen-action', { tool: 'screen' });
           await sleep(160);
         }
@@ -1233,7 +1277,7 @@ class AgentRunner extends EventEmitter {
       ? 'background'
       : 'photos';
     const isBackgroundVisualMode = effectiveVisualMode === 'background';
-    const configuredMax = Math.max(1, Math.min(200, Number(settings.maxSteps) || 45));
+    const configuredMax = Math.max(5, Math.min(300, Number(settings.maxSteps) || 180));
     const agentModel = this.resolveModelForJob('agent');
     if (agentModel.id === 'auto') agentModel.id = 'gpt-6.1-terra';
     const fastModel = this.resolveModelForJob('fast');
@@ -1630,6 +1674,7 @@ class AgentRunner extends EventEmitter {
       const activeStepModel = agentModel.id;
       const sysPrompt = makeWorkSysPrompt(activeStepModel);
       let zeroWorkRejections = 0;
+      let stillLoadingNudges = 0;
       let untestedRejections = 0;
       let verifyRejections = 0;
       let qaPasses = 0;
@@ -1691,7 +1736,7 @@ class AgentRunner extends EventEmitter {
         const workTCfg = buildThinkingConfig(activeStepModel, settings.thinkingLevel || 'medium', this.getModels());
         const workPayload = {
           systemInstruction: { parts: [{ text: sysPrompt }] },
-          contents: pruneHistoryScreenshots(contents, 2),
+          contents: compactHistoryForLongRun(pruneHistoryScreenshots(contents, 2)),
           tools: toolPayload
         };
         if (forceToolNextTurn && !usingDirectCu) {
@@ -1700,9 +1745,9 @@ class AgentRunner extends EventEmitter {
         forceToolNextTurn = false;
         if (workTCfg) workPayload.generationConfig = { thinkingConfig: workTCfg };
 
-        const workTimeoutMs = isFastWork ? 16000 : 30000;
+        const workTimeoutMs = isFastWork ? 20000 : 45000;
         let workUseDirectGenerate = isFastWork; // Flash-Lite / Flash / Low use direct generateContent for fastest zero-stall tool calls!
-        for (let transientTry = 0; transientTry < 2; transientTry++) {
+        for (let transientTry = 0; transientTry < 4; transientTry++) {
           if (this.stopped) throw abortError();
           try {
             const callOpts = {
@@ -1740,9 +1785,9 @@ class AgentRunner extends EventEmitter {
             const retryMs = Number(apiErr.retryAfterMs) || 0;
             const isDailyQuota = apiErr.kind === 'quota' || /limit:\s*0\b|per[\s_-]*day|PerDay|free_tier_requests|insufficient_quota|credit balance|RESOURCE_EXHAUSTED|exceeded your current quota|\d+h\d*m/i.test(errMsg) || retryMs > 120000;
             const isTransient = !isDailyQuota && (['server', 'rate', 'timeout', 'network'].includes(apiErr.kind) || /high demand|overloaded|temporarily|try again|capacity|timed out|stalled|per[\s_-]*minute/i.test(errMsg) || (retryMs > 0 && retryMs <= 65000));
-            if (isTransient && transientTry < 1) {
-              const waitMs = Math.min(35000, Math.max(2000, retryMs || (3000 * (transientTry + 1))));
-              this.emitLog({ kind: 'retry', status: 'warn', model: activeStepModel, tool: 'work_retry', detail: `${activeStepModel} rate-limited/busy; waiting ${Math.round(waitMs / 1000)}s and retrying same model` });
+            if (isTransient && transientTry < 3) {
+              const waitMs = Math.min(45000, Math.max(2500, retryMs || (3500 * (transientTry + 1))));
+              this.emitLog({ kind: 'retry', status: 'warn', model: activeStepModel, tool: 'work_retry', detail: `${activeStepModel} rate-limited/busy; waiting ${Math.round(waitMs / 1000)}s and retrying same model (${transientTry + 1}/3)` });
               this.setStatus({ running: true, state: 'thinking', mode: 'work', model: activeStepModel, step, maxSteps, stepText: `Step ${step} · ${activeStepModel} waiting ${Math.round(waitMs / 1000)}s to retry…` });
               await sleep(waitMs);
               continue;
@@ -1853,6 +1898,61 @@ class AgentRunner extends EventEmitter {
           const elapsedNow = Date.now() - workStartMs;
           const withinMaxTime = elapsedNow < taskProfile.maxWorkMs;
           const missingHold = wantsLongPress && !didHoldAction;
+
+          // Gate 0: STAY & WATCH GUARD — NEVER let Brief declare "Done" while a terminal, flasher/validator,
+          // AI video generator, installer, download, or another AI agent is still loading or running!
+          if (stillLoadingNudges < 18 && step < maxSteps && withinMaxTime && stepLog.length > 0) {
+            const lastStep = stepLog[stepLog.length - 1];
+            const unverifiedLaunchedTerm = !!(
+              lastStep && lastStep.ok && (
+                (lastStep.tool === 'run_command' && lastStep.result && (lastStep.result.opened_window || lastStep.result.background || lastStep.result.still_running)) ||
+                (lastStep.tool === 'terminal_open' && lastStep.args && lastStep.args.initial_command) ||
+                (lastStep.tool === 'terminal_send' && lastStep.result && lastStep.result.running)
+              )
+            );
+            const activeBgTerms = getRunningTerminalSessions().filter((s) => !s.interactive && s.command);
+            let screenLoadingSignal = '';
+            let liveCheckUiText = '';
+            if (!unverifiedLaunchedTerm && !activeBgTerms.length && !isBackgroundVisualMode) {
+              liveCheckUiText = await describeForegroundElements(this.screen, this.automation, { fastMode: false }).catch(() => '');
+              const sig = analyzeWatchText(liveCheckUiText);
+              if (sig.isLoading && !sig.isDone) {
+                screenLoadingSignal = sig.loadingHit || 'active progress';
+              }
+            }
+            if (unverifiedLaunchedTerm || activeBgTerms.length > 0 || screenLoadingSignal) {
+              stillLoadingNudges += 1;
+              forceToolNextTurn = !usingDirectCu;
+              const watchEmoji = pickWatchEmoji(stillLoadingNudges);
+              const activeSessionId = (lastStep && lastStep.result && lastStep.result.session_id) || (activeBgTerms[0] && activeBgTerms[0].id) || '';
+              const why = unverifiedLaunchedTerm
+                ? `terminal command was just launched (${lastStep.tool}) and has NOT finished yet`
+                : activeBgTerms.length > 0
+                  ? `background terminal session (${activeBgTerms[0].id}) is still running`
+                  : `screen still shows active progress ("${screenLoadingSignal}")`;
+              const watchMsg = `${watchEmoji} Stay & Watch: ${why} — watching until it finishes or errors, then verifying…`;
+              this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'stay_watch_guard', detail: why });
+              this.emit('work-note', { runId, chatId, step, text: watchMsg });
+              this.setStatus({ running: true, state: 'watching', mode: 'work', model: activeStepModel, step, maxSteps, stepText: watchMsg });
+              if (!isBackgroundVisualMode) this.cursorEmitter({ kind: 'watch', label: `${watchEmoji} Watching progress… (${formatWatchElapsed(elapsedNow)})` });
+              currentShot = await this.screen.capture({ format: 'jpeg' }).catch(() => currentShot);
+              const watchVisionShot = await shotForVision(currentShot, this.automation);
+              contents.push({
+                role: 'user',
+                parts: [
+                  {
+                    text: `[STAY & WATCH GUARD — DO NOT FINISH WHILE LOADING (${formatWorkedTime(elapsedNow)} elapsed)]:\n` +
+                      `Detected: ${why}.\n` +
+                      `You MUST NOT say "finished" until this actually completes and you verify the final outcome (or diagnose any error/denial)! ` +
+                      `Call \`watch_and_wait({ reason: "${(lastStep && lastStep.description ? lastStep.description.slice(0, 42) : 'active process').replace(/"/g, '')}"${activeSessionId ? `, session_id: "${activeSessionId}"` : ''}, max_wait_minutes: 15 })\` RIGHT NOW to stay & monitor until completion or error, then verify the final result!` +
+                      (liveCheckUiText ? '\n' + liveCheckUiText : '')
+                  },
+                  { inlineData: { mimeType: watchVisionShot.mime, data: watchVisionShot.base64 } }
+                ]
+              });
+              continue;
+            }
+          }
 
           // Gate 1: Reject photo-only / zero real action attempts (max 2 nudges — never loop forever!)
           if ((mutStepsNow.length === 0 || missingHold) && zeroWorkRejections < 2 && step < maxSteps && withinMaxTime) {
@@ -2108,7 +2208,7 @@ class AgentRunner extends EventEmitter {
               await sleep(160);
             }
             // Animate the single black OS cursor visibly to the active workspace/file/app and click when modifying or opening items.
-            const skipPreClick = ['browser_tab', 'focus_window', 'window_control', 'close_other_windows', 'open_app', 'open_url', 'wait', 'take_screenshot', 'list_windows', 'web_search', 'fetch_url', 'mouse_button', 'hold_key', 'scroll', 'click', 'click_element', 'type_text', 'press_keys'].includes(name);
+            const skipPreClick = ['browser_tab', 'focus_window', 'window_control', 'close_other_windows', 'open_app', 'open_url', 'wait', 'watch_and_wait', 'take_screenshot', 'list_windows', 'web_search', 'fetch_url', 'mouse_button', 'hold_key', 'scroll', 'click', 'click_element', 'type_text', 'press_keys'].includes(name);
             if (name === 'mouse_button' && String(args.action || '').toLowerCase() === 'down') mouseButtonHeld = true;
             if (name === 'mouse_button' && String(args.action || '').toLowerCase() === 'up') mouseButtonHeld = false;
             if (name === 'mouse_button' || name === 'hold_key' || (args && (args.hold_ms > 80 || args.duration_ms > 80 || args.long_press || args.hold))) {
@@ -2126,7 +2226,7 @@ class AgentRunner extends EventEmitter {
             try {
               const out = mcpMeta
                 ? await this.mcpManager.callGeminiTool(name, args)
-                : await handler.run(args, this.makeToolContext({ chatId, toolCallId, step }));
+                : await handler.run(args, this.makeToolContext({ chatId, toolCallId, step, runId, model: stepModelLabel, maxSteps, isBackground: isBackgroundVisualMode }));
               const cmdFailed = (name === 'run_command' || name === 'terminal_send') && out && out.ok === false;
               stepOk = !cmdFailed;
               if (cmdFailed && classifyModelTier(activeStepModel) === 'flagship') {
@@ -2276,12 +2376,14 @@ class AgentRunner extends EventEmitter {
           }
 
           // Stuck-loop protection: track identical repeated tool calls and consecutive failures so Brief never loops forever
+          // (Exempt watch_and_wait / terminal_read up to 24 cycles so 3–4 hour long-running watches never falsely abort!)
           const callSig = name + ':' + JSON.stringify(args || {}).slice(0, 200);
           if (callSig === lastToolSig) consecutiveSameToolCount += 1;
           else { lastToolSig = callSig; consecutiveSameToolCount = 1; }
           if (stepOk) consecutiveFailedSteps = 0;
           else consecutiveFailedSteps += 1;
-          if (consecutiveSameToolCount >= 3) {
+          const sameLimit = (name === 'watch_and_wait' || name === 'terminal_read') ? 24 : 3;
+          if (consecutiveSameToolCount >= sameLimit) {
             stuckBreakReason = `Stopped automatically to avoid repeating "${name}" (${consecutiveSameToolCount} identical attempts in a row).`;
           } else if (consecutiveFailedSteps >= 4) {
             stuckBreakReason = `Stopped automatically after ${consecutiveFailedSteps} consecutive failed steps (last: "${name}" — ${(resultObj && resultObj.error) || 'action failed'}).`;

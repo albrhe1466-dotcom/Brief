@@ -11,6 +11,14 @@ const MODEL_REALITY_NOTE =
 const USER_REDIRECT_MEMORY_NOTE =
   'CALM USER REDIRECT & CONTEXT MEMORY ("NO, OPEN X INSTEAD OF Y"): Remember user corrections across the entire conversation! Whenever the user says "no, open X instead of Y", "not that one, do X", "use A instead of B", or redirects your path: (1) Lock in BOTH what NOT to repeat (Y) and the exact new target (X) for every remaining step; (2) Stay calm, confident, and focused — never panic, over-apologize, get confused, or drift back into Y; (3) Pivot straight to X and complete it cleanly.';
 
+const STAY_WATCH_VERIFY_NOTE =
+  'STAY, WATCH & VERIFY — LONG-RUNNING ENDURANCE PROTOCOL (5 MIN MINIMUM READY, UP TO 3–4 HOURS MAX — ALL MODELS & BACKGROUND/VISIBLE MODES): ' +
+  '(1) NEVER QUIT OR SAY "DONE" WHILE ANYTHING IS STILL LOADING, RUNNING, INSTALLING, COMPILING, FLASHING, VALIDATING, DOWNLOADING, RENDERING, GENERATING A VIDEO/IMAGE, OR WAITING FOR ANOTHER AI AGENT! ' +
+  '(2) Launching a terminal (`run_command(open_window=true)`, `run_command(background=true)`, `terminal_open`, `terminal_send`) or clicking "Start / Flash / Generate / Render / Send" is ONLY THE BEGINNING — NOT completion! You do NOT know if it succeeded, got denied, asked for permission, or threw an error unless you STAY AND WATCH IT finish! ' +
+  '(3) Immediately call `watch_and_wait({ reason, max_wait_minutes, session_id, done_keywords, error_keywords })` (supports 1 to 240 minutes = 4 hours in chunks, displaying cute watching cursor status 👀🍿 / 👀🍕 / 👀☕ while polling screen OCR & terminal output without burning extra tokens). ' +
+  '(4) Watch through EVERY stage (for example: Loading → Flashing 0–100% → Validating 0–100% → Flash Complete; OR Prompt Sent → Generating Video → Rendering → Ready; OR Terminal Running → Exit Code 0). If an error, denial, UAC/permission prompt, failure, or crash appears while watching, IMMEDIATELY inspect it, diagnose the cause, fix/retry if possible, or report clearly what happened! ' +
+  '(5) FINAL END-TO-END VERIFICATION: After the long process finishes, ALWAYS check the actual finished artifact/destination before declaring success — e.g. check terminal exit code & final success lines, inspect the generated video/file, or inspect the target drive / SD card partitions & written files (`list_directory`, `run_command`, or visual inspection) so you KNOW FOR A FACT it actually worked!';
+
 function classifyModelTier(modelId) {
   const clean = String(modelId || '').toLowerCase().replace(/^(?:models|google|openai|anthropic)\//, '');
   if (/carbon|argon|6\.2-?astra|astra|fable/.test(clean)) return 'flagship';
@@ -158,7 +166,8 @@ function buildWorkSystemPrompt({ screen, automation, cuActive, cuModelId, permis
     `14. ${buildTierDirective(modelId, 'work')}`,
     `15. ${buildThinkingDirective(thinkingLevel)} Never leak private API keys or fabricate file names, line counts, paths, URLs, test passes, or command output. Only report facts directly observed in tool outputs and screenshots.`,
     `16. ${MODEL_REALITY_NOTE}`,
-    `17. ${USER_REDIRECT_MEMORY_NOTE}`
+    `17. ${USER_REDIRECT_MEMORY_NOTE}`,
+    `18. ${STAY_WATCH_VERIFY_NOTE}`
   ]).join('\n');
 }
 

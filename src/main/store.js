@@ -63,8 +63,16 @@ function sanitizeSettingsData(data) {
     data.deepWorkMinMinutes = 0;
     dirty = true;
   }
-  if (data.maxSteps === 140) {
-    data.maxSteps = 45;
+  if (data.maxSteps === 140 || data.maxSteps === 45) {
+    data.maxSteps = 180;
+    dirty = true;
+  }
+  if (data.deepWorkMaxMinutes === 25 || data.deepWorkMaxMinutes === 30) {
+    data.deepWorkMaxMinutes = 240;
+    dirty = true;
+  }
+  if (data.commandTimeoutSec === 120) {
+    data.commandTimeoutSec = 300;
     dirty = true;
   }
   if (data.typingDelayMs === 6) {
@@ -169,9 +177,9 @@ const DEFAULT_SETTINGS = {
   minimizeDuringAgent: true,
   showOverlay: true,
   showWidget: false,
-  maxSteps: 45,
+  maxSteps: 180,
   deepWorkMinMinutes: 0,
-  deepWorkMaxMinutes: 25,
+  deepWorkMaxMinutes: 240,
   multiAgentParallel: true,
   verifyTaskBeforeFinish: true,
   screenshotMaxWidth: 3840,
@@ -180,7 +188,7 @@ const DEFAULT_SETTINGS = {
   cursorSpeedMs: 200,
   cursorSpeedProfile: 'adaptive', // 'adaptive' | 'slow' | 'medium' | 'fast'
   alignCursorBack: true,          // Re-align mouse smoothly to target on drift and back to user origin after finishing
-  commandTimeoutSec: 120,
+  commandTimeoutSec: 300,
   pasteLongText: false,
   sidebarCollapsed: false,
   sidebarWidth: 260,

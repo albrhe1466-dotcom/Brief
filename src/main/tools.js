@@ -22,6 +22,149 @@ const IS_MAC = process.platform === 'darwin';
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
+/* Strictly wholesome watching + snack emojis for cursor waiting pill (zero inappropriate emojis). */
+const WATCH_SNACK_EMOJIS = [
+  '👀🍿',
+  '👀🍕',
+  '👀☕',
+  '👀🍪',
+  '👀🍩',
+  '👀🍔',
+  '👀🍟',
+  '👀🧃',
+  '👀🥨',
+  '👀🍵'
+];
+
+function pickWatchEmoji(tick = 0) {
+  const idx = Math.abs(Math.floor(Number(tick) || 0)) % WATCH_SNACK_EMOJIS.length;
+  return WATCH_SNACK_EMOJIS[idx];
+}
+
+function formatWatchElapsed(ms) {
+  const totalSec = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+  const hrs = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  if (hrs > 0) return hrs + 'h ' + String(mins).padStart(2, '0') + 'm';
+  if (mins > 0) return mins + 'm ' + String(secs).padStart(2, '0') + 's';
+  return secs + 's';
+}
+
+const DEFAULT_LOADING_RE = /\b(loading|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|bundling|packaging|writing|formatting|copying|transferring|syncing|initializing|starting|processing|working|thinking|waiting|please\s+wait|in\s+progress|almost\s+there|remaining|eta\b|queued|preparing|finishing|checking\s+updates)\b|\b(?:[1-9]?\d(?:\.\d+)?)\s*%/i;
+const DEFAULT_ERROR_RE = /\b(error|failed|failure|denied|access\s+is\s+denied|permission\s+denied|rejected|unable\s+to|could\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|checksum\s+mismatch|validation\s+failed|flash\s+failed|something\s+went\s+wrong|corrupt(?:ed)?|not\s+enough\s+space|device\s+not\s+found|timed?\s*out|do\s+you\s+want\s+to\s+allow|user\s+account\s+control|try\s+again|retry|\[y\/n\]|press\s+any\s+key)\b/i;
+const DEFAULT_DONE_RE = /\b(flash\s+complete|completed?\s+successfully|finished\s+successfully|all\s+done|100%\s*(?:complete|done|finished)?|successfully\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\s+to\s+download|video\s+ready|export\s+complete|build\s+succeeded|done!)\b/i;
+
+function analyzeWatchText(rawText, doneKeywords, errorKeywords) {
+  const txt = String(rawText || '').replace(/\s+/g, ' ').trim();
+  const low = txt.toLowerCase();
+  const findCustom = (list) => {
+    if (!Array.isArray(list)) return '';
+    for (const kw of list) {
+      const k = String(kw || '').trim();
+      if (k && low.includes(k.toLowerCase())) return k;
+    }
+    return '';
+  };
+  const customErr = findCustom(errorKeywords);
+  const errM = customErr ? [customErr] : DEFAULT_ERROR_RE.exec(txt);
+  const customDone = findCustom(doneKeywords);
+  const doneM = customDone ? [customDone] : DEFAULT_DONE_RE.exec(txt);
+
+  // Detect active percentage strictly < 100% OR active loading/flashing/validating/generating words
+  let loadingHit = '';
+  const pctRe = /\b(\d{1,3})(?:\.\d+)?\s*%/g;
+  let pm;
+  while ((pm = pctRe.exec(txt))) {
+    const val = Number(pm[1]);
+    if (val >= 0 && val < 100) { loadingHit = pm[0]; break; }
+  }
+  if (!loadingHit) {
+    const lm = /\b(loading|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\s+wait|in\s+progress|remaining|eta\b|queued|preparing|working\.\.\.|thinking\.\.\.)\b/i.exec(txt);
+    if (lm) loadingHit = lm[0];
+  }
+
+  // Critical: if screen says "Validating..." or "Flashing 99%" or "Rendering...", NEVER treat as done yet!
+  const stillActivePhase = /\b(flashing|validating|verifying|generating|rendering|downloading|installing|extracting|decompressing|compiling|building|writing|please\s+wait|in\s+progress|loading|remaining)\b/i.test(txt);
+  const isDone = !!doneM && (!stillActivePhase || !!customDone && !/\b(validating|flashing|rendering|generating)\b/i.test(loadingHit));
+
+  return {
+    isLoading: !!loadingHit,
+    loadingHit,
+    hasError: !!errM,
+    errorHit: errM ? String(errM[0]) : '',
+    isDone,
+    doneHit: doneM ? String(doneM[0]) : ''
+  };
+}
+
+function quickShotDiffPct(shotA, shotB) {
+  try {
+    if (!shotA || !shotB || !shotA.base64 || !shotB.base64) return null;
+    if (shotA.base64 === shotB.base64) return 0;
+    const { nativeImage } = require('electron');
+    if (!nativeImage) return null;
+    const a = nativeImage.createFromBuffer(Buffer.from(shotA.base64, 'base64')).resize({ width: 48, height: 27 }).toBitmap();
+    const b = nativeImage.createFromBuffer(Buffer.from(shotB.base64, 'base64')).resize({ width: 48, height: 27 }).toBitmap();
+    if (!a.length || a.length !== b.length) return null;
+    let changed = 0;
+    const px = Math.floor(a.length / 4);
+    for (let i = 0; i < a.length; i += 4) {
+      if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 26) changed++;
+    }
+    return px ? Number(((changed / px) * 100).toFixed(1)) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function sampleForegroundTextForWatch(ctx) {
+  const chunks = [];
+  try {
+    if (ctx && ctx.automation) {
+      const disp = (ctx.screen && typeof ctx.screen.currentDisplay === 'function') ? ctx.screen.currentDisplay() : null;
+      const b = (disp && disp.bounds) || { x: 0, y: 0, width: 1920, height: 1080 };
+      const sf = (disp && disp.scaleFactor) || 1;
+      const [fg, uiEls, ocr] = await Promise.all([
+        typeof ctx.automation.foreground === 'function' ? Promise.race([ctx.automation.foreground().catch(() => null), sleep(450).then(() => null)]) : Promise.resolve(null),
+        typeof ctx.automation.inspectUi === 'function' ? Promise.race([ctx.automation.inspectUi(95).catch(() => []), sleep(850).then(() => [])]) : Promise.resolve([]),
+        typeof ctx.automation.ocrScreen === 'function' ? Promise.race([ctx.automation.ocrScreen(Math.round(b.x * sf), Math.round(b.y * sf), Math.round(b.width * sf), Math.round(b.height * sf)).catch(() => null), sleep(1400).then(() => null)]) : Promise.resolve(null)
+      ]);
+      if (fg && fg.title) chunks.push('WINDOW: ' + fg.title);
+      if (Array.isArray(uiEls)) {
+        for (const el of uiEls.slice(0, 80)) {
+          const nm = String((el && (el.name || el.value)) || '').trim();
+          if (nm.length >= 2) chunks.push(nm);
+        }
+      }
+      if (ocr && Array.isArray(ocr.lines)) {
+        for (const ln of ocr.lines.slice(0, 140)) {
+          const t = String((ln && ln.text) || '').trim();
+          if (t.length >= 2) chunks.push(t);
+        }
+      }
+    }
+  } catch (_) { /* ignore */ }
+  return chunks.join(' | ').slice(0, 12000);
+}
+
+function getRunningTerminalSessions() {
+  const out = [];
+  for (const s of TERMINAL_SESSIONS.values()) {
+    if (s && s.running) {
+      out.push({
+        id: s.id,
+        shell: s.shell,
+        command: s.lastCommand || '',
+        interactive: !!s.interactive,
+        startedAt: s.startedAt || 0,
+        tail: String(s.output || '').slice(-1200)
+      });
+    }
+  }
+  return out;
+}
+
 function knownFolders() {
   const safe = (n) => { try { return app.getPath(n); } catch (_) { return null; } };
   return {
@@ -1719,14 +1862,263 @@ const TOOLS = [
   },
   {
     name: 'wait', kind: 'info', observe: true,
-    description: 'Wait for something to load, then get a new screenshot.',
-    parameters: { type: 'object', properties: { seconds: { type: 'number', description: '0.5 to 30 seconds.' } }, required: ['seconds'] },
-    describe: (a) => 'Wait ' + a.seconds + 's',
+    description: 'Wait briefly (0.5 to 300 seconds) while displaying live watching cursor status, then get a fresh screenshot. For terminals, flashing, rendering, video generation, downloads, installs, or waiting on another AI agent, prefer watch_and_wait instead so Brief watches actively for completion or errors.',
+    parameters: { type: 'object', properties: {
+      seconds: { type: 'number', description: '0.5 to 300 seconds (up to 5 minutes).' },
+      reason: { type: 'string', description: 'Short label of what you are waiting for (shown next to cursor).' }
+    }, required: ['seconds'] },
+    describe: (a) => 'Wait ' + a.seconds + 's' + (a.reason ? ' (' + a.reason + ')' : ''),
     async run(a, ctx) {
-      const ms = Math.max(500, Math.min(30000, Number(a.seconds || 1) * 1000));
-      const end = Date.now() + ms;
-      while (Date.now() < end) { if (ctx.isStopped()) throw new Error('Stopped by user.'); await sleep(200); }
-      return { waited_ms: ms };
+      const ms = Math.max(500, Math.min(300000, Number(a.seconds || 1) * 1000));
+      const reason = String(a.reason || 'loading').trim().slice(0, 34);
+      const start = Date.now();
+      const end = start + ms;
+      let tick = 0;
+      let lastEmit = 0;
+      while (Date.now() < end) {
+        if (ctx.isStopped()) throw new Error('Stopped by user.');
+        const now = Date.now();
+        if (now - lastEmit >= 2000) {
+          lastEmit = now;
+          const emoji = pickWatchEmoji(Math.floor((now - start) / 10000) + tick);
+          const lbl = `${emoji} Waiting (${reason})… ${formatWatchElapsed(now - start)}`;
+          if (ctx.cursor && !ctx.isBackground) ctx.cursor({ kind: 'watch', label: lbl });
+          if (ctx.setStatus) ctx.setStatus({ state: 'watching', stepText: lbl });
+          tick++;
+        }
+        await sleep(250);
+      }
+      return { waited_ms: ms, reason };
+    }
+  },
+  {
+    name: 'watch_and_wait', kind: 'info', observe: true,
+    description: 'Stay and actively watch a running process (terminal command, installer, OS flasher/validator like BalenaEtcher, AI video/image generator, build, download, or another AI agent) until it completes, errors/denies, needs input, or hits a checkpoint. Supports 1 to 240 minutes (4 hours!) with zero extra LLM calls while waiting, showing wholesome watching+snack cursor emojis (👀🍿 / 👀🍕 / 👀☕). Works in BOTH Background and Live Visible modes!',
+    parameters: { type: 'object', properties: {
+      reason: { type: 'string', description: 'What Brief is watching (e.g. "terminal build", "flashing & validating OS image", "AI video generation", "other AI agent reply").' },
+      session_id: { type: 'string', description: 'Optional terminal session_id from terminal_open or run_command(background=true) to monitor directly.' },
+      max_wait_minutes: { type: 'number', description: 'Max minutes to watch in this cycle (default 15, min 1, max 240 = 4 hours). For multi-hour jobs, checkpoints return every ~12m so you can visually verify and continue watching.' },
+      check_interval_sec: { type: 'number', description: 'Seconds between screen/terminal checks (default 8, min 3, max 45).' },
+      done_keywords: { type: 'array', items: { type: 'string' }, description: 'Optional words/phrases indicating true final completion (e.g. ["Flash Complete", "Finished", "Video ready"]).' },
+      error_keywords: { type: 'array', items: { type: 'string' }, description: 'Optional words/phrases indicating an error, denial, or prompt needing immediate intervention.' },
+      watch_mode: { type: 'string', enum: ['auto', 'screen', 'terminal', 'both'], description: 'What to watch: "auto" (terminal+screen if session_id given, else screen), "terminal", "screen", or "both".' }
+    }, required: ['reason'] },
+    describe: (a) => '👀🍿 Stay & watch: ' + String(a.reason || 'running process').slice(0, 64),
+    async run(a, ctx) {
+      const reason = String(a.reason || 'process').trim().slice(0, 44);
+      const sessionId = String(a.session_id || '').trim();
+      const reqMaxMin = Math.max(1, Math.min(240, Number(a.max_wait_minutes) || 15));
+      // Checkpoint cleanly every 12 minutes on multi-hour tasks so the AI can visually inspect & continue up to 4 hours total!
+      const cycleBudgetMs = Math.min(reqMaxMin * 60 * 1000, 12 * 60 * 1000);
+      const baseIntervalMs = Math.max(3, Math.min(45, Number(a.check_interval_sec) || 8)) * 1000;
+      const doneKws = Array.isArray(a.done_keywords) ? a.done_keywords : [];
+      const errorKws = Array.isArray(a.error_keywords) ? a.error_keywords : [];
+      const rawMode = String(a.watch_mode || 'auto').toLowerCase();
+      const watchTerminal = !!sessionId && (rawMode === 'auto' || rawMode === 'terminal' || rawMode === 'both');
+      const watchScreen = !watchTerminal || rawMode === 'both' || rawMode === 'screen';
+
+      const started = Date.now();
+      const deadline = started + cycleBudgetMs;
+      let prevShot = (watchScreen && ctx.screen) ? await ctx.screen.capture({ format: 'jpeg' }).catch(() => null) : null;
+      let sess = sessionId ? TERMINAL_SESSIONS.get(sessionId) : null;
+      let lastTermLen = sess ? String(sess.output || '').length : 0;
+      let sawActivity = false;
+      let settledSince = 0;
+      let checks = 0;
+      let emojiIdx = Math.floor(Math.random() * WATCH_SNACK_EMOJIS.length);
+      let lastEmojiSwap = started;
+      let lastTextSnippet = '';
+      let lastLoadingSignal = '';
+
+      const emitWatchBanner = (extraNote) => {
+        const now = Date.now();
+        if (now - lastEmojiSwap >= 14000) {
+          emojiIdx = (emojiIdx + 1) % WATCH_SNACK_EMOJIS.length;
+          lastEmojiSwap = now;
+        }
+        const emoji = pickWatchEmoji(emojiIdx);
+        const elap = formatWatchElapsed(now - started);
+        const label = `${emoji} Watching ${reason}${extraNote ? ' · ' + extraNote : ''} (${elap})`;
+        if (ctx.cursor && !ctx.isBackground) {
+          ctx.cursor({ kind: 'watch', label: label.slice(0, 62) });
+        }
+        if (ctx.setStatus) {
+          ctx.setStatus({ state: 'watching', stepText: label });
+        }
+      };
+
+      emitWatchBanner('live');
+
+      while (Date.now() < deadline) {
+        if (ctx.isStopped()) throw new Error('Stopped by user.');
+        // Adaptive sleep: responsive 250ms stop checks while waiting baseIntervalMs (gently scales up slightly after 3m)
+        const elapsedNow = Date.now() - started;
+        const intervalMs = elapsedNow > 180000 ? Math.min(25000, Math.round(baseIntervalMs * 1.6)) : baseIntervalMs;
+        const nextCheckAt = Math.min(deadline, Date.now() + intervalMs);
+        while (Date.now() < nextCheckAt) {
+          if (ctx.isStopped()) throw new Error('Stopped by user.');
+          emitWatchBanner(lastLoadingSignal || '');
+          await sleep(Math.min(1000, Math.max(200, nextCheckAt - Date.now())));
+        }
+        if (ctx.isStopped()) throw new Error('Stopped by user.');
+        checks++;
+
+        // 1) Monitor background/interactive terminal session if provided
+        if (watchTerminal) {
+          sess = TERMINAL_SESSIONS.get(sessionId);
+          if (!sess) {
+            return {
+              ok: true,
+              outcome: 'terminal_closed',
+              reason,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              note: 'Terminal session ' + sessionId + ' is no longer active. Verify the final result now.'
+            };
+          }
+          const fullOut = String(sess.output || '');
+          const delta = fullOut.slice(lastTermLen);
+          if (delta.trim().length > 0) {
+            sawActivity = true;
+            settledSince = 0;
+            lastTermLen = fullOut.length;
+          }
+          const termSig = analyzeWatchText(delta || fullOut.slice(-2500), doneKws, errorKws);
+          if (!sess.running) {
+            const okExit = sess.exitCode === 0;
+            return {
+              ok: okExit,
+              outcome: okExit ? 'process_exited_ok' : 'process_exited_error',
+              reason,
+              session_id: sessionId,
+              exit_code: sess.exitCode,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              output_tail: truncateMiddle(fullOut.slice(-10000), 10000),
+              note: okExit
+                ? 'Terminal command finished with exit code 0! Inspect the output and verify the final artifact/result before finishing.'
+                : 'Terminal command exited with error code ' + sess.exitCode + '! Inspect stderr/output, diagnose what went wrong, and fix or report it.'
+            };
+          }
+          if (termSig.hasError) {
+            return {
+              ok: false,
+              outcome: 'alert_detected',
+              source: 'terminal',
+              matched: termSig.errorHit,
+              reason,
+              session_id: sessionId,
+              running: true,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              output_tail: truncateMiddle(fullOut.slice(-8000), 8000),
+              note: 'Detected error/prompt "' + termSig.errorHit + '" in terminal output while watching! Inspect and respond/fix immediately.'
+            };
+          }
+          if (termSig.isDone && !termSig.isLoading) {
+            return {
+              ok: true,
+              outcome: 'completed',
+              source: 'terminal',
+              matched: termSig.doneHit,
+              reason,
+              session_id: sessionId,
+              running: sess.running,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              output_tail: truncateMiddle(fullOut.slice(-8000), 8000),
+              note: 'Detected completion signal "' + termSig.doneHit + '" in terminal! Verify the final outcome now.'
+            };
+          }
+          if (termSig.loadingHit) lastLoadingSignal = termSig.loadingHit.slice(0, 18);
+        }
+
+        // 2) Monitor live screen visuals + OCR + UIA (terminals, flashers/validators, AI video generators, other AI agents, installers)
+        if (watchScreen && ctx.screen) {
+          const curShot = await ctx.screen.capture({ format: 'jpeg' }).catch(() => null);
+          const diffPct = quickShotDiffPct(prevShot, curShot);
+          prevShot = curShot || prevShot;
+          const screenText = await sampleForegroundTextForWatch(ctx);
+          lastTextSnippet = screenText.slice(0, 1800);
+          const sig = analyzeWatchText(screenText, doneKws, errorKws);
+
+          if (diffPct !== null && diffPct >= 0.35) {
+            sawActivity = true;
+            settledSince = 0;
+          }
+          if (sig.isLoading) {
+            sawActivity = true;
+            settledSince = 0;
+            lastLoadingSignal = sig.loadingHit.slice(0, 18);
+          } else {
+            lastLoadingSignal = '';
+          }
+
+          // Immediate wake on error / denial / UAC / popup / failure!
+          if (sig.hasError && !sig.isDone) {
+            return {
+              ok: false,
+              outcome: 'alert_detected',
+              source: 'screen',
+              matched: sig.errorHit,
+              reason,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              visual_diff_pct: diffPct,
+              screen_text_excerpt: lastTextSnippet,
+              note: 'Alert/Error/Prompt detected on screen ("' + sig.errorHit + '") while watching! Inspect the attached fresh screenshot carefully to handle/fix/approve or report it.'
+            };
+          }
+
+          // Wake on confirmed completion ONLY when active loading/validating is finished!
+          if (sig.isDone && !sig.isLoading && (Date.now() - started) >= 4000) {
+            return {
+              ok: true,
+              outcome: 'completed',
+              source: 'screen',
+              matched: sig.doneHit,
+              reason,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              visual_diff_pct: diffPct,
+              screen_text_excerpt: lastTextSnippet,
+              note: 'Completion signal "' + sig.doneHit + '" detected on screen and loading stopped! Visually inspect the fresh screenshot AND verify the final result/drive/file before declaring done.'
+            };
+          }
+
+          // If screen stopped changing after real progress AND zero loading signals remain for >= 35s, wake up to verify!
+          if (!sig.isLoading && (diffPct === null || diffPct < 0.25)) {
+            if (!settledSince) settledSince = Date.now();
+            const stillMs = Date.now() - settledSince;
+            const settleThresholdMs = sawActivity ? 35000 : 50000;
+            if (stillMs >= settleThresholdMs) {
+              return {
+                ok: true,
+                outcome: 'settled_verify',
+                source: 'screen',
+                reason,
+                watched_duration: formatWatchElapsed(Date.now() - started),
+                checks,
+                visual_diff_pct: diffPct,
+                screen_text_excerpt: lastTextSnippet,
+                note: 'Screen activity settled with no active loading indicator detected. Look closely at the attached screenshot: if the process truly finished, verify the output/drive/file; if it is still waiting or progressing slowly, call watch_and_wait again!'
+              };
+            }
+          }
+        }
+      }
+
+      // Clean checkpoint after 12m (or requested max_wait_minutes) — allows seamless 3-4 hour total endurance!
+      return {
+        ok: true,
+        outcome: 'checkpoint',
+        reason,
+        watched_duration: formatWatchElapsed(Date.now() - started),
+        checks,
+        still_loading_hint: lastLoadingSignal || 'check attached screenshot',
+        screen_text_excerpt: lastTextSnippet,
+        note: 'Watch checkpoint reached after ' + formatWatchElapsed(Date.now() - started) + '. Inspect the fresh screenshot: if it is STILL loading/flashing/validating/generating, call watch_and_wait again to keep watching (up to 4 hours total)! If finished, verify the final result.'
+      };
     }
   },
 
@@ -2240,7 +2632,7 @@ const TOOLS = [
       shell: { type: 'string', enum: ['cmd', 'powershell', 'bash'], description: 'Use "cmd" for Windows Command Prompt (cmd.exe) or "powershell" for PowerShell (default on Windows: powershell).' },
       background: { type: 'boolean', description: 'Set true for long-running servers/watchers/tasks to keep running in the background and return session_id.' },
       open_window: { type: 'boolean', description: 'Set true to launch a real visible Command Prompt / PowerShell window on the desktop.' },
-      timeout_sec: { type: 'integer', description: 'Timeout in seconds for foreground commands (default 120, max 1800).' }
+      timeout_sec: { type: 'integer', description: 'Timeout in seconds for foreground commands (default 300 = 5 min, max 14400 = 4 hours).' }
     }, required: ['command'] },
     describe: (a) => 'Run in ' + (a.shell === 'cmd' ? 'Command Prompt' : (a.shell || (IS_WIN ? 'PowerShell' : 'bash'))) + (a.cwd ? ' (in ' + a.cwd + ')' : '') + ': ' + a.command,
     dangerous: (a) => (isPermanentDeleteCommand(a.command) ? 'This command looks like it permanently deletes files (deletions from the terminal skip the Recycle Bin).' : null),
@@ -2271,8 +2663,16 @@ const TOOLS = [
           ? ['/c', 'start', '"Brief Command Prompt"', '/D', cwd, 'cmd.exe', '/k', String(a.command || '')]
           : ['/c', 'start', '"Brief PowerShell"', '/D', cwd, 'powershell.exe', '-NoExit', '-Command', String(a.command || '')];
         spawn('cmd.exe', winArgs, { cwd, detached: true, windowsHide: false, stdio: 'ignore' }).unref();
-        await sleep(700);
-        return { ok: true, opened_window: true, shell: shellLabel, cwd, command: a.command };
+        await sleep(900);
+        return {
+          ok: true,
+          opened_window: true,
+          still_running: true,
+          shell: shellLabel,
+          cwd,
+          command: a.command,
+          still_running_notice: 'IMPORTANT: The visible terminal window was just launched and is STILL LOADING/RUNNING! Do NOT declare finished yet — call watch_and_wait to stay and watch the terminal window until it clearly succeeds or errors, then verify the final output!'
+        };
       }
 
       const emitStream = (chunk, streamName, extra) => {
@@ -2309,13 +2709,25 @@ const TOOLS = [
           cwd: sess.cwd,
           running: sess.running,
           exit_code: sess.exitCode,
-          output: truncateMiddle(sess.output, 12000)
+          output: truncateMiddle(sess.output, 12000),
+          still_running_notice: sess.running ? 'This command is still running in background (session_id=' + sess.id + '). Call watch_and_wait({ reason, session_id: "' + sess.id + '" }) to stay and watch until it completes or errors!' : ''
         };
       }
 
-      const limit = Math.max(5, Math.min(1800, Number(a.timeout_sec) || Number(ctx.settings().commandTimeoutSec) || 120)) * 1000;
+      const limit = Math.max(5, Math.min(14400, Number(a.timeout_sec) || Number(ctx.settings().commandTimeoutSec) || 300)) * 1000;
       const started = Date.now();
       emitStream('', 'meta', { running: true });
+      let cmdWatchTick = 0;
+      const cmdWatchIv = setInterval(() => {
+        if (ctx.isStopped && ctx.isStopped()) return;
+        const elapMs = Date.now() - started;
+        if (elapMs < 2200) return;
+        const emoji = pickWatchEmoji(Math.floor(elapMs / 12000) + cmdWatchTick);
+        const lbl = `${emoji} Watching ${shellLabel}… (${formatWatchElapsed(elapMs)})`;
+        if (ctx.cursor && !ctx.isBackground) ctx.cursor({ kind: 'watch', label: lbl });
+        if (ctx.setStatus) ctx.setStatus({ state: 'watching', stepText: lbl });
+        cmdWatchTick++;
+      }, 2500);
       return await new Promise((resolve, reject) => {
         let out = '';
         let err = '';
@@ -2323,7 +2735,7 @@ const TOOLS = [
         let child;
         try {
           child = spawn(exe, args, { cwd, windowsHide: true, detached: !IS_WIN, env: process.env });
-        } catch (e) { reject(e); return; }
+        } catch (e) { clearInterval(cmdWatchIv); reject(e); return; }
         ctx.registerProcess(child);
         const timer = setTimeout(() => { timedOut = true; killTree(child); }, limit);
         child.stdout.on('data', (d) => {
@@ -2338,8 +2750,9 @@ const TOOLS = [
           if (err.length > 200000) err = err.slice(-200000);
           emitStream(s, 'stderr', { running: true });
         });
-        child.on('error', (e) => { clearTimeout(timer); ctx.unregisterProcess(child); reject(e); });
+        child.on('error', (e) => { clearInterval(cmdWatchIv); clearTimeout(timer); ctx.unregisterProcess(child); reject(e); });
         child.on('close', (code) => {
+          clearInterval(cmdWatchIv);
           clearTimeout(timer);
           ctx.unregisterProcess(child);
           emitStream('', 'meta', { running: false, exitCode: code });
@@ -2788,4 +3201,4 @@ function declarations({ includeScreen = true, cuMode = false } = {}) {
 
 function getTool(name) { return TOOLS.find((t) => t.name === name) || null; }
 
-module.exports = { TOOLS, CU_ACTIONS, declarations, getTool, resolvePath, knownFolders, killTree, stopAllTerminalSessions, isPermanentDeleteCommand, pointsOf, launchApp, makeMatcher, categoryOf, runLiveWebSearch, fetchWebPageText, isSelfOrDesktopForeground, ensureTargetForeground, typeText };
+module.exports = { TOOLS, CU_ACTIONS, declarations, getTool, resolvePath, knownFolders, killTree, stopAllTerminalSessions, isPermanentDeleteCommand, pointsOf, launchApp, makeMatcher, categoryOf, runLiveWebSearch, fetchWebPageText, isSelfOrDesktopForeground, ensureTargetForeground, typeText, WATCH_SNACK_EMOJIS, pickWatchEmoji, formatWatchElapsed, analyzeWatchText, getRunningTerminalSessions };

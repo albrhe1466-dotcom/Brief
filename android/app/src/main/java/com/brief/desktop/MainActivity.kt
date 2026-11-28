@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=219")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=220")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -400,12 +400,12 @@ class MainActivity : AppCompatActivity() {
         }.getOrElse { JSONObject().put("chats", JSONArray()).put("projects", JSONArray()) }
 
         val pkgInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
-        val actualVersionName = pkgInfo?.versionName ?: "2.1.3-beta"
+        val actualVersionName = pkgInfo?.versionName ?: "2.1.4-beta"
         val actualBuildCode = if (pkgInfo != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             pkgInfo.longVersionCode.toInt()
         } else {
             @Suppress("DEPRECATION")
-            pkgInfo?.versionCode ?: 219
+            pkgInfo?.versionCode ?: 220
         }
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
@@ -632,7 +632,7 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startAndroidApkUpdateJson(apkUrl: String, versionTag: String): String {
-            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.3-beta" }
+            val safeVer = versionTag.replace(Regex("[^a-zA-Z0-9._-]"), "").removePrefix("v").ifEmpty { "2.1.4-beta" }
             val cleanUrl = apkUrl.trim().ifEmpty {
                 "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v$safeVer.apk"
             }

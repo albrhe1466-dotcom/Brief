@@ -152,7 +152,6 @@
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
       text-rendering: optimizeLegibility;
-      selection-background-color: var(--blue-600);
     }
 
     ::selection {
@@ -7324,7 +7323,7 @@
             <span id="header-update-label">Update</span>
           </button>
 
-          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.3-beta">
+          <button class="header-pill-btn" id="whats-new-open-btn" type="button" title="What's New in Brief v2.1.4-beta">
             <span aria-hidden="true">✨</span>
             <span>News</span>
           </button>
@@ -8117,15 +8116,15 @@
               <div class="role-grid">
                 <div class="field-group">
                   <label class="field-label" for="opt-max-steps">Max Steps per Task</label>
-                  <input class="text-input mono" id="opt-max-steps" type="number" min="5" max="200">
+                  <input class="text-input mono" id="opt-max-steps" type="number" min="5" max="300">
                 </div>
                 <div class="field-group">
                   <label class="field-label" for="opt-deep-min-mins">Deep Studio Min Work (min)</label>
-                  <input class="text-input mono" id="opt-deep-min-mins" type="number" min="0" max="20">
+                  <input class="text-input mono" id="opt-deep-min-mins" type="number" min="0" max="30">
                 </div>
                 <div class="field-group">
-                  <label class="field-label" for="opt-deep-max-mins">Max Work Ceiling (min)</label>
-                  <input class="text-input mono" id="opt-deep-max-mins" type="number" min="5" max="30">
+                  <label class="field-label" for="opt-deep-max-mins">Max Work Endurance (5–240 min / 4h)</label>
+                  <input class="text-input mono" id="opt-deep-max-mins" type="number" min="5" max="240">
                 </div>
                 <div class="field-group">
                   <label class="field-label" for="opt-cursor-speed-profile">Mouse Speed Mode</label>
@@ -8141,8 +8140,8 @@
                   <input class="text-input mono" id="opt-cursor-speed" type="number" min="0" max="1500">
                 </div>
                 <div class="field-group">
-                  <label class="field-label" for="opt-cmd-timeout">Command Timeout (sec)</label>
-                  <input class="text-input mono" id="opt-cmd-timeout" type="number" min="10" max="1800">
+                  <label class="field-label" for="opt-cmd-timeout">Command Timeout (sec · up to 4h)</label>
+                  <input class="text-input mono" id="opt-cmd-timeout" type="number" min="10" max="14400">
                 </div>
                 <div class="field-group">
                   <label class="field-label" for="opt-display-target">Target Display</label>
@@ -8316,7 +8315,7 @@
         <div class="modal-title" id="whats-new-title">
           <img src="assets/logo.png" alt="" style="width: 24px; height: 24px; border-radius: 5px;">
           <span>What’s New in Brief</span>
-          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.3-beta</span>
+          <span class="news-version-pill" id="news-live-version-pill">News · v2.1.4-beta</span>
         </div>
         <button class="icon-btn" id="whats-new-close-x" type="button" title="Close What's New" aria-label="Close What's New" style="background: #dc2626; border: 1px solid #f87171; color: #ffffff; width: 32px; height: 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(220, 38, 38, 0.45);">✕</button>
       </div>
@@ -8324,10 +8323,10 @@
         <div class="news-hero-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:220px;">
             <div id="news-live-headline" style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 3px;">
-              Brief v2.1.3-beta — Voice Memo Waveform &amp; Speech-to-Text Across All 4 LLMs, Live Web Search Website Logos + ▾ Sources Drawer &amp; 4-Stage Claude Motion
+              Brief v2.1.4-beta — Stay, Watch &amp; Verify Engine (5 Min – 4 Hours Endurance), Wholesome 👀🍿 Watching Cursor &amp; Final Output Verification
             </div>
             <div id="news-update-status" style="font-size: 12px; color: var(--text-secondary);">
-              You are on <strong>v2.1.3-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Samsung, Honor &amp; ColorOS).
+              You are on <strong>v2.1.4-beta</strong> · Live global update &amp; news sync active for Windows, Linux &amp; Android (Honor MagicOS, Samsung &amp; ColorOS).
             </div>
           </div>
           <div id="news-update-strip" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -8337,27 +8336,27 @@
         </div>
 
         <div class="news-gallery-grid" id="whats-new-gallery">
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-voice-memo.svg" data-news-caption="Brief v2.1.3-beta Voice Memo &amp; Instant Speech-to-Text Across All 4 LLMs (Gemini, OpenAI, Claude &amp; OpenRouter) — Tap Mic next to Send for live waveform memo &amp; crystal-clear text conversion">
-            <img class="news-photo-thumb" src="assets/news-v213-voice-memo.svg" alt="Brief v2.1.3-beta Voice Memo Waveform and Speech-to-Text across all 4 LLMs">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v214-stay-watch.svg" data-news-caption="Brief v2.1.4-beta Stay, Watch &amp; Verify Engine (5 Min – 4 Hours Endurance) — Stays patiently for terminals, OS flashers/validators, AI video generators &amp; other AI agents with wholesome 👀🍿 / 👀🍕 / 👀☕ cursor labels">
+            <img class="news-photo-thumb" src="assets/news-v214-stay-watch.svg" alt="Brief v2.1.4-beta Stay Watch and Verify Engine with 5m to 4h endurance">
             <div class="news-photo-caption">
-              <div class="news-photo-title">Voice Memo &amp; Speech-to-Text (All 4 LLMs)</div>
-              <div class="news-photo-sub">Tap the Microphone next to Send to transform your message bar into a live waveform memo and convert your voice to exact text across Gemini, OpenAI, Claude &amp; OpenRouter.</div>
+              <div class="news-photo-title">Stay, Watch &amp; Verify (5 Min – 4 Hours)</div>
+              <div class="news-photo-sub">Never quits while a terminal, OS flasher/validator, video generator, or another AI agent is loading — shows 👀🍿 watching cursor, catches errors/denials &amp; verifies final outputs!</div>
             </div>
           </button>
 
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-web-search.svg" data-news-caption="Brief v2.1.3-beta Live Web Search Website Favicon Logos &amp; Expandable Visited Links Drawer (▾) — See where Brief searches, inspect every link, and click the blue Open button">
-            <img class="news-photo-thumb" src="assets/news-v213-web-search.svg" alt="Brief v2.1.3-beta Live Web Search Website Logos and Expandable Sources">
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-voice-memo.svg" data-news-caption="Brief Voice Memo &amp; Instant Speech-to-Text Across All 4 LLMs (Gemini, OpenAI, Claude &amp; OpenRouter) + PC Inserted Mic Selector">
+            <img class="news-photo-thumb" src="assets/news-v213-voice-memo.svg" alt="Brief Voice Memo Waveform and Speech-to-Text across all 4 LLMs">
+            <div class="news-photo-caption">
+              <div class="news-photo-title">Voice Memo &amp; PC Mic Selector</div>
+              <div class="news-photo-sub">Tap the Microphone next to Send for live waveform speech-to-text across Gemini, OpenAI, Claude &amp; OpenRouter (plus PC/laptop mic switcher).</div>
+            </div>
+          </button>
+
+          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-web-search.svg" data-news-caption="Brief Live Web Search Website Favicon Logos &amp; Expandable Visited Links Drawer (▾) — See where Brief searches, inspect every link, and click the blue Open button">
+            <img class="news-photo-thumb" src="assets/news-v213-web-search.svg" alt="Brief Live Web Search Website Logos and Expandable Sources">
             <div class="news-photo-caption">
               <div class="news-photo-title">Web Search Logos &amp; ▾ Visited Links</div>
               <div class="news-photo-sub">Shows real website logos on the right while searching the web, with an expandable ▾ drawer of queries, visited websites, and a blue Open Link button.</div>
-            </div>
-          </button>
-
-          <button class="news-photo-card" type="button" data-news-src="assets/news-v213-claude-motion.svg" data-news-caption="Brief v2.1.3-beta 4-Stage Claude #d9693f Motion (Starburst → 1.2× Faster 3-Ball Orbit → Aligned Pulse → Jumping Wave), Welcome-Only Clawd &amp; Calm Redirect Memory">
-            <img class="news-photo-thumb" src="assets/news-v213-claude-motion.svg" alt="Brief v2.1.3-beta Claude 4-Stage Motion and Brief Work Welcome Clawd">
-            <div class="news-photo-caption">
-              <div class="news-photo-title">4-Stage #d9693f Motion &amp; Clean Status</div>
-              <div class="news-photo-sub">Starburst morphs into 1.2× faster 3-ball orbit (no rings), aligns into soft pulse &amp; jumping wave, hides Clawd while working, and fixes model-switch status.</div>
             </div>
           </button>
         </div>
@@ -8366,13 +8365,13 @@
           <div class="news-col-card">
             <div class="news-col-heading">
               <span>✨</span>
-              <span id="news-col-ver-label">What’s New in v2.1.3-beta</span>
+              <span id="news-col-ver-label">What’s New in v2.1.4-beta</span>
             </div>
             <ul class="news-list" id="news-live-bullets">
-              <li><strong>Voice Memo Waveform &amp; Speech-to-Text Across All 4 LLMs + PC Mic Selector:</strong> Tap the Microphone button beside Send to turn your message bar into a live audio waveform memo and convert voice to exact text across Gemini, OpenAI, Claude &amp; OpenRouter; on PC &amp; laptops, click the integrated arrow inside the mic pill to see and pick inserted Headphones, 3.5mm Aux, USB, or built-in mics (automatically hidden on phones &amp; tablets).</li>
-              <li><strong>Live Web Search Website Logos &amp; Expandable <code class="mono">▾</code> Sources Drawer:</strong> Displays real website favicons on the right whenever Brief searches the web, expanding to show exact search queries, visited links, and a crisp blue <strong>Open</strong> button for every website.</li>
-              <li><strong>4-Stage Claude <code class="mono">#d9693f</code> Motion (<code class="mono">1.2×</code> Faster) &amp; Main-Menu Clawd:</strong> Morphs smoothly from starburst petals into 3 pure orbiting balls (<code class="mono">1.2×</code> faster, zero rings), aligns into wave pulse &amp; jumping loading dots, and shows Clawd strictly on the Brief Work main menu.</li>
-              <li><strong>Fixed Model-Switch Status &amp; Added Calm Redirect Memory:</strong> Fixed stuck <code class="mono">Checking…</code> / <code class="mono">Ready</code> indicators when switching providers and upgraded multi-turn redirect memory (<code class="mono">“No, open X instead of Y”</code>) across all 4 AIs.</li>
+              <li><strong>Stay, Watch &amp; Verify Engine (5 Min Ready → 4 Hours Max):</strong> Brief never quits early while a terminal, installer, OS flasher/validator, AI video generator, download, or another AI agent is still loading — it stays patiently, monitors progress, and catches errors, denials, or permission prompts immediately.</li>
+              <li><strong>Wholesome Eye + Snack Watching Cursor (<code class="mono">👀🍿</code> / <code class="mono">👀🍕</code> / <code class="mono">👀☕</code> / <code class="mono">👀🍪</code>):</strong> Displays rotating wholesome watching status pills with live elapsed timers right beside the floating cursor and status bar across Windows, Linux &amp; Android (Background &amp; Live Visible modes).</li>
+              <li><strong>Real Final Verification Across All 4 Models (Gemini, OpenAI, Claude &amp; OpenRouter):</strong> After long tasks complete, Brief verifies terminal exit codes, generated outputs, and written drives/SD cards before saying Done.</li>
+              <li><strong>Long-Session Endurance:</strong> Smart multi-hour context compaction + Android partial WakeLock keep 5-minute to 4-hour sessions steady on Honor MagicOS, Samsung One UI, Linux &amp; Windows.</li>
             </ul>
           </div>
 
@@ -8611,9 +8610,9 @@
           minimizeDuringAgent: true,
           showOverlay: true,
           showWidget: false,
-          maxSteps: 45,
+          maxSteps: 180,
           deepWorkMinMinutes: 0,
-          deepWorkMaxMinutes: 25,
+          deepWorkMaxMinutes: 240,
           multiAgentParallel: true,
           verifyTaskBeforeFinish: true,
           screenshotMaxWidth: 3840,
@@ -8623,7 +8622,7 @@
           cursorSpeedMs: 200,
           cursorSpeedProfile: 'adaptive',
           alignCursorBack: true,
-          commandTimeoutSec: 120,
+          commandTimeoutSec: 300,
           pasteLongText: false,
           sidebarCollapsed: false,
           sidebarWidth: 260,
@@ -13495,6 +13494,7 @@
           const s = String(m || '').trim();
           if (!s) return '';
           if (s.length <= 16) return s;
+          if (s.length <= 16) return s;
           return s.slice(0, 4) + '••••' + s.slice(-4);
         };
         const slotDefs = [
@@ -13949,12 +13949,12 @@
         $('opt-send-enter').checked = State.settings.sendWithEnter !== false;
         $('opt-sound-chime').checked = !!State.settings.soundChime;
         $('opt-align-cursor').checked = State.settings.alignCursorBack !== false;
-        $('opt-max-steps').value = State.settings.maxSteps || 45;
+        $('opt-max-steps').value = State.settings.maxSteps || 180;
         $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 0;
-        $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 25;
+        $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 240;
         $('opt-cursor-speed-profile').value = State.settings.cursorSpeedProfile || 'adaptive';
         $('opt-cursor-speed').value = State.settings.cursorSpeedMs !== undefined ? State.settings.cursorSpeedMs : 200;
-        $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 120;
+        $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 300;
 
         const dispSelect = $('opt-display-target');
         const opts = [
@@ -14174,8 +14174,8 @@
          11. MODALS, SHORTCUTS, EVENT BINDING, IPC & SELF-TEST
       ==================================================================== */
 
-      const BRIEF_NEWS_VERSION = '2.1.3-beta';
-      const BRIEF_BUILD_NUMBER = 219;
+      const BRIEF_NEWS_VERSION = '2.1.4-beta';
+      const BRIEF_BUILD_NUMBER = 220;
       let latestRemoteRelease = null;
 
       if (api && api.onUpdateProgress) {
@@ -15451,11 +15451,11 @@
             if (api && api.updateSettings) await api.updateSettings({ [key]: v }).catch(() => {});
           });
         };
-        numSave('opt-max-steps', 'maxSteps', 5, 200);
-        numSave('opt-deep-min-mins', 'deepWorkMinMinutes', 0, 20);
-        numSave('opt-deep-max-mins', 'deepWorkMaxMinutes', 5, 30);
+        numSave('opt-max-steps', 'maxSteps', 5, 300);
+        numSave('opt-deep-min-mins', 'deepWorkMinMinutes', 0, 30);
+        numSave('opt-deep-max-mins', 'deepWorkMaxMinutes', 5, 240);
         numSave('opt-cursor-speed', 'cursorSpeedMs', 0, 1500);
-        numSave('opt-cmd-timeout', 'commandTimeoutSec', 10, 1800);
+        numSave('opt-cmd-timeout', 'commandTimeoutSec', 10, 14400);
 
         $('opt-cursor-speed-profile').addEventListener('change', async (e) => {
           State.settings.cursorSpeedProfile = e.target.value;
