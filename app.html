@@ -8116,7 +8116,7 @@
               <div class="role-grid">
                 <div class="field-group">
                   <label class="field-label" for="opt-max-steps">Max Steps per Task</label>
-                  <input class="text-input mono" id="opt-max-steps" type="number" min="5" max="300">
+                  <input class="text-input mono" id="opt-max-steps" type="number" min="5" max="400">
                 </div>
                 <div class="field-group">
                   <label class="field-label" for="opt-deep-min-mins">Deep Studio Min Work (min)</label>
@@ -8610,7 +8610,7 @@
           minimizeDuringAgent: true,
           showOverlay: true,
           showWidget: false,
-          maxSteps: 180,
+          maxSteps: 240,
           deepWorkMinMinutes: 0,
           deepWorkMaxMinutes: 240,
           multiAgentParallel: true,
@@ -8622,7 +8622,7 @@
           cursorSpeedMs: 200,
           cursorSpeedProfile: 'adaptive',
           alignCursorBack: true,
-          commandTimeoutSec: 300,
+          commandTimeoutSec: 1080,
           pasteLongText: false,
           sidebarCollapsed: false,
           sidebarWidth: 260,
@@ -13949,12 +13949,12 @@
         $('opt-send-enter').checked = State.settings.sendWithEnter !== false;
         $('opt-sound-chime').checked = !!State.settings.soundChime;
         $('opt-align-cursor').checked = State.settings.alignCursorBack !== false;
-        $('opt-max-steps').value = State.settings.maxSteps || 180;
+        $('opt-max-steps').value = State.settings.maxSteps || 240;
         $('opt-deep-min-mins').value = State.settings.deepWorkMinMinutes !== undefined ? State.settings.deepWorkMinMinutes : 0;
         $('opt-deep-max-mins').value = State.settings.deepWorkMaxMinutes !== undefined ? State.settings.deepWorkMaxMinutes : 240;
         $('opt-cursor-speed-profile').value = State.settings.cursorSpeedProfile || 'adaptive';
         $('opt-cursor-speed').value = State.settings.cursorSpeedMs !== undefined ? State.settings.cursorSpeedMs : 200;
-        $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 300;
+        $('opt-cmd-timeout').value = State.settings.commandTimeoutSec || 1080;
 
         const dispSelect = $('opt-display-target');
         const opts = [
@@ -14175,7 +14175,7 @@
       ==================================================================== */
 
       const BRIEF_NEWS_VERSION = '2.1.4-beta';
-      const BRIEF_BUILD_NUMBER = 220;
+      const BRIEF_BUILD_NUMBER = 221;
       let latestRemoteRelease = null;
 
       if (api && api.onUpdateProgress) {
@@ -15451,7 +15451,7 @@
             if (api && api.updateSettings) await api.updateSettings({ [key]: v }).catch(() => {});
           });
         };
-        numSave('opt-max-steps', 'maxSteps', 5, 300);
+        numSave('opt-max-steps', 'maxSteps', 5, 400);
         numSave('opt-deep-min-mins', 'deepWorkMinMinutes', 0, 30);
         numSave('opt-deep-max-mins', 'deepWorkMaxMinutes', 5, 240);
         numSave('opt-cursor-speed', 'cursorSpeedMs', 0, 1500);

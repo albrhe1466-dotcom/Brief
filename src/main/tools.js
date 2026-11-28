@@ -51,9 +51,10 @@ function formatWatchElapsed(ms) {
   return secs + 's';
 }
 
-const DEFAULT_LOADING_RE = /\b(loading|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|bundling|packaging|writing|formatting|copying|transferring|syncing|initializing|starting|processing|working|thinking|waiting|please\s+wait|in\s+progress|almost\s+there|remaining|eta\b|queued|preparing|finishing|checking\s+updates)\b|\b(?:[1-9]?\d(?:\.\d+)?)\s*%/i;
-const DEFAULT_ERROR_RE = /\b(error|failed|failure|denied|access\s+is\s+denied|permission\s+denied|rejected|unable\s+to|could\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|checksum\s+mismatch|validation\s+failed|flash\s+failed|something\s+went\s+wrong|corrupt(?:ed)?|not\s+enough\s+space|device\s+not\s+found|timed?\s*out|do\s+you\s+want\s+to\s+allow|user\s+account\s+control|try\s+again|retry|\[y\/n\]|press\s+any\s+key)\b/i;
-const DEFAULT_DONE_RE = /\b(flash\s+complete|completed?\s+successfully|finished\s+successfully|all\s+done|100%\s*(?:complete|done|finished)?|successfully\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\s+to\s+download|video\s+ready|export\s+complete|build\s+succeeded|done!)\b/i;
+const DEFAULT_LOADING_RE = /\b(loading|reading|thinking|thought\s+for|analyzing|searching|exploring|inspecting|planning|editing|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|bundling|packaging|writing|formatting|copying|transferring|syncing|initializing|starting|processing|working|waiting|please\s+wait|in\s+progress|almost\s+there|remaining|eta\b|queued|preparing|finishing|checking\s+updates|stop\s+generating|running\s+command)\b|\b(?:[1-9]?\d(?:\.\d+)?)\s*%/i;
+const DEFAULT_PERMISSION_RE = /\b(allow\s+once|allow\s+always|allow\s+this|accept\s+all|approve|permission\s+required|wants?\s+to\s+(?:access|run|open|edit|read|write|execute|use)|do\s+you\s+want\s+to\s+allow|user\s+account\s+control|grant\s+(?:access|permission)|yes,\s*proceed|run\s+command\?|open\s+folder\?|trust\s+(?:this|the)\s+(?:folder|workspace|authors?)|\[y\/n\]|\(y\/n\)|press\s+any\s+key|click\s+allow|ask\s+for\s+permission)\b/i;
+const DEFAULT_ERROR_RE = /\b(error:|failed|failure|denied|access\s+is\s+denied|permission\s+denied|rejected|unable\s+to|could\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|checksum\s+mismatch|validation\s+failed|flash\s+failed|something\s+went\s+wrong|corrupt(?:ed)?|not\s+enough\s+space|device\s+not\s+found|timed?\s*out|try\s+again|retry)\b/i;
+const DEFAULT_DONE_RE = /\b(flash\s+complete|completed?\s+successfully|finished\s+successfully|all\s+done|100%\s*(?:complete|done|finished)|successfully\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\s+to\s+download|video\s+ready|export\s+complete|build\s+succeeded|done!)\b/i;
 
 function analyzeWatchText(rawText, doneKeywords, errorKeywords) {
   const txt = String(rawText || '').replace(/\s+/g, ' ').trim();
@@ -66,12 +67,13 @@ function analyzeWatchText(rawText, doneKeywords, errorKeywords) {
     }
     return '';
   };
+  const permM = DEFAULT_PERMISSION_RE.exec(txt);
   const customErr = findCustom(errorKeywords);
   const errM = customErr ? [customErr] : DEFAULT_ERROR_RE.exec(txt);
   const customDone = findCustom(doneKeywords);
   const doneM = customDone ? [customDone] : DEFAULT_DONE_RE.exec(txt);
 
-  // Detect active percentage strictly < 100% OR active loading/flashing/validating/generating words
+  // Detect active percentage strictly < 100% OR active loading/reading/thinking/flashing/validating/generating words
   let loadingHit = '';
   const pctRe = /\b(\d{1,3})(?:\.\d+)?\s*%/g;
   let pm;
@@ -80,17 +82,19 @@ function analyzeWatchText(rawText, doneKeywords, errorKeywords) {
     if (val >= 0 && val < 100) { loadingHit = pm[0]; break; }
   }
   if (!loadingHit) {
-    const lm = /\b(loading|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\s+wait|in\s+progress|remaining|eta\b|queued|preparing|working\.\.\.|thinking\.\.\.)\b/i.exec(txt);
+    const lm = /\b(loading|reading|thinking|thought\s+for|analyzing|searching|exploring|inspecting|planning|editing|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\s+wait|in\s+progress|remaining|eta\b|queued|preparing|stop\s+generating|running\s+command|working\.\.\.|thinking\.\.\.)\b/i.exec(txt);
     if (lm) loadingHit = lm[0];
   }
 
-  // Critical: if screen says "Validating..." or "Flashing 99%" or "Rendering...", NEVER treat as done yet!
-  const stillActivePhase = /\b(flashing|validating|verifying|generating|rendering|downloading|installing|extracting|decompressing|compiling|building|writing|please\s+wait|in\s+progress|loading|remaining)\b/i.test(txt);
-  const isDone = !!doneM && (!stillActivePhase || !!customDone && !/\b(validating|flashing|rendering|generating)\b/i.test(loadingHit));
+  // Critical: if screen says "Validating...", "Flashing 99%", "Reading...", "Thinking...", or "Rendering...", NEVER treat as done yet!
+  const stillActivePhase = /\b(reading|thinking|analyzing|searching|flashing|validating|verifying|generating|rendering|downloading|installing|extracting|decompressing|compiling|building|writing|formatting|copying|please\s+wait|in\s+progress|loading|remaining|stop\s+generating)\b/i.test(txt);
+  const isDone = !!doneM && (!stillActivePhase || (!!customDone && !/\b(validating|flashing|rendering|generating|reading|thinking)\b/i.test(loadingHit)));
 
   return {
     isLoading: !!loadingHit,
     loadingHit,
+    hasPermissionPrompt: !!permM,
+    permissionHit: permM ? String(permM[0]) : '',
     hasError: !!errM,
     errorHit: errM ? String(errM[0]) : '',
     isDone,
@@ -1893,23 +1897,23 @@ const TOOLS = [
   },
   {
     name: 'watch_and_wait', kind: 'info', observe: true,
-    description: 'Stay and actively watch a running process (terminal command, installer, OS flasher/validator like BalenaEtcher, AI video/image generator, build, download, or another AI agent) until it completes, errors/denies, needs input, or hits a checkpoint. Supports 1 to 240 minutes (4 hours!) with zero extra LLM calls while waiting, showing wholesome watching+snack cursor emojis (👀🍿 / 👀🍕 / 👀☕). Works in BOTH Background and Live Visible modes!',
+    description: 'Stay PATIENTLY and quietly watch ANY running process (Claude AI reading/thinking, ChatGPT, any other AI agent, terminal command, BalenaEtcher, Rufus, OS flasher/validator, AI video generator, installer, download, or build) until the REAL final result, a permission prompt (supports granting 3–16 permissions in a row!), or an error appears. Supports up to 240 minutes (4 hours!) with zero extra LLM calls and zero "I am still waiting" chat spam, showing wholesome watching+snack cursor emojis (👀🍿 / 👀🍕 / 👀☕). Works in BOTH Background and Live Visible modes!',
     parameters: { type: 'object', properties: {
-      reason: { type: 'string', description: 'What Brief is watching (e.g. "terminal build", "flashing & validating OS image", "AI video generation", "other AI agent reply").' },
+      reason: { type: 'string', description: 'What Brief is watching (e.g. "Claude AI working", "terminal build", "BalenaEtcher/Rufus flashing & validating", "AI video generation").' },
       session_id: { type: 'string', description: 'Optional terminal session_id from terminal_open or run_command(background=true) to monitor directly.' },
-      max_wait_minutes: { type: 'number', description: 'Max minutes to watch in this cycle (default 15, min 1, max 240 = 4 hours). For multi-hour jobs, checkpoints return every ~12m so you can visually verify and continue watching.' },
+      max_wait_minutes: { type: 'number', description: 'Max minutes to stay and watch patiently (default 30, min 1, max 240 = 4 hours). Stays silently up to 30m per cycle so it never interrupts prematurely!' },
       check_interval_sec: { type: 'number', description: 'Seconds between screen/terminal checks (default 8, min 3, max 45).' },
-      done_keywords: { type: 'array', items: { type: 'string' }, description: 'Optional words/phrases indicating true final completion (e.g. ["Flash Complete", "Finished", "Video ready"]).' },
-      error_keywords: { type: 'array', items: { type: 'string' }, description: 'Optional words/phrases indicating an error, denial, or prompt needing immediate intervention.' },
+      done_keywords: { type: 'array', items: { type: 'string' }, description: 'Optional words/phrases indicating true final completion (e.g. ["Flash Complete", "READY", "Finished", "Video ready"]).' },
+      error_keywords: { type: 'array', items: { type: 'string' }, description: 'Optional words/phrases indicating an error, denial, or crash needing immediate intervention.' },
       watch_mode: { type: 'string', enum: ['auto', 'screen', 'terminal', 'both'], description: 'What to watch: "auto" (terminal+screen if session_id given, else screen), "terminal", "screen", or "both".' }
     }, required: ['reason'] },
-    describe: (a) => '👀🍿 Stay & watch: ' + String(a.reason || 'running process').slice(0, 64),
+    describe: (a) => '👀🍿 Stay & watch patiently: ' + String(a.reason || 'running process').slice(0, 64),
     async run(a, ctx) {
       const reason = String(a.reason || 'process').trim().slice(0, 44);
       const sessionId = String(a.session_id || '').trim();
-      const reqMaxMin = Math.max(1, Math.min(240, Number(a.max_wait_minutes) || 15));
-      // Checkpoint cleanly every 12 minutes on multi-hour tasks so the AI can visually inspect & continue up to 4 hours total!
-      const cycleBudgetMs = Math.min(reqMaxMin * 60 * 1000, 12 * 60 * 1000);
+      const reqMaxMin = Math.max(1, Math.min(240, Number(a.max_wait_minutes) || 30));
+      // Stay quietly up to 30 full minutes per cycle (so 16–30 min jobs finish smoothly with ZERO impatient wake-ups; multi-hour jobs up to 4h checkpoint cleanly every 30m!)
+      const cycleBudgetMs = Math.min(reqMaxMin * 60 * 1000, 30 * 60 * 1000);
       const baseIntervalMs = Math.max(3, Math.min(45, Number(a.check_interval_sec) || 8)) * 1000;
       const doneKws = Array.isArray(a.done_keywords) ? a.done_keywords : [];
       const errorKws = Array.isArray(a.error_keywords) ? a.error_keywords : [];
@@ -1947,13 +1951,13 @@ const TOOLS = [
         }
       };
 
-      emitWatchBanner('live');
+      emitWatchBanner('patiently');
 
       while (Date.now() < deadline) {
         if (ctx.isStopped()) throw new Error('Stopped by user.');
-        // Adaptive sleep: responsive 250ms stop checks while waiting baseIntervalMs (gently scales up slightly after 3m)
+        // Adaptive sleep: responsive 250ms stop checks while waiting baseIntervalMs
         const elapsedNow = Date.now() - started;
-        const intervalMs = elapsedNow > 180000 ? Math.min(25000, Math.round(baseIntervalMs * 1.6)) : baseIntervalMs;
+        const intervalMs = elapsedNow > 240000 ? Math.min(22000, Math.round(baseIntervalMs * 1.5)) : baseIntervalMs;
         const nextCheckAt = Math.min(deadline, Date.now() + intervalMs);
         while (Date.now() < nextCheckAt) {
           if (ctx.isStopped()) throw new Error('Stopped by user.');
@@ -1973,7 +1977,7 @@ const TOOLS = [
               reason,
               watched_duration: formatWatchElapsed(Date.now() - started),
               checks,
-              note: 'Terminal session ' + sessionId + ' is no longer active. Verify the final result now.'
+              note: 'Terminal session ' + sessionId + ' is no longer active. Verify and test the real final result now.'
             };
           }
           const fullOut = String(sess.output || '');
@@ -1996,8 +2000,23 @@ const TOOLS = [
               checks,
               output_tail: truncateMiddle(fullOut.slice(-10000), 10000),
               note: okExit
-                ? 'Terminal command finished with exit code 0! Inspect the output and verify the final artifact/result before finishing.'
-                : 'Terminal command exited with error code ' + sess.exitCode + '! Inspect stderr/output, diagnose what went wrong, and fix or report it.'
+                ? 'Terminal command finished with exit code 0! Now TEST and verify the real final outcome before declaring done.'
+                : 'Terminal command exited with error code ' + sess.exitCode + '! Inspect stderr/output, diagnose what went wrong, fix or honestly tell the user.'
+            };
+          }
+          if (termSig.hasPermissionPrompt) {
+            return {
+              ok: true,
+              outcome: 'permission_prompt',
+              source: 'terminal',
+              matched: termSig.permissionHit,
+              reason,
+              session_id: sessionId,
+              running: true,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              output_tail: truncateMiddle(fullOut.slice(-6000), 6000),
+              note: 'Terminal is asking for permission/confirmation ("' + termSig.permissionHit + '")! Respond with terminal_send (e.g. y / Enter) and IMMEDIATELY call watch_and_wait again — do NOT stop after granting 1 permission (supports up to 16 permission grants)!'
             };
           }
           if (termSig.hasError) {
@@ -2012,7 +2031,7 @@ const TOOLS = [
               watched_duration: formatWatchElapsed(Date.now() - started),
               checks,
               output_tail: truncateMiddle(fullOut.slice(-8000), 8000),
-              note: 'Detected error/prompt "' + termSig.errorHit + '" in terminal output while watching! Inspect and respond/fix immediately.'
+              note: 'Detected error/failure ("' + termSig.errorHit + '") in terminal output while watching! Inspect and fix or report honestly.'
             };
           }
           if (termSig.isDone && !termSig.isLoading) {
@@ -2027,13 +2046,13 @@ const TOOLS = [
               watched_duration: formatWatchElapsed(Date.now() - started),
               checks,
               output_tail: truncateMiddle(fullOut.slice(-8000), 8000),
-              note: 'Detected completion signal "' + termSig.doneHit + '" in terminal! Verify the final outcome now.'
+              note: 'Detected completion signal "' + termSig.doneHit + '" in terminal! Now TEST and verify the actual final result.'
             };
           }
           if (termSig.loadingHit) lastLoadingSignal = termSig.loadingHit.slice(0, 18);
         }
 
-        // 2) Monitor live screen visuals + OCR + UIA (terminals, flashers/validators, AI video generators, other AI agents, installers)
+        // 2) Monitor live screen visuals + OCR + UIA (Claude AI, ChatGPT, other AI agents, terminals, BalenaEtcher, Rufus, video generators, installers)
         if (watchScreen && ctx.screen) {
           const curShot = await ctx.screen.capture({ format: 'jpeg' }).catch(() => null);
           const diffPct = quickShotDiffPct(prevShot, curShot);
@@ -2042,7 +2061,7 @@ const TOOLS = [
           lastTextSnippet = screenText.slice(0, 1800);
           const sig = analyzeWatchText(screenText, doneKws, errorKws);
 
-          if (diffPct !== null && diffPct >= 0.35) {
+          if (diffPct !== null && diffPct >= 0.25) {
             sawActivity = true;
             settledSince = 0;
           }
@@ -2054,7 +2073,23 @@ const TOOLS = [
             lastLoadingSignal = '';
           }
 
-          // Immediate wake on error / denial / UAC / popup / failure!
+          // Immediate wake on permission / approval prompt (so Brief keeps granting permissions 1..16 and immediately resumes watching!)
+          if (sig.hasPermissionPrompt && !sig.isDone) {
+            return {
+              ok: true,
+              outcome: 'permission_prompt',
+              source: 'screen',
+              matched: sig.permissionHit,
+              reason,
+              watched_duration: formatWatchElapsed(Date.now() - started),
+              checks,
+              visual_diff_pct: diffPct,
+              screen_text_excerpt: lastTextSnippet,
+              note: 'Permission / approval prompt detected ("' + sig.permissionHit + '")! Grant it (click Allow / Approve / Accept / Proceed / Yes / Open Folder) and IMMEDIATELY call watch_and_wait again — NEVER stop after granting 1 permission (apps & AI agents commonly ask 3–16 times)!'
+            };
+          }
+
+          // Immediate wake on real error / failure / denial / crash!
           if (sig.hasError && !sig.isDone) {
             return {
               ok: false,
@@ -2066,12 +2101,12 @@ const TOOLS = [
               checks,
               visual_diff_pct: diffPct,
               screen_text_excerpt: lastTextSnippet,
-              note: 'Alert/Error/Prompt detected on screen ("' + sig.errorHit + '") while watching! Inspect the attached fresh screenshot carefully to handle/fix/approve or report it.'
+              note: 'Error / Failure detected on screen ("' + sig.errorHit + '") while watching! Inspect the attached fresh screenshot carefully to diagnose, fix/retry, or honestly report it.'
             };
           }
 
-          // Wake on confirmed completion ONLY when active loading/validating is finished!
-          if (sig.isDone && !sig.isLoading && (Date.now() - started) >= 4000) {
+          // Wake on confirmed completion ONLY when active loading/reading/thinking/flashing/validating is completely finished!
+          if (sig.isDone && !sig.isLoading && (Date.now() - started) >= 5000) {
             return {
               ok: true,
               outcome: 'completed',
@@ -2082,15 +2117,15 @@ const TOOLS = [
               checks,
               visual_diff_pct: diffPct,
               screen_text_excerpt: lastTextSnippet,
-              note: 'Completion signal "' + sig.doneHit + '" detected on screen and loading stopped! Visually inspect the fresh screenshot AND verify the final result/drive/file before declaring done.'
+              note: 'Completion signal "' + sig.doneHit + '" detected on screen and loading stopped! Now TEST & VERIFY the actual final output/drive/files/app before saying done (do NOT just assume it worked!).'
             };
           }
 
-          // If screen stopped changing after real progress AND zero loading signals remain for >= 35s, wake up to verify!
-          if (!sig.isLoading && (diffPct === null || diffPct < 0.25)) {
+          // Be TRULY PATIENT: only wake on stillness after 3–4 FULL MINUTES (180s–240s) of ZERO pixel change AND ZERO loading/reading/thinking/progress signals!
+          if (!sig.isLoading && (diffPct === null || diffPct < 0.2)) {
             if (!settledSince) settledSince = Date.now();
             const stillMs = Date.now() - settledSince;
-            const settleThresholdMs = sawActivity ? 35000 : 50000;
+            const settleThresholdMs = sawActivity ? 180000 : 240000;
             if (stillMs >= settleThresholdMs) {
               return {
                 ok: true,
@@ -2101,14 +2136,14 @@ const TOOLS = [
                 checks,
                 visual_diff_pct: diffPct,
                 screen_text_excerpt: lastTextSnippet,
-                note: 'Screen activity settled with no active loading indicator detected. Look closely at the attached screenshot: if the process truly finished, verify the output/drive/file; if it is still waiting or progressing slowly, call watch_and_wait again!'
+                note: 'Screen stayed completely unchanged with no loading/progress indicators for ' + formatWatchElapsed(stillMs) + '. Inspect the fresh screenshot closely: if the final result arrived, TEST & verify it; if a permission button or next step is waiting, click it; if still slowly running, call watch_and_wait again WITHOUT telling the user "I am still waiting"!'
               };
             }
           }
         }
       }
 
-      // Clean checkpoint after 12m (or requested max_wait_minutes) — allows seamless 3-4 hour total endurance!
+      // Clean 30-min checkpoint for multi-hour jobs (up to 4 hours total) — stay quiet, NEVER print "I am still waiting"!
       return {
         ok: true,
         outcome: 'checkpoint',
@@ -2117,7 +2152,7 @@ const TOOLS = [
         checks,
         still_loading_hint: lastLoadingSignal || 'check attached screenshot',
         screen_text_excerpt: lastTextSnippet,
-        note: 'Watch checkpoint reached after ' + formatWatchElapsed(Date.now() - started) + '. Inspect the fresh screenshot: if it is STILL loading/flashing/validating/generating, call watch_and_wait again to keep watching (up to 4 hours total)! If finished, verify the final result.'
+        note: 'Silent 30m watch checkpoint reached (' + formatWatchElapsed(Date.now() - started) + '). DO NOT output a chat reply saying "I am still waiting"! Look at the fresh screenshot: if STILL loading/flashing/validating/reading/generating, immediately call watch_and_wait again (up to 4 hours total). If finished, TEST & verify the final result!'
       };
     }
   },
@@ -2714,7 +2749,7 @@ const TOOLS = [
         };
       }
 
-      const limit = Math.max(5, Math.min(14400, Number(a.timeout_sec) || Number(ctx.settings().commandTimeoutSec) || 300)) * 1000;
+      const limit = Math.max(5, Math.min(14400, Number(a.timeout_sec) || Number(ctx.settings().commandTimeoutSec) || 1080)) * 1000;
       const started = Date.now();
       emitStream('', 'meta', { running: true });
       let cmdWatchTick = 0;

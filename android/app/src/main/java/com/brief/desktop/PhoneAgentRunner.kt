@@ -20,18 +20,27 @@ class PhoneAgentRunner(
             "👀🍔", "👀🍟", "👀🧃", "👀🥨", "👀🍵"
         )
         private val WATCH_LOADING_WORD_RE = Regex(
-            "\\b(loading|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\\s+wait|in\\s+progress|remaining|eta\\b|queued|preparing|thinking\\.\\.\\.|working\\.\\.\\.)\\b",
+            "\\b(loading|reading|thinking|thought\\s+for|analyzing|searching|exploring|inspecting|planning|editing|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\\s+wait|in\\s+progress|remaining|eta\\b|queued|preparing|stop\\s+generating|running\\s+command|thinking\\.\\.\\.|working\\.\\.\\.)\\b",
+            RegexOption.IGNORE_CASE
+        )
+        private val WATCH_PERMISSION_RE = Regex(
+            "\\b(allow\\s+once|allow\\s+always|allow\\s+this|accept\\s+all|approve|permission\\s+required|wants?\\s+to\\s+(?:access|run|open|edit|read|write|execute|use)|do\\s+you\\s+want\\s+to\\s+allow|grant\\s+(?:access|permission)|yes,\\s*proceed|run\\s+command\\?|open\\s+folder\\?|trust\\s+(?:this|the)\\s+folder|allow\\s+access|while\\s+using\\s+the\\s+app|only\\s+this\\s+time)\\b",
             RegexOption.IGNORE_CASE
         )
         private val WATCH_ERROR_RE = Regex(
-            "\\b(error|failed|failure|denied|access\\s+denied|permission\\s+denied|rejected|unable\\s+to|could\\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|validation\\s+failed|something\\s+went\\s+wrong|corrupt(?:ed)?|not\\s+enough\\s+space|try\\s+again|retry|allow\\s+brief|allow\\s+access)\\b",
+            "\\b(error:|failed|failure|denied|access\\s+denied|permission\\s+denied|rejected|unable\\s+to|could\\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|validation\\s+failed|something\\s+went\\s+wrong|corrupt(?:ed)?|not\\s+enough\\s+space|try\\s+again|retry)\\b",
             RegexOption.IGNORE_CASE
         )
         private val WATCH_DONE_RE = Regex(
-            "\\b(flash\\s+complete|completed?\\s+successfully|finished\\s+successfully|all\\s+done|100%\\s*(?:complete|done|finished)?|successfully\\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\\s+to\\s+download|video\\s+ready|export\\s+complete|done!)\\b",
+            "\\b(flash\\s+complete|completed?\\s+successfully|finished\\s+successfully|all\\s+done|100%\\s*(?:complete|done|finished)|successfully\\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\\s+to\\s+download|video\\s+ready|export\\s+complete|done!)\\b",
             RegexOption.IGNORE_CASE
         )
         private val WATCH_PCT_RE = Regex("\\b(\\d{1,3})(?:\\.\\d+)?\\s*%")
+        private val IMPATIENT_WAIT_TEXT_RE = Regex(
+            "\\b(i['’]?m\\s+still\\s+waiting|still\\s+waiting|currently\\s+(?:loading|running|flashing|validating|generating|reading|thinking|working)|in\\s+progress|let\\s+me\\s+know\\s+when\\s+(?:it|this)\\s+finish|waiting\\s+for\\s+(?:it|the|claude|chatgpt|ai|terminal|etcher|rufus))\\b",
+            RegexOption.IGNORE_CASE
+        )
+        private const val MAX_EXTERNAL_PERMISSION_GRANTS = 16
     }
 
     private fun pickWatchEmoji(tick: Int): String =
@@ -65,6 +74,8 @@ class PhoneAgentRunner(
     private data class WatchSignal(
         val isLoading: Boolean,
         val loadingHit: String,
+        val hasPermissionPrompt: Boolean,
+        val permissionHit: String,
         val hasError: Boolean,
         val errorHit: String,
         val isDone: Boolean,
@@ -74,6 +85,7 @@ class PhoneAgentRunner(
     private fun analyzeWatchText(raw: String, doneKws: List<String> = emptyList(), errorKws: List<String> = emptyList()): WatchSignal {
         val txt = raw.replace(Regex("\\s+"), " ").trim()
         val low = txt.lowercase()
+        val permHit = WATCH_PERMISSION_RE.find(txt)?.value.orEmpty()
         val customErr = errorKws.firstOrNull { it.isNotBlank() && low.contains(it.lowercase()) }.orEmpty()
         val errHit = customErr.ifEmpty { WATCH_ERROR_RE.find(txt)?.value.orEmpty() }
         val customDone = doneKws.firstOrNull { it.isNotBlank() && low.contains(it.lowercase()) }.orEmpty()
@@ -90,8 +102,8 @@ class PhoneAgentRunner(
             loadingHit = WATCH_LOADING_WORD_RE.find(txt)?.value.orEmpty()
         }
         val stillActive = WATCH_LOADING_WORD_RE.containsMatchIn(txt)
-        val isDone = doneHit.isNotEmpty() && (!stillActive || (customDone.isNotEmpty() && !loadingHit.contains("validat", true) && !loadingHit.contains("flash", true)))
-        return WatchSignal(loadingHit.isNotEmpty(), loadingHit, errHit.isNotEmpty(), errHit, isDone, doneHit)
+        val isDone = doneHit.isNotEmpty() && (!stillActive || (customDone.isNotEmpty() && !loadingHit.contains("validat", true) && !loadingHit.contains("flash", true) && !loadingHit.contains("read", true) && !loadingHit.contains("think", true)))
+        return WatchSignal(loadingHit.isNotEmpty(), loadingHit, permHit.isNotEmpty(), permHit, errHit.isNotEmpty(), errHit, isDone, doneHit)
     }
 
     private fun pruneAndroidHistoryForLongRun() {
@@ -315,15 +327,16 @@ class PhoneAgentRunner(
 
         val sysPrompt = buildSystemPrompt(workMode, thinking)
         val toolDefs = buildToolsJson(workMode)
-        val maxSteps = if (workMode) 150 else if (thinking == ThinkingLevel.EXTRA) 6 else 4
+        val maxSteps = if (workMode) 240 else if (thinking == ThinkingLevel.EXTRA) 6 else 4
         val workStartMs = System.currentTimeMillis()
-        val maxWorkMs = 240L * 60L * 1000L // Up to 4 hours endurance (5m minimum ready -> 4h max)
+        val maxWorkMs = 240L * 60L * 1000L // Up to 4 hours endurance (16–20+ min thorough work -> 4h max)
         val requiresMultiStepCompletion = workMode &&
-            Regex("\\b(search|find|click|tap|channel|latest|video|short|shorts|watch|play|send|message|type|generate|render|download|install|flash|verify)\\b", RegexOption.IGNORE_CASE).containsMatchIn(prompt)
+            Regex("\\b(search|find|click|tap|channel|latest|video|short|shorts|watch|play|send|message|type|generate|render|download|install|flash|verify|claude|chatgpt|agent|rufus|etcher)\\b", RegexOption.IGNORE_CASE).containsMatchIn(prompt)
 
         var executedActionCount = 0
         var prematureFinishNudges = 0
         var stillLoadingNudges = 0
+        var permissionGrantsCount = 0
         var lastRepeatedSig = ""
         var sameSigStreak = 0
 
@@ -369,24 +382,33 @@ class PhoneAgentRunner(
                 )
 
                 if (res.toolCalls.isEmpty()) {
-                    // Stay & Watch Guard: NEVER finish while the screen still shows active loading/generating/downloading/installing/flashing/validating progress!
-                    if (workMode && stillLoadingNudges < 18 && BriefAccessibilityService.instance != null) {
+                    // Ultra-Patient Stay & Watch Guard: NEVER finish OR say "I'm still waiting" while Claude/ChatGPT/any AI or app is reading, loading, validating, or asking for permission!
+                    if (workMode && stillLoadingNudges < 40 && BriefAccessibilityService.instance != null) {
                         val accNow = BriefAccessibilityService.instance!!
                         val checkUiNow = accNow.readScreenElements(150)
                         val uiSig = analyzeWatchText(extractUiTextForWatch(checkUiNow))
-                        if (uiSig.isLoading && !uiSig.isDone) {
+                        val impatientTxt = IMPATIENT_WAIT_TEXT_RE.containsMatchIn(res.text)
+                        val hasPermToGrant = uiSig.hasPermissionPrompt && !uiSig.isDone && permissionGrantsCount < MAX_EXTERNAL_PERMISSION_GRANTS
+                        if (hasPermToGrant || (uiSig.isLoading && !uiSig.isDone) || impatientTxt) {
                             stillLoadingNudges++
                             val wEmoji = pickWatchEmoji(stillLoadingNudges)
-                            val wMsg = "$wEmoji Still loading (${uiSig.loadingHit}) — staying to watch until finished or errored…"
+                            val wMsg = when {
+                                hasPermToGrant -> "$wEmoji Permission prompt (${permissionGrantsCount + 1}/$MAX_EXTERNAL_PERMISSION_GRANTS) — granting & continuing…"
+                                impatientTxt -> "$wEmoji Staying patient until real result arrives…"
+                                else -> "$wEmoji Watching (${uiSig.loadingHit}) patiently…"
+                            }
                             onStep(wMsg)
                             if (!isBgVisual) accNow.updateOverlayState(provider, wMsg)
                             val checkFrame = accNow.captureLiveVisionFrame(settleMaxMs = 700L)
+                            val directive = if (hasPermToGrant) {
+                                "[PERMISSION PROMPT DETECTED (${permissionGrantsCount + 1}/$MAX_EXTERNAL_PERMISSION_GRANTS)]: Tap Allow / Approve / Accept / Proceed / Open Folder NOW, then IMMEDIATELY call `watch_and_wait({\"reason\": \"waiting after permission\", \"max_wait_minutes\": 30})` — do NOT stop after 1 permission!"
+                            } else {
+                                "[PATIENT STAY & WATCH GUARD — DO NOT QUIT OR SAY 'I AM STILL WAITING']: Never send a reply saying you are still waiting! Call `watch_and_wait({\"reason\": \"${uiSig.loadingHit.ifEmpty { "active process" }}\", \"max_wait_minutes\": 30})` RIGHT NOW to stay quietly until the REAL result arrives, then TEST & verify it!"
+                            }
                             history.add(
                                 ConversationTurn(
                                     role = "user",
-                                    text = "[STAY & WATCH GUARD — DO NOT STOP WHILE LOADING]: Screen still shows active progress (\"${uiSig.loadingHit}\"). " +
-                                        "You MUST NOT declare finished yet! Call `watch_and_wait({\"reason\": \"${uiSig.loadingHit}\", \"max_wait_minutes\": 15})` NOW to stay and watch until it completes or errors, then verify the final result!" +
-                                        formatUiSnapshotForAi(checkUiNow),
+                                    text = directive + formatUiSnapshotForAi(checkUiNow),
                                     imageBase64 = checkFrame?.calibratedAiBase64
                                 )
                             )
@@ -453,11 +475,33 @@ class PhoneAgentRunner(
                         BriefAccessibilityService.instance?.updateOverlayState(provider, humanDesc)
                     }
 
-                    val sameLimit = if (tc.name == "watch_and_wait") 24 else 4
-                    val out = if (sameSigStreak >= sameLimit) {
+                    val isPermTap = tc.name == "tap_element" &&
+                        Regex("\\b(allow|approve|accept|proceed|permit|grant|yes|confirm|continue|trust|run|open\\s+folder|ok|while\\s+using|only\\s+this\\s+time)\\b", RegexOption.IGNORE_CASE)
+                            .containsMatchIn(tc.args.optString("label"))
+                    val sameLimit = when {
+                        tc.name == "watch_and_wait" -> 24
+                        isPermTap -> MAX_EXTERNAL_PERMISSION_GRANTS + 1
+                        else -> 4
+                    }
+                    var out = if (sameSigStreak >= sameLimit) {
                         JSONObject().put("error", "Repeated identical action $sameLimit times; try a different coordinate, tap_element, or swipe to scroll.").toString()
                     } else {
                         executeTool(tc, provider, isBgVisual, onStep)
+                    }
+                    if (isPermTap && !out.contains("\"error\"")) {
+                        permissionGrantsCount++
+                        val patched = runCatching { JSONObject(out) }.getOrElse { JSONObject().put("ok", true) }
+                        patched.put("permission_grant_count", permissionGrantsCount)
+                        patched.put("permission_grant_max", MAX_EXTERNAL_PERMISSION_GRANTS)
+                        patched.put(
+                            "next_step_reminder",
+                            if (permissionGrantsCount >= MAX_EXTERNAL_PERMISSION_GRANTS) {
+                                "Reached max $MAX_EXTERNAL_PERMISSION_GRANTS automatic permission grants — pause and ask the user if more permissions are needed."
+                            } else {
+                                "Granted permission #$permissionGrantsCount/$MAX_EXTERNAL_PERMISSION_GRANTS. Immediately call watch_and_wait({\"reason\": \"waiting after permission\", \"max_wait_minutes\": 30}) to stay patiently for the next permission or real final result!"
+                            }
+                        )
+                        out = patched.toString()
                     }
 
                     if (tc.name in setOf("web_search", "fetch_url", "open_url")) {
@@ -628,8 +672,8 @@ class PhoneAgentRunner(
             }
             "watch_and_wait" -> {
                 val reason = a.optString("reason", "process").trim().take(34).ifEmpty { "process" }
-                val reqMin = a.optDouble("max_wait_minutes", 15.0).coerceIn(1.0, 240.0)
-                val cycleMs = minOf((reqMin * 60_000.0).toLong(), 10L * 60_000L)
+                val reqMin = a.optDouble("max_wait_minutes", 30.0).coerceIn(1.0, 240.0)
+                val cycleMs = minOf((reqMin * 60_000.0).toLong(), 30L * 60_000L)
                 val baseIntervalMs = (a.optDouble("check_interval_sec", 8.0).coerceIn(3.0, 45.0) * 1000.0).toLong()
                 val doneKws = buildList {
                     val arr = a.optJSONArray("done_keywords")
@@ -664,11 +708,11 @@ class PhoneAgentRunner(
                     }
                 }
 
-                paintWatch("live")
+                paintWatch("patiently")
                 while (System.currentTimeMillis() < deadline) {
                     if (stopped) return JSONObject().put("error", "Stopped by user.").toString()
                     val elapsedNow = System.currentTimeMillis() - started
-                    val intervalMs = if (elapsedNow > 180_000L) minOf(24_000L, (baseIntervalMs * 1.5).toLong()) else baseIntervalMs
+                    val intervalMs = if (elapsedNow > 240_000L) minOf(22_000L, (baseIntervalMs * 1.5).toLong()) else baseIntervalMs
                     val nextAt = minOf(deadline, System.currentTimeMillis() + intervalMs)
                     while (System.currentTimeMillis() < nextAt) {
                         if (stopped) return JSONObject().put("error", "Stopped by user.").toString()
@@ -688,6 +732,17 @@ class PhoneAgentRunner(
                     }
                     lastLoadingHit = if (sig.isLoading) sig.loadingHit.take(16) else ""
 
+                    if (sig.hasPermissionPrompt && !sig.isDone) {
+                        return JSONObject()
+                            .put("ok", true)
+                            .put("outcome", "permission_prompt")
+                            .put("matched", sig.permissionHit)
+                            .put("reason", reason)
+                            .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
+                            .put("checks", checks)
+                            .put("detail", "Permission prompt detected (\"${sig.permissionHit}\") — tap Allow/Approve/Open Folder and IMMEDIATELY call watch_and_wait again (supports up to $MAX_EXTERNAL_PERMISSION_GRANTS permission grants)!")
+                            .toString()
+                    }
                     if (sig.hasError && !sig.isDone) {
                         return JSONObject()
                             .put("ok", false)
@@ -696,10 +751,10 @@ class PhoneAgentRunner(
                             .put("reason", reason)
                             .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
                             .put("checks", checks)
-                            .put("detail", "Alert/Error detected (\"${sig.errorHit}\") — inspect screen and fix or report!")
+                            .put("detail", "Error/Failure detected (\"${sig.errorHit}\") — inspect screen and fix or report honestly!")
                             .toString()
                     }
-                    if (sig.isDone && !sig.isLoading && (System.currentTimeMillis() - started) >= 4000L) {
+                    if (sig.isDone && !sig.isLoading && (System.currentTimeMillis() - started) >= 5000L) {
                         return JSONObject()
                             .put("ok", true)
                             .put("outcome", "completed")
@@ -707,20 +762,21 @@ class PhoneAgentRunner(
                             .put("reason", reason)
                             .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
                             .put("checks", checks)
-                            .put("detail", "Finished (\"${sig.doneHit}\") — verify final output on screen now!")
+                            .put("detail", "Finished (\"${sig.doneHit}\") — NOW TEST & VERIFY the actual final output before declaring done!")
                             .toString()
                     }
+                    // Truly patient: require 3–4 full minutes (180s–240s) of total stillness & zero loading indicators!
                     if (!sig.isLoading && !changed) {
                         if (settledSince == 0L) settledSince = System.currentTimeMillis()
                         val stillMs = System.currentTimeMillis() - settledSince
-                        if (stillMs >= (if (sawActivity) 35_000L else 50_000L)) {
+                        if (stillMs >= (if (sawActivity) 180_000L else 240_000L)) {
                             return JSONObject()
                                 .put("ok", true)
                                 .put("outcome", "settled_verify")
                                 .put("reason", reason)
                                 .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
                                 .put("checks", checks)
-                                .put("detail", "Screen settled — inspect fresh screenshot and verify result (or call watch_and_wait again if still working).")
+                                .put("detail", "Screen stayed completely still for ${formatWatchElapsed(stillMs)}. Inspect closely: test & verify if finished, tap permission if waiting, or call watch_and_wait again WITHOUT saying 'I am still waiting'!")
                                 .toString()
                         }
                     }
@@ -731,7 +787,7 @@ class PhoneAgentRunner(
                     .put("reason", reason)
                     .put("watched_duration", formatWatchElapsed(System.currentTimeMillis() - started))
                     .put("checks", checks)
-                    .put("detail", "Checkpoint reached — inspect screenshot and call watch_and_wait again if still in progress (up to 4 hours total).")
+                    .put("detail", "Silent 30m checkpoint — DO NOT say 'I am still waiting' in chat! Call watch_and_wait again if still running (up to 4h total), or test & verify if done.")
                     .toString()
             }
             "read_screen_ui" -> {
@@ -837,8 +893,8 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
 3. PREFER PRECISION: Use the `[Live 150-Node Interactive UI Map]` coordinates or `tap_element` whenever a button/tab/channel has a clear label, and use the calibrated `0..1000` screenshot grid for visual icons/thumbnails/avatars.
 4. IF SOMETHING IS OFF-SCREEN: Use `swipe` (`x1=500, y1=760, x2=500, y2=260`) to scroll down smoothly and inspect new items.
 5. CALM USER REDIRECT & CONTEXT MEMORY ("NO, OPEN X INSTEAD OF Y"): Remember user corrections across the entire chat! Whenever the user says "no, open X instead of Y" or redirects you, remember NOT to open/repeat Y, never get confused or flustered, and pivot straight to X!
-6. STAY, WATCH & VERIFY (5-MIN TO 4-HOUR LONG-TASK ENDURANCE — ALL 4 MODELS, BACKGROUND & VISIBLE): NEVER declare "Done" while an app, terminal, download, installer, flasher/validator, AI video generator, or another AI agent is still loading, rendering, or replying! Immediately call `watch_and_wait({"reason": "...", "max_wait_minutes": 15})` (up to 240 minutes = 4 hours via checkpoints, showing cute 👀🍿 / 👀🍕 / 👀☕ watching cursor status) so you watch for completion, denials, popups, or errors, and ALWAYS verify the final outcome before finishing!
-7. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion.$extraHint"""
+6. ULTRA-PATIENT STAY, WATCH, MULTI-PERMISSION (3–16 GRANTS) & REAL-TEST RULE (THOROUGH 16–20+ MIN VALIDATION WHEN NEEDED, UP TO 4 HOURS MAX — ALL 4 MODELS): NEVER quit early and NEVER reply "I'm still waiting" while Claude AI, ChatGPT, any other AI, a terminal, flasher, video generator, or any app is reading, thinking, loading, or working! Stay quietly inside `watch_and_wait({"reason": "...", "max_wait_minutes": 30})` (up to 240 min = 4h, showing cute 👀🍿 / 👀🍕 / 👀☕ cursor status). When another AI or app asks for permission (1st: read/run, 2nd: open folder, etc. — 3–4 commonly, up to 16 max!), tap Allow/Approve/Accept/Open Folder and IMMEDIATELY call `watch_and_wait` again until the REAL final result arrives — then TEST IT and honestly tell the user whether it worked or failed!
+7. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion (or if an app loops past 16 permission prompts).$extraHint"""
         }
     }
 

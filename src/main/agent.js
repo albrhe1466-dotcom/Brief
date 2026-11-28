@@ -224,7 +224,7 @@ function isTestEvidenceStep(item) {
   if (!item || !item.ok) return false;
   const t = String(item.tool || '');
   const a = item.args || {};
-  if (t === 'run_command' || t === 'terminal_open' || t === 'terminal_send' || t === 'terminal_read' || t === 'watch_and_wait' || t === 'open_path' || t === 'open_url' || t === 'browser_tab') return true;
+  if (t === 'run_command' || t === 'terminal_open' || t === 'terminal_send' || t === 'terminal_read' || t === 'open_path' || t === 'open_url' || t === 'browser_tab' || t === 'list_directory') return true;
   if (t === 'read_screen_text' || t === 'zoom_region') return true;
   if (/execute_luau|start_stop_play|test|verify|render|preview|play/i.test(t)) return true;
   if (t === 'press_keys') {
@@ -244,7 +244,7 @@ function detectDeepTaskProfile(task, _openWindows, settings, overrides) {
   const isRoblox = /\b(roblox|roblox\s*studio|obby|luau|startergui|proximityprompt|clickdetector)\b/i.test(text);
   const isAnimationOrCreative = /\b(capcut|blender|higgsfield|after\s*effects|premiere|photoshop|illustrator|adobe|keyframe|rig|timeline|unreal|unity|davinci)\b/i.test(text);
   const isQuickCheckOnly = /^\s*(?:what is on my screen|read (?:this|screen)|open [a-z0-9 ]{1,24}|search (?:google|youtube|web) for .{1,50}|take a screenshot|list windows)\s*[.!?]?\s*$/i.test(text);
-  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby|flash|etcher|burn|install|download|render|generate)\b/i.test(text));
+  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby|flash|etcher|rufus|burn|install|download|render|generate|verify|test|claude|chatgpt|agent|sd\s*card|usb)\b/i.test(text));
   const isDeepBuildTask = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative);
 
   const minMins = (overrides && typeof overrides.minWorkMs === 'number')
@@ -1277,7 +1277,7 @@ class AgentRunner extends EventEmitter {
       ? 'background'
       : 'photos';
     const isBackgroundVisualMode = effectiveVisualMode === 'background';
-    const configuredMax = Math.max(5, Math.min(300, Number(settings.maxSteps) || 180));
+    const configuredMax = Math.max(5, Math.min(400, Number(settings.maxSteps) || 240));
     const agentModel = this.resolveModelForJob('agent');
     if (agentModel.id === 'auto') agentModel.id = 'gpt-6.1-terra';
     const fastModel = this.resolveModelForJob('fast');
@@ -1675,6 +1675,8 @@ class AgentRunner extends EventEmitter {
       const sysPrompt = makeWorkSysPrompt(activeStepModel);
       let zeroWorkRejections = 0;
       let stillLoadingNudges = 0;
+      let permissionGrantsCount = 0;
+      const MAX_EXTERNAL_PERMISSION_GRANTS = 16;
       let untestedRejections = 0;
       let verifyRejections = 0;
       let qaPasses = 0;
@@ -1899,10 +1901,12 @@ class AgentRunner extends EventEmitter {
           const withinMaxTime = elapsedNow < taskProfile.maxWorkMs;
           const missingHold = wantsLongPress && !didHoldAction;
 
-          // Gate 0: STAY & WATCH GUARD — NEVER let Brief declare "Done" while a terminal, flasher/validator,
-          // AI video generator, installer, download, or another AI agent is still loading or running!
-          if (stillLoadingNudges < 18 && step < maxSteps && withinMaxTime && stepLog.length > 0) {
+          // Gate 0: ULTRA-PATIENT STAY & WATCH GUARD — NEVER let Brief declare "Done" OR send a useless
+          // "I'm still waiting" message while Claude AI, ChatGPT, any other AI, a terminal, BalenaEtcher,
+          // Rufus, a video generator, or any app is still reading, thinking, loading, validating, or asking permission!
+          if (stillLoadingNudges < 40 && step < maxSteps && withinMaxTime && stepLog.length > 0) {
             const lastStep = stepLog[stepLog.length - 1];
+            const impatientWaitingText = /\b(i['’]?m\s+still\s+waiting|still\s+waiting|currently\s+(?:loading|running|flashing|validating|generating|reading|thinking|working)|in\s+progress|let\s+me\s+know\s+when\s+(?:it|this)\s+finish|waiting\s+for\s+(?:it|the|claude|chatgpt|ai|terminal|etcher|rufus))\b/i.test(String(visibleText || ''));
             const unverifiedLaunchedTerm = !!(
               lastStep && lastStep.ok && (
                 (lastStep.tool === 'run_command' && lastStep.result && (lastStep.result.opened_window || lastStep.result.background || lastStep.result.still_running)) ||
@@ -1912,39 +1916,47 @@ class AgentRunner extends EventEmitter {
             );
             const activeBgTerms = getRunningTerminalSessions().filter((s) => !s.interactive && s.command);
             let screenLoadingSignal = '';
+            let screenPermSignal = '';
             let liveCheckUiText = '';
             if (!unverifiedLaunchedTerm && !activeBgTerms.length && !isBackgroundVisualMode) {
               liveCheckUiText = await describeForegroundElements(this.screen, this.automation, { fastMode: false }).catch(() => '');
               const sig = analyzeWatchText(liveCheckUiText);
-              if (sig.isLoading && !sig.isDone) {
+              if (sig.hasPermissionPrompt && !sig.isDone && permissionGrantsCount < MAX_EXTERNAL_PERMISSION_GRANTS) {
+                screenPermSignal = sig.permissionHit || 'permission prompt';
+              } else if (sig.isLoading && !sig.isDone) {
                 screenLoadingSignal = sig.loadingHit || 'active progress';
               }
             }
-            if (unverifiedLaunchedTerm || activeBgTerms.length > 0 || screenLoadingSignal) {
+            if (unverifiedLaunchedTerm || activeBgTerms.length > 0 || screenLoadingSignal || screenPermSignal || impatientWaitingText) {
               stillLoadingNudges += 1;
               forceToolNextTurn = !usingDirectCu;
               const watchEmoji = pickWatchEmoji(stillLoadingNudges);
               const activeSessionId = (lastStep && lastStep.result && lastStep.result.session_id) || (activeBgTerms[0] && activeBgTerms[0].id) || '';
-              const why = unverifiedLaunchedTerm
-                ? `terminal command was just launched (${lastStep.tool}) and has NOT finished yet`
-                : activeBgTerms.length > 0
-                  ? `background terminal session (${activeBgTerms[0].id}) is still running`
-                  : `screen still shows active progress ("${screenLoadingSignal}")`;
-              const watchMsg = `${watchEmoji} Stay & Watch: ${why} — watching until it finishes or errors, then verifying…`;
+              const why = screenPermSignal
+                ? `permission prompt detected ("${screenPermSignal}", grant ${permissionGrantsCount + 1}/${MAX_EXTERNAL_PERMISSION_GRANTS})`
+                : impatientWaitingText
+                  ? 'you tried to reply "still waiting" instead of actually staying and watching until the real result arrives'
+                  : unverifiedLaunchedTerm
+                    ? `terminal command was just launched (${lastStep.tool}) and has NOT finished yet`
+                    : activeBgTerms.length > 0
+                      ? `background terminal session (${activeBgTerms[0].id}) is still running`
+                      : `screen still shows active progress ("${screenLoadingSignal}")`;
+              const watchMsg = `${watchEmoji} Staying patient: ${why}…`;
               this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'stay_watch_guard', detail: why });
-              this.emit('work-note', { runId, chatId, step, text: watchMsg });
               this.setStatus({ running: true, state: 'watching', mode: 'work', model: activeStepModel, step, maxSteps, stepText: watchMsg });
-              if (!isBackgroundVisualMode) this.cursorEmitter({ kind: 'watch', label: `${watchEmoji} Watching progress… (${formatWatchElapsed(elapsedNow)})` });
+              if (!isBackgroundVisualMode) this.cursorEmitter({ kind: 'watch', label: `${watchEmoji} Watching patiently… (${formatWatchElapsed(elapsedNow)})` });
               currentShot = await this.screen.capture({ format: 'jpeg' }).catch(() => currentShot);
               const watchVisionShot = await shotForVision(currentShot, this.automation);
+              const nextDirective = screenPermSignal
+                ? `Click Allow / Approve / Accept / Proceed / Yes / Open Folder to grant permission (${permissionGrantsCount + 1}/${MAX_EXTERNAL_PERMISSION_GRANTS}), then IMMEDIATELY call \`watch_and_wait({ reason: "waiting after permission", max_wait_minutes: 30 })\` to stay patiently for the next permission or final result!`
+                : `NEVER reply "I'm still waiting" — stay QUIETLY inside \`watch_and_wait({ reason: "${(lastStep && lastStep.description ? lastStep.description.slice(0, 42) : 'active process').replace(/"/g, '')}"${activeSessionId ? `, session_id: "${activeSessionId}"` : ''}, max_wait_minutes: 30 })\` RIGHT NOW until the REAL final result or a permission prompt/error arrives, then TEST & verify the final result!`;
               contents.push({
                 role: 'user',
                 parts: [
                   {
-                    text: `[STAY & WATCH GUARD — DO NOT FINISH WHILE LOADING (${formatWorkedTime(elapsedNow)} elapsed)]:\n` +
+                    text: `[PATIENT STAY & WATCH GUARD — DO NOT QUIT OR SAY "STILL WAITING" (${formatWorkedTime(elapsedNow)} elapsed)]:\n` +
                       `Detected: ${why}.\n` +
-                      `You MUST NOT say "finished" until this actually completes and you verify the final outcome (or diagnose any error/denial)! ` +
-                      `Call \`watch_and_wait({ reason: "${(lastStep && lastStep.description ? lastStep.description.slice(0, 42) : 'active process').replace(/"/g, '')}"${activeSessionId ? `, session_id: "${activeSessionId}"` : ''}, max_wait_minutes: 15 })\` RIGHT NOW to stay & monitor until completion or error, then verify the final result!` +
+                      nextDirective +
                       (liveCheckUiText ? '\n' + liveCheckUiText : '')
                   },
                   { inlineData: { mimeType: watchVisionShot.mime, data: watchVisionShot.base64 } }
@@ -2375,14 +2387,32 @@ class AgentRunner extends EventEmitter {
             }
           }
 
+          // Track external permission-granting clicks/keys (Allow/Approve/Accept/Proceed/Yes/Open Folder — up to 16 grants per task!)
+          const isExternalPermGrant = stepOk && (
+            ((name === 'click_text' || name === 'click_element') && /\b(allow|approve|accept|proceed|permit|grant|yes|confirm|continue|trust|run|open\s+folder|ok)\b/i.test(String((args && args.query) || ''))) ||
+            (name === 'terminal_send' && /^(?:y|yes|a|always|)$/i.test(String((args && args.input) || '').trim()))
+          );
+          if (isExternalPermGrant) {
+            permissionGrantsCount += 1;
+            if (resultObj && typeof resultObj === 'object') {
+              resultObj.permission_grant_count = permissionGrantsCount;
+              resultObj.permission_grant_max = MAX_EXTERNAL_PERMISSION_GRANTS;
+              resultObj.next_step_reminder = permissionGrantsCount >= MAX_EXTERNAL_PERMISSION_GRANTS
+                ? `Reached max ${MAX_EXTERNAL_PERMISSION_GRANTS} automatic permission grants in this session — pause and ask the user if more permissions are needed.`
+                : `Granted permission #${permissionGrantsCount}/${MAX_EXTERNAL_PERMISSION_GRANTS}. Immediately call watch_and_wait({ reason: "waiting after permission", max_wait_minutes: 30 }) to stay patiently for the next permission prompt or the real final result — do NOT quit after 1 permission!`;
+            }
+          }
+
           // Stuck-loop protection: track identical repeated tool calls and consecutive failures so Brief never loops forever
-          // (Exempt watch_and_wait / terminal_read up to 24 cycles so 3–4 hour long-running watches never falsely abort!)
+          // (Exempt watch_and_wait / terminal_read up to 24 cycles and external permission grants up to 16 cycles!)
           const callSig = name + ':' + JSON.stringify(args || {}).slice(0, 200);
           if (callSig === lastToolSig) consecutiveSameToolCount += 1;
           else { lastToolSig = callSig; consecutiveSameToolCount = 1; }
           if (stepOk) consecutiveFailedSteps = 0;
           else consecutiveFailedSteps += 1;
-          const sameLimit = (name === 'watch_and_wait' || name === 'terminal_read') ? 24 : 3;
+          const sameLimit = (name === 'watch_and_wait' || name === 'terminal_read')
+            ? 24
+            : (isExternalPermGrant ? (MAX_EXTERNAL_PERMISSION_GRANTS + 1) : 3);
           if (consecutiveSameToolCount >= sameLimit) {
             stuckBreakReason = `Stopped automatically to avoid repeating "${name}" (${consecutiveSameToolCount} identical attempts in a row).`;
           } else if (consecutiveFailedSteps >= 4) {

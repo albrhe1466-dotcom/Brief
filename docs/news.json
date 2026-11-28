@@ -1,25 +1,25 @@
 {
   "version": "2.1.4-beta",
-  "build": 220,
+  "build": 221,
   "releasedAt": "2026-11-28",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
   "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.4-beta.apk",
   "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
   "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
-  "headline": "Brief v2.1.4-beta — Stay, Watch & Verify Engine (5 Min – 4 Hours Endurance), Wholesome 👀🍿 Watching Cursor & Real Final Verification Across All 4 Models",
+  "headline": "Brief v2.1.4-beta — Ultra-Patient Stay, Watch & Verify Engine (Up to 4 Hours), Multi-Permission Granting (Up to 16×) & Real Final Testing",
   "bullets": [
-    "Stay, Watch & Verify Engine (5 Min Ready → 4 Hours Max): Brief never quits early while a terminal, installer, OS flasher/validator, AI video generator, download, or another AI agent is still loading — it stays patiently, monitors progress without burning extra tokens, and catches errors, denials, or permission prompts immediately.",
-    "Wholesome Eye + Snack Watching Cursor (Windows, Linux & Android): While waiting for long processes in Live Visible or Background mode, Brief shows cute rotating watching cursor labels (👀🍿 / 👀🍕 / 👀☕ / 👀🍪) with live elapsed timers right beside the cursor and in the status bar.",
-    "End-to-End Final Verification Across All 4 LLMs (Gemini, OpenAI, Claude & OpenRouter): After a terminal finishes, a video renders, or an OS image completes flashing & validating, Brief checks exit codes, generated outputs, and target drives/SD cards before reporting success.",
-    "Full Multi-Platform Endurance: Auto-compacts long multi-hour histories cleanly, holds Android partial WakeLock during long watches on Honor MagicOS, Samsung & Pixel, and works seamlessly in Background and Live Visible modes."
+    "Ultra-Patient Watching (Zero 'I'm still waiting' Spam): Whether watching Claude, ChatGPT, another AI agent reading/thinking, a terminal, BalenaEtcher, Rufus, or a video generator, Brief stays quietly watching until the actual final result, a permission prompt, or an error appears (supports thorough 16–20+ minute runs up to 4 hours max).",
+    "Multi-Permission Auto-Granting (3–4 Commonly, Up to 16 Max): When another AI agent or app asks repeatedly for permissions (inspect, open folder, edit, run, confirm), Brief grants each safe permission step by step and immediately goes right back to watching instead of stopping after 1 approval.",
+    "Wholesome Eye + Snack Watching Cursor (Windows, Linux & Android): Live rotating watching labels (👀🍿 / 👀🍕 / 👀☕ / 👀🍪) with elapsed timers right beside the cursor and in the status bar across Background and Live Visible modes.",
+    "Real Post-Completion Testing Across All 4 LLMs (Gemini, OpenAI, Claude & OpenRouter): After a process finishes, Brief actually tests the output (exit codes, files, target drives/SD cards, generated videos, or app behavior) and honestly reports whether it worked or failed."
   ],
   "photos": [
     {
       "src": "assets/news-v214-stay-watch.svg",
-      "tag": "5m–4h Endurance · v2.1.4-beta",
+      "tag": "Ultra-Patient · v2.1.4-beta",
       "title": "Stay, Watch & Verify Engine + 👀🍿 Cursor",
-      "caption": "Never ends while a terminal, OS flasher/validator, video generator, or another AI agent is still loading — stays up to 4 hours, catches errors/denials, and verifies final outputs across all 4 models."
+      "caption": "Stays quietly until the real final result, grants up to 16 repeated permissions for AI agents & apps, and tests outputs before reporting across Windows, Linux & Android."
     },
     {
       "src": "assets/news-v213-voice-memo.svg",
