@@ -5455,10 +5455,16 @@
        Windows & Linux PCs 100% at full desktop scale, and centers popovers so
        they NEVER clip off the top/bottom in portrait or landscape!
     ===================================================================== */
+    html[data-platform="android"],
+    html[data-platform="android"] body {
+      height: 100% !important;
+      max-height: 100% !important;
+      overflow: hidden !important;
+    }
     html[data-platform="android"] {
-      --rail-width: 38px !important;
-      --sidebar-width: 186px;
-      --header-height: 40px !important;
+      --rail-width: 40px !important;
+      --sidebar-width: 196px;
+      --header-height: 42px !important;
       font-size: 12.5px !important;
     }
     html[data-platform="android"] body {
@@ -5468,13 +5474,16 @@
       padding: 6px 0 8px !important;
     }
     html[data-platform="android"] .rail-brand {
-      width: 28px !important;
-      height: 28px !important;
+      width: 30px !important;
+      height: 30px !important;
+      background: #000000 !important;
+      border-radius: 8px !important;
       margin-bottom: 4px !important;
     }
     html[data-platform="android"] .rail-brand img {
-      width: 17px !important;
-      height: 17px !important;
+      width: 26px !important;
+      height: 26px !important;
+      object-fit: contain !important;
     }
     html[data-platform="android"] .rail-btn {
       width: 30px !important;
@@ -5560,27 +5569,33 @@
       max-width: min(680px, calc(100vw - 24px)) !important;
       margin: 0 auto !important;
     }
-    /* True Portrait & Landscape Vertical + Horizontal Centering on Android Phones & Tablets (Zero Notch Crowding & Zero Bottom Chin!) */
+    /* True Portrait & Landscape Vertical + Horizontal Centering on Android Phones & Tablets (Honor MagicOS 10 / Android 16 / Samsung One UI — Zero Notch Crowding & Zero Bottom Chin!) */
     html[data-platform="android"] #app-shell {
       width: 100% !important;
       height: 100% !important;
+      min-height: 0 !important;
     }
     html[data-platform="android"] #top-header {
       margin-top: 2px !important;
       min-height: 42px !important;
+      flex-shrink: 0 !important;
     }
     html[data-platform="android"] body.is-welcome #main-area {
       display: flex !important;
       flex-direction: column !important;
+      justify-content: flex-start !important;
+      height: 100% !important;
+      min-height: 0 !important;
       padding: 0 !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
     }
     html[data-platform="android"] body.is-welcome #workspace-body {
       flex: 0 0 auto !important;
       width: 100% !important;
-      margin-top: auto !important;
-      margin-bottom: 0 !important;
+      margin: auto 0 0 !important;
+      overflow: visible !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
@@ -5588,9 +5603,10 @@
     }
     html[data-platform="android"] body.is-welcome #view-welcome {
       width: 100% !important;
-      max-width: min(680px, calc(100vw - 24px)) !important;
+      max-width: min(700px, calc(100vw - 24px)) !important;
       margin: 0 auto !important;
       padding: 8px 14px 4px !important;
+      overflow: visible !important;
       align-items: center !important;
       text-align: center !important;
     }
@@ -5604,9 +5620,14 @@
       justify-content: center !important;
     }
     html[data-platform="android"] body.is-welcome #composer-dock {
-      margin-top: 4px !important;
-      margin-bottom: auto !important;
-      padding-bottom: 12px !important;
+      flex: 0 0 auto !important;
+      margin: 4px 0 auto !important;
+      padding-bottom: 14px !important;
+      overflow: visible !important;
+    }
+    html[data-platform="android"] body.is-welcome .composer-wrap,
+    html[data-platform="android"] body.is-welcome #composer-capsule {
+      overflow: visible !important;
     }
     @media (orientation: landscape) and (max-height: 540px) {
       html[data-platform="android"] body.is-welcome .welcome-inner {
@@ -6363,12 +6384,17 @@
       z-index: 2;
     }
     /* Brief Code Clawd mascot (perched ONLY on Brief Work main menu — hides immediately when asking or working) */
+    body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #composer-dock,
+    body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] .composer-wrap {
+      overflow: visible !important;
+    }
     body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #composer-capsule {
       position: relative;
+      overflow: visible !important;
       margin-top: 52px;
     }
     html[data-platform="android"] body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #composer-capsule {
-      margin-top: 40px;
+      margin-top: 46px;
     }
     #brief-code-clawd {
       display: none;
@@ -6387,7 +6413,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     body.is-welcome:not(.is-running)[data-provider="anthropic"][data-mode="work"] #brief-code-clawd {
-      display: block;
+      display: block !important;
     }
     body:not(.is-welcome) #brief-code-clawd,
     body.is-running #brief-code-clawd {
@@ -6409,10 +6435,18 @@
       right: 18px;
     }
     html[data-platform="android"] #brief-code-clawd img {
-      width: 76px;
+      width: 78px;
     }
     html[data-platform="android"] #brief-code-clawd[data-clawd="soccer"] img {
-      width: 88px;
+      width: 90px;
+    }
+    @media (min-width: 641px) {
+      html[data-platform="android"] #brief-code-clawd img {
+        width: 92px;
+      }
+      html[data-platform="android"] #brief-code-clawd[data-clawd="soccer"] img {
+        width: 106px;
+      }
     }
     /* Never show Ask for permission / Full access in regular Chat mode across all 4 AIs */
     .perm-hidden-in-chat,
@@ -8485,7 +8519,10 @@
           getUsage: async () => ({ session: { total: 0, requests: 0, prompt: 0, output: 0, thoughts: 0 } }),
           resetUsage: async () => ({ session: { total: 0, requests: 0, prompt: 0, output: 0, thoughts: 0 } }),
           updateSettings: async (patch) => JSON.parse(window.BriefAndroidBridge.updateSettingsJson(JSON.stringify(patch || {}))),
-          setPermissionMode: async (mode) => JSON.parse(window.BriefAndroidBridge.updateSettingsJson(JSON.stringify({ permissionMode: mode }))),
+          setPermissionMode: async (mode) => ({
+            ok: true,
+            settings: JSON.parse(window.BriefAndroidBridge.updateSettingsJson(JSON.stringify({ permissionMode: mode })))
+          }),
           setHotkey: async (accel) => ({ ok: true, hotkey: accel }),
           saveChatsData: async (data) => { window.BriefAndroidBridge.saveChatsJson(JSON.stringify(data || {})); return { ok: true }; },
           getDiagnostics: async () => JSON.parse(window.BriefAndroidBridge.getDiagnosticsJson()),
@@ -10326,6 +10363,7 @@
         if (heading) heading.textContent = buildWelcomeGreeting(userName);
         renderWelcomeCodeBackdrop();
         renderBriefWorkVisualModeUI();
+        renderBriefCodeClawd();
         renderClaudeTopicPills();
         if (typeof renderUsageRing === 'function') { try { renderUsageRing(); } catch (_) { /* not ready yet */ } }
       }
@@ -10517,8 +10555,18 @@
             : (vis.name + ' Models');
         }
 
+        const modelBelongsToProvider = (modelId, provId) => {
+          const m = String(modelId || '').toLowerCase();
+          if (!m) return false;
+          if (provId === 'anthropic') return m.includes('claude') || m.includes('sonnet') || m.includes('opus') || m.includes('haiku');
+          if (provId === 'openai') return m === 'auto' || m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3') || m.startsWith('o4');
+          if (provId === 'openrouter') return m.includes('/');
+          return m.includes('gemini');
+        };
         const matchedPreset = State.presets.find((p) => p.id === active || p.key === State.settings.activePreset);
-        const matchedGen = vis.id === 'openai' ? null : genModels.find((m) => m.id === active);
+        const matchedGen = (vis.id === 'openai' || !modelBelongsToProvider(active, vis.id))
+          ? null
+          : genModels.find((m) => m.id === active);
         if (!matchedPreset && !matchedGen && State.presets.length) {
           active = vis.id === 'openai'
             ? (inWorkMode ? 'gpt-6.1-terra' : 'auto')
@@ -10637,8 +10685,12 @@
       }
 
       function renderPermissionAndModeUI() {
-        const perm = State.settings.permissionMode || 'ask';
-        const isChat = perm === 'chat' || State.workspaceTab === 'chat';
+        const rawPerm = State.settings.permissionMode || 'ask';
+        const isChat = State.workspaceTab === 'chat' || (rawPerm === 'chat' && State.workspaceTab !== 'work');
+        const perm = (!isChat && rawPerm === 'chat') ? 'full' : rawPerm;
+        if (!isChat && State.settings.permissionMode === 'chat') {
+          State.settings.permissionMode = 'full';
+        }
         document.body.dataset.mode = isChat ? 'chat' : 'work';
 
         DOM.modeSegChat.classList.toggle('active', isChat);
@@ -10663,7 +10715,7 @@
         }
 
         DOM.permTriggerBtn.classList.remove('perm-full', 'perm-chat');
-        DOM.permTriggerDot.className = 'selector-dot ' + perm;
+        DOM.permTriggerDot.className = 'selector-dot ' + (perm === 'full' ? 'full' : 'ask');
 
         // Permission choice (Ask / Full access) only belongs to Work / Brief Code / Task — never plain Chat.
         DOM.permTriggerBtn.classList.toggle('perm-hidden-in-chat', isChat);
@@ -10673,9 +10725,6 @@
         if (perm === 'full') {
           DOM.permTriggerBtn.classList.add('perm-full');
           DOM.permTriggerLabel.textContent = 'Full access ❗';
-        } else if (perm === 'chat') {
-          DOM.permTriggerBtn.classList.add('perm-chat');
-          DOM.permTriggerLabel.textContent = 'Chat only';
         } else {
           DOM.permTriggerLabel.textContent = 'Ask for permission';
         }
@@ -10730,30 +10779,35 @@
         const confirmed = mode === 'full';
         if (api && api.setPermissionMode) {
           const res = await api.setPermissionMode(mode, confirmed);
-          if (res && res.ok) {
-            State.settings = res.settings;
-            State.workspaceTab = mode === 'chat' ? 'chat' : 'work';
-            renderPermissionAndModeUI();
+          if (res && res.ok && res.settings) {
+            State.settings = Object.assign({}, State.settings, res.settings);
+          } else if (res && typeof res === 'object' && res.permissionMode) {
+            State.settings = Object.assign({}, State.settings, res);
+          } else {
+            State.settings.permissionMode = mode;
           }
         } else {
           State.settings.permissionMode = mode;
-          State.workspaceTab = mode === 'chat' ? 'chat' : 'work';
-          renderPermissionAndModeUI();
         }
+        State.workspaceTab = mode === 'chat' ? 'chat' : 'work';
+        renderPermissionAndModeUI();
         closePopovers();
       }
 
       async function confirmFullAccessActivation() {
         if (api && api.setPermissionMode) {
           const res = await api.setPermissionMode('full', true);
-          if (res && res.ok) {
-            State.settings = res.settings;
-            State.workspaceTab = 'work';
+          if (res && res.ok && res.settings) {
+            State.settings = Object.assign({}, State.settings, res.settings);
+          } else if (res && typeof res === 'object' && res.permissionMode) {
+            State.settings = Object.assign({}, State.settings, res);
+          } else {
+            State.settings.permissionMode = 'full';
           }
         } else {
           State.settings.permissionMode = 'full';
-          State.workspaceTab = 'work';
         }
+        State.workspaceTab = 'work';
         closeAllModals();
         renderPermissionAndModeUI();
         showToast('❗ Full access activated for this session.', 'warn');
@@ -13484,6 +13538,119 @@
                   inp.placeholder = 'Paste ' + d.name + ' API key (' + d.prefix + ')…';
                   inp.focus();
                 }
+              }
+            });
+            const tabLabel = createElement('span', { style: 'display:inline-flex;align-items:center;gap:6px;font-weight:700;' });
+            if (d.logo) {
+              tabLabel.appendChild(createElement('img', { src: d.logo, alt: '', style: 'width:15px;height:15px;object-fit:contain;display:block;' }));
+            }
+            tabLabel.appendChild(document.createTextNode(d.name));
+            btn.appendChild(tabLabel);
+            const dot = createElement('span', {
+              className: 'prov-status-dot' + (info.has ? ' saved' : ''),
+              title: info.has ? ('Key saved: ' + (shortMask(info.masked) || '')) : 'No key saved'
+            });
+            btn.appendChild(dot);
+            el.appendChild(btn);
+          }
+        }
+        const maskedEl = $('settings-key-masked');
+        if (maskedEl) {
+          maskedEl.textContent = State.hasKey
+            ? (providerVisual(State.provider).name + ' · ' + shortMask(State.keyMasked))
+            : 'None saved';
+        }
+      }
+
+      function renderAndroidControlBanner() {
+        const banner = $('android-perm-banner');
+        if (!banner) return;
+        const isAndroid = document.documentElement.getAttribute('data-platform') === 'android' ||
+          (State.os && State.os.platform === 'android');
+        if (!isAndroid) {
+          banner.classList.remove('needs-perms');
+          return;
+        }
+        const accOk = !!(State.diagnostics && State.diagnostics.accessibilityEnabled);
+        banner.classList.toggle('needs-perms', !accOk);
+      }
+
+      function applyKeyValidationBundle(res) {
+        if (!res) return;
+        if (res.diagnostics) State.diagnostics = res.diagnostics;
+        if (res.key) {
+          State.hasKey = !!res.key.has;
+          State.keyMasked = res.key.masked || '';
+          State.keyBackend = res.key.backend || State.keyBackend;
+          if (res.key.slots) State.keySlots = res.key.slots;
+        }
+        if (res.slots) State.keySlots = res.slots;
+        if (res.provider) State.provider = res.provider;
+        if (res.providerInfo) State.providerInfo = res.providerInfo;
+        if (Array.isArray(res.presets)) State.presets = res.presets;
+        if (Array.isArray(res.models)) State.models = res.models;
+        if (res.match) State.match = res.match;
+        if (res.settings) State.settings = Object.assign({}, State.settings, res.settings);
+        if (!res.provider && State.settings && State.settings.provider) {
+          State.provider = State.settings.provider;
+        }
+        applyProviderTheme(State.provider);
+        renderKeyHeaderIndicator();
+        renderKeySlots();
+        renderModelSelector();
+        renderWelcomeView({ triggerLogoAnim: false });
+        renderSettingsTab();
+        renderAndroidControlBanner();
+      }
+
+      function renderKeyHeaderIndicator() {
+        const dot = DOM.headerKeyDot;
+        if (!State.hasKey) {
+          dot.className = 'key-status-dot invalid';
+          DOM.settingsOpenBtn.title = 'No API key saved';
+          return;
+        }
+        const lv = State.settings.lastValidation;
+        if (!lv || lv.status === 'valid') {
+          dot.className = 'key-status-dot valid';
+        } else if (lv.status === 'rate' || lv.status === 'network') {
+          dot.className = 'key-status-dot warn';
+        } else {
+          dot.className = 'key-status-dot invalid';
+        }
+      }
+
+      function renderUsageIndicators() {
+        const u = State.usage && State.usage.session ? State.usage.session : { total: 0, requests: 0 };
+        DOM.usagePillText.textContent = formatNumber(u.total) + ' tokens this session';
+
+        const sumEl = $('settings-usage-summary');
+        if (sumEl) {
+          sumEl.innerHTML =
+            '<strong>Requests:</strong> ' + formatNumber(u.requests) +
+            ' &nbsp;·&nbsp; <strong>Prompt:</strong> ' + formatNumber(u.prompt) +
+            ' &nbsp;·&nbsp; <strong>Output:</strong> ' + formatNumber(u.output) +
+            (u.thoughts ? ' &nbsp;·&nbsp; <strong>Thinking:</strong> ' + formatNumber(u.thoughts) : '') +
+            ' &nbsp;·&nbsp; <strong>Total this session:</strong> ' + formatNumber(u.total) + ' tokens';
+        }
+
+        const modalBody = $('usage-modal-body');
+        if (modalBody) {
+          modalBody.innerHTML = '';
+          modalBody.appendChild(createElement('div', {
+            className: 'settings-card',
+            html:
+              '<div class="settings-card-title">Session Totals</div>' +
+              '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;">' +
+              '<div><div class="field-hint">Total Tokens</div><strong style="font-size:18px;">' + formatNumber(u.total) + '</strong></div>' +
+              '<div><div class="field-hint">Prompt Tokens</div><strong style="font-size:18px;">' + formatNumber(u.prompt) + '</strong></div>' +
+              '<div><div class="field-hint">Output + Thinking</div><strong style="font-size:18px;">' + formatNumber((u.output || 0) + (u.thoughts || 0)) + '</strong></div>' +
+              '</div>'
+          }));
+
+          const byModel = State.usage && State.usage.byModel ? Object.entries(State.usage.byModel) : [];
+          if (byModel.length) {
+            const tbl = createElement('table', { className: 'models-table' });
             tbl.innerHTML = '<thead><tr><th>Model</th><th>Requests</th><th>Prompt</th><th>Output</th><th>Total</th></tr></thead>';
             const tb = createElement('tbody');
             for (const [mid, mu] of byModel) {
@@ -14008,7 +14175,7 @@
       ==================================================================== */
 
       const BRIEF_NEWS_VERSION = '2.1.3-beta';
-      const BRIEF_BUILD_NUMBER = 218;
+      const BRIEF_BUILD_NUMBER = 219;
       let latestRemoteRelease = null;
 
       if (api && api.onUpdateProgress) {
@@ -14192,7 +14359,7 @@
                   linuxDebUrl: debHit || (feed && feed.linuxDebUrl),
                   mandatoryAndroid: true
                 });
-              } else if (feed) {
+              } else if (feed && ghVer && !isRemoteVersionNewer(feed.version || '0.0.0', ghVer)) {
                 if (apkHit) feed.apkUrl = apkHit;
                 if (winHit) feed.winUrl = winHit;
                 if (debHit) feed.linuxDebUrl = debHit;

@@ -16,7 +16,7 @@ android {
         applicationId = "com.brief.desktop"
         minSdk = 26
         targetSdk = 34
-        versionCode = 218
+        versionCode = 219
         versionName = "2.1.3-beta"
     }
 

@@ -796,11 +796,25 @@ function setupIpc() {
         const apkHit = findAsset(/^Brief-Android-v.*\.apk$/i) || findAsset(/^Brief-Android\.apk$/i);
         const winHit = findAsset(/^Brief-Setup\.exe$/i);
         const debHit = findAsset(/^Brief-Linux-x64\.deb$/i);
+        const cmpSem = (a, b) => {
+          const p = (s) => {
+            const [c, pre = ''] = String(s || '').replace(/^v/i, '').split('-', 2);
+            const n = c.split('.').map((x) => parseInt(x, 10) || 0);
+            return { n: [n[0] || 0, n[1] || 0, n[2] || 0], pre: pre.toLowerCase() };
+          };
+          const pa = p(a), pb = p(b);
+          for (let i = 0; i < 3; i++) if (pa.n[i] !== pb.n[i]) return pa.n[i] - pb.n[i];
+          if (!pa.pre && pb.pre) return 1;
+          if (pa.pre && !pb.pre) return -1;
+          return pa.pre.localeCompare(pb.pre);
+        };
+        const feedVer = feed && feed.version ? String(feed.version) : '';
+        const ghSameOrNewer = !!ghVer && (!feedVer || cmpSem(ghVer, feedVer) >= 0);
         feed = Object.assign({}, feed || {}, {
-          version: (feed && feed.version) || ghVer,
-          apkUrl: apkHit || (feed && feed.apkUrl),
-          winUrl: winHit || (feed && feed.winUrl),
-          linuxDebUrl: debHit || (feed && feed.linuxDebUrl)
+          version: (ghVer && (!feedVer || cmpSem(ghVer, feedVer) > 0)) ? ghVer : (feedVer || ghVer),
+          apkUrl: (ghSameOrNewer && apkHit) || (feed && feed.apkUrl),
+          winUrl: (ghSameOrNewer && winHit) || (feed && feed.winUrl),
+          linuxDebUrl: (ghSameOrNewer && debHit) || (feed && feed.linuxDebUrl)
         });
       }
     } catch (_) { /* offline */ }

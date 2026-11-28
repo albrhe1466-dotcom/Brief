@@ -97,8 +97,14 @@ object OemCompatibilityHelper {
     }
 
     fun isTablet(context: Context? = null): Boolean {
-        val model = (Build.MODEL ?: "").lowercase()
-        if (model.contains("pad") || model.contains("tab") || model.contains("hey-") || model.contains("rol-") || model.contains("rod-")) {
+        val model = "${Build.MODEL ?: ""} ${Build.PRODUCT ?: ""} ${Build.DEVICE ?: ""}".lowercase()
+        if (
+            model.contains("pad") || model.contains("tab") ||
+            model.contains("eln2") || model.contains("eln-") ||
+            model.contains("hey-") || model.contains("rol-") ||
+            model.contains("rod-") || model.contains("agn-") ||
+            model.contains("kbr-") || model.contains("mrd-")
+        ) {
             return true
         }
         val ctx = context ?: return false

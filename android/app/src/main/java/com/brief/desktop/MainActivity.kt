@@ -153,6 +153,10 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(webView)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
         ViewCompat.setOnApplyWindowInsetsListener(webView) { v, windowInsets ->
             val barsAndCutout = windowInsets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
@@ -164,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=218")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=219")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -401,7 +405,7 @@ class MainActivity : AppCompatActivity() {
             pkgInfo.longVersionCode.toInt()
         } else {
             @Suppress("DEPRECATION")
-            pkgInfo?.versionCode ?: 218
+            pkgInfo?.versionCode ?: 219
         }
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {
@@ -523,6 +527,25 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread { showNativePhoneSetupDialog() }
         }
 
+        private fun compareSemver(aRaw: String, bRaw: String): Int {
+            fun parse(s: String): Triple<IntArray, Boolean, String> {
+                val clean = s.trim().removePrefix("v").removePrefix("V")
+                val parts = clean.split("-", limit = 2)
+                val nums = parts[0].split(".").map { it.toIntOrNull() ?: 0 }
+                val arr = intArrayOf(nums.getOrElse(0) { 0 }, nums.getOrElse(1) { 0 }, nums.getOrElse(2) { 0 })
+                val pre = if (parts.size > 1) parts[1].lowercase() else ""
+                return Triple(arr, pre.isNotEmpty(), pre)
+            }
+            val (aN, aPre, aTag) = parse(aRaw)
+            val (bN, bPre, bTag) = parse(bRaw)
+            for (i in 0..2) {
+                if (aN[i] != bN[i]) return aN[i].compareTo(bN[i])
+            }
+            if (!aPre && bPre) return 1
+            if (aPre && !bPre) return -1
+            return aTag.compareTo(bTag)
+        }
+
         @JavascriptInterface
         fun checkRemoteUpdateAsync(callId: String, argJson: String) {
             lifecycleScope.launch {
@@ -582,12 +605,19 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                                 val merged = feed ?: JSONObject()
-                                if (merged.optString("version").isBlank() && ghVer.isNotBlank()) {
+                                val feedVer = merged.optString("version")
+                                val ghIsSameOrNewer = ghVer.isNotBlank() && (feedVer.isBlank() || compareSemver(ghVer, feedVer) >= 0)
+                                if (feedVer.isBlank() && ghVer.isNotBlank()) {
+                                    merged.put("version", ghVer)
+                                } else if (ghVer.isNotBlank() && compareSemver(ghVer, feedVer) > 0) {
                                     merged.put("version", ghVer)
                                 }
-                                if (apkHit.isNotBlank()) merged.put("apkUrl", apkHit)
-                                if (winHit.isNotBlank()) merged.put("winUrl", winHit)
-                                if (debHit.isNotBlank()) merged.put("linuxDebUrl", debHit)
+                                // Only replace asset download links when GitHub release matches or is newer than news.json
+                                if (ghIsSameOrNewer) {
+                                    if (apkHit.isNotBlank()) merged.put("apkUrl", apkHit)
+                                    if (winHit.isNotBlank()) merged.put("winUrl", winHit)
+                                    if (debHit.isNotBlank()) merged.put("linuxDebUrl", debHit)
+                                }
                                 if (!merged.has("mandatoryAndroid")) merged.put("mandatoryAndroid", true)
                                 feed = merged
                             }
@@ -622,41 +652,57 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     val targetApk = File(updatesDir, "Brief-Android-v$safeVer.apk")
-                    val req = Request.Builder()
-                        .url(cleanUrl)
-                        .header("Cache-Control", "no-cache")
-                        .build()
-                    updateHttp.newCall(req).execute().use { resp ->
-                        if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
-                        val body = resp.body ?: throw IllegalStateException("Empty APK response")
-                        val total = body.contentLength()
-                        var written = 0L
-                        var lastPct = -1
-                        body.byteStream().use { input ->
-                            FileOutputStream(targetApk).use { output ->
-                                val buf = ByteArray(32 * 1024)
-                                while (true) {
-                                    val n = input.read(buf)
-                                    if (n <= 0) break
-                                    output.write(buf, 0, n)
-                                    written += n
-                                    if (total > 0) {
-                                        val pct = ((written * 100L) / total).toInt().coerceIn(0, 100)
-                                        if (pct >= lastPct + 10 || pct == 100) {
-                                            lastPct = pct
-                                            emitJsEvent(
-                                                "update:progress",
-                                                JSONObject().put("percent", pct).put("version", safeVer)
-                                            )
+                    val candidateUrls = listOf(
+                        cleanUrl,
+                        "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android.apk"
+                    ).distinct()
+                    var downloaded = false
+                    var lastErr: Exception? = null
+                    for (dlUrl in candidateUrls) {
+                        try {
+                            val req = Request.Builder()
+                                .url(dlUrl)
+                                .header("Cache-Control", "no-cache")
+                                .build()
+                            updateHttp.newCall(req).execute().use { resp ->
+                                if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
+                                val body = resp.body ?: throw IllegalStateException("Empty APK response")
+                                val total = body.contentLength()
+                                var written = 0L
+                                var lastPct = -1
+                                body.byteStream().use { input ->
+                                    FileOutputStream(targetApk).use { output ->
+                                        val buf = ByteArray(32 * 1024)
+                                        while (true) {
+                                            val n = input.read(buf)
+                                            if (n <= 0) break
+                                            output.write(buf, 0, n)
+                                            written += n
+                                            if (total > 0) {
+                                                val pct = ((written * 100L) / total).toInt().coerceIn(0, 100)
+                                                if (pct >= lastPct + 10 || pct == 100) {
+                                                    lastPct = pct
+                                                    emitJsEvent(
+                                                        "update:progress",
+                                                        JSONObject().put("percent", pct).put("version", safeVer)
+                                                    )
+                                                }
+                                            }
                                         }
+                                        output.flush()
                                     }
                                 }
-                                output.flush()
                             }
+                            if (targetApk.exists() && targetApk.length() >= 500_000L) {
+                                downloaded = true
+                                break
+                            }
+                        } catch (ex: Exception) {
+                            lastErr = ex
                         }
                     }
-                    if (!targetApk.exists() || targetApk.length() < 500_000L) {
-                        throw IllegalStateException("Incomplete APK download")
+                    if (!downloaded) {
+                        throw lastErr ?: IllegalStateException("Incomplete APK download")
                     }
                     emitJsEvent("update:progress", JSONObject().put("percent", 100).put("done", true).put("version", safeVer))
                     runOnUiThread {
