@@ -26,6 +26,107 @@ function extractDomainSafe(rawUrl) {
   }
 }
 
+/**
+ * HARD SELF-RELIANCE GUARDRAIL:
+ * Prevents Brief from ever opening Claude, ChatGPT, Gemini web, Perplexity, Copilot, DeepSeek, Cursor,
+ * Antigravity, Codex, random browser tabs, or random desktop terminal windows when the user did NOT ask for them!
+ * Brief MUST think, plan, code, write, and solve the task HIMSELF using his own direct tools.
+ */
+const EXTERNAL_AI_RULES = [
+  { label: 'Claude', targetRe: /\bclaude(?:\.ai|\s*code|\s*desktop)?\b|anthropic\.com\/claude/i, userRe: /\bclaude\b/i },
+  { label: 'ChatGPT', targetRe: /\bchatgpt\b|chat\.openai\.com/i, userRe: /\b(?:chatgpt|openai\s+chat)\b/i },
+  { label: 'Gemini web', targetRe: /gemini\.google\.com/i, userRe: /\bgemini\.google\.com|open\s+gemini\b/i },
+  { label: 'Perplexity', targetRe: /\bperplexity(?:\.ai)?\b/i, userRe: /\bperplexity\b/i },
+  { label: 'Copilot', targetRe: /copilot\.microsoft\.com|\bgithub\s+copilot\b/i, userRe: /\bcopilot\b/i },
+  { label: 'DeepSeek', targetRe: /\bdeepseek(?:\.com)?\b/i, userRe: /\bdeepseek\b/i },
+  { label: 'Grok', targetRe: /\bgrok\.com\b/i, userRe: /\bgrok\b/i },
+  { label: 'Poe', targetRe: /\bpoe\.com\b/i, userRe: /\bpoe\.com|\bopen\s+poe\b/i },
+  { label: 'Cursor', targetRe: /\bcursor(?:\.exe|\.sh|\.com)?\b/i, userRe: /\bcursor\b/i },
+  { label: 'Antigravity', targetRe: /\bantigravity\b/i, userRe: /\bantigravity\b/i },
+  { label: 'Codex', targetRe: /(?:^|\s)codex(?:\s|$)/i, userRe: /\bcodex\b/i }
+];
+
+function checkUnsolicitedActionBlock(toolName, args, userIntentText, runtimeState) {
+  const name = String(toolName || '');
+  const a = args || {};
+  const intent = String(userIntentText || '');
+  const state = runtimeState || {};
+
+  // 1) NEVER open or invoke another AI website/app/CLI unless the user EXPLICITLY named that AI!
+  if (['open_url', 'browser_tab', 'open_app', 'focus_window', 'run_command', 'terminal_open', 'terminal_send'].includes(name)) {
+    const inspectTarget = [a.url, a.query, a.name, a.title, a.command, a.initial_command, a.input]
+      .filter(Boolean)
+      .join(' ');
+    if (inspectTarget) {
+      for (const rule of EXTERNAL_AI_RULES) {
+        if (rule.targetRe.test(inspectTarget) && !rule.userRe.test(intent)) {
+          return {
+            blocked: true,
+            reason: `BLOCKED: The user did NOT ask you to open or use ${rule.label}! YOU are Brief — do ALL the thinking, coding, writing, and work YOURSELF using your own brain and direct tools (write_file, edit_file, read_file, run_command, web_search, fetch_url). Never delegate to ${rule.label} or open another AI unless the user explicitly asks for it by name!`
+          };
+        }
+      }
+    }
+  }
+
+  // 2) NEVER pop up random desktop terminal apps/windows unless the user explicitly asked to open a terminal!
+  const userAskedVisibleTerminal = /\b(open\s+(?:a\s+)?(?:cmd|command\s+prompt|powershell|terminal|console|shell)|launch\s+(?:a\s+)?(?:cmd|powershell|terminal)|visible\s+terminal|show\s+(?:the\s+)?terminal|new\s+terminal)\b/i.test(intent);
+  if (name === 'open_app' && /\b(cmd|cmd\.exe|command\s*prompt|powershell|pwsh|windows\s*terminal|wt|wt\.exe|terminal|git\s*bash|konsole|gnome-terminal|xterm)\b/i.test(String(a.name || '')) && !userAskedVisibleTerminal) {
+    return {
+      blocked: true,
+      reason: 'BLOCKED: Do NOT open random desktop terminal windows! Run commands directly and quietly using `run_command({ command: "..." })` (with open_window omitted/false) so you capture real stdout/stderr/exit codes cleanly without opening random terminal windows.'
+    };
+  }
+  if (name === 'terminal_open' && !userAskedVisibleTerminal && (state.openedTerminalsCount || 0) >= 2) {
+    return {
+      blocked: true,
+      reason: 'BLOCKED: You already opened interactive terminal session(s) in this task. Reuse an existing session with `terminal_send` or use one-shot `run_command` instead of opening more random terminals!'
+    };
+  }
+
+  // 3) NEVER open random browser tabs, empty tabs, or browser search tabs when web_search exists!
+  const userAskedBrowserOrUrl = /\b(browser|tab|tabs|website|site|webpage|url|https?:\/\/|youtube|google\.com|chrome|edge|firefox|brave|opera|localhost|127\.0\.0\.1|preview|open\s+in\s+browser|\.com\b|\.org\b|\.net\b|\.io\b|\.dev\b|\.html\b)\b/i.test(intent);
+  if (name === 'browser_tab' && String(a.action || '').toLowerCase() === 'new' && !String(a.url || '').trim() && !/\bnew\s+tab\b/i.test(intent)) {
+    return {
+      blocked: true,
+      reason: 'BLOCKED: Do NOT open empty random browser tabs! Stay focused on the user\'s actual request using direct file, command, or `web_search` tools.'
+    };
+  }
+  if ((name === 'open_url' || (name === 'browser_tab' && ['new', 'navigate'].includes(String(a.action || '').toLowerCase()))) && a.url) {
+    const uStr = String(a.url || '').trim();
+    const isGenericSearchEngine = /^https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/?(?:\?|$|search)|bing\.com\/?(?:\?|$|search)|duckduckgo\.com\/?(?:\?|$)|yahoo\.com\/?(?:\?|$))/i.test(uStr);
+    if (isGenericSearchEngine && !/\b(?:open\s+(?:google|bing|duckduckgo)|google\.com|bing\.com|duckduckgo\.com)\b/i.test(intent)) {
+      return {
+        blocked: true,
+        reason: 'BLOCKED: Do NOT open random search-engine browser tabs! Use your silent built-in `web_search({ query: "..." })` and `fetch_url` tools instead.'
+      };
+    }
+    if (!userAskedBrowserOrUrl && (state.unsolicitedTabsOpened || 0) >= 1) {
+      return {
+        blocked: true,
+        reason: 'BLOCKED: The user did NOT ask you to open multiple browser tabs! Use `web_search` / `fetch_url` silently for research, or work directly on the user\'s files/apps.'
+      };
+    }
+  }
+  if (name === 'press_keys') {
+    const keysStr = [a.keys, ...(Array.isArray(a.sequence) ? a.sequence : [])].filter(Boolean).join(' ').toLowerCase();
+    if (/\b(?:ctrl|cmd|meta)\+t\b/.test(keysStr) && !/\bnew\s+tab\b/i.test(intent)) {
+      return {
+        blocked: true,
+        reason: 'BLOCKED: Do NOT press Ctrl+T to open random browser tabs! Use `web_search` / `fetch_url` or work directly on the requested task.'
+      };
+    }
+    if (/\bwin\+r\b/.test(keysStr) && !userAskedVisibleTerminal) {
+      return {
+        blocked: true,
+        reason: 'BLOCKED: Do NOT press Win+R to spawn random windows! Use `run_command` or direct file/app tools instead.'
+      };
+    }
+  }
+
+  return { blocked: false };
+}
+
 function buildRedirectMemoryReminder(messages) {
   if (!Array.isArray(messages) || messages.length < 2) return '';
   const corrections = [];
@@ -244,7 +345,7 @@ function detectDeepTaskProfile(task, _openWindows, settings, overrides) {
   const isRoblox = /\b(roblox|roblox\s*studio|obby|luau|startergui|proximityprompt|clickdetector)\b/i.test(text);
   const isAnimationOrCreative = /\b(capcut|blender|higgsfield|after\s*effects|premiere|photoshop|illustrator|adobe|keyframe|rig|timeline|unreal|unity|davinci)\b/i.test(text);
   const isQuickCheckOnly = /^\s*(?:what is on my screen|read (?:this|screen)|open [a-z0-9 ]{1,24}|search (?:google|youtube|web) for .{1,50}|take a screenshot|list windows)\s*[.!?]?\s*$/i.test(text);
-  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby|flash|etcher|rufus|burn|install|download|render|generate|verify|test|claude|chatgpt|agent|sd\s*card|usb)\b/i.test(text));
+  const requiresAppTest = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative || /\b(create|build|make|fix|debug|code|script|app|website|html|game|elevator|obby|flash|etcher|rufus|burn|install|render|generate|verify|test|sd\s*card|usb)\b/i.test(text));
   const isDeepBuildTask = !isQuickCheckOnly && (isRoblox || isAnimationOrCreative);
 
   const minMins = (overrides && typeof overrides.minWorkMs === 'number')
@@ -1677,6 +1778,11 @@ class AgentRunner extends EventEmitter {
       let stillLoadingNudges = 0;
       let permissionGrantsCount = 0;
       const MAX_EXTERNAL_PERMISSION_GRANTS = 16;
+      const guardrailState = { openedTerminalsCount: 0, unsolicitedTabsOpened: 0 };
+      const userIntentForGuard = [
+        ...(Array.isArray(messages) ? messages.filter((m) => m && m.role === 'user' && m.text).slice(-6).map((m) => String(m.text)) : []),
+        String(task || '')
+      ].join('\n');
       let untestedRejections = 0;
       let verifyRejections = 0;
       let qaPasses = 0;
@@ -1832,12 +1938,12 @@ class AgentRunner extends EventEmitter {
               const p = String(w.process || '').toLowerCase();
               if (/roblox/i.test(taskStr) && (t.includes('roblox') || p.includes('roblox'))) return true;
               if (/blender/i.test(taskStr) && (t.includes('blender') || p.includes('blender'))) return true;
-              if (/(?:vs\s*code|code|visual\s*studio)/i.test(taskStr) && (t.includes('code') || p.includes('code'))) return true;
+              if (/(?:vs\s*code|visual\s*studio\s*code)/i.test(taskStr) && (t.includes('visual studio code') || p === 'code')) return true;
               if (/notepad/i.test(taskStr) && (t.includes('notepad') || p.includes('notepad'))) return true;
-              if (/(?:terminal|cmd|powershell)/i.test(taskStr) && (t.includes('cmd') || t.includes('powershell') || t.includes('terminal'))) return true;
-              if (/(?:browser|chrome|edge|firefox)/i.test(taskStr) && (t.includes('chrome') || t.includes('edge') || t.includes('firefox'))) return true;
+              if (/(?:open\s+(?:a\s+)?(?:terminal|cmd|powershell))/i.test(taskStr) && (t.includes('cmd') || t.includes('powershell') || t.includes('terminal'))) return true;
+              if (/(?:chrome|edge|firefox|brave|browser|tab)/i.test(taskStr) && (t.includes('chrome') || t.includes('edge') || t.includes('firefox') || t.includes('brave'))) return true;
               return false;
-            }) || (openWindows.length ? openWindows[0] : null);
+            }) || null;
 
             if (targetWin) {
               const toolCallId = 'init_focus_' + Date.now();
@@ -1918,7 +2024,8 @@ class AgentRunner extends EventEmitter {
             let screenLoadingSignal = '';
             let screenPermSignal = '';
             let liveCheckUiText = '';
-            if (!unverifiedLaunchedTerm && !activeBgTerms.length && !isBackgroundVisualMode) {
+            const interactedWithExternalGui = stepLog.some((st) => st && st.ok && ['open_app', 'focus_window', 'click', 'click_text', 'click_element', 'watch_and_wait', 'browser_tab', 'open_url'].includes(st.tool));
+            if (!unverifiedLaunchedTerm && !activeBgTerms.length && !isBackgroundVisualMode && interactedWithExternalGui) {
               liveCheckUiText = await describeForegroundElements(this.screen, this.automation, { fastMode: false }).catch(() => '');
               const sig = analyzeWatchText(liveCheckUiText);
               if (sig.hasPermissionPrompt && !sig.isDone && permissionGrantsCount < MAX_EXTERNAL_PERMISSION_GRANTS) {
@@ -2002,7 +2109,7 @@ class AgentRunner extends EventEmitter {
                   ? 'Run one live check inside Roblox Studio now: press Play/Run (`F5` or `F8`), check Output for zero red errors, fix any broken part, then finish.'
                   : taskProfile.isAnimationOrCreative
                     ? 'Preview your animation/scene once now (press Space/Play or scrub timeline and inspect), fix anything missing, then finish.'
-                    : 'Test what you built or fixed now (`run_command` in Command Prompt/PowerShell, `terminal_send`, `open_path`, or `open_url`). If anything is wrong, inform the user and fix it before finishing.');
+                    : 'Verify what you built or fixed now (e.g. run a quick check with `run_command` quietly without opening random windows, or inspect the file you created). If anything is wrong, inform the user and fix it before finishing.');
             this.emitLog({ kind: 'verify', status: 'warn', model: activeStepModel, tool: 'test_gate', detail: lastTestFailed ? 'Previous test failed — continuing fix & re-test' : 'Running live test before finishing' });
             this.emit('work-note', {
               runId,
@@ -2100,7 +2207,27 @@ class AgentRunner extends EventEmitter {
           if (this.stopped) throw abortError();
           const fc = p.functionCall;
           const name = fc.name;
-          const args = fc.args || {};
+          const args = Object.assign({}, fc.args || {});
+
+          // HARD SELF-RELIANCE GUARDRAIL: Block unsolicited Claude/other-AI launching, random browser tabs, and random visible terminals!
+          if (name === 'run_command' && args.open_window === true && !/\b(open\s+(?:a\s+)?(?:cmd|command\s+prompt|powershell|terminal|console)|visible\s+terminal|show\s+(?:the\s+)?terminal)\b/i.test(userIntentForGuard)) {
+            args.open_window = false;
+          }
+          const guardVerdict = checkUnsolicitedActionBlock(name, args, userIntentForGuard, guardrailState);
+          if (guardVerdict.blocked) {
+            this.emitLog({ kind: 'safety', status: 'warn', model: activeStepModel, tool: name, detail: guardVerdict.reason });
+            responseParts.push({
+              functionResponse: Object.assign(fc.id ? { id: fc.id } : {}, {
+                name,
+                response: { ok: false, blocked: true, error: guardVerdict.reason }
+              })
+            });
+            continue;
+          }
+          if (name === 'terminal_open') guardrailState.openedTerminalsCount += 1;
+          if (name === 'open_url' || (name === 'browser_tab' && String(args.action || '').toLowerCase() === 'new')) {
+            guardrailState.unsolicitedTabsOpened += 1;
+          }
 
           // Handle delegation to Google's Computer Use model
           if (name === 'delegate_screen_control' && cuAvailable) {
@@ -2387,10 +2514,10 @@ class AgentRunner extends EventEmitter {
             }
           }
 
-          // Track external permission-granting clicks/keys (Allow/Approve/Accept/Proceed/Yes/Open Folder — up to 16 grants per task!)
+          // Track genuine external permission-granting clicks/keys (Allow/Approve/Accept/Open Folder/Trust — up to 16 grants per task!)
           const isExternalPermGrant = stepOk && (
-            ((name === 'click_text' || name === 'click_element') && /\b(allow|approve|accept|proceed|permit|grant|yes|confirm|continue|trust|run|open\s+folder|ok)\b/i.test(String((args && args.query) || ''))) ||
-            (name === 'terminal_send' && /^(?:y|yes|a|always|)$/i.test(String((args && args.input) || '').trim()))
+            ((name === 'click_text' || name === 'click_element') && /\b(allow|approve|accept|permit|grant|trust|open\s+folder|yes,\s*proceed|while\s+using|only\s+this\s+time)\b/i.test(String((args && args.query) || ''))) ||
+            (name === 'terminal_send' && /^(?:y|yes|a|always)$/i.test(String((args && args.input) || '').trim()))
           );
           if (isExternalPermGrant) {
             permissionGrantsCount += 1;
@@ -2571,5 +2698,6 @@ module.exports = {
   formatWorkedTime,
   isMutatingWorkStep,
   isTestEvidenceStep,
-  detectDeepTaskProfile
+  detectDeepTaskProfile,
+  checkUnsolicitedActionBlock
 };

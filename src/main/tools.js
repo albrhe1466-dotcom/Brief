@@ -51,7 +51,7 @@ function formatWatchElapsed(ms) {
   return secs + 's';
 }
 
-const DEFAULT_LOADING_RE = /\b(loading|reading|thinking|thought\s+for|analyzing|searching|exploring|inspecting|planning|editing|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|bundling|packaging|writing|formatting|copying|transferring|syncing|initializing|starting|processing|working|waiting|please\s+wait|in\s+progress|almost\s+there|remaining|eta\b|queued|preparing|finishing|checking\s+updates|stop\s+generating|running\s+command)\b|\b(?:[1-9]?\d(?:\.\d+)?)\s*%/i;
+const DEFAULT_LOADING_RE = /\b(loading(?:\.\.\.|\s+\d|\s+[a-z]+)|is\s+reading|reading\.\.\.|is\s+thinking|thinking\.\.\.|thought\s+for|is\s+analyzing|analyzing\.\.\.|searching\s+the\s+web|searching\.\.\.|flashing|validating|verifying\.\.\.|generating(?:\s+video|\.\.\.)|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building\.\.\.|bundling|packaging|writing\s+image|formatting|copying\s+(?:iso|files)|transferring|syncing\.\.\.|initializing|processing\.\.\.|working\.\.\.|waiting\.\.\.|please\s+wait|in\s+progress|almost\s+there|\d+\s*(?:sec|min|hr|m|s)\s+remaining|eta\b|queued|preparing\.\.\.|checking\s+updates|stop\s+generating|running\s+command)\b|\b(?:[1-9]?\d(?:\.\d+)?)\s*%/i;
 const DEFAULT_PERMISSION_RE = /\b(allow\s+once|allow\s+always|allow\s+this|accept\s+all|approve|permission\s+required|wants?\s+to\s+(?:access|run|open|edit|read|write|execute|use)|do\s+you\s+want\s+to\s+allow|user\s+account\s+control|grant\s+(?:access|permission)|yes,\s*proceed|run\s+command\?|open\s+folder\?|trust\s+(?:this|the)\s+(?:folder|workspace|authors?)|\[y\/n\]|\(y\/n\)|press\s+any\s+key|click\s+allow|ask\s+for\s+permission)\b/i;
 const DEFAULT_ERROR_RE = /\b(error:|failed|failure|denied|access\s+is\s+denied|permission\s+denied|rejected|unable\s+to|could\s+not|cannot|exception|crashed|fatal|abort(?:ed)?|checksum\s+mismatch|validation\s+failed|flash\s+failed|something\s+went\s+wrong|corrupt(?:ed)?|not\s+enough\s+space|device\s+not\s+found|timed?\s*out|try\s+again|retry)\b/i;
 const DEFAULT_DONE_RE = /\b(flash\s+complete|completed?\s+successfully|finished\s+successfully|all\s+done|100%\s*(?:complete|done|finished)|successfully\s+(?:installed|flashed|generated|rendered|built|downloaded|completed|created|verified)|ready\s+to\s+download|video\s+ready|export\s+complete|build\s+succeeded|done!)\b/i;
@@ -73,7 +73,7 @@ function analyzeWatchText(rawText, doneKeywords, errorKeywords) {
   const customDone = findCustom(doneKeywords);
   const doneM = customDone ? [customDone] : DEFAULT_DONE_RE.exec(txt);
 
-  // Detect active percentage strictly < 100% OR active loading/reading/thinking/flashing/validating/generating words
+  // Detect active percentage strictly < 100% OR unambiguous active loading/flashing/validating/generating/AI-working phrases
   let loadingHit = '';
   const pctRe = /\b(\d{1,3})(?:\.\d+)?\s*%/g;
   let pm;
@@ -82,12 +82,12 @@ function analyzeWatchText(rawText, doneKeywords, errorKeywords) {
     if (val >= 0 && val < 100) { loadingHit = pm[0]; break; }
   }
   if (!loadingHit) {
-    const lm = /\b(loading|reading|thinking|thought\s+for|analyzing|searching|exploring|inspecting|planning|editing|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\s+wait|in\s+progress|remaining|eta\b|queued|preparing|stop\s+generating|running\s+command|working\.\.\.|thinking\.\.\.)\b/i.exec(txt);
+    const lm = /\b(loading(?:\.\.\.|\s+\d|\s+[a-z]+)|is\s+reading|reading\.\.\.|is\s+thinking|thinking\.\.\.|thought\s+for|is\s+analyzing|analyzing\.\.\.|searching\s+the\s+web|searching\.\.\.|flashing|validating|verifying\.\.\.|generating(?:\s+video|\.\.\.)|rendering|downloading|uploading|installing|extracting|decompressing|compiling|building\.\.\.|writing\s+image|formatting|copying\s+(?:iso|files)|transferring|syncing\.\.\.|initializing|processing\.\.\.|please\s+wait|in\s+progress|\d+\s*(?:sec|min|hr|m|s)\s+remaining|eta\b|queued|preparing\.\.\.|stop\s+generating|running\s+command|working\.\.\.)\b/i.exec(txt);
     if (lm) loadingHit = lm[0];
   }
 
   // Critical: if screen says "Validating...", "Flashing 99%", "Reading...", "Thinking...", or "Rendering...", NEVER treat as done yet!
-  const stillActivePhase = /\b(reading|thinking|analyzing|searching|flashing|validating|verifying|generating|rendering|downloading|installing|extracting|decompressing|compiling|building|writing|formatting|copying|please\s+wait|in\s+progress|loading|remaining|stop\s+generating)\b/i.test(txt);
+  const stillActivePhase = /\b(is\s+reading|reading\.\.\.|is\s+thinking|thinking\.\.\.|is\s+analyzing|analyzing\.\.\.|searching\s+the\s+web|flashing|validating|verifying\.\.\.|generating(?:\s+video|\.\.\.)|rendering|downloading|uploading|installing|extracting|decompressing|compiling|writing\s+image|formatting|copying\s+(?:iso|files)|please\s+wait|in\s+progress|loading\.\.\.|stop\s+generating)\b/i.test(txt);
   const isDone = !!doneM && (!stillActivePhase || (!!customDone && !/\b(validating|flashing|rendering|generating|reading|thinking)\b/i.test(loadingHit)));
 
   return {
@@ -1694,7 +1694,7 @@ const TOOLS = [
   },
   {
     name: 'browser_tab', kind: 'app',
-    description: 'Inspect, switch to, open, navigate, or close browser tabs (Chrome, Edge, Brave, Firefox, Opera). Use action="list" to see all open tab titles, "switch" to click into a specific tab by title, "close" to close a tab, "close_others" to close all other tabs except query, or "new"/"navigate" to open/load a URL in the browser.',
+    description: 'Inspect, switch to, navigate, or close browser tabs (Chrome, Edge, Brave, Firefox, Opera). ONLY use action="new"/"navigate" when the user explicitly asked to open a specific website or preview! NEVER open random tabs or open Claude/ChatGPT/other AI sites — use web_search/fetch_url for research.',
     parameters: {
       type: 'object',
       properties: {
@@ -1897,9 +1897,9 @@ const TOOLS = [
   },
   {
     name: 'watch_and_wait', kind: 'info', observe: true,
-    description: 'Stay PATIENTLY and quietly watch ANY running process (Claude AI reading/thinking, ChatGPT, any other AI agent, terminal command, BalenaEtcher, Rufus, OS flasher/validator, AI video generator, installer, download, or build) until the REAL final result, a permission prompt (supports granting 3–16 permissions in a row!), or an error appears. Supports up to 240 minutes (4 hours!) with zero extra LLM calls and zero "I am still waiting" chat spam, showing wholesome watching+snack cursor emojis (👀🍿 / 👀🍕 / 👀☕). Works in BOTH Background and Live Visible modes!',
+    description: 'Stay PATIENTLY and quietly watch an ALREADY RUNNING process (your terminal command/build, BalenaEtcher, Rufus, OS flasher/validator, video generator, installer, download, or another app/AI ONLY if the user explicitly asked you to monitor it) until the REAL final result, a permission prompt (supports granting 3–16 permissions in a row), or an error appears. Supports up to 240 minutes (4 hours!) with zero extra LLM calls and zero "I am still waiting" chat spam, showing wholesome watching+snack cursor emojis (👀🍿 / 👀🍕 / 👀☕). NEVER open another AI just to watch it — do your own work yourself!',
     parameters: { type: 'object', properties: {
-      reason: { type: 'string', description: 'What Brief is watching (e.g. "Claude AI working", "terminal build", "BalenaEtcher/Rufus flashing & validating", "AI video generation").' },
+      reason: { type: 'string', description: 'What running process Brief is watching (e.g. "terminal build", "BalenaEtcher/Rufus flashing & validating", "video generation", "installer").' },
       session_id: { type: 'string', description: 'Optional terminal session_id from terminal_open or run_command(background=true) to monitor directly.' },
       max_wait_minutes: { type: 'number', description: 'Max minutes to stay and watch patiently (default 30, min 1, max 240 = 4 hours). Stays silently up to 30m per cycle so it never interrupts prematurely!' },
       check_interval_sec: { type: 'number', description: 'Seconds between screen/terminal checks (default 8, min 3, max 45).' },
@@ -2660,14 +2660,14 @@ const TOOLS = [
   /* ---------------- code & full terminal / command prompt control ---------------- */
   {
     name: 'run_command', kind: 'command',
-    description: 'Run a real Windows Command Prompt (shell="cmd") or PowerShell (shell="powershell") command with live streaming output. Supports one-shot commands, background dev servers/watchers (background=true returning a session_id for terminal_read/terminal_send/terminal_stop), or opening a visible Command Prompt window on desktop (open_window=true).',
+    description: 'Run a real Windows Command Prompt (shell="cmd") or PowerShell (shell="powershell") command quietly with captured stdout/stderr and exit code. Leave open_window false (default) so you NEVER pop up random terminal windows unless the user explicitly asked for a visible terminal window!',
     parameters: { type: 'object', properties: {
       command: { type: 'string', description: 'Exact command to run in Command Prompt or PowerShell.' },
       cwd: { type: 'string', description: 'Working folder (supports Desktop, Documents, Downloads, or full path; default: home).' },
       shell: { type: 'string', enum: ['cmd', 'powershell', 'bash'], description: 'Use "cmd" for Windows Command Prompt (cmd.exe) or "powershell" for PowerShell (default on Windows: powershell).' },
-      background: { type: 'boolean', description: 'Set true for long-running servers/watchers/tasks to keep running in the background and return session_id.' },
-      open_window: { type: 'boolean', description: 'Set true to launch a real visible Command Prompt / PowerShell window on the desktop.' },
-      timeout_sec: { type: 'integer', description: 'Timeout in seconds for foreground commands (default 300 = 5 min, max 14400 = 4 hours).' }
+      background: { type: 'boolean', description: 'Set true ONLY for long-running servers/watchers that need to stay alive and return session_id.' },
+      open_window: { type: 'boolean', description: 'Leave FALSE (default)! Set true ONLY if the user explicitly asked you to launch a visible desktop Command Prompt / PowerShell window.' },
+      timeout_sec: { type: 'integer', description: 'Timeout in seconds for foreground commands (default 1080 = 18 min, max 14400 = 4 hours).' }
     }, required: ['command'] },
     describe: (a) => 'Run in ' + (a.shell === 'cmd' ? 'Command Prompt' : (a.shell || (IS_WIN ? 'PowerShell' : 'bash'))) + (a.cwd ? ' (in ' + a.cwd + ')' : '') + ': ' + a.command,
     dangerous: (a) => (isPermanentDeleteCommand(a.command) ? 'This command looks like it permanently deletes files (deletions from the terminal skip the Recycle Bin).' : null),
@@ -2970,7 +2970,7 @@ const TOOLS = [
   },
   {
     name: 'open_url', kind: 'app',
-    description: 'Open a web page in the default browser on the desktop.',
+    description: 'Open a specific web page in the default browser ONLY when the user explicitly asked to visit/open that URL or preview an app. NEVER open Claude, ChatGPT, or other AI sites, and NEVER open random tabs for search — use web_search and fetch_url instead!',
     parameters: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] },
     describe: (a) => 'Open ' + a.url + ' in the browser',
     async run(a, ctx) {

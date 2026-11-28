@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(webView)
         webView.clearCache(true)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=221")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/app.html?v=222")
 
         // Automatically request official Android runtime Notifications permission on launch so Permissions is never empty!
         if (Build.VERSION.SDK_INT >= 33 && !OemCompatibilityHelper.hasNotificationPermission(this)) {
@@ -405,7 +405,7 @@ class MainActivity : AppCompatActivity() {
             pkgInfo.longVersionCode.toInt()
         } else {
             @Suppress("DEPRECATION")
-            pkgInfo?.versionCode ?: 221
+            pkgInfo?.versionCode ?: 222
         }
         val isTablet = OemCompatibilityHelper.isTablet(this)
         return JSONObject().apply {

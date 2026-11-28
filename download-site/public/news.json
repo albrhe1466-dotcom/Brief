@@ -1,25 +1,25 @@
 {
   "version": "2.1.4-beta",
-  "build": 221,
+  "build": 222,
   "releasedAt": "2026-11-28",
   "mandatoryAndroid": true,
   "autoDownloadAndroid": false,
   "apkUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Android-v2.1.4-beta.apk",
   "winUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Setup.exe",
   "linuxDebUrl": "https://github.com/albrhe1466-dotcom/Brief/releases/latest/download/Brief-Linux-x64.deb",
-  "headline": "Brief v2.1.4-beta — Ultra-Patient Stay, Watch & Verify Engine (Up to 4 Hours), Multi-Permission Granting (Up to 16×) & Real Final Testing",
+  "headline": "Brief v2.1.4-beta — Self-Reliant Agent Guardrails (Zero Random Tabs/Terminals/Other-AI Launches), Local-Time Usage Reset Clock & Ultra-Patient Watching",
   "bullets": [
-    "Ultra-Patient Watching (Zero 'I'm still waiting' Spam): Whether watching Claude, ChatGPT, another AI agent reading/thinking, a terminal, BalenaEtcher, Rufus, or a video generator, Brief stays quietly watching until the actual final result, a permission prompt, or an error appears (supports thorough 16–20+ minute runs up to 4 hours max).",
-    "Multi-Permission Auto-Granting (3–4 Commonly, Up to 16 Max): When another AI agent or app asks repeatedly for permissions (inspect, open folder, edit, run, confirm), Brief grants each safe permission step by step and immediately goes right back to watching instead of stopping after 1 approval.",
-    "Wholesome Eye + Snack Watching Cursor (Windows, Linux & Android): Live rotating watching labels (👀🍿 / 👀🍕 / 👀☕ / 👀🍪) with elapsed timers right beside the cursor and in the status bar across Background and Live Visible modes.",
-    "Real Post-Completion Testing Across All 4 LLMs (Gemini, OpenAI, Claude & OpenRouter): After a process finishes, Brief actually tests the output (exit codes, files, target drives/SD cards, generated videos, or app behavior) and honestly reports whether it worked or failed."
+    "Self-Reliant Agent Guardrails (Windows, Linux & Android): Brief thinks, codes, writes, and solves tasks on its own — hard runtime guardrails now block unsolicited Claude/ChatGPT/other-AI launches, random browser tabs, Ctrl+T spam, and stray desktop terminal windows unless you explicitly ask for them.",
+    "Usage Reset Clock Below the Top-Right Usage Ring: Shows 'Resetting usage at: <your local time>' right beneath the usage circle and ALWAYS resets usage back to 0% when that local clock time hits — whether you are at 0%, 35%, 99%, or 100%.",
+    "Ultra-Patient Stay, Watch & Multi-Permission Engine (Up to 4 Hours, 3–16 Permission Grants): Stays quietly on active processes with wholesome 👀🍿 / 👀🍕 / 👀☕ cursor labels, never spams 'I'm still waiting', and skips false-positive static UI triggers.",
+    "Real Post-Completion Testing Across All 4 LLMs (Gemini, OpenAI, Claude & OpenRouter): Verifies files, exit codes, and real outputs before reporting success."
   ],
   "photos": [
     {
       "src": "assets/news-v214-stay-watch.svg",
-      "tag": "Ultra-Patient · v2.1.4-beta",
-      "title": "Stay, Watch & Verify Engine + 👀🍿 Cursor",
-      "caption": "Stays quietly until the real final result, grants up to 16 repeated permissions for AI agents & apps, and tests outputs before reporting across Windows, Linux & Android."
+      "tag": "Self-Reliant · v2.1.4-beta",
+      "title": "Self-Reliant Agent + Local-Time Usage Reset Clock",
+      "caption": "Does the work itself without opening random tabs, terminals, or other AIs — plus shows 'Resetting usage at: <local time>' under the top usage circle with guaranteed auto-reset."
     },
     {
       "src": "assets/news-v213-voice-memo.svg",

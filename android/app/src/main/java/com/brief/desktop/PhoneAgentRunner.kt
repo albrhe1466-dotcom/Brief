@@ -20,8 +20,18 @@ class PhoneAgentRunner(
             "👀🍔", "👀🍟", "👀🧃", "👀🥨", "👀🍵"
         )
         private val WATCH_LOADING_WORD_RE = Regex(
-            "\\b(loading|reading|thinking|thought\\s+for|analyzing|searching|exploring|inspecting|planning|editing|flashing|validating|verifying|generating|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building|writing|formatting|copying|transferring|syncing|initializing|processing|please\\s+wait|in\\s+progress|remaining|eta\\b|queued|preparing|stop\\s+generating|running\\s+command|thinking\\.\\.\\.|working\\.\\.\\.)\\b",
+            "\\b(loading(?:\\.\\.\\.|\\s+\\d|\\s+[a-z]+)|is\\s+reading|reading\\.\\.\\.|is\\s+thinking|thinking\\.\\.\\.|thought\\s+for|is\\s+analyzing|analyzing\\.\\.\\.|searching\\s+the\\s+web|searching\\.\\.\\.|flashing|validating|verifying\\.\\.\\.|generating(?:\\s+video|\\.\\.\\.)|rendering|downloading|uploading|installing|uninstalling|extracting|decompressing|compiling|building\\.\\.\\.|writing\\s+image|formatting|copying\\s+(?:iso|files)|transferring|syncing\\.\\.\\.|initializing|processing\\.\\.\\.|please\\s+wait|in\\s+progress|\\d+\\s*(?:sec|min|hr|m|s)\\s+remaining|eta\\b|queued|preparing\\.\\.\\.|stop\\s+generating|running\\s+command|working\\.\\.\\.)\\b",
             RegexOption.IGNORE_CASE
+        )
+        private val EXTERNAL_AI_GUARD_RULES = listOf(
+            Triple("Claude", Regex("\\bclaude(?:\\.ai|\\s*code|\\s*desktop)?\\b|anthropic\\.com/claude", RegexOption.IGNORE_CASE), Regex("\\bclaude\\b", RegexOption.IGNORE_CASE)),
+            Triple("ChatGPT", Regex("\\bchatgpt\\b|chat\\.openai\\.com", RegexOption.IGNORE_CASE), Regex("\\b(?:chatgpt|openai\\s+chat)\\b", RegexOption.IGNORE_CASE)),
+            Triple("Gemini", Regex("gemini\\.google\\.com", RegexOption.IGNORE_CASE), Regex("gemini\\.google\\.com|\\bopen\\s+gemini\\b", RegexOption.IGNORE_CASE)),
+            Triple("Perplexity", Regex("\\bperplexity(?:\\.ai)?\\b", RegexOption.IGNORE_CASE), Regex("\\bperplexity\\b", RegexOption.IGNORE_CASE)),
+            Triple("Copilot", Regex("copilot\\.microsoft\\.com|\\bcopilot\\b", RegexOption.IGNORE_CASE), Regex("\\bcopilot\\b", RegexOption.IGNORE_CASE)),
+            Triple("DeepSeek", Regex("\\bdeepseek(?:\\.com)?\\b", RegexOption.IGNORE_CASE), Regex("\\bdeepseek\\b", RegexOption.IGNORE_CASE)),
+            Triple("Grok", Regex("\\bgrok\\.com\\b", RegexOption.IGNORE_CASE), Regex("\\bgrok\\b", RegexOption.IGNORE_CASE)),
+            Triple("Poe", Regex("\\bpoe\\.com\\b", RegexOption.IGNORE_CASE), Regex("\\bpoe\\.com|\\bopen\\s+poe\\b", RegexOption.IGNORE_CASE))
         )
         private val WATCH_PERMISSION_RE = Regex(
             "\\b(allow\\s+once|allow\\s+always|allow\\s+this|accept\\s+all|approve|permission\\s+required|wants?\\s+to\\s+(?:access|run|open|edit|read|write|execute|use)|do\\s+you\\s+want\\s+to\\s+allow|grant\\s+(?:access|permission)|yes,\\s*proceed|run\\s+command\\?|open\\s+folder\\?|trust\\s+(?:this|the)\\s+folder|allow\\s+access|while\\s+using\\s+the\\s+app|only\\s+this\\s+time)\\b",
@@ -476,14 +486,37 @@ class PhoneAgentRunner(
                     }
 
                     val isPermTap = tc.name == "tap_element" &&
-                        Regex("\\b(allow|approve|accept|proceed|permit|grant|yes|confirm|continue|trust|run|open\\s+folder|ok|while\\s+using|only\\s+this\\s+time)\\b", RegexOption.IGNORE_CASE)
+                        Regex("\\b(allow|approve|accept|permit|grant|trust|open\\s+folder|yes,\\s*proceed|while\\s+using|only\\s+this\\s+time)\\b", RegexOption.IGNORE_CASE)
                             .containsMatchIn(tc.args.optString("label"))
                     val sameLimit = when {
                         tc.name == "watch_and_wait" -> 24
                         isPermTap -> MAX_EXTERNAL_PERMISSION_GRANTS + 1
                         else -> 4
                     }
-                    var out = if (sameSigStreak >= sameLimit) {
+                    val unsolicitedBlockMsg: String? = if (tc.name == "open_app" || tc.name == "open_url") {
+                        val targetText = tc.args.optString("name") + " " + tc.args.optString("url")
+                        val userTextAll = buildString {
+                            history.filter { it.role == "user" }.takeLast(6).forEach { append(it.text).append('\n') }
+                            append(prompt)
+                        }
+                        val blockedAi = EXTERNAL_AI_GUARD_RULES.firstOrNull { (_, targetRe, userRe) ->
+                            targetRe.containsMatchIn(targetText) && !userRe.containsMatchIn(userTextAll)
+                        }
+                        when {
+                            blockedAi != null ->
+                                "BLOCKED: The user did NOT ask you to open ${blockedAi.first}! YOU are Brief — do the thinking and work YOURSELF instead of opening another AI app or site."
+                            tc.name == "open_url" &&
+                                Regex("^https?://(?:www\\.)?(?:google\\.[a-z.]+/?(?:\\?|\\z|search)|bing\\.com/?(?:\\?|\\z|search)|duckduckgo\\.com/?(?:\\?|\\z))", RegexOption.IGNORE_CASE)
+                                    .containsMatchIn(tc.args.optString("url").trim()) &&
+                                !Regex("\\b(?:open\\s+(?:google|bing|duckduckgo)|google\\.com|bing\\.com|duckduckgo\\.com)\\b", RegexOption.IGNORE_CASE)
+                                    .containsMatchIn(userTextAll) ->
+                                "BLOCKED: Do NOT open random search-engine tabs! Use your silent built-in `web_search` and `fetch_url` tools instead."
+                            else -> null
+                        }
+                    } else null
+                    var out = if (unsolicitedBlockMsg != null) {
+                        JSONObject().put("ok", false).put("blocked", true).put("error", unsolicitedBlockMsg).toString()
+                    } else if (sameSigStreak >= sameLimit) {
                         JSONObject().put("error", "Repeated identical action $sameLimit times; try a different coordinate, tap_element, or swipe to scroll.").toString()
                     } else {
                         executeTool(tc, provider, isBgVisual, onStep)
@@ -880,7 +913,8 @@ class PhoneAgentRunner(
             """You are Brief on Android (Work Mode — Smart 150-Frame Vision Phone & Tablet Agent).
 You have LIVE calibrated HD screenshots (0..1000 x 0..1000 coordinate ruler on top/left edges, where 0,0 is top-left and 1000,1000 is bottom-right) PLUS a 150-node interactive UI element map on EVERY step.
 
-CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
+CRITICAL EXECUTION RULES (BE SMART, SELF-RELIANT, THOROUGH & NEVER QUIT EARLY):
+0. ABSOLUTE SELF-RELIANCE — DO THE WORK YOURSELF (NEVER OPEN CLAUDE/CHATGPT OR RANDOM TABS): YOU are Brief! Solve the user's request yourself using your own brain and direct tools (`web_search`, `fetch_url`, app controls). NEVER open Claude, ChatGPT, Gemini, Perplexity, Copilot, or random browser tabs/apps unless the user EXPLICITLY named them in their message!
 1. COMPLETE EVERY STEP OF THE USER'S GOAL: Never stop right after opening an app! If the user says "open YouTube, search MrBeast, click the Beast channel icon, and open/give his latest Short or latest video":
    - Step A: Call `open_app({"name": "YouTube"})`.
    - Step B: Tap the Search icon (`tap_element({"label": "Search"})` or `tap` on the magnifying glass in the top bar).
@@ -893,7 +927,7 @@ CRITICAL EXECUTION RULES (BE SMART, THOROUGH & NEVER QUIT EARLY):
 3. PREFER PRECISION: Use the `[Live 150-Node Interactive UI Map]` coordinates or `tap_element` whenever a button/tab/channel has a clear label, and use the calibrated `0..1000` screenshot grid for visual icons/thumbnails/avatars.
 4. IF SOMETHING IS OFF-SCREEN: Use `swipe` (`x1=500, y1=760, x2=500, y2=260`) to scroll down smoothly and inspect new items.
 5. CALM USER REDIRECT & CONTEXT MEMORY ("NO, OPEN X INSTEAD OF Y"): Remember user corrections across the entire chat! Whenever the user says "no, open X instead of Y" or redirects you, remember NOT to open/repeat Y, never get confused or flustered, and pivot straight to X!
-6. ULTRA-PATIENT STAY, WATCH, MULTI-PERMISSION (3–16 GRANTS) & REAL-TEST RULE (THOROUGH 16–20+ MIN VALIDATION WHEN NEEDED, UP TO 4 HOURS MAX — ALL 4 MODELS): NEVER quit early and NEVER reply "I'm still waiting" while Claude AI, ChatGPT, any other AI, a terminal, flasher, video generator, or any app is reading, thinking, loading, or working! Stay quietly inside `watch_and_wait({"reason": "...", "max_wait_minutes": 30})` (up to 240 min = 4h, showing cute 👀🍿 / 👀🍕 / 👀☕ cursor status). When another AI or app asks for permission (1st: read/run, 2nd: open folder, etc. — 3–4 commonly, up to 16 max!), tap Allow/Approve/Accept/Open Folder and IMMEDIATELY call `watch_and_wait` again until the REAL final result arrives — then TEST IT and honestly tell the user whether it worked or failed!
+6. ULTRA-PATIENT STAY, WATCH, MULTI-PERMISSION (3–16 GRANTS) & REAL-TEST RULE (ONLY FOR ALREADY-RUNNING PROCESSES — UP TO 4 HOURS MAX, ALL 4 MODELS): Whenever an app, download, installer, video generator, OR another AI explicitly requested by the user is ALREADY loading/working, NEVER quit early and NEVER reply "I'm still waiting"! Stay quietly inside `watch_and_wait({"reason": "...", "max_wait_minutes": 30})` (up to 240 min = 4h, showing cute 👀🍿 / 👀🍕 / 👀☕ cursor status). When an active app asks for permission (3–4 commonly, up to 16 max!), tap Allow/Approve/Accept/Open Folder and IMMEDIATELY call `watch_and_wait` again until the REAL final result arrives — then TEST IT and honestly tell the user whether it worked or failed!
 7. SAFETY: Pause and ask the user only before irreversible payments, password entry, or permanent deletion (or if an app loops past 16 permission prompts).$extraHint"""
         }
     }

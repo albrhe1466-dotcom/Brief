@@ -637,7 +637,15 @@
       display: block;
     }
 
-    /* Usage limit ring (top-right, next to Settings) */
+    /* Usage limit ring (top-right, next to Settings) + Local Reset Clock right below it */
+    .usage-ring-wrap {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      flex-shrink: 0;
+    }
     .usage-ring-btn {
       position: relative;
       width: 34px;
@@ -658,6 +666,41 @@
       font-weight: 700;
       color: #f1f5f9;
       font-family: var(--font-mono);
+    }
+    .usage-reset-clock {
+      position: absolute;
+      top: calc(100% + 5px);
+      right: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15, 17, 23, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-secondary);
+      font-size: 10.5px;
+      font-weight: 500;
+      line-height: 1.25;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      cursor: pointer;
+      z-index: 35;
+      transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+    }
+    .usage-reset-clock:hover {
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #ffffff;
+      background: rgba(24, 27, 36, 0.96);
+    }
+    .usage-reset-clock-icon {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
+      opacity: 0.86;
     }
 
     /* Steady Task Running header pill (zero blinking) */
@@ -1093,6 +1136,9 @@
     }
 
     #top-header {
+      position: relative;
+      z-index: 30;
+      overflow: visible;
       height: var(--header-height);
       padding: 0 18px;
       display: grid;
@@ -5541,6 +5587,16 @@
       width: 28px !important;
       height: 28px !important;
     }
+    html[data-platform="android"] .usage-reset-clock {
+      top: calc(100% + 4px) !important;
+      padding: 2px 7px !important;
+      font-size: 9.5px !important;
+      gap: 3px !important;
+    }
+    html[data-platform="android"] .usage-reset-clock-icon {
+      width: 10px !important;
+      height: 10px !important;
+    }
     html[data-platform="android"] body .welcome-title-row {
       gap: 8px !important;
       margin-bottom: 5px !important;
@@ -6852,12 +6908,19 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
       }
       #top-header {
+        position: relative !important;
+        z-index: 30 !important;
         height: 46px !important;
         padding: 0 12px !important;
         flex-wrap: nowrap !important;
         justify-content: space-between !important;
-        overflow: hidden;
+        overflow: visible !important;
         gap: 6px !important;
+      }
+      .usage-reset-clock {
+        top: calc(100% + 4px) !important;
+        padding: 2px 7px !important;
+        font-size: 9.5px !important;
       }
       #sidebar-expand-btn {
         display: inline-flex !important;
@@ -7333,13 +7396,22 @@
             <span>Settings</span>
           </button>
 
-          <button class="usage-ring-btn" id="usage-ring-btn" type="button" title="Usage limit: 0%" aria-label="Usage limit">
-            <svg viewBox="0 0 36 36" width="34" height="34" aria-hidden="true">
-              <circle class="usage-ring-track" cx="18" cy="18" r="15" fill="none" stroke-width="3.5"></circle>
-              <circle id="usage-ring-fill" cx="18" cy="18" r="15" fill="none" stroke-width="3.5" stroke-linecap="round" transform="rotate(-90 18 18)" stroke-dasharray="94.25" stroke-dashoffset="94.25" stroke="#22c55e"></circle>
-            </svg>
-            <span id="usage-ring-text">0%</span>
-          </button>
+          <div class="usage-ring-wrap" id="usage-ring-wrap">
+            <button class="usage-ring-btn" id="usage-ring-btn" type="button" title="Usage limit: 0%" aria-label="Usage limit">
+              <svg viewBox="0 0 36 36" width="34" height="34" aria-hidden="true">
+                <circle class="usage-ring-track" cx="18" cy="18" r="15" fill="none" stroke-width="3.5"></circle>
+                <circle id="usage-ring-fill" cx="18" cy="18" r="15" fill="none" stroke-width="3.5" stroke-linecap="round" transform="rotate(-90 18 18)" stroke-dasharray="94.25" stroke-dashoffset="94.25" stroke="#22c55e"></circle>
+              </svg>
+              <span id="usage-ring-text">0%</span>
+            </button>
+            <div class="usage-reset-clock" id="usage-reset-clock" role="button" tabindex="0" title="Usage automatically resets to 0% at this local time — even if you still have usage left">
+              <svg class="usage-reset-clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <polyline points="12 7 12 12 15.5 14"></polyline>
+              </svg>
+              <span id="usage-reset-clock-text">Resetting usage at: --:--</span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -13043,8 +13115,20 @@
         return USAGE_PROVIDER_LABEL[p] ? p : 'gemini';
       }
 
+      function formatLocalResetClock(ts) {
+        if (!ts || !isFinite(ts)) return '--:--';
+        try {
+          return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        } catch (_) {
+          const d = new Date(ts);
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+      }
+
       // Usage is tracked separately per company (the API key's provider).
-      // Below 100%, percent stays right where it is; at 100%, silent background local-time check unlocks when cooldown ends.
+      // Every provider ALWAYS has a live local-time reset clock (`resetAt`).
+      // When that local clock time arrives, usage ALWAYS resets cleanly back to 0% —
+      // whether you had 0/100 used, 35/100 used, 99/100 used, or 100/100 (0 left)!
       function getUsageMeter(overrideProv) {
         const key = usageProviderKey(overrideProv);
         const all = (State.settings && State.settings.usageMeters) || {};
@@ -13059,59 +13143,89 @@
         if (api && api.updateSettings) api.updateSettings({ usageMeters: all }).catch(() => {});
       }
 
-      // Quietly records the user's local start timestamp strictly in the background (never displayed anywhere).
+      // Records the user's local session start & ensures a scheduled local reset clock always exists.
       function touchUsageSessionStart(overrideProv) {
         const um = getUsageMeter(overrideProv);
-        if (!um.startedAt || (um.percent || 0) === 0) {
+        const now = Date.now();
+        const winMs = usageWaitWindowFor(State.settings && State.settings.activeModel);
+        if (!um.startedAt || !um.resetAt || um.resetAt <= 0) {
           saveUsageMeter({
-            percent: um.percent || 0,
-            startedAt: Date.now(),
-            resetAt: um.resetAt || 0
+            percent: Math.max(0, Math.min(100, Math.round(um.percent || 0))),
+            startedAt: um.startedAt || now,
+            resetAt: (um.resetAt && um.resetAt > now) ? um.resetAt : (now + winMs)
           }, overrideProv);
         }
       }
 
-      // Quiet background local-time check:
-      // - If 100% cooldown has finished, refresh back to 0% automatically.
-      // - Never allow any leftover/provider timer longer than 3 hours (strictly 2h or 3h max).
+      // Live local-time auto-reset check:
+      // - Always ensures a real scheduled local reset time exists (2h fast/balanced, 3h strong/flagship).
+      // - Whenever local clock reaches `resetAt`, UNCONDITIONALLY resets usage back to 0% (whether at 0%, 35%, 99%, or 100%)
+      //   and schedules the next local cycle automatically!
       function syncBackgroundUsageTimer(overrideProv) {
         const um = getUsageMeter(overrideProv);
         const now = Date.now();
-        if ((um.percent || 0) >= 100 && um.resetAt > 0) {
-          if (now >= um.resetAt) {
-            saveUsageMeter({ percent: 0, startedAt: 0, resetAt: 0 }, overrideProv);
-            return true;
+        const winMs = usageWaitWindowFor(State.settings && State.settings.activeModel);
+        const pct = Math.max(0, Math.min(100, Math.round(um.percent || 0)));
+
+        if (!um.resetAt || !isFinite(um.resetAt) || um.resetAt <= 0) {
+          saveUsageMeter({ percent: pct, startedAt: um.startedAt || now, resetAt: now + winMs }, overrideProv);
+          return false;
+        }
+        if (now >= um.resetAt) {
+          saveUsageMeter({ percent: 0, startedAt: now, resetAt: now + winMs }, overrideProv);
+          if (!overrideProv || overrideProv === usageProviderKey()) {
+            if (State.ui && State.ui.activeModal === 'modal-usage-limit') closeAllModals();
           }
-          if (um.resetAt - now > USAGE_WAIT_3H_MS) {
-            const clampedWin = usageWaitWindowFor(State.settings && State.settings.activeModel);
-            saveUsageMeter({ percent: 100, startedAt: um.startedAt || now, resetAt: now + clampedWin }, overrideProv);
-          }
+          return true;
+        }
+        if (um.resetAt - now > USAGE_WAIT_3H_MS + 60000) {
+          saveUsageMeter({ percent: pct, startedAt: um.startedAt || now, resetAt: now + winMs }, overrideProv);
         }
         return false;
       }
 
-      // Immediately refreshes usage to 0% when user switches/changes to a new API key.
+      function syncAllProviderUsageTimers() {
+        for (const pKey of Object.keys(USAGE_PROVIDER_LABEL)) {
+          const all = (State.settings && State.settings.usageMeters) || {};
+          if (all[pKey] || pKey === usageProviderKey()) {
+            syncBackgroundUsageTimer(pKey);
+          }
+        }
+      }
+
+      // Immediately refreshes usage to 0% when user switches/changes to a new API key and starts a fresh local reset cycle.
       function resetUsageMeterForProvider(overrideProv) {
-        saveUsageMeter({ percent: 0, startedAt: 0, resetAt: 0 }, overrideProv);
+        const now = Date.now();
+        const winMs = usageWaitWindowFor(State.settings && State.settings.activeModel);
+        saveUsageMeter({ percent: 0, startedAt: now, resetAt: now + winMs }, overrideProv);
         renderUsageRing();
         if (State.ui && State.ui.activeModal === 'modal-usage-limit') closeAllModals();
       }
 
       function renderUsageRing() {
-        syncBackgroundUsageTimer();
+        syncAllProviderUsageTimers();
         const um = getUsageMeter();
         const p = Math.max(0, Math.min(100, Math.round(um.percent || 0)));
         const fill = $('usage-ring-fill');
         const txt = $('usage-ring-text');
         const btn = $('usage-ring-btn');
+        const clockText = $('usage-reset-clock-text');
+        const clockEl = $('usage-reset-clock');
         if (!fill || !txt || !btn) return;
         const circ = 94.25;
         fill.setAttribute('stroke-dashoffset', String(circ * (1 - p / 100)));
         fill.setAttribute('stroke', usageColor(p));
         txt.textContent = p + '%';
+        const resetClockStr = formatLocalResetClock(um.resetAt);
         const waitLeft = um.resetAt ? Math.max(0, um.resetAt - Date.now()) : 0;
-        const wait = (p >= 100 && waitLeft > 0) ? ' · wait about ' + formatUsageWait(waitLeft) : '';
-        btn.title = USAGE_PROVIDER_LABEL[usageProviderKey()] + ' usage: ' + p + '%' + wait + ' (right-click to reset)';
+        const waitInfo = waitLeft > 0 ? (' · resets at ' + resetClockStr + ' (in ' + formatUsageWait(waitLeft) + ')') : '';
+        btn.title = USAGE_PROVIDER_LABEL[usageProviderKey()] + ' usage: ' + p + '%' + waitInfo + ' (right-click to reset)';
+        if (clockText) {
+          clockText.textContent = 'Resetting usage at: ' + resetClockStr;
+        }
+        if (clockEl) {
+          clockEl.title = USAGE_PROVIDER_LABEL[usageProviderKey()] + ' (' + p + '% used · ' + (100 - p) + '% left) automatically resets to 0% at ' + resetClockStr + (waitLeft > 0 ? (' (in ' + formatUsageWait(waitLeft) + ')') : '') + ' — even if you still have usage left.';
+        }
       }
 
       function usageLimitWaitLabel() {
@@ -13125,14 +13239,18 @@
 
       function usageLimitMessage() {
         const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+        const um = getUsageMeter();
         const wait = usageLimitWaitLabel();
-        return "You've reached your " + name + ' usage limit. Change your API key to refresh immediately, or wait about ' + wait + '.';
+        const clockStr = formatLocalResetClock(um.resetAt);
+        return "You've reached your " + name + ' usage limit. Change your API key to refresh immediately, or wait until ' + clockStr + ' (about ' + wait + ').';
       }
 
       function openUsageLimitModal() {
         syncBackgroundUsageTimer();
         const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+        const um = getUsageMeter();
         const wait = usageLimitWaitLabel();
+        const clockStr = formatLocalResetClock(um.resetAt);
         const badge = $('usage-limit-badge');
         const head = $('usage-limit-headline');
         const sub = $('usage-limit-sub');
@@ -13140,13 +13258,13 @@
         const waitInline = $('usage-limit-wait-inline');
         if (badge) badge.textContent = '100% · ' + name;
         if (head) head.textContent = "You've reached your " + name + ' usage limit';
-        if (sub) sub.textContent = 'To continue right away, you can either change your API key to refresh your usage, or wait about ' + wait + ' for your limit to reset.';
-        if (waitHead) waitHead.textContent = 'Wait ~' + wait;
-        if (waitInline) waitInline.textContent = wait;
+        if (sub) sub.textContent = 'To continue right away, you can either change your API key to refresh your usage, or wait until ' + clockStr + ' (about ' + wait + ') for your limit to reset automatically.';
+        if (waitHead) waitHead.textContent = 'Resets at ' + clockStr + ' (~' + wait + ')';
+        if (waitInline) waitInline.textContent = clockStr + ' (' + wait + ')';
         openModal('modal-usage-limit');
       }
 
-      // Blocked while at 100% and background local-time cooldown is still running.
+      // Blocked while at 100% and local-time reset window is still running.
       function isUsageLimitReached() {
         syncBackgroundUsageTimer();
         const um = getUsageMeter();
@@ -13160,16 +13278,15 @@
         const startedAt = prev.startedAt || now;
         const winMs = usageWaitWindowFor(modelIdForWindow || (State.settings && State.settings.activeModel));
         let resetAt = resetAtOverride || 0;
-        if (!resetAt && p >= 100) {
+        if (!resetAt) {
           if (prev.resetAt && prev.resetAt > now) {
+            // Preserve the exact scheduled local reset clock across 0% -> 35% -> 99% -> 100%!
             resetAt = prev.resetAt;
           } else {
-            // Check silent background local start time; ensure a clear 2h/3h cooldown window
-            const fromStart = startedAt + winMs;
-            resetAt = (fromStart > now + 10 * 60 * 1000) ? fromStart : (now + winMs);
+            resetAt = now + winMs;
           }
         }
-        saveUsageMeter({ percent: p, startedAt, resetAt: p >= 100 ? resetAt : 0 });
+        saveUsageMeter({ percent: p, startedAt, resetAt });
         renderUsageRing();
       }
 
@@ -13208,25 +13325,39 @@
 
       function bindUsageRing() {
         const btn = $('usage-ring-btn');
+        const showUsageInfo = () => {
+          syncAllProviderUsageTimers();
+          renderUsageRing();
+          const um = getUsageMeter();
+          const p = Math.round(um.percent || 0);
+          const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
+          const clockStr = formatLocalResetClock(um.resetAt);
+          if (p >= 100) {
+            openUsageLimitModal();
+          } else {
+            showToast(name + ' usage: ' + p + '% (' + (100 - p) + '% left) · Resetting at ' + clockStr, 'ok');
+          }
+        };
         if (btn && !btn.dataset.bound) {
           btn.dataset.bound = '1';
-          btn.addEventListener('click', () => {
-            syncBackgroundUsageTimer();
-            const um = getUsageMeter();
-            const p = Math.round(um.percent || 0);
-            const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
-            if (p >= 100) {
-              openUsageLimitModal();
-            } else {
-              showToast(name + ' usage: ' + p + '%', 'ok');
-            }
-          });
+          btn.addEventListener('click', showUsageInfo);
           btn.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const name = USAGE_PROVIDER_LABEL[usageProviderKey()];
             if (window.confirm('Reset the ' + name + ' usage meter to 0%?')) {
               resetUsageMeterForProvider();
               showToast(name + ' usage meter reset to 0%.', 'ok');
+            }
+          });
+        }
+        const clockEl = $('usage-reset-clock');
+        if (clockEl && !clockEl.dataset.bound) {
+          clockEl.dataset.bound = '1';
+          clockEl.addEventListener('click', showUsageInfo);
+          clockEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              showUsageInfo();
             }
           });
         }
@@ -13259,10 +13390,16 @@
             saveUsageMeter({ percent: 0, startedAt: 0, resetAt: 0 }, 'gemini');
           }
         } catch (_) { /* ignore */ }
-        // Silently initialize background local-time check without displaying any time in UI
-        syncBackgroundUsageTimer();
+        // Live local-time reset clock & auto-reset across all providers (even if usage is 0%, 35%, 99%, or 100%)
+        syncAllProviderUsageTimers();
         renderUsageRing();
-        setInterval(renderUsageRing, 30000);
+        if (!window._briefUsageResetInterval) {
+          window._briefUsageResetInterval = setInterval(renderUsageRing, 15000);
+          window.addEventListener('focus', renderUsageRing);
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) renderUsageRing();
+          });
+        }
       }
 
       function setRunningState(isRunning, labelText) {
@@ -14175,7 +14312,7 @@
       ==================================================================== */
 
       const BRIEF_NEWS_VERSION = '2.1.4-beta';
-      const BRIEF_BUILD_NUMBER = 221;
+      const BRIEF_BUILD_NUMBER = 222;
       let latestRemoteRelease = null;
 
       if (api && api.onUpdateProgress) {
